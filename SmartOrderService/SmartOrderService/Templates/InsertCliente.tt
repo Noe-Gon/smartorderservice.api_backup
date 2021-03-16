@@ -1,0 +1,39 @@
+﻿<#@ template language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ parameter name="Customer" type="SmartOrderService.DB.so_customer"#>
+<#@ parameter name="CustomerData" type="SmartOrderService.DB.so_customer_data"#>
+<#@ parameter name="User" type="System.String"#>
+<#@ parameter name="Password" type="System.String"#>
+<#@ parameter name="IsVirtual" type="System.String"#>
+<#@ parameter name="Observations" type="System.String"#>
+<#@ parameter name="BranchName" type="System.String"#>
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <InsertCliente xmlns="http://tempuri.org/">
+      <Usuario><#=this.User#></Usuario>
+      <Password><#=this.Password#></Password>
+      <datoscli>
+        <Nombre><#=this.Customer.name#></Nombre>
+        <RFC><#=this.CustomerData.ftr#></RFC>
+        <Calle><#=this.CustomerData.address_street#></Calle>
+        <NoInterior></NoInterior>
+        <NoExterior><#=this.CustomerData.address_number#></NoExterior>
+        <CteCP><#=String.IsNullOrEmpty(this.CustomerData.postal_code) ? "0" : this.CustomerData.postal_code #></CteCP>
+        <Colonia></Colonia>
+        <Localidad><#=this.CustomerData.suburb#></Localidad>
+        <MunicipioDel><#=this.CustomerData.suburb#></MunicipioDel>
+        <Estado><#=String.IsNullOrEmpty(this.CustomerData.state) ? "Sin informacion" : this.CustomerData.state #></Estado>
+        <Pais><#=this.CustomerData.country#></Pais>
+        <Email><#=this.Customer.getSingleEmail()#></Email>
+        <EsVirtual><#=this.IsVirtual#></EsVirtual>
+        <Sucural><#=this.BranchName#></Sucural>
+        <Observaciones><#=this.Observations#></Observaciones>
+        <Contacto><#=this.Customer.contact#></Contacto>
+      </datoscli>
+    </InsertCliente>
+  </soap:Body>
+</soap:Envelope>

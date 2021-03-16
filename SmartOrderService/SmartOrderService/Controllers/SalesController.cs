@@ -1,0 +1,223 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Web.Http;
+using System.Web.Http.Description;
+using SmartOrderService.DB;
+using SmartOrderService.Mappers;
+using SmartOrderService.Models;
+using SmartOrderService.Models.Requests;
+using SmartOrderService.Services;
+using SmartOrderService.Models.Responses;
+using SmartOrderService.CustomExceptions;
+using SmartOrderService.Utils;
+using SmartOrderService.Models.DTO;
+using Newtonsoft.Json;
+
+namespace SmartOrderService.Controllers
+{
+    public class SalesController : ApiController
+    {
+        private SmartOrderModel db = new SmartOrderModel();
+
+        SaleService service;
+
+        [HttpGet,Route("api/sales/{SaleId}/Lines")]
+        public HttpResponseMessage getLines(int SaleId, [FromUri] InvoiceDataDto invoiceData)
+
+        {
+            try
+            {
+                var opeFacturaDto = new InvoiceService().getInvoiceOpeFacturaDto(SaleId, invoiceData);
+
+                return Request.CreateResponse(HttpStatusCode.OK, opeFacturaDto);
+            }
+            catch(Exception e)
+            {
+                return Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+            }
+           
+        }
+
+        [HttpGet, Route("api/sales/{SaleId}/ConvertLines")]
+        public HttpResponseMessage convertToLine(int SaleId, [FromUri] InvoiceDataDto invoiceData)
+
+        {
+            try
+            {
+                var opeFacturaDto = new InvoiceService().createOpeFacturaDto(SaleId, invoiceData);
+
+                return Request.CreateResponse(HttpStatusCode.OK, opeFacturaDto);
+            }
+            catch (Exception e)
+            {
+                return Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+            }
+
+        }
+
+        [HttpGet, Route("api/v2/sales/{SaleId}/ConvertLines")]
+        public HttpResponseMessage convertToLinev2(int SaleId )
+
+        {
+            try
+            {
+                var i = Request.Headers.GetValues("InvoiceData");
+                var invoicedto =i.FirstOrDefault().ToString();
+                var invoiceData  = JsonConvert.DeserializeObject<InvoiceDataDto>(invoicedto);
+                var opeFacturaDto = new InvoiceService().createOpeFacturaDtoV2(SaleId, invoiceData);
+
+                return Request.CreateResponse(HttpStatusCode.OK, opeFacturaDto);
+            }
+            catch (Exception e)
+            {
+                return Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+            }
+
+        }
+
+        // GET: api/Sales
+        public HttpResponseMessage Getso_sale([FromUri ]SaleRequest request)
+        {
+            HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.NoContent);
+         
+
+            var date = DateUtils.getDateTime(request.Date);
+
+            service = new SaleService();
+            try
+            {
+                if (request.BranchCode != null && request.UserCode != null)
+                {
+
+                    var sales = service.getSalesByRoute(request.BranchCode, request.UserCode, request.Trip, date, request.Unmodifiable);
+                    response = Request.CreateResponse(HttpStatusCode.OK,sales);
+                }
+
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message);
+            }
+            
+            return response;
+        }
+
+        // GET: api/Sales/5
+        [ResponseType(typeof(so_sale))]
+        public IHttpActionResult Getso_sale(int id)
+        {
+            so_sale so_sale = db.so_sale.Find(id);
+            if (so_sale == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(so_sale);
+        }
+
+        // PUT: api/Sales/5
+        [ResponseType(typeof(void))]
+        public IHttpActionResult Putso_sale(int id, so_sale so_sale)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (id != so_sale.saleId)
+            {
+                return BadRequest();
+            }
+
+            db.Entry(so_sale).State = EntityState.Modified;
+
+            try
+            {
+                db.SaveChanges();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!so_saleExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return StatusCode(HttpStatusCode.NoContent);
+        }
+
+        // POST: api/Sales
+        [ResponseType(typeof(so_sale))]
+        public IHttpActionResult Postso_sale(Sale sale)
+        {
+            SaleService service = new SaleService();
+            service.create(sale);
+
+            if (sale.SaleId==0)
+            {
+                return BadRequest("parametros incorrectos");
+            }
+
+             return CreatedAtRoute("DefaultApi", new { id = sale.SaleId }, sale);
+
+            //return StatusCode(HttpStatusCode.Created);
+        }
+
+        // DELETE: api/Sales/5
+       
+        public HttpResponseMessage Delete(int id)
+        {
+            HttpResponseMessage response;
+
+            try
+            {
+                //var token = Request.Headers.GetValues("OS_TOKEN").FirstOrDefault();
+
+                //var user = new UserService().getUserByToken(token);
+
+                var service = new SaleService();
+                var sale = service.Delete(id);
+
+                response = Request.CreateResponse(HttpStatusCode.OK,sale);
+            }
+            catch (DeviceNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Unauthorized,"no estas autorizado");
+            }
+            catch (EntityNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.NotFound);
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError,"la venta no fue afectada");
+            }
+
+            return response;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                db.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        private bool so_saleExists(int id)
+        {
+            return db.so_sale.Count(e => e.saleId == id) > 0;
+        }
+    }
+}
