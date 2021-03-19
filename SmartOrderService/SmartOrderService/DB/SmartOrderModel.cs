@@ -140,8 +140,20 @@ namespace SmartOrderService.DB
         public virtual DbSet<User_Visit_Plan> User_Visit_Plan { get; set; }
         public virtual DbSet<so_invoice_opefactura> so_invoice_opefactura { set; get; }
 
+        public virtual DbSet<so_role_team> so_role_team { get; set; }
+        public virtual DbSet<so_route_team> so_route_team { get; set; }
+
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<so_role_team>()
+                .Property(e => e.description)
+                .IsFixedLength();
+
+            modelBuilder.Entity<so_role_team>()
+                .HasMany(e => e.so_route_team)
+                .WithRequired(e => e.so_role_team)
+                .WillCascadeOnDelete(false);
+
             modelBuilder.Entity<factdet>()
                 .Property(e => e.sitio)
                 .IsUnicode(false);

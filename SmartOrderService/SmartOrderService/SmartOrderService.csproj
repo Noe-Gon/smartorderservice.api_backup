@@ -399,10 +399,12 @@
     <Compile Include="DB\so_replacement.cs" />
     <Compile Include="DB\so_revision_states.cs" />
     <Compile Include="DB\so_revision_types.cs" />
+    <Compile Include="DB\so_role_team.cs" />
     <Compile Include="DB\so_route.cs" />
     <Compile Include="DB\so_route_category.cs" />
     <Compile Include="DB\so_route_customer.cs" />
     <Compile Include="DB\so_inventory_revisions.cs" />
+    <Compile Include="DB\so_route_team.cs" />
     <Compile Include="DB\so_sale.cs" />
     <Compile Include="DB\so_sale_detail.cs" />
     <Compile Include="DB\so_sale_inventory.cs" />
