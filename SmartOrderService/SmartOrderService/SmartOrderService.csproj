@@ -505,6 +505,7 @@
     <Compile Include="Models\DTO\UserReasonDevolutionDto.cs" />
     <Compile Include="Models\DTO\VisitDto.cs" />
     <Compile Include="Models\DTO\Workday.cs" />
+    <Compile Include="Models\Enum\ERoleTeam.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\DTO\PriceDto.cs" />
     <Compile Include="Models\DTO\PriceList.cs" />

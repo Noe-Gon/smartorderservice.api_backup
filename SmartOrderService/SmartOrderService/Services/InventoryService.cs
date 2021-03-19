@@ -18,6 +18,8 @@ namespace SmartOrderService.Services
         public static int INVENTORY_AVAILABLE = 0;
         public static int INVENTORY_OPEN = 1;
         public static int INVENTORY_CLOSED = 2;
+        public const int ROL_IMPULSOR = 1;
+        public const int ROL_AYUDANTE = 2;
 
         private SmartOrderModel db = new SmartOrderModel();
         public so_inventory getCurrentInventory(int userId, DateTime? Date)
@@ -59,11 +61,11 @@ namespace SmartOrderService.Services
 
             if (CurrentInventory != null)
             {
-                 CurrentInventory.state = INVENTORY_CLOSED;
-                 CurrentInventory.modifiedon = DateTime.Now;
-                 db.SaveChanges();
+                CurrentInventory.state = INVENTORY_CLOSED;
+                CurrentInventory.modifiedon = DateTime.Now;
+                db.SaveChanges();
 
-                 return true;
+                return true;
             }
 
             return false;
@@ -79,7 +81,7 @@ namespace SmartOrderService.Services
 
             var deliveryIdsFromDevolutions = db.so_delivery_devolution.Where(d => deliveryIdsFromInventory.Contains(d.deliveryId) && d.status).Select(d => d.deliveryId).ToList();
 
-            var deliveryIdsFromSale = db.so_sale.Where(s => s.inventoryId == inventory.inventoryId && s.status).Select(s=> s.deliveryId).ToList();
+            var deliveryIdsFromSale = db.so_sale.Where(s => s.inventoryId == inventory.inventoryId && s.status).Select(s => s.deliveryId).ToList();
 
             deliveryIdsFromInventory.RemoveAll(d => deliveryIdsFromDevolutions.Contains(d));
 
@@ -93,7 +95,7 @@ namespace SmartOrderService.Services
 
         public List<TripDto> getTrips(string BranchCode, DateTime Date)
         {
-            var inventories = db.so_inventory.Where(i => 
+            var inventories = db.so_inventory.Where(i =>
             i.so_user.so_branch.code.Equals(BranchCode) &&
             i.status &&
             i.state >= InventoryService.INVENTORY_OPEN &&
@@ -151,7 +153,7 @@ namespace SmartOrderService.Services
 
             var Today = DateTime.Today;
 
-            int UserId = request.UserId;
+            int UserId = SearchDrivingId(request.UserId);
             bool OnlyCurrent = request.OnlyCurrent;
 
             if (OnlyCurrent)
@@ -187,7 +189,16 @@ namespace SmartOrderService.Services
 
         }
 
-
+        private int SearchDrivingId(int actualUserId)
+        {
+            so_route_team teamRoute = db.so_route_team.Where(i => i.userId == actualUserId).ToList().FirstOrDefault();
+            if (teamRoute == null)
+            {
+                return actualUserId;
+            }
+            int DrivingId = db.so_route_team.Where(i => i.routeId == teamRoute.routeId && i.roleTeamId == ROL_IMPULSOR).ToList().FirstOrDefault().userId;
+            return DrivingId;
+        }
         public InventoryRevisionDto getInventoryByRoute(int routeId, DateTime Date)
         {
 
