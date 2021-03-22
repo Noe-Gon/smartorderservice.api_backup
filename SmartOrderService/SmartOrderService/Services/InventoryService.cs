@@ -14,7 +14,6 @@ namespace SmartOrderService.Services
 {
     public class InventoryService
     {
-
         public static int INVENTORY_AVAILABLE = 0;
         public static int INVENTORY_OPEN = 1;
         public static int INVENTORY_CLOSED = 2;
@@ -189,16 +188,33 @@ namespace SmartOrderService.Services
 
         }
 
+        public int getInventoryState(int userId,DateTime date)
+        {
+            if (date == null) {
+                date = DateTime.Today;
+            }
+            userId = SearchDrivingId(userId);
+            var inventory = db.so_inventory.Where(i => i.userId == userId
+            && DbFunctions.TruncateTime(i.date) == DbFunctions.TruncateTime(date)
+            ).ToList();
+            if (!inventory.Any())
+            {
+                throw new InventoryEmptyException();
+            }
+            return inventory.FirstOrDefault().state;
+        }
+
         private int SearchDrivingId(int actualUserId)
         {
             so_route_team teamRoute = db.so_route_team.Where(i => i.userId == actualUserId).ToList().FirstOrDefault();
             if (teamRoute == null)
             {
-                return actualUserId;
+                throw new RelatedDriverNotFoundException("El usuario con id " + actualUserId + " no se encuentra relacionado con ningun equipo");
             }
             int DrivingId = db.so_route_team.Where(i => i.routeId == teamRoute.routeId && i.roleTeamId == ROL_IMPULSOR).ToList().FirstOrDefault().userId;
             return DrivingId;
         }
+
         public InventoryRevisionDto getInventoryByRoute(int routeId, DateTime Date)
         {
 

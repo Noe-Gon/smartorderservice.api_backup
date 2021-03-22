@@ -43,6 +43,10 @@ namespace SmartOrderService.Controllers
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict, "El inventario esta siendo cargado a WBC");
             }
+            catch(RelatedDriverNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+            }
             catch (Exception e)
             {
                 response = Request.CreateResponse(HttpStatusCode.InternalServerError, "ups lo arreglaremos...");
