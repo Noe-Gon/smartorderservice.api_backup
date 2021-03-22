@@ -237,6 +237,7 @@
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\ApiVersionController.cs" />
     <Compile Include="Controllers\ApplicationController.cs" />
+    <Compile Include="Controllers\AssistantController.cs" />
     <Compile Include="Controllers\BillingDataController.cs" />
     <Compile Include="Controllers\BinnacleVisitController.cs" />
     <Compile Include="Controllers\BranchController.cs" />
@@ -288,6 +289,7 @@
     <Compile Include="CustomExceptions\InventoryRevisionException.cs" />
     <Compile Include="CustomExceptions\ProductNotFoundBillingException.cs" />
     <Compile Include="CustomExceptions\RegisterCustomerBillingException.cs" />
+    <Compile Include="CustomExceptions\RelatedDriverNotFoundException.cs" />
     <Compile Include="CustomExceptions\RouteNotFoundException.cs" />
     <Compile Include="CustomExceptions\SaleNotFoundException.cs" />
     <Compile Include="CustomExceptions\ServerErrorException.cs" />
@@ -505,7 +507,6 @@
     <Compile Include="Models\DTO\UserReasonDevolutionDto.cs" />
     <Compile Include="Models\DTO\VisitDto.cs" />
     <Compile Include="Models\DTO\Workday.cs" />
-    <Compile Include="Models\Enum\ERoleTeam.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\DTO\PriceDto.cs" />
     <Compile Include="Models\DTO\PriceList.cs" />
@@ -559,6 +560,7 @@
     <Compile Include="Results\ChallengeResult.cs" />
     <Compile Include="Services\ApiVersionService.cs" />
     <Compile Include="Services\ApplicationService.cs" />
+    <Compile Include="Services\AssistantService.cs" />
     <Compile Include="Services\BillingDataService.cs" />
     <Compile Include="Services\BinnacleVisitService.cs" />
     <Compile Include="Services\CollectBottleService.cs" />
@@ -683,6 +685,7 @@
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="fonts\" />
+    <Folder Include="Views\Assistant\" />
     <Folder Include="Views\VersionApi\" />
   </ItemGroup>
   <ItemGroup>
