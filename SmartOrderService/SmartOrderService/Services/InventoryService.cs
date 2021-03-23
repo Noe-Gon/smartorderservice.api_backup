@@ -9,6 +9,7 @@ using SmartOrderService.Models.DTO;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.CustomExceptions;
 using OpeCDLib.Models;
+using SmartOrderService.Models.Enum;
 
 namespace SmartOrderService.Services
 {
@@ -17,8 +18,6 @@ namespace SmartOrderService.Services
         public static int INVENTORY_AVAILABLE = 0;
         public static int INVENTORY_OPEN = 1;
         public static int INVENTORY_CLOSED = 2;
-        public const int ROL_IMPULSOR = 1;
-        public const int ROL_AYUDANTE = 2;
 
         private SmartOrderModel db = new SmartOrderModel();
         public so_inventory getCurrentInventory(int userId, DateTime? Date)
@@ -209,9 +208,9 @@ namespace SmartOrderService.Services
             so_route_team teamRoute = db.so_route_team.Where(i => i.userId == actualUserId).ToList().FirstOrDefault();
             if (teamRoute == null)
             {
-                throw new RelatedDriverNotFoundException("El usuario con id " + actualUserId + " no se encuentra relacionado con ningun equipo");
+                throw new RelatedDriverNotFoundException(actualUserId);
             }
-            int DrivingId = db.so_route_team.Where(i => i.routeId == teamRoute.routeId && i.roleTeamId == ROL_IMPULSOR).ToList().FirstOrDefault().userId;
+            int DrivingId = db.so_route_team.Where(i => i.routeId == teamRoute.routeId && i.roleTeamId == (int)ERolTeam.Impulsor).ToList().FirstOrDefault().userId;
             return DrivingId;
         }
 
