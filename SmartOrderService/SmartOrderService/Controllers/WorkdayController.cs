@@ -113,28 +113,6 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
-        [HttpGet,Route("api/workday/WorkDayStatus")]
-        public HttpResponseMessage CheckWorkDayStatus(int userId)
-        {
-            HttpResponseMessage response;
-            WorkdayService service = new WorkdayService();
-            DateTime today = DateTime.Today;
-            try
-            {
-                bool isStarted = service.checkDriverWorkDay(userId);
-                response = Request.CreateResponse(HttpStatusCode.Accepted, isStarted);
-            }
-            catch(NotSupportedException e)
-            {
-                response = Request.CreateResponse(HttpStatusCode.Conflict,"Accion no soportada para el perfil del impulsor");
-            }
-            catch (RelatedDriverNotFoundException e)
-            {
-                response = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
-            }
-            return response;
-        }
-
         // DELETE: api/Workday/5
         public void Delete(int id)
         {

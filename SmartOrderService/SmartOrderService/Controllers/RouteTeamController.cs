@@ -1,5 +1,4 @@
 ﻿using SmartOrderService.CustomExceptions;
-using SmartOrderService.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,20 +6,20 @@ using System.Net;
 using System.Net.Http;
 using System.Web.Http;
 
-namespace SmartOrderService.Controllers
+namespace SmartOrderService.Services
 {
-    public class AssistantController : ApiController
+    public class RouteTeamController : ApiController
     {
 
-        [HttpGet,Route("api/assistant/travelstatus")]
+        [HttpGet, Route("api/routeam/travelstatus")]
         public HttpResponseMessage CheckTravelStatus(int UserId)
         {
             HttpResponseMessage response;
             try
             {
-                AssistantService service = new AssistantService();
+                RouteTeamService service = new RouteTeamService();
                 bool result = service.checkCurrentTravelState(UserId);
-                response =  Request.CreateResponse(HttpStatusCode.OK, result);
+                response = Request.CreateResponse(HttpStatusCode.OK, result);
             }
             catch (RelatedDriverNotFoundException e)
             {
@@ -33,6 +32,28 @@ namespace SmartOrderService.Controllers
             catch (Exception e)
             {
                 response = Request.CreateResponse(HttpStatusCode.InternalServerError, "ups lo arreglaremos...");
+            }
+            return response;
+        }
+
+        [HttpGet, Route("api/routeam/workdaystatus")]
+        public HttpResponseMessage CheckWorkDayStatus(int userId)
+        {
+            HttpResponseMessage response;
+            RouteTeamService service = new RouteTeamService();
+            DateTime today = DateTime.Today;
+            try
+            {
+                bool isStarted = service.checkDriverWorkDay(userId);
+                response = Request.CreateResponse(HttpStatusCode.Accepted, isStarted);
+            }
+            catch (NotSupportedException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, "Accion no soportada para el perfil del impulsor");
+            }
+            catch (RelatedDriverNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
             }
             return response;
         }
@@ -50,12 +71,12 @@ namespace SmartOrderService.Controllers
         }
 
         // POST api/<controller>
-        public void Post([FromBody] string value)
+        public void Post([FromBody]string value)
         {
         }
 
         // PUT api/<controller>/5
-        public void Put(int id, [FromBody] string value)
+        public void Put(int id, [FromBody]string value)
         {
         }
 
