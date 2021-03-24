@@ -7,20 +7,22 @@ using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.DTO;
 using System.Data.Entity;
 using OpeCDLib.Models;
+using SmartOrderService.Models.Enum;
 
 namespace SmartOrderService.Services
 {
     public class WorkdayService
     {
         private SmartOrderModel db = new SmartOrderModel();
+
         public Workday createWorkday(int userId)
         {
             Workday workday = new Workday();
             var id = Guid.NewGuid();
 
             var currentWorkday = db.so_work_day.Where(
-                w => w.userId == userId 
-                && !w.date_end.HasValue 
+                w => w.userId == userId
+                && !w.date_end.HasValue
                 && w.status
                 ).FirstOrDefault();
 
@@ -32,17 +34,19 @@ namespace SmartOrderService.Services
                 return workday;
             }
 
+            //userId = checkDriverWorkDay(userId);
+
             var time = DateTime.Now;
 
             var device = db.so_device.Where(d => d.userId == userId && d.status);
 
-         
+
             //validamos que este registrado
             if (!device.Any())
                 throw new NoUserFoundException();
 
-            
-      int deviceId = device.FirstOrDefault().deviceId;
+
+            int deviceId = device.FirstOrDefault().deviceId;
 
             var newWorkday = new so_work_day()
             {
@@ -66,6 +70,50 @@ namespace SmartOrderService.Services
 
             return workday;
 
+        }
+
+        public bool checkDriverWorkDay(int userId)
+        {
+            int routeId = searchRouteId(userId);
+            so_route_team driver = searchDriverId(routeId);
+            if (driver.userId == userId)
+            {
+                throw new NotSupportedException();
+            }
+            if (GetWorkdayByUserAndDate(driver.userId, DateTime.Today) == null)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        private int searchRouteId(int userId)
+        {
+            so_route_team routeTeam = db.so_route_team.Where(
+                i => i.userId == userId
+                ).FirstOrDefault();
+            if (routeTeam == null)
+            {
+                throw new RelatedDriverNotFoundException(userId);
+            }
+            return routeTeam.routeId;
+        }
+
+        private so_route_team searchDriverId(int routeId)
+        {
+            so_route_team routeTeam = db.so_route_team.Where(
+                i => i.routeId == routeId
+                && i.roleTeamId == (int)ERolTeam.Impulsor
+                ).FirstOrDefault();
+            return routeTeam;
+        }
+
+        private so_work_day GetWorkdayByUserAndDate(int userId, DateTime date)
+        {
+            return db.so_work_day.Where(
+                i => i.userId == userId
+                && DbFunctions.TruncateTime(i.date_start) == DbFunctions.TruncateTime(date)
+                ).FirstOrDefault();
         }
 
         public List<Jornada> RetrieveWorkDay(string BranchCode,string UserCode,DateTime Date)

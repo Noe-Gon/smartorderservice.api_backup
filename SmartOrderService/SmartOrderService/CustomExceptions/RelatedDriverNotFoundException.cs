@@ -7,7 +7,7 @@ namespace SmartOrderService.CustomExceptions
 {
     public class RelatedDriverNotFoundException : Exception
     {
-        public RelatedDriverNotFoundException(string message) : base(message)
+        public RelatedDriverNotFoundException(int idUser) : base("El usuario con id " + idUser + " no se encuentra relacionado con ningun equipo")
         {
 
         }
