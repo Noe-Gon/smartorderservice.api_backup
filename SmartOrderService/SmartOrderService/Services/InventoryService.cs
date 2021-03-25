@@ -192,6 +192,7 @@ namespace SmartOrderService.Services
             if (date == null) {
                 date = DateTime.Today;
             }
+            date = Convert.ToDateTime("31/01/2020");
             userId = SearchDrivingId(userId);
             var inventory = db.so_inventory.Where(i => i.userId == userId
             && DbFunctions.TruncateTime(i.date) == DbFunctions.TruncateTime(date)
