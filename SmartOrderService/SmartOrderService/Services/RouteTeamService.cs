@@ -13,25 +13,35 @@ namespace SmartOrderService.Services
     {
         private SmartOrderModel db = new SmartOrderModel();
         private InventoryService inventoryService = new InventoryService();
+        private RoleTeamService roleTeamService = new RoleTeamService();
 
         public bool checkCurrentTravelState(int userId)
         {
-            int inventoryState = getInventoryState(userId);
-            if (inventoryState == InventoryService.INVENTORY_OPEN)
+            ERolTeam userRole = roleTeamService.getUserRole(userId);
+            if (userRole == ERolTeam.SinAsignar)
             {
                 return true;
             }
-            if (inventoryState == InventoryService.INVENTORY_AVAILABLE || inventoryState == InventoryService.INVENTORY_CLOSED)
+            int inventoryState = getInventoryState(userId);
+            if ((inventoryState == 0 && userRole == ERolTeam.Impulsor))
+            {
+                return true;
+            }
+            if (((inventoryState == 1 || inventoryState == 2) && userRole == ERolTeam.Impulsor))
             {
                 return false;
             }
-            throw new Exception();
+            if (inventoryState == 1)
+            {
+                return true;
+            }
+            return false;
         }
 
         public bool checkDriverWorkDay(int userId)
         {
             int routeId = searchRouteId(userId);
-            so_route_team driver = searchDriverId(routeId);
+            so_route_team driver = searchDriverByRouteId(routeId);
             if (driver.userId == userId)
             {
                 throw new NotSupportedException();
@@ -41,6 +51,13 @@ namespace SmartOrderService.Services
                 return false;
             }
             return true;
+        }
+
+        private int getDriverIdByAssistant(int assistantId)
+        {
+            int assistantRouteId = searchRouteId(assistantId);
+            int driverId = searchDriverByRouteId(assistantRouteId).userId;
+            return driverId;
         }
 
         private int getInventoryState(int userId)
@@ -62,7 +79,7 @@ namespace SmartOrderService.Services
             return routeTeam.routeId;
         }
 
-        private so_route_team searchDriverId(int routeId)
+        private so_route_team searchDriverByRouteId(int routeId)
         {
             so_route_team routeTeam = db.so_route_team.Where(
                 i => i.routeId == routeId

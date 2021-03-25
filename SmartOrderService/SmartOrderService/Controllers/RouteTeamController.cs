@@ -12,13 +12,13 @@ namespace SmartOrderService.Services
     {
 
         [HttpGet, Route("api/routeam/travelstatus")]
-        public HttpResponseMessage CheckTravelStatus(int UserId)
+        public HttpResponseMessage CheckTravelStatus(int userId)
         {
             HttpResponseMessage response;
             try
             {
                 RouteTeamService service = new RouteTeamService();
-                bool result = service.checkCurrentTravelState(UserId);
+                bool result = service.checkCurrentTravelState(userId);
                 response = Request.CreateResponse(HttpStatusCode.OK, result);
             }
             catch (RelatedDriverNotFoundException e)

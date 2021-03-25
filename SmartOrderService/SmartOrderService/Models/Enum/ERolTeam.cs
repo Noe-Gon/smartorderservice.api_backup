@@ -7,6 +7,7 @@ namespace SmartOrderService.Models.Enum
 {
     public enum ERolTeam
     {
+        SinAsignar = 0,
         Impulsor = 1,
         Ayudante = 2
     }

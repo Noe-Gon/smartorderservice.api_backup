@@ -560,6 +560,7 @@
     <Compile Include="Results\ChallengeResult.cs" />
     <Compile Include="Services\ApiVersionService.cs" />
     <Compile Include="Services\ApplicationService.cs" />
+    <Compile Include="Services\RoleTeamService.cs" />
     <Compile Include="Services\RouteTeamService.cs" />
     <Compile Include="Services\BillingDataService.cs" />
     <Compile Include="Services\BinnacleVisitService.cs" />
