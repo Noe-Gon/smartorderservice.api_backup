@@ -73,6 +73,10 @@ namespace SmartOrderService.Controllers
                 workday = service.createWorkday(workday.UserId);
                 response = Request.CreateResponse(HttpStatusCode.Created, workday);
             }
+            catch (NotSupportedException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Created);
+            }
             catch (NoUserFoundException e)
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict, "Usuario no registrado");
