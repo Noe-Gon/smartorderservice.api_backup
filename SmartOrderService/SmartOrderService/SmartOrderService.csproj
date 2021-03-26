@@ -406,6 +406,7 @@
     <Compile Include="DB\so_route_customer.cs" />
     <Compile Include="DB\so_inventory_revisions.cs" />
     <Compile Include="DB\so_route_team.cs" />
+    <Compile Include="DB\so_route_team_travels.cs" />
     <Compile Include="DB\so_sale.cs" />
     <Compile Include="DB\so_sale_detail.cs" />
     <Compile Include="DB\so_sale_inventory.cs" />
@@ -588,6 +589,7 @@
     <Compile Include="Services\InventoryRevisionService.cs" />
     <Compile Include="Services\RouteService.cs" />
     <Compile Include="Controllers\RouteTeamController.cs" />
+    <Compile Include="Services\RouteTeamTravelsService.cs" />
     <Compile Include="Services\SurveyCustomerService.cs" />
     <Compile Include="Services\TrackingService.cs" />
     <Compile Include="Services\UserDevolutionService.cs" />

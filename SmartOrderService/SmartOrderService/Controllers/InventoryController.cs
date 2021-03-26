@@ -43,9 +43,13 @@ namespace SmartOrderService.Controllers
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict, "El inventario esta siendo cargado a WBC");
             }
-            catch(RelatedDriverNotFoundException e)
+            catch (RelatedDriverNotFoundException e)
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+            }
+            catch (BadRequestException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.BadRequest,e.Message);
             }
             catch (Exception e)
             {
@@ -55,14 +59,14 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
-   
+
         // POST: api/Inventory
         public void Post([FromBody]string value)
         {
         }
 
         // PUT: api/Inventory/5
-        [HttpPut,Route("api/inventory/{inventoryId}/close")]
+        [HttpPut, Route("api/inventory/{inventoryId}/close")]
         public HttpResponseMessage CloseInventory(int inventoryId)
         {
 
@@ -77,9 +81,9 @@ namespace SmartOrderService.Controllers
             }
             catch (Exception e)
             {
-                response = Request.CreateResponse(HttpStatusCode.InternalServerError, "Error interno: "+ e.Message);
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, "Error interno: " + e.Message);
             }
-            
+
             return response;
         }
 
@@ -92,7 +96,7 @@ namespace SmartOrderService.Controllers
             try
             {
                 new InventoryService().OpenInventory(inventoryId);
-                
+
                 response = Request.CreateResponse(HttpStatusCode.OK);
 
             }
@@ -100,7 +104,6 @@ namespace SmartOrderService.Controllers
             {
                 response = Request.CreateResponse(HttpStatusCode.NotFound, "No se encontro inventario con ese id");
             }
-
             catch (Exception e)
             {
                 response = Request.CreateResponse(HttpStatusCode.InternalServerError, "Error interno: " + e.Message);
@@ -114,6 +117,32 @@ namespace SmartOrderService.Controllers
         {
         }
 
+
+        [HttpPut, Route("api/inventory/open")]
+        public HttpResponseMessage OpenInventory([FromUri]InventoryRequest request)
+        {
+            HttpResponseMessage response;
+            if (!request.InventoryId.HasValue)
+            {
+                response = Request.CreateResponse(HttpStatusCode.BadRequest, "Falta el parametro InventoryId");
+                return response;
+            }
+            try
+            {
+                int inventoryId = request.InventoryId.Value;
+                new InventoryService().OpenInventory(inventoryId,request.UserId);
+                response = Request.CreateResponse(HttpStatusCode.OK);
+            }
+            catch (TravelNotStartedException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict,e.Message);
+            }
+            catch(WorkdayNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+            }
+            return response;
+        }
 
     }
 }

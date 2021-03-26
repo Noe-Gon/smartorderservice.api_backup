@@ -12,7 +12,6 @@ namespace SmartOrderService.Services
     public class RouteTeamService
     {
         private SmartOrderModel db = new SmartOrderModel();
-        private InventoryService inventoryService = new InventoryService();
         private RoleTeamService roleTeamService = new RoleTeamService();
 
         public bool checkCurrentTravelState(int userId)
@@ -53,21 +52,8 @@ namespace SmartOrderService.Services
             return true;
         }
 
-        private int getDriverIdByAssistant(int assistantId)
-        {
-            int assistantRouteId = searchRouteId(assistantId);
-            int driverId = searchDriverByRouteId(assistantRouteId).userId;
-            return driverId;
-        }
 
-        private int getInventoryState(int userId)
-        {
-            DateTime today = DateTime.Today;
-            int inventoryState = inventoryService.getInventoryState(userId,today);
-            return inventoryState;
-        }
-
-        private int searchRouteId(int userId)
+        public int searchRouteId(int userId)
         {
             so_route_team routeTeam = db.so_route_team.Where(
                 i => i.userId == userId
@@ -79,6 +65,20 @@ namespace SmartOrderService.Services
             return routeTeam.routeId;
         }
 
+        private int getDriverIdByAssistant(int assistantId)
+        {
+            int assistantRouteId = searchRouteId(assistantId);
+            int driverId = searchDriverByRouteId(assistantRouteId).userId;
+            return driverId;
+        }
+
+        private int getInventoryState(int userId)
+        {
+            DateTime today = DateTime.Today;
+            int inventoryState = getInventoryState(userId,today);
+            return inventoryState;
+        }
+
         private so_route_team searchDriverByRouteId(int routeId)
         {
             so_route_team routeTeam = db.so_route_team.Where(
@@ -88,7 +88,7 @@ namespace SmartOrderService.Services
             return routeTeam;
         }
 
-        private so_work_day GetWorkdayByUserAndDate(int userId, DateTime date)
+        public so_work_day GetWorkdayByUserAndDate(int userId, DateTime date)
         {
             return db.so_work_day.Where(
                 i => i.userId == userId
@@ -96,5 +96,33 @@ namespace SmartOrderService.Services
                 ).FirstOrDefault();
         }
 
+        public int getInventoryState(int userId, DateTime date)
+        {
+            if (date == null)
+            {
+                date = DateTime.Today;
+            }
+            date = Convert.ToDateTime("31/01/2020");
+            userId = SearchDrivingId(userId);
+            var inventory = db.so_inventory.Where(i => i.userId == userId
+            && DbFunctions.TruncateTime(i.date) == DbFunctions.TruncateTime(date)
+            ).ToList();
+            if (!inventory.Any())
+            {
+                throw new InventoryEmptyException();
+            }
+            return inventory.FirstOrDefault().state;
+        }
+
+        private int SearchDrivingId(int actualUserId)
+        {
+            so_route_team teamRoute = db.so_route_team.Where(i => i.userId == actualUserId).ToList().FirstOrDefault();
+            if (teamRoute == null)
+            {
+                throw new RelatedDriverNotFoundException(actualUserId);
+            }
+            int DrivingId = db.so_route_team.Where(i => i.routeId == teamRoute.routeId && i.roleTeamId == (int)ERolTeam.Impulsor).ToList().FirstOrDefault().userId;
+            return DrivingId;
+        }
     }
 }
