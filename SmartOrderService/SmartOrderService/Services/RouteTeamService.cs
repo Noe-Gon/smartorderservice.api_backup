@@ -39,15 +39,25 @@ namespace SmartOrderService.Services
 
         public bool checkDriverWorkDay(int userId)
         {
-            int routeId = searchRouteId(userId);
-            so_route_team driver = searchDriverByRouteId(routeId);
-            if (driver.userId == userId)
+            ERolTeam userRole = roleTeamService.getUserRole(userId);
+            if (userRole == ERolTeam.Impulsor)
             {
-                throw new NotSupportedException();
-            }
-            if (GetWorkdayByUserAndDate(driver.userId, DateTime.Today) == null)
-            {
+                var userWorkDay = GetWorkdayByUserAndDate(userId,DateTime.Today);
+                if(userWorkDay == null)
+                {
+                    return true;
+                }
                 return false;
+            }
+            if (userRole == ERolTeam.Ayudante)
+            {
+                int driverId = getDriverIdByAssistant(userId);
+                var userWorkDay = GetWorkdayByUserAndDate(driverId, DateTime.Today);
+                if (userWorkDay == null)
+                {
+                    return false;
+                }
+                return true;
             }
             return true;
         }
