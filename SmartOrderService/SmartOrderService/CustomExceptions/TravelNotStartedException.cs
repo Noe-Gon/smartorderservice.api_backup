@@ -5,14 +5,14 @@ using System.Web;
 
 namespace SmartOrderService.CustomExceptions
 {
-    public class WorkdayNotFoundException : Exception
+    public class TravelNotStartedException:Exception
     {
-        public WorkdayNotFoundException() : base()
+        public TravelNotStartedException() : base()
         {
 
         }
 
-        public WorkdayNotFoundException(string message) : base(message)
+        public TravelNotStartedException(string message) : base(message)
         {
 
         }

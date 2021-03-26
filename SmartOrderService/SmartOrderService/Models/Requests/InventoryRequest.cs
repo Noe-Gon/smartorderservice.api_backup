@@ -8,6 +8,7 @@ namespace SmartOrderService.Models.Requests
     public class InventoryRequest : Request
     {
         public int UserId { get; set; }
-        public bool OnlyCurrent { get; set; }
+        public bool? OnlyCurrent { get; set; }
+        public int? InventoryId { get; set; }
     }
 }
