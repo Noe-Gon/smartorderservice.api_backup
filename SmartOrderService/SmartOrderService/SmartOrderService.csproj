@@ -272,6 +272,7 @@
     <Compile Include="Controllers\ValuesController.cs" />
     <Compile Include="Controllers\WorkdayController.cs" />
     <Compile Include="CustomExceptions\BadPropiertiesException.cs" />
+    <Compile Include="CustomExceptions\BadRequestException.cs" />
     <Compile Include="CustomExceptions\BillingDataException.cs" />
     <Compile Include="CustomExceptions\CustomerBillingDataNotFoundException.cs" />
     <Compile Include="CustomExceptions\CustomerException.cs" />
@@ -292,6 +293,7 @@
     <Compile Include="CustomExceptions\RouteNotFoundException.cs" />
     <Compile Include="CustomExceptions\SaleNotFoundException.cs" />
     <Compile Include="CustomExceptions\ServerErrorException.cs" />
+    <Compile Include="CustomExceptions\TravelNotStartedException.cs" />
     <Compile Include="CustomExceptions\WorkdayNotFoundException.cs" />
     <Compile Include="CustomExceptions\WorkdayStartedException.cs" />
     <Compile Include="DB\DEVOLUTIONS_VIEW.cs" />
