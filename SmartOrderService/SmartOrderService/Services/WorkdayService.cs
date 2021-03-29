@@ -144,6 +144,16 @@ namespace SmartOrderService.Services
 
         public Workday FinishWorkday(Workday workday)
         {
+            ERolTeam userRol = roleTeamService.getUserRole(workday.UserId);
+            if (userRol == ERolTeam.SinAsignar || userRol == ERolTeam.Impulsor)
+            {
+                FinishWorkdayProcess(workday);
+            }
+            return workday;
+        }
+
+        public Workday FinishWorkdayProcess(Workday workday)
+        {
             int UserId = workday.UserId;
             Guid WorkdayId = workday.WorkdayId;
 
