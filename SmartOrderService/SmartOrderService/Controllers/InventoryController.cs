@@ -87,6 +87,8 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
+
+
         [HttpPut, Route("api/inventory/{inventoryId}/open")]
         public HttpResponseMessage OpenInventory(int inventoryId)
         {
@@ -144,5 +146,34 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
+        [HttpPut, Route("api/inventory/{inventoryId}/close")]
+        public HttpResponseMessage CloseInventory([FromUri]InventoryRequest request)
+        {
+            HttpResponseMessage response;
+            if (!request.InventoryId.HasValue)
+            {
+                response = Request.CreateResponse(HttpStatusCode.BadRequest, "Falta el parametro InventoryId");
+                return response;
+            }
+            try
+            {
+                var result = new InventoryService().CloseInventory(request.InventoryId.Value,request.UserId);
+                HttpStatusCode code = result ? HttpStatusCode.OK : HttpStatusCode.Conflict;
+                response = Request.CreateResponse(code);
+            }
+            catch (WorkdayNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+            }
+            catch (EntityNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+            }
+            catch (TravelNotStartedException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+            }
+            return response;
+        }
     }
 }

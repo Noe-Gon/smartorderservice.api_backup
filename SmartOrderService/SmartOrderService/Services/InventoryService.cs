@@ -72,6 +72,23 @@ namespace SmartOrderService.Services
             return false;
         }
 
+        public bool CloseInventory(int inventoryId, int userId)
+        {
+            ERolTeam userTeamRole = roleTeamService.getUserRole(userId);
+            if (userTeamRole == ERolTeam.SinAsignar)
+            {
+                return CloseInventory(inventoryId);
+            }
+            if (userTeamRole == ERolTeam.Impulsor)
+            {
+                CloseInventory(inventoryId);
+                updateRouteTeamTravelStatus(userId, inventoryId, 3);
+                return true;
+            }
+            updateRouteTeamTravelStatus(userId, inventoryId, 4);
+            return true;
+        }
+
         [Obsolete]
         public bool inventoryFinish(so_inventory inventory)
         {
@@ -157,7 +174,7 @@ namespace SmartOrderService.Services
             if (userTeamRole == ERolTeam.Ayudante)
             {
                 userId = SearchDrivingId(userId);
-                updateRouteTeamTravelStatus(userId,inventoryId);
+                updateRouteTeamTravelStatus(userId,inventoryId,2);
             }
         }
 
@@ -564,7 +581,7 @@ namespace SmartOrderService.Services
 
         }
 
-        private void updateRouteTeamTravelStatus(int userId, int inventoryId)
+        private void updateRouteTeamTravelStatus(int userId, int inventoryId,int travelStatus)
         {
             int routeId = routeTeamService.searchRouteId(userId);
             var workDay = routeTeamService.GetWorkdayByUserAndDate(userId, DateTime.Today);
@@ -585,7 +602,7 @@ namespace SmartOrderService.Services
             {
                 throw new TravelNotStartedException("El impulsor no ha iniciado el viaje");
             }
-            routeTeamTravels.travelStatus = 2;
+            routeTeamTravels.travelStatus = travelStatus;
             db.SaveChanges();
         }
     }
