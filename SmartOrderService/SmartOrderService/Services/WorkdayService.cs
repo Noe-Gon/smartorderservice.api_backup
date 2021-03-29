@@ -19,7 +19,7 @@ namespace SmartOrderService.Services
         public Workday createWorkday(int userId)
         {
             ERolTeam userRol = roleTeamService.getUserRole(userId);
-            if (!userRol == ERolTeam.Ayudante) {
+            if (!(userRol == ERolTeam.Ayudante)) {
                 Workday workday = new Workday();
                 var id = Guid.NewGuid();
 
