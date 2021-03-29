@@ -1,4 +1,5 @@
 ﻿using SmartOrderService.CustomExceptions;
+using SmartOrderService.Models.Requests;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -54,6 +55,34 @@ namespace SmartOrderService.Services
             catch (RelatedDriverNotFoundException e)
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+            }
+            return response;
+        }
+
+        public HttpResponseMessage CheckTravelClosingStatus([FromUri]InventoryRequest request)
+        {
+            HttpResponseMessage response;
+            if (!request.InventoryId.HasValue)
+            {
+                response = Request.CreateResponse(HttpStatusCode.BadRequest, "Falta el parametro InventoryId");
+                return response;
+            }
+            try
+            {
+                RouteTeamService routeTeamService = new RouteTeamService();
+                response = Request.CreateResponse(HttpStatusCode.Accepted,routeTeamService.CheckTravelClosingStatus(request.UserId,request.InventoryId.Value));
+            }
+            catch (InventoryEmptyException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, "Inventario no registrado para esa fecha");
+            }
+            catch (InventoryNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict,"Inventario no encontrado para el usuario" + request.UserId);
+            }
+            catch(Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict,e.Message);
             }
             return response;
         }
