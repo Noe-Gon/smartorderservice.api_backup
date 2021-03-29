@@ -5,14 +5,14 @@ using System.Web;
 
 namespace SmartOrderService.CustomExceptions
 {
-    public class InventoryEmptyException : Exception
+    public class InventoryNotFoundException : Exception
     {
-        public InventoryEmptyException() : base()
+        public InventoryNotFoundException() : base()
         {
 
         }
 
-        public InventoryEmptyException(string message) : base(message)
+        public InventoryNotFoundException(string message) : base(message)
         {
 
         }
