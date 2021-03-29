@@ -59,6 +59,7 @@ namespace SmartOrderService.Services
             return response;
         }
 
+        [HttpGet, Route("api/routeam/travelclosestatus")]
         public HttpResponseMessage CheckTravelClosingStatus([FromUri]InventoryRequest request)
         {
             HttpResponseMessage response;
@@ -83,6 +84,26 @@ namespace SmartOrderService.Services
             catch(Exception e)
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict,e.Message);
+            }
+            return response;
+        }
+
+        [HttpGet, Route("api/routeam/workdayclosestatus")]
+        public HttpResponseMessage CheckWorkDayClosingStatus(int userId)
+        {
+            HttpResponseMessage response;
+            try
+            {
+                RouteTeamService routeTeamService = new RouteTeamService();
+                response = Request.CreateResponse(HttpStatusCode.Accepted,routeTeamService.CheckWorkDayClosingStatus(userId));
+            }
+            catch (WorkdayNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict,"No se encontro la jornada del usuario " + userId);
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
             }
             return response;
         }
