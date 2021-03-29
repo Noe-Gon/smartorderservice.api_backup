@@ -123,6 +123,29 @@ namespace SmartOrderService.Services
             return inventory.FirstOrDefault().state;
         }
 
+        public bool CheckWorkDayClosingStatus(int userId)
+        {
+            ERolTeam userRole = roleTeamService.getUserRole(userId);
+            if (userRole == ERolTeam.SinAsignar)
+            {
+                return true;
+            }
+            if (userRole == ERolTeam.Impulsor)
+            {
+                var userWorkDay = GetWorkdayByUserAndDate(userId, DateTime.Today);
+                if (userWorkDay == null)
+                {
+                    throw new WorkdayNotFoundException();
+                }
+                if (userWorkDay.date_end == null)
+                {
+                    return true;
+                }
+                return false;
+            }
+            return true;
+        }
+
         private int SearchDrivingId(int actualUserId)
         {
             so_route_team teamRoute = db.so_route_team.Where(i => i.userId == actualUserId).ToList().FirstOrDefault();
