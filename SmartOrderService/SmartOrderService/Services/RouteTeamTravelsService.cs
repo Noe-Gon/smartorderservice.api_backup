@@ -24,6 +24,16 @@ namespace SmartOrderService.Services
             return userRouteTeamTravel.travelStatus;
         }
 
+        public void SetClosingStatusRoutTeamTravels(Guid workDayId)
+        {
+            var routeTeamTravels = db.so_route_team_travels.Where(e => e.work_dayId.Equals(workDayId));
+            foreach (var routeTravel in routeTeamTravels)
+            {
+                routeTravel.travelStatus = 4;
+            }
+            db.SaveChanges();
+        }
+
         public bool CheckTravelsClosingStatus(int userId, DateTime date)
         {
             // Join entre la columna inventory y route team travels
@@ -35,7 +45,7 @@ namespace SmartOrderService.Services
                 routeTeam => routeTeam.inventoryId,
                 (inventario, routeTeam) => new
                 {
-                    state = inventario.state,
+                    state = routeTeam.travelStatus,
                     userId = inventario.userId,
                     date = inventario.date
                 }
