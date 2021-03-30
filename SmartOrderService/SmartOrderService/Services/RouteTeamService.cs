@@ -137,7 +137,7 @@ namespace SmartOrderService.Services
                 {
                     throw new WorkdayNotFoundException();
                 }
-                if (userWorkDay.date_end == null)
+                if (userWorkDay.date_end == null && routeTeamTravelsService.CheckTravelsClosingStatus(userId,DateTime.Today))
                 {
                     return true;
                 }

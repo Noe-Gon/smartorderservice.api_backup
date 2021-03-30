@@ -87,8 +87,6 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
-
-
         [HttpPut, Route("api/inventory/{inventoryId}/open")]
         public HttpResponseMessage OpenInventory(int inventoryId)
         {

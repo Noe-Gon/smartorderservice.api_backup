@@ -148,6 +148,7 @@ namespace SmartOrderService.Services
             if (userRol == ERolTeam.SinAsignar || userRol == ERolTeam.Impulsor)
             {
                 FinishWorkdayProcess(workday);
+                new RouteTeamTravelsService().SetClosingStatusRoutTeamTravels(workday.WorkdayId);
             }
             return workday;
         }
