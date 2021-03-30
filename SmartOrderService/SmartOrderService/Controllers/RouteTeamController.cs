@@ -24,15 +24,15 @@ namespace SmartOrderService.Services
             }
             catch (RelatedDriverNotFoundException e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+                response = Request.CreateResponse(HttpStatusCode.Conflict, false);
             }
             catch (InventoryEmptyException e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict, "No existe inventario, para este día");
+                response = Request.CreateResponse(HttpStatusCode.Conflict, false);
             }
             catch (Exception e)
             {
-                response = Request.CreateResponse(HttpStatusCode.InternalServerError, "ups lo arreglaremos...");
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, false);
             }
             return response;
         }
@@ -50,11 +50,11 @@ namespace SmartOrderService.Services
             }
             catch (NotSupportedException e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict, "Accion no soportada para el perfil del impulsor");
+                response = Request.CreateResponse(HttpStatusCode.Conflict, false);
             }
             catch (RelatedDriverNotFoundException e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+                response = Request.CreateResponse(HttpStatusCode.Conflict, false);
             }
             return response;
         }
@@ -75,15 +75,15 @@ namespace SmartOrderService.Services
             }
             catch (InventoryEmptyException e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict, "Inventario no registrado para esa fecha");
+                response = Request.CreateResponse(HttpStatusCode.Conflict, false);
             }
             catch (InventoryNotFoundException e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict,"Inventario no encontrado para el usuario" + request.UserId);
+                response = Request.CreateResponse(HttpStatusCode.Conflict,false);
             }
             catch(Exception e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict,e.Message);
+                response = Request.CreateResponse(HttpStatusCode.Conflict,false);
             }
             return response;
         }
@@ -99,11 +99,11 @@ namespace SmartOrderService.Services
             }
             catch (WorkdayNotFoundException e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict,"No se encontro la jornada del usuario " + userId);
+                response = Request.CreateResponse(HttpStatusCode.Conflict,false);
             }
             catch (Exception e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+                response = Request.CreateResponse(HttpStatusCode.Conflict, false);
             }
             return response;
         }
