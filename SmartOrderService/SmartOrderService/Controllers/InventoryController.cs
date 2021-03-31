@@ -144,7 +144,7 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
-        [HttpPut, Route("api/inventory/{inventoryId}/close")]
+        [HttpPut, Route("api/inventory/close")]
         public HttpResponseMessage CloseInventory([FromUri]InventoryRequest request)
         {
             HttpResponseMessage response;
