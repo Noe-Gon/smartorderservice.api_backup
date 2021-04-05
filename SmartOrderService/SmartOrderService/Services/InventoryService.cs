@@ -193,7 +193,7 @@ namespace SmartOrderService.Services
             var Today = DateTime.Today;
 
             int UserId = SearchDrivingId(request.UserId);
-            if (request.OnlyCurrent.HasValue)
+            if (!request.OnlyCurrent.HasValue)
             {
                 throw new BadRequestException("Falta el parametro OnlyCurrent");
             }
