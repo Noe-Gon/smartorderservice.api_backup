@@ -587,7 +587,7 @@ namespace SmartOrderService.Services
             var workDay = routeTeamService.GetWorkdayByUserAndDate(userId, DateTime.Today);
             if (workDay == null)
             {
-                throw new WorkdayNotFoundException("No se encontro una jonada relacionada con el usuario" + userId);
+                throw new WorkdayNotFoundException("No se encontro una jornada relacionada con el usuario " + userId);
             }
             so_route_team_travels routeTeamTravels = db.so_route_team_travels.Where(
                 i => i.inventoryId.Equals(inventoryId)
