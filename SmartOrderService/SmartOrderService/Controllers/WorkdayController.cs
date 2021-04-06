@@ -75,7 +75,7 @@ namespace SmartOrderService.Controllers
             }
             catch (NotSupportedException e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Created);
+                response = Request.CreateResponse(HttpStatusCode.Created,workday);
             }
             catch (NoUserFoundException e)
             {
