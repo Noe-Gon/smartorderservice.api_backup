@@ -68,8 +68,7 @@ namespace SmartOrderService.Controllers
         {
             WorkdayService service = new WorkdayService();
             HttpResponseMessage response;
-            try {
-
+            try { 
                 workday = service.createWorkday(workday.UserId);
                 response = Request.CreateResponse(HttpStatusCode.Created, workday);
             }
