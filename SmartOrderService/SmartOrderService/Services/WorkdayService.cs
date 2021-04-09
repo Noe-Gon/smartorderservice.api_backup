@@ -18,24 +18,24 @@ namespace SmartOrderService.Services
 
         public Workday createWorkday(int userId)
         {
+            
+            Workday workday = new Workday();
+
+            var currentWorkday = searchWorkDay(userId);
+
+            if (currentWorkday != null)
+            {
+                workday.UserId = userId;
+                workday.WorkdayId = currentWorkday.work_dayId;
+                workday.IsOpen = true;
+                return workday;
+            }
+
             ERolTeam userRol = roleTeamService.getUserRole(userId);
-            if (!(userRol == ERolTeam.Ayudante)) {
-                Workday workday = new Workday();
+
+            if (!(userRol == ERolTeam.Ayudante))
+            {
                 var id = Guid.NewGuid();
-
-                var currentWorkday = db.so_work_day.Where(
-                    w => w.userId == userId
-                    && !w.date_end.HasValue
-                    && w.status
-                    ).FirstOrDefault();
-
-                if (currentWorkday != null)
-                {
-                    workday.UserId = userId;
-                    workday.WorkdayId = currentWorkday.work_dayId;
-                    workday.IsOpen = true;
-                    return workday;
-                }
 
                 //userId = checkDriverWorkDay(userId);
 
@@ -73,7 +73,12 @@ namespace SmartOrderService.Services
 
                 return workday;
             }
-            throw new NotSupportedException();
+            so_work_day driverWorkDay = GetDriverWorkDayByAssistantId(userId);
+
+            workday.UserId = userId;
+            workday.WorkdayId = driverWorkDay.work_dayId;
+            workday.IsOpen = true;
+            return workday;
         }
 
         public List<Jornada> RetrieveWorkDay(string BranchCode,string UserCode,DateTime Date)
@@ -135,7 +140,6 @@ namespace SmartOrderService.Services
             return Jornadas;
 
         }
-
 
         public bool onOpenWorkDay(Workday workday)
         {
@@ -237,6 +241,23 @@ namespace SmartOrderService.Services
             }
                     
            
+        }
+
+        private so_work_day GetDriverWorkDayByAssistantId(int assistantId)
+        {
+            RouteTeamService routeTeamService = new RouteTeamService();
+            int driverId = routeTeamService.getDriverIdByAssistant(assistantId);
+            return searchWorkDay(driverId);
+        }
+
+        private so_work_day searchWorkDay(int userId)
+        {
+            so_work_day currentWorkday = db.so_work_day.Where(
+                w => w.userId == userId
+                && !w.date_end.HasValue
+                && w.status
+                ).FirstOrDefault();
+            return currentWorkday;
         }
 
         public Workday getWorkDay(string workDayId)

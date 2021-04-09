@@ -250,7 +250,7 @@ namespace SmartOrderService.Services
 
         private int SearchDrivingId(int actualUserId)
         {
-            so_route_team teamRoute = db.so_route_team.Where(i => i.userId == actualUserId).ToList().FirstOrDefault();
+            so_route_team teamRoute = db.so_route_team.Where(i => i.userId == actualUserId).FirstOrDefault();
             if (teamRoute == null)
             {
                 throw new RelatedDriverNotFoundException(actualUserId);

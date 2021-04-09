@@ -146,6 +146,13 @@ namespace SmartOrderService.Services
             return true;
         }
 
+        public int getDriverIdByAssistant(int assistantId)
+        {
+            int assistantRouteId = searchRouteId(assistantId);
+            int driverId = searchDriverByRouteId(assistantRouteId).userId;
+            return driverId;
+        }
+
         private int SearchDrivingId(int actualUserId)
         {
             so_route_team teamRoute = db.so_route_team.Where(i => i.userId == actualUserId).ToList().FirstOrDefault();
@@ -155,13 +162,6 @@ namespace SmartOrderService.Services
             }
             int DrivingId = db.so_route_team.Where(i => i.routeId == teamRoute.routeId && i.roleTeamId == (int)ERolTeam.Impulsor).ToList().FirstOrDefault().userId;
             return DrivingId;
-        }
-
-        private int getDriverIdByAssistant(int assistantId)
-        {
-            int assistantRouteId = searchRouteId(assistantId);
-            int driverId = searchDriverByRouteId(assistantRouteId).userId;
-            return driverId;
         }
 
         private int getInventoryState(int userId)
