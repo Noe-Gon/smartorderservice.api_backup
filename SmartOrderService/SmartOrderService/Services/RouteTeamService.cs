@@ -72,14 +72,14 @@ namespace SmartOrderService.Services
             }
             if (userRole == ERolTeam.Impulsor)
             {
-                if (getInventoryState(userId,DateTime.Today) == 1 && routeTeamTravelsService.getTravelStatusByInventoryId(inventoryId) == 1)
+                if (getInventoryState(userId,DateTime.Today) == 1 && routeTeamTravelsService.getTravelStatusByInventoryId(inventoryId) == EInventoryTeamStatus.InventarioCerradoPorAsistente)
                 {
                     return true;
                 }
                 return false;
             }
             int driverId = getDriverIdByAssistant(userId);
-            if (getInventoryState(userId, DateTime.Today) == 1 && routeTeamTravelsService.getTravelStatusByInventoryId(inventoryId) == 2)
+            if (getInventoryState(userId, DateTime.Today) == 1 && routeTeamTravelsService.getTravelStatusByInventoryId(inventoryId) == EInventoryTeamStatus.InventarioAbiertoPorAyudante)
             {
                 return true;
             }
