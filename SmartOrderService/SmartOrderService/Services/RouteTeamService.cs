@@ -78,7 +78,6 @@ namespace SmartOrderService.Services
                 }
                 return false;
             }
-            int driverId = getDriverIdByAssistant(userId);
             if (getInventoryState(userId, DateTime.Today) == 1 && routeTeamTravelsService.getTravelStatusByInventoryId(inventoryId) == EInventoryTeamStatus.InventarioAbiertoPorAyudante)
             {
                 return true;
@@ -108,19 +107,18 @@ namespace SmartOrderService.Services
 
         public int getInventoryState(int userId, DateTime date)
         {
+            InventoryService inventoryService = new InventoryService();
             if (date == null)
             {
                 date = DateTime.Today;
             }
             userId = SearchDrivingId(userId);
-            var inventory = db.so_inventory.Where(i => i.userId == userId
-            && DbFunctions.TruncateTime(i.date) == DbFunctions.TruncateTime(date)
-            ).ToList();
-            if (!inventory.Any())
+            var inventory = inventoryService.getCurrentInventory(userId,date);
+            if (inventory == null)
             {
                 throw new InventoryEmptyException();
             }
-            return inventory.FirstOrDefault().state;
+            return inventory.state;
         }
 
         public bool CheckWorkDayClosingStatus(int userId)
