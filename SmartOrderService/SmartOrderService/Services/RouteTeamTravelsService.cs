@@ -1,5 +1,6 @@
 ﻿using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
+using SmartOrderService.Models.Enum;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -14,14 +15,14 @@ namespace SmartOrderService.Services
 
         private SmartOrderModel db = new SmartOrderModel();
 
-        public int getTravelStatusByInventoryId(int inventoryId)
+        public EInventoryTeamStatus getTravelStatusByInventoryId(int inventoryId)
         {
             var userRouteTeamTravel = db.so_route_team_travels.Where(i => i.inventoryId == inventoryId).FirstOrDefault();
             if (userRouteTeamTravel == null)
             {
                 throw new InventoryNotFoundException();
             }
-            return userRouteTeamTravel.travelStatus;
+            return (EInventoryTeamStatus)userRouteTeamTravel.travelStatus;
         }
 
         public void SetClosingStatusRoutTeamTravels(Guid workDayId)
