@@ -191,12 +191,22 @@ namespace SmartOrderService.Services
             List<InventoryDto> Inventories = new List<InventoryDto>();
 
             var Today = DateTime.Today;
+            ERolTeam userTeamRole = roleTeamService.getUserRole(request.UserId);
+            int UserId;
 
-            int UserId = SearchDrivingId(request.UserId);
             if (!request.OnlyCurrent.HasValue)
             {
                 throw new BadRequestException("Falta el parametro OnlyCurrent");
             }
+
+            if (!(userTeamRole == ERolTeam.SinAsignar)) {
+                UserId = SearchDrivingId(request.UserId);
+            }
+            else
+            {
+                UserId = request.UserId;
+            }
+
             bool OnlyCurrent = request.OnlyCurrent.Value;
 
             if (OnlyCurrent)
