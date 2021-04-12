@@ -33,7 +33,7 @@ namespace SmartOrderService.Services
 
             ERolTeam userRol = roleTeamService.getUserRole(userId);
 
-            if (!(userRol == ERolTeam.Ayudante))
+            if (userRol != ERolTeam.Ayudante)
             {
                 var id = Guid.NewGuid();
 

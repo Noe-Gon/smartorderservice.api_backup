@@ -282,6 +282,7 @@
     <Compile Include="CustomExceptions\EntityNotFoundException.cs" />
     <Compile Include="CustomExceptions\InventoryEmptyException.cs" />
     <Compile Include="CustomExceptions\InventoryInProgressException.cs" />
+    <Compile Include="CustomExceptions\InventoryNotClosedException.cs" />
     <Compile Include="CustomExceptions\InventoryNotFoundException.cs" />
     <Compile Include="CustomExceptions\InvoiceException.cs" />
     <Compile Include="CustomExceptions\NoCustomerVisitException.cs" />
@@ -294,7 +295,7 @@
     <Compile Include="CustomExceptions\RouteNotFoundException.cs" />
     <Compile Include="CustomExceptions\SaleNotFoundException.cs" />
     <Compile Include="CustomExceptions\ServerErrorException.cs" />
-    <Compile Include="CustomExceptions\TravelNotStartedException.cs" />
+    <Compile Include="CustomExceptions\InventoryNotOpenException.cs" />
     <Compile Include="CustomExceptions\WorkdayNotFoundException.cs" />
     <Compile Include="CustomExceptions\WorkdayStartedException.cs" />
     <Compile Include="DB\DEVOLUTIONS_VIEW.cs" />
