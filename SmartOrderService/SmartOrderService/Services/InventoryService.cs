@@ -196,7 +196,7 @@ namespace SmartOrderService.Services
                 throw new BadRequestException("Falta el parametro OnlyCurrent");
             }
 
-            if (!(userTeamRole == ERolTeam.SinAsignar)) {
+            if (userTeamRole != ERolTeam.SinAsignar) {
                 UserId = SearchDrivingId(request.UserId);
             }
             else

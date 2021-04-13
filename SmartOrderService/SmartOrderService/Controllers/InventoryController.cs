@@ -59,7 +59,6 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
-
         // POST: api/Inventory
         public void Post([FromBody]string value)
         {
