@@ -133,7 +133,7 @@ namespace SmartOrderService.Controllers
                 new InventoryService().OpenInventory(inventoryId,request.UserId);
                 response = Request.CreateResponse(HttpStatusCode.OK);
             }
-            catch (TravelNotStartedException e)
+            catch (InventoryNotOpenException e)
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict,e.Message);
             }
@@ -167,7 +167,7 @@ namespace SmartOrderService.Controllers
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
             }
-            catch (TravelNotStartedException e)
+            catch (InventoryNotOpenException e)
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
             }

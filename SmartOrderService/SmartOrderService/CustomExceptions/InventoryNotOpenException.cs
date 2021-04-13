@@ -5,14 +5,14 @@ using System.Web;
 
 namespace SmartOrderService.CustomExceptions
 {
-    public class TravelNotStartedException:Exception
+    public class InventoryNotOpenException:Exception
     {
-        public TravelNotStartedException() : base()
+        public InventoryNotOpenException() : base()
         {
 
         }
 
-        public TravelNotStartedException(string message) : base(message)
+        public InventoryNotOpenException(string message) : base(message)
         {
 
         }
