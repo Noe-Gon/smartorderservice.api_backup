@@ -82,7 +82,7 @@ namespace SmartOrderService.Services
             {
                 CloseInventory(inventoryId);
             }
-            updateRouteTeamTravelStatus(userId, inventoryId, userTeamRole);
+            closingRouteTeamTravelStatus(userId, inventoryId, userTeamRole);
             return true;
         }
 
@@ -171,7 +171,7 @@ namespace SmartOrderService.Services
             if (userTeamRole == ERolTeam.Ayudante)
             {
                 userId = SearchDrivingId(userId);
-                updateRouteTeamTravelStatus(userId,inventoryId,userTeamRole);
+                openingRouteTeamTravelStatus(userId,inventoryId,userTeamRole);
             }
         }
 
@@ -588,7 +588,7 @@ namespace SmartOrderService.Services
 
         }
 
-        private void updateRouteTeamTravelStatus(int userId, int inventoryId, ERolTeam userRol)
+        private void closingRouteTeamTravelStatus(int userId, int inventoryId, ERolTeam userRol)
         {
             RouteTeamTravelsService roleTeamService = new RouteTeamTravelsService();
             int routeId = routeTeamService.searchRouteId(userId);
@@ -598,11 +598,7 @@ namespace SmartOrderService.Services
             {
                 throw new WorkdayNotFoundException("No se encontro una jornada relacionada con el usuario " + userId);
             }
-            so_route_team_travels routeTeamTravels = db.so_route_team_travels.Where(
-                i => i.inventoryId.Equals(inventoryId)
-            && i.routeId.Equals(routeId)
-            && i.work_dayId.Equals(workDay.work_dayId)).FirstOrDefault();
-
+            var routeTeamTravels = searchRoutTeamTravels(inventoryId, routeId, workDay.work_dayId);
             EInventoryTeamStatus inventoryStatus = roleTeamService.getTravelStatusByInventoryId(routeTeamTravels.inventoryId);
             if (routeTeamTravels == null)
             {
@@ -623,6 +619,46 @@ namespace SmartOrderService.Services
                 routeTeamTravels.travelStatus = (int)EInventoryTeamStatus.InventarioCerradoPorImpulsor;
             }
             db.SaveChanges();
+        }
+
+        private void openingRouteTeamTravelStatus(int userId, int inventoryId, ERolTeam userRol)
+        {
+            RouteTeamTravelsService roleTeamService = new RouteTeamTravelsService();
+            int routeId = routeTeamService.searchRouteId(userId);
+            int driverId = SearchDrivingId(userId);
+            var workDay = routeTeamService.GetWorkdayByUserAndDate(driverId, DateTime.Today);
+            if (workDay == null)
+            {
+                throw new WorkdayNotFoundException("No se encontro una jornada relacionada con el usuario " + userId);
+            }
+            var routeTeamTravels = searchRoutTeamTravels(inventoryId, routeId, workDay.work_dayId);
+            EInventoryTeamStatus inventoryStatus = roleTeamService.getTravelStatusByInventoryId(routeTeamTravels.inventoryId);
+            if (routeTeamTravels == null)
+            {
+                throw new EntityNotFoundException();
+            }
+            if (userRol == ERolTeam.Ayudante)
+            {
+                if (inventoryStatus == EInventoryTeamStatus.InventarioCerrado)
+                {
+                    throw new InventoryNotOpenException("El impulsor no ha comenzado el viaje");
+                }
+                routeTeamTravels.travelStatus = (int)EInventoryTeamStatus.InventarioAbiertoPorAyudante;
+            }
+            else if (userRol == ERolTeam.Impulsor)
+            {
+                routeTeamTravels.travelStatus = (int)EInventoryTeamStatus.InventarioAbiertoPorImpulsor;
+            }
+            db.SaveChanges();
+        }
+
+        private so_route_team_travels searchRoutTeamTravels(int inventoryId, int routeId, Guid workdayId)
+        {
+            so_route_team_travels routeTeamTravels = db.so_route_team_travels.Where(
+                i => i.inventoryId.Equals(inventoryId)
+                && i.routeId.Equals(routeId)
+                && i.work_dayId.Equals(workdayId)).FirstOrDefault();
+            return routeTeamTravels;
         }
     }
 }
