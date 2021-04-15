@@ -20,9 +20,9 @@ namespace SmartOrderService.Services
 
             if (soUser.type == so_user.POAC_TYPE || soUser.type == so_user.CCEH_TYPE)
             {
-
-                so_inventory inventory = new InventoryService().getCurrentInventory(userId, null);
-
+                InventoryService inventoryService = new InventoryService();
+                userId = inventoryService.SearchDrivingId(userId);
+                so_inventory inventory = inventoryService.getCurrentInventory(userId, null);
 
                 List<VisitDto> visits = new List<VisitDto>();
 
