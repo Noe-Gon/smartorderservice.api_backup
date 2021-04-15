@@ -80,7 +80,11 @@ namespace SmartOrderService.Services
             }
             if (userTeamRole == ERolTeam.Impulsor)
             {
-                CloseInventory(inventoryId);
+                if (CloseInventory(inventoryId)) {
+                    closingRouteTeamTravelStatus(userId, inventoryId, userTeamRole);
+                    return true;
+                }
+                return false;
             }
             closingRouteTeamTravelStatus(userId, inventoryId, userTeamRole);
             return true;
@@ -170,7 +174,6 @@ namespace SmartOrderService.Services
             }
             if (userTeamRole == ERolTeam.Ayudante)
             {
-                userId = SearchDrivingId(userId);
                 openingRouteTeamTravelStatus(userId,inventoryId,userTeamRole);
             }
         }
@@ -255,7 +258,7 @@ namespace SmartOrderService.Services
             return inventory.FirstOrDefault().state;
         }
 
-        private int SearchDrivingId(int actualUserId)
+        public int SearchDrivingId(int actualUserId)
         {
             so_route_team teamRoute = db.so_route_team.Where(i => i.userId == actualUserId).FirstOrDefault();
             if (teamRoute == null)
