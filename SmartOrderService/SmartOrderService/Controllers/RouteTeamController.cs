@@ -48,6 +48,10 @@ namespace SmartOrderService.Services
                 bool isStarted = service.checkDriverWorkDay(userId);
                 response = Request.CreateResponse(HttpStatusCode.Accepted, isStarted);
             }
+            catch (WorkdayNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict,false);
+            }
             catch (NotSupportedException e)
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict, false);
