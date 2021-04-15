@@ -43,8 +43,11 @@ namespace SmartOrderService.Services
             ERolTeam userRole = roleTeamService.getUserRole(userId);
             if (userRole == ERolTeam.Impulsor)
             {
-                var userWorkDay = GetWorkdayByUserAndDate(userId, DateTime.Today);
-                if (userWorkDay == null)
+                try
+                {
+                    var userWorkDay = GetWorkdayByUserAndDate(userId, DateTime.Today);
+                }
+                catch (WorkdayNotFoundException e)
                 {
                     return true;
                 }
@@ -52,9 +55,12 @@ namespace SmartOrderService.Services
             }
             if (userRole == ERolTeam.Ayudante)
             {
-                int driverId = getDriverIdByAssistant(userId);
-                var userWorkDay = GetWorkdayByUserAndDate(driverId, DateTime.Today);
-                if (userWorkDay == null)
+                try
+                {
+                    int driverId = getDriverIdByAssistant(userId);
+                    var userWorkDay = GetWorkdayByUserAndDate(driverId, DateTime.Today);
+                }
+                catch (WorkdayNotFoundException e)
                 {
                     return false;
                 }
