@@ -22,7 +22,7 @@ namespace SmartOrderService.Services
             {
                 return true;
             }
-            int inventoryState = getInventoryState(userId);
+            int inventoryState = getInventoryState(userId,DateTime.Today);
             if ((inventoryState == 0 && userRole == ERolTeam.Impulsor))
             {
                 return true;
@@ -99,10 +99,15 @@ namespace SmartOrderService.Services
 
         public so_work_day GetWorkdayByUserAndDate(int userId, DateTime date)
         {
-            return db.so_work_day.Where(
+            so_work_day workday =  db.so_work_day.Where(
                 i => i.userId == userId
                 && DbFunctions.TruncateTime(i.date_start) == DbFunctions.TruncateTime(date)
                 ).FirstOrDefault();
+            if (workday == null)
+            {
+                throw new WorkdayNotFoundException("No se encontro la jornada para el usuario " + userId + "y el dia " + date);
+            }
+            return workday;
         }
 
         public int getInventoryState(int userId, DateTime date)
@@ -114,10 +119,6 @@ namespace SmartOrderService.Services
             }
             userId = SearchDrivingId(userId);
             var inventory = inventoryService.getCurrentInventory(userId,date);
-            if (inventory == null)
-            {
-                throw new InventoryEmptyException();
-            }
             return inventory.state;
         }
 
@@ -160,13 +161,6 @@ namespace SmartOrderService.Services
             }
             int DrivingId = db.so_route_team.Where(i => i.routeId == teamRoute.routeId && i.roleTeamId == (int)ERolTeam.Impulsor).ToList().FirstOrDefault().userId;
             return DrivingId;
-        }
-
-        private int getInventoryState(int userId)
-        {
-            DateTime today = DateTime.Today;
-            int inventoryState = getInventoryState(userId, today);
-            return inventoryState;
         }
 
         private so_route_team searchDriverByRouteId(int routeId)

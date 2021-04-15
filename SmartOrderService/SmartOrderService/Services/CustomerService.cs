@@ -21,6 +21,7 @@ namespace SmartOrderService.Services
         public List<CustomerDto> getAll(DateTime updated,int UserId) {
 
             List<CustomerDto> customers = new List<CustomerDto>();
+            InventoryService inventoryService = new InventoryService();
 
             var UserRoute = db.so_user_route.Where(u => u.userId.Equals(UserId) && u.status).FirstOrDefault();
             var datas = db.so_route_customer.Where(
@@ -31,8 +32,9 @@ namespace SmartOrderService.Services
                 .Distinct()
                 .ToList();
 
+            UserId = inventoryService.SearchDrivingId(UserId);
 
-            var Inventory = new InventoryService().getCurrentInventory(UserId,null);
+            var Inventory = inventoryService.getCurrentInventory(UserId,null);
 
             var CustomerToDeliver = new DeliveryService().getCustomersToDeliver(Inventory.inventoryId, UserId);
 
