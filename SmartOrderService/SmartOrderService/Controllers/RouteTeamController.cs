@@ -50,7 +50,7 @@ namespace SmartOrderService.Services
             }
             catch (WorkdayNotFoundException e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict,false);
+                response = Request.CreateResponse(HttpStatusCode.Conflict,true);
             }
             catch (NotSupportedException e)
             {
