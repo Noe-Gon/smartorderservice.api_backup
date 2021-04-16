@@ -154,6 +154,7 @@ namespace SmartOrderService.Services
                 FinishWorkdayProcess(workday);
                 new RouteTeamTravelsService().SetClosingStatusRoutTeamTravels(workday.WorkdayId);
             }
+            workday.IsOpen = false;
             return workday;
         }
 
