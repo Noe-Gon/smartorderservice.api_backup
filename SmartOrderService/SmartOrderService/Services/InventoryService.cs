@@ -9,20 +9,22 @@ using SmartOrderService.Models.DTO;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.CustomExceptions;
 using OpeCDLib.Models;
+using SmartOrderService.Models.Enum;
 
 namespace SmartOrderService.Services
 {
     public class InventoryService
     {
-
         public static int INVENTORY_AVAILABLE = 0;
         public static int INVENTORY_OPEN = 1;
         public static int INVENTORY_CLOSED = 2;
 
         private SmartOrderModel db = new SmartOrderModel();
+        private RoleTeamService roleTeamService = new RoleTeamService();
+        private RouteTeamService routeTeamService = new RouteTeamService();
+
         public so_inventory getCurrentInventory(int userId, DateTime? Date)
         {
-
             DateTime today = DateTime.Today;
 
             if (Date != null)
@@ -59,14 +61,33 @@ namespace SmartOrderService.Services
 
             if (CurrentInventory != null)
             {
-                 CurrentInventory.state = INVENTORY_CLOSED;
-                 CurrentInventory.modifiedon = DateTime.Now;
-                 db.SaveChanges();
+                CurrentInventory.state = INVENTORY_CLOSED;
+                CurrentInventory.modifiedon = DateTime.Now;
+                db.SaveChanges();
 
-                 return true;
+                return true;
             }
 
             return false;
+        }
+
+        public bool CloseInventory(int inventoryId, int userId)
+        {
+            ERolTeam userTeamRole = roleTeamService.getUserRole(userId);
+            if (userTeamRole == ERolTeam.SinAsignar)
+            {
+                return CloseInventory(inventoryId);
+            }
+            if (userTeamRole == ERolTeam.Impulsor)
+            {
+                if (CloseInventory(inventoryId)) {
+                    closingRouteTeamTravelStatus(userId, inventoryId, userTeamRole);
+                    return true;
+                }
+                return false;
+            }
+            closingRouteTeamTravelStatus(userId, inventoryId, userTeamRole);
+            return true;
         }
 
         [Obsolete]
@@ -79,7 +100,7 @@ namespace SmartOrderService.Services
 
             var deliveryIdsFromDevolutions = db.so_delivery_devolution.Where(d => deliveryIdsFromInventory.Contains(d.deliveryId) && d.status).Select(d => d.deliveryId).ToList();
 
-            var deliveryIdsFromSale = db.so_sale.Where(s => s.inventoryId == inventory.inventoryId && s.status).Select(s=> s.deliveryId).ToList();
+            var deliveryIdsFromSale = db.so_sale.Where(s => s.inventoryId == inventory.inventoryId && s.status).Select(s => s.deliveryId).ToList();
 
             deliveryIdsFromInventory.RemoveAll(d => deliveryIdsFromDevolutions.Contains(d));
 
@@ -93,7 +114,7 @@ namespace SmartOrderService.Services
 
         public List<TripDto> getTrips(string BranchCode, DateTime Date)
         {
-            var inventories = db.so_inventory.Where(i => 
+            var inventories = db.so_inventory.Where(i =>
             i.so_user.so_branch.code.Equals(BranchCode) &&
             i.status &&
             i.state >= InventoryService.INVENTORY_OPEN &&
@@ -137,6 +158,26 @@ namespace SmartOrderService.Services
 
         }
 
+        public void OpenInventory(int inventoryId, int userId)
+        {
+            ERolTeam userTeamRole = roleTeamService.getUserRole(userId);
+            if (userTeamRole == ERolTeam.SinAsignar)
+            {
+                OpenInventory(inventoryId);
+                return;
+            }
+            if (userTeamRole == ERolTeam.Impulsor)
+            {
+                OpenInventory(inventoryId);
+                recordRouteTeamTravelStatus(userId,inventoryId);
+                return;
+            }
+            if (userTeamRole == ERolTeam.Ayudante)
+            {
+                openingRouteTeamTravelStatus(userId,inventoryId,userTeamRole);
+            }
+        }
+
         public bool IsReady(int InventoryId)
         {
             return db.so_inventory_summary.Where(
@@ -150,9 +191,23 @@ namespace SmartOrderService.Services
             List<InventoryDto> Inventories = new List<InventoryDto>();
 
             var Today = DateTime.Today;
+            ERolTeam userTeamRole = roleTeamService.getUserRole(request.UserId);
+            int UserId;
 
-            int UserId = request.UserId;
-            bool OnlyCurrent = request.OnlyCurrent;
+            if (!request.OnlyCurrent.HasValue)
+            {
+                throw new BadRequestException("Falta el parametro OnlyCurrent");
+            }
+
+            if (userTeamRole != ERolTeam.SinAsignar) {
+                UserId = SearchDrivingId(request.UserId);
+            }
+            else
+            {
+                UserId = request.UserId;
+            }
+
+            bool OnlyCurrent = request.OnlyCurrent.Value;
 
             if (OnlyCurrent)
             {
@@ -187,6 +242,32 @@ namespace SmartOrderService.Services
 
         }
 
+        public int getInventoryState(int userId,DateTime date)
+        {
+            if (date == null) {
+                date = DateTime.Today;
+            }
+            userId = SearchDrivingId(userId);
+            var inventory = db.so_inventory.Where(i => i.userId == userId
+            && DbFunctions.TruncateTime(i.date) == DbFunctions.TruncateTime(date)
+            ).ToList();
+            if (!inventory.Any())
+            {
+                throw new InventoryEmptyException();
+            }
+            return inventory.FirstOrDefault().state;
+        }
+
+        public int SearchDrivingId(int actualUserId)
+        {
+            so_route_team teamRoute = db.so_route_team.Where(i => i.userId == actualUserId).FirstOrDefault();
+            if (teamRoute == null)
+            {
+                throw new RelatedDriverNotFoundException(actualUserId);
+            }
+            int DrivingId = db.so_route_team.Where(i => i.routeId == teamRoute.routeId && i.roleTeamId == (int)ERolTeam.Impulsor).ToList().FirstOrDefault().userId;
+            return DrivingId;
+        }
 
         public InventoryRevisionDto getInventoryByRoute(int routeId, DateTime Date)
         {
@@ -356,12 +437,54 @@ namespace SmartOrderService.Services
             return dto;
         }
 
+        public List<int> GetInventoryProductsIds(int inventoryId)
+        {
+            var inventory = db.so_inventory.Where(i => i.inventoryId.Equals(inventoryId) && i.status).FirstOrDefault();
+
+            var products = inventory.so_inventory_detail.Where(d => d.status).Select(d => d.productId).ToList();
+
+          
+            if (products.Any()) {
+
+                // add bottles
+                var bottles = db.so_product_bottle.Where(b => products.Contains(b.productId) && b.status).Select(b=> b.bottleId).ToList();
+
+                products.AddRange(bottles);
+
+
+                //add implements
+
+                var implements = inventory.so_inventory_detail_article.Where(i => i.status).Select(i => i.articleId).ToList();
+
+                products.AddRange(implements);
+            }
+
+            return products;
+
+        }
+
+        public void recordRouteTeamTravelStatus(int userId, int inventoryId)
+        {
+            int routeId = routeTeamService.searchRouteId(userId);
+            Guid workDayId = routeTeamService.GetWorkdayByUserAndDate(userId,DateTime.Today).work_dayId;
+            var routeTeamTravel = new so_route_team_travels()
+            {
+                routeId = routeId,
+                inventoryId = inventoryId,
+                travelStatus = 1,
+                work_dayId = workDayId
+            };
+            db.so_route_team_travels.Add(routeTeamTravel);
+            db.SaveChanges();
+        }
+
         private List<ProductState> getSubClassifications(int productId, int productAmount, IQueryable<so_user_devolutions> userDevolutions)
         {
             List<ProductState> subClassifications = new List<ProductState>();
 
 
-            if (userDevolutions.Any()) {
+            if (userDevolutions.Any())
+            {
                 var productDevolution = userDevolutions.Where(p => p.productId.Equals(productId) && p.so_user_reason_devolutions.value != 1);
 
                 foreach (var devolution in productDevolution)
@@ -442,7 +565,8 @@ namespace SmartOrderService.Services
 
             foreach (var replacement in replacements)
             {
-                dto.Replacements.Add(new InventoryReplacementDto() {
+                dto.Replacements.Add(new InventoryReplacementDto()
+                {
                     ReplacementId = replacement.replacementId,
                     Amount = replacement.amount,
                     Status = replacement.status
@@ -454,7 +578,8 @@ namespace SmartOrderService.Services
 
             foreach (var article in articles)
             {
-                dto.Details.Add(new InventoryDetailDto() {
+                dto.Details.Add(new InventoryDetailDto()
+                {
                     ProductId = article.articleId,
                     Amount = article.amount,
                     Status = article.status
@@ -466,31 +591,77 @@ namespace SmartOrderService.Services
 
         }
 
-
-        public List<int> GetInventoryProductsIds(int inventoryId)
+        private void closingRouteTeamTravelStatus(int userId, int inventoryId, ERolTeam userRol)
         {
-            var inventory = db.so_inventory.Where(i => i.inventoryId.Equals(inventoryId) && i.status).FirstOrDefault();
-
-            var products = inventory.so_inventory_detail.Where(d => d.status).Select(d => d.productId).ToList();
-
-          
-            if (products.Any()) {
-
-                // add bottles
-                var bottles = db.so_product_bottle.Where(b => products.Contains(b.productId) && b.status).Select(b=> b.bottleId).ToList();
-
-                products.AddRange(bottles);
-
-
-                //add implements
-
-                var implements = inventory.so_inventory_detail_article.Where(i => i.status).Select(i => i.articleId).ToList();
-
-                products.AddRange(implements);
+            RouteTeamTravelsService roleTeamService = new RouteTeamTravelsService();
+            int routeId = routeTeamService.searchRouteId(userId);
+            int driverId = SearchDrivingId(userId);
+            var workDay = routeTeamService.GetWorkdayByUserAndDate(driverId, DateTime.Today);
+            if (workDay == null)
+            {
+                throw new WorkdayNotFoundException("No se encontro una jornada relacionada con el usuario " + userId);
             }
+            var routeTeamTravels = searchRoutTeamTravels(inventoryId, routeId, workDay.work_dayId);
+            EInventoryTeamStatus inventoryStatus = roleTeamService.getTravelStatusByInventoryId(routeTeamTravels.inventoryId);
+            if (routeTeamTravels == null)
+            {
+                throw new EntityNotFoundException();
+            }
+            if (userRol == ERolTeam.Ayudante)
+            {
+                if (inventoryStatus != EInventoryTeamStatus.InventarioAbiertoPorAyudante) {
+                    throw new InventoryNotOpenException("El ayudante no ha comenzado el viaje");
+                }
+                routeTeamTravels.travelStatus = (int)EInventoryTeamStatus.InventarioCerradoPorAsistente;
+            }
+            if (userRol == ERolTeam.Impulsor)
+            {
+                if (inventoryStatus != EInventoryTeamStatus.InventarioCerradoPorAsistente) {
+                    throw new InventoryNotClosedException("El ayudante no ha cerrado el viaje");
+                }
+                routeTeamTravels.travelStatus = (int)EInventoryTeamStatus.InventarioCerradoPorImpulsor;
+            }
+            db.SaveChanges();
+        }
 
-            return products;
+        private void openingRouteTeamTravelStatus(int userId, int inventoryId, ERolTeam userRol)
+        {
+            RouteTeamTravelsService roleTeamService = new RouteTeamTravelsService();
+            int routeId = routeTeamService.searchRouteId(userId);
+            int driverId = SearchDrivingId(userId);
+            var workDay = routeTeamService.GetWorkdayByUserAndDate(driverId, DateTime.Today);
+            if (workDay == null)
+            {
+                throw new WorkdayNotFoundException("No se encontro una jornada relacionada con el usuario " + userId);
+            }
+            var routeTeamTravels = searchRoutTeamTravels(inventoryId, routeId, workDay.work_dayId);
+            EInventoryTeamStatus inventoryStatus = roleTeamService.getTravelStatusByInventoryId(routeTeamTravels.inventoryId);
+            if (routeTeamTravels == null)
+            {
+                throw new EntityNotFoundException();
+            }
+            if (userRol == ERolTeam.Ayudante)
+            {
+                if (inventoryStatus == EInventoryTeamStatus.InventarioCerrado)
+                {
+                    throw new InventoryNotOpenException("El impulsor no ha comenzado el viaje");
+                }
+                routeTeamTravels.travelStatus = (int)EInventoryTeamStatus.InventarioAbiertoPorAyudante;
+            }
+            else if (userRol == ERolTeam.Impulsor)
+            {
+                routeTeamTravels.travelStatus = (int)EInventoryTeamStatus.InventarioAbiertoPorImpulsor;
+            }
+            db.SaveChanges();
+        }
 
+        private so_route_team_travels searchRoutTeamTravels(int inventoryId, int routeId, Guid workdayId)
+        {
+            so_route_team_travels routeTeamTravels = db.so_route_team_travels.Where(
+                i => i.inventoryId.Equals(inventoryId)
+                && i.routeId.Equals(routeId)
+                && i.work_dayId.Equals(workdayId)).FirstOrDefault();
+            return routeTeamTravels;
         }
     }
 }

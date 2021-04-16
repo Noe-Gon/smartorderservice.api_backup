@@ -7,22 +7,21 @@ using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.DTO;
 using System.Data.Entity;
 using OpeCDLib.Models;
+using SmartOrderService.Models.Enum;
 
 namespace SmartOrderService.Services
 {
     public class WorkdayService
     {
         private SmartOrderModel db = new SmartOrderModel();
+        private RoleTeamService roleTeamService = new RoleTeamService();
+
         public Workday createWorkday(int userId)
         {
+            
             Workday workday = new Workday();
-            var id = Guid.NewGuid();
 
-            var currentWorkday = db.so_work_day.Where(
-                w => w.userId == userId 
-                && !w.date_end.HasValue 
-                && w.status
-                ).FirstOrDefault();
+            var currentWorkday = searchWorkDay(userId);
 
             if (currentWorkday != null)
             {
@@ -32,40 +31,54 @@ namespace SmartOrderService.Services
                 return workday;
             }
 
-            var time = DateTime.Now;
+            ERolTeam userRol = roleTeamService.getUserRole(userId);
 
-            var device = db.so_device.Where(d => d.userId == userId && d.status);
-
-         
-            //validamos que este registrado
-            if (!device.Any())
-                throw new NoUserFoundException();
-
-            
-      int deviceId = device.FirstOrDefault().deviceId;
-
-            var newWorkday = new so_work_day()
+            if (userRol != ERolTeam.Ayudante)
             {
-                work_dayId = id,
-                userId = userId,
-                date_start = time,
-                createdon = time,
-                deviceId = deviceId,
-                openby_device = userId,
-                modifiedon = time,
-                status = true
+                var id = Guid.NewGuid();
 
-            };
+                //userId = checkDriverWorkDay(userId);
 
-            db.so_work_day.Add(newWorkday);
-            db.SaveChanges();
+                var time = DateTime.Now;
+
+                var device = db.so_device.Where(d => d.userId == userId && d.status);
+
+
+                //validamos que este registrado
+                if (!device.Any())
+                    throw new NoUserFoundException();
+
+
+                int deviceId = device.FirstOrDefault().deviceId;
+
+                var newWorkday = new so_work_day()
+                {
+                    work_dayId = id,
+                    userId = userId,
+                    date_start = time,
+                    createdon = time,
+                    deviceId = deviceId,
+                    openby_device = userId,
+                    modifiedon = time,
+                    status = true
+
+                };
+
+                db.so_work_day.Add(newWorkday);
+                db.SaveChanges();
+
+                workday.UserId = userId;
+                workday.WorkdayId = newWorkday.work_dayId;
+                workday.IsOpen = true;
+
+                return workday;
+            }
+            so_work_day driverWorkDay = GetDriverWorkDayByAssistantId(userId);
 
             workday.UserId = userId;
-            workday.WorkdayId = newWorkday.work_dayId;
+            workday.WorkdayId = driverWorkDay.work_dayId;
             workday.IsOpen = true;
-
             return workday;
-
         }
 
         public List<Jornada> RetrieveWorkDay(string BranchCode,string UserCode,DateTime Date)
@@ -128,13 +141,24 @@ namespace SmartOrderService.Services
 
         }
 
-
         public bool onOpenWorkDay(Workday workday)
         {
             return false;
         }
 
         public Workday FinishWorkday(Workday workday)
+        {
+            ERolTeam userRol = roleTeamService.getUserRole(workday.UserId);
+            if (userRol == ERolTeam.SinAsignar || userRol == ERolTeam.Impulsor)
+            {
+                FinishWorkdayProcess(workday);
+                new RouteTeamTravelsService().SetClosingStatusRoutTeamTravels(workday.WorkdayId);
+            }
+            workday.IsOpen = false;
+            return workday;
+        }
+
+        public Workday FinishWorkdayProcess(Workday workday)
         {
             int UserId = workday.UserId;
             Guid WorkdayId = workday.WorkdayId;
@@ -220,6 +244,23 @@ namespace SmartOrderService.Services
            
         }
 
+        private so_work_day GetDriverWorkDayByAssistantId(int assistantId)
+        {
+            RouteTeamService routeTeamService = new RouteTeamService();
+            int driverId = routeTeamService.getDriverIdByAssistant(assistantId);
+            return searchWorkDay(driverId);
+        }
+
+        private so_work_day searchWorkDay(int userId)
+        {
+            so_work_day currentWorkday = db.so_work_day.Where(
+                w => w.userId == userId
+                && !w.date_end.HasValue
+                && w.status
+                ).FirstOrDefault();
+            return currentWorkday;
+        }
+
         public Workday getWorkDay(string workDayId)
         {
             var workDay = db.so_work_day.Where(w => w.work_dayId == new Guid(workDayId) && w.status).FirstOrDefault();
@@ -258,5 +299,6 @@ namespace SmartOrderService.Services
 
             return workDayDto;
         }
+
     }
 }

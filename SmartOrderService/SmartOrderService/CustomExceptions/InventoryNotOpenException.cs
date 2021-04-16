@@ -5,14 +5,14 @@ using System.Web;
 
 namespace SmartOrderService.CustomExceptions
 {
-    public class WorkdayNotFoundException : Exception
+    public class InventoryNotOpenException:Exception
     {
-        public WorkdayNotFoundException() : base()
+        public InventoryNotOpenException() : base()
         {
 
         }
 
-        public WorkdayNotFoundException(string message) : base(message)
+        public InventoryNotOpenException(string message) : base(message)
         {
 
         }

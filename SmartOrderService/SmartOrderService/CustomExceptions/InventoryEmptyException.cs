@@ -7,5 +7,14 @@ namespace SmartOrderService.CustomExceptions
 {
     public class InventoryEmptyException : Exception
     {
+        public InventoryEmptyException() : base()
+        {
+
+        }
+
+        public InventoryEmptyException(string message) : base(message)
+        {
+
+        }
     }
 }
