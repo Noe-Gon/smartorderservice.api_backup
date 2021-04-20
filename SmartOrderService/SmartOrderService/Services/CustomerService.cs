@@ -32,7 +32,13 @@ namespace SmartOrderService.Services
                 .Distinct()
                 .ToList();
 
-            UserId = inventoryService.SearchDrivingId(UserId);
+            try
+            {
+                UserId = inventoryService.SearchDrivingId(UserId);
+            }
+            catch (RelatedDriverNotFoundException e)
+            {
+            }
 
             var Inventory = inventoryService.getCurrentInventory(UserId,null);
 
