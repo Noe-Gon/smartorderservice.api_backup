@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SmartOrderService.Models.DTO;
+using System;
 using System.Collections.Generic;
 
 namespace SmartOrderService.Models

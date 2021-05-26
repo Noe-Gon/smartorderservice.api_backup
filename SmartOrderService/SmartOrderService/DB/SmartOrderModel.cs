@@ -145,6 +145,8 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_route_team> so_route_team { get; set; }
         public virtual DbSet<so_route_team_travels> so_route_team_travels { get; set; }
 
+        public virtual DbSet<so_route_team_inventory_available> so_route_team_inventory_available { get; set; }
+
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<so_role_team>()

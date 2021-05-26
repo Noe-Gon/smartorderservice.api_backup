@@ -261,6 +261,7 @@
     <Compile Include="Controllers\ReplacementController.cs" />
     <Compile Include="Controllers\RouteController.cs" />
     <Compile Include="Controllers\RouteRevisionController.cs" />
+    <Compile Include="Controllers\RouteTeamInventoryAvailableController.cs" />
     <Compile Include="Controllers\SurveyCustomerController.cs" />
     <Compile Include="Controllers\TrackingController.cs" />
     <Compile Include="Controllers\UserController.cs" />
@@ -286,6 +287,7 @@
     <Compile Include="CustomExceptions\InventoryNotFoundException.cs" />
     <Compile Include="CustomExceptions\InvoiceException.cs" />
     <Compile Include="CustomExceptions\NoCustomerVisitException.cs" />
+    <Compile Include="CustomExceptions\NotEnoughProductAmountException.cs" />
     <Compile Include="CustomExceptions\NotFoundUsersConfigException.cs" />
     <Compile Include="CustomExceptions\NoUserFoundException.cs" />
     <Compile Include="CustomExceptions\InventoryRevisionException.cs" />
@@ -410,6 +412,7 @@
     <Compile Include="DB\so_route_customer.cs" />
     <Compile Include="DB\so_inventory_revisions.cs" />
     <Compile Include="DB\so_route_team.cs" />
+    <Compile Include="DB\so_route_team_inventory_available.cs" />
     <Compile Include="DB\so_route_team_travels.cs" />
     <Compile Include="DB\so_sale.cs" />
     <Compile Include="DB\so_sale_detail.cs" />
@@ -469,8 +472,11 @@
     <Compile Include="Models\DTO\Invoice\InvoiceLineOpeFacturaDto.cs" />
     <Compile Include="Models\DTO\Invoice\InvoiceOpeFacturaDto.cs" />
     <Compile Include="Models\DTO\Invoice\SimpleInvoiceLineOpeFactura.cs" />
+    <Compile Include="Models\DTO\Product.cs" />
     <Compile Include="Models\DTO\RegisterCustomerDataDto.cs" />
     <Compile Include="Models\DTO\RegisterCustomerDto.cs" />
+    <Compile Include="Models\DTO\RouteTeamInventoryDto.cs" />
+    <Compile Include="Models\DTO\SaleDetailResult.cs" />
     <Compile Include="Models\DTO\TrackingConfigurationDto.cs" />
     <Compile Include="Models\DTO\CountConfigurationDto.cs" />
     <Compile Include="Models\DTO\CustomerDataDto.cs" />
@@ -567,6 +573,7 @@
     <Compile Include="Services\ApiVersionService.cs" />
     <Compile Include="Services\ApplicationService.cs" />
     <Compile Include="Services\RoleTeamService.cs" />
+    <Compile Include="Services\RouteTeamInventoryAvailableService.cs" />
     <Compile Include="Services\RouteTeamService.cs" />
     <Compile Include="Services\BillingDataService.cs" />
     <Compile Include="Services\BinnacleVisitService.cs" />
@@ -595,6 +602,7 @@
     <Compile Include="Services\RouteService.cs" />
     <Compile Include="Controllers\RouteTeamController.cs" />
     <Compile Include="Services\RouteTeamTravelsService.cs" />
+    <Compile Include="Services\SaleDetailResultService.cs" />
     <Compile Include="Services\SurveyCustomerService.cs" />
     <Compile Include="Services\TrackingService.cs" />
     <Compile Include="Services\UserDevolutionService.cs" />
@@ -695,6 +703,7 @@
     <Folder Include="App_Data\" />
     <Folder Include="fonts\" />
     <Folder Include="Views\Assistant\" />
+    <Folder Include="Views\RouteTeamInventoryAvailable\" />
     <Folder Include="Views\VersionApi\" />
   </ItemGroup>
   <ItemGroup>

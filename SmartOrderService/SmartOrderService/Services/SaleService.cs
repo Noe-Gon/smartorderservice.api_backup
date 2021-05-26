@@ -4,6 +4,7 @@ using SmartOrderService.DB;
 using SmartOrderService.Mappers;
 using SmartOrderService.Models;
 using SmartOrderService.Models.DTO;
+using SmartOrderService.Models.Enum;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -19,8 +20,7 @@ namespace SmartOrderService.Services
         private ListMapper<Sale, so_sale> listMapper;
         private ListMapper<SaleDetail, so_sale_detail> listDetailsMapper;
         private SmartOrderModel db = new SmartOrderModel();
-
-        
+        private readonly object balanceLock = new object();
 
         public List<Sale> getAll(String branchCode,String userCode) {
 
@@ -40,8 +40,6 @@ namespace SmartOrderService.Services
 
             return sales;
         }
-
-
 
         public List<Venta> getSalesByRoute(string BranchCode, string UserCode,int Trip,DateTime Date, bool Unmodifiable)
         {
@@ -185,6 +183,110 @@ namespace SmartOrderService.Services
             }
 
             return sale;
+        }
+
+        public Sale UnlockCreate(Sale sale)
+        {
+            int userId = sale.UserId;
+            DateTime date = DateTime.Parse(sale.Date);
+            int customerId = sale.CustomerId;
+            int deliveryId = sale.DeliveryId;
+            var registeredSale = db.so_sale.
+                     Where(
+                    s => (DateTime.Compare(s.date, date) == 0 || deliveryId.Equals(s.deliveryId.Value))
+                     && s.userId.Equals(userId)
+                     && s.customerId.Equals(customerId)
+                     && s.status
+                     ).FirstOrDefault();
+
+
+            if (registeredSale == null)
+                {
+
+                    so_sale entitySale = createSale(sale);
+                    entitySale.so_sale_detail = createDetails(sale.SaleDetails, userId);
+                    entitySale.so_sale_replacement = createReplacements(sale.SaleReplacements, userId);
+                    entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
+                    SetTaxes(entitySale);
+                sale.SaleId = SaveSale(entitySale);
+                }
+
+                else
+                {
+                sale.SaleId = registeredSale.saleId;
+                }
+
+            return sale;
+        }
+
+        public bool checkIfSaleExist(Sale sale)
+        {
+                int userId = sale.UserId;
+                DateTime date = DateTime.Parse(sale.Date);
+                int customerId = sale.CustomerId;
+
+                int deliveryId = sale.DeliveryId;
+
+                var registeredSale = db.so_sale.
+                     Where(
+                    s => (DateTime.Compare(s.date, date) == 0 || deliveryId.Equals(s.deliveryId.Value))
+                     && s.userId.Equals(userId)
+                     && s.customerId.Equals(customerId)
+                     && s.status
+                     ).FirstOrDefault();
+
+
+                if (registeredSale == null)
+                {
+                    return false;
+                }
+
+                return true;
+        }
+
+        public Sale CreateSaleResultFromSale(Sale sale)
+        {
+                RoleTeamService roleTeamService = new RoleTeamService();
+                ERolTeam userRole = roleTeamService.getUserRole(sale.UserId);
+                if (userRole == ERolTeam.SinAsignar)
+                {
+                    return sale;
+                }
+                SaleDetailResultService saleDetailResultService = new SaleDetailResultService();
+                InventoryService inventoryService = new InventoryService();
+                Sale saleResult = new Sale();
+                saleResult.UserId = sale.UserId;
+                saleResult.TotalCash = sale.TotalCash;
+                saleResult.SaleId = sale.SaleId;
+                saleResult.TotalCredit = sale.TotalCredit;
+                saleResult.CustomerTag = sale.CustomerTag;
+                saleResult.InventoryId = sale.InventoryId;
+                saleResult.Date = sale.Date;
+                saleResult.CustomerId = sale.CustomerId;
+                saleResult.DeliveryId = sale.DeliveryId;
+                saleResult.SaleDetails = new List<SaleDetail>();
+                for (int i = 0; i < sale.SaleDetails.Count(); i++)
+                {
+                    int amountSaled = 0;
+                    SaleDetailResult saleDetailResult = new SaleDetailResult(sale.SaleDetails[i]);
+
+                    if (inventoryService.CheckInventoryAvailability(sale.InventoryId, sale.SaleDetails[i].ProductId, sale.SaleDetails[i].Amount))
+                    {
+                        amountSaled = sale.SaleDetails[i].Amount;
+                    }
+                    else
+                    {
+                        sale.TotalCash -= Decimal.ToDouble(sale.SaleDetails[i].Import);
+                        sale.SaleDetails.RemoveAt(i);
+                        i--;
+                    }
+                    saleDetailResult.AmountSold = amountSaled;
+                    saleResult.SaleDetails.Add(saleDetailResult);
+                }
+                saleResult.TotalCash = Math.Round(sale.TotalCash, 3);
+                saleResult.SaleReplacements = sale.SaleReplacements;
+                saleResult.SalePromotions = sale.SalePromotions;
+                return saleResult;
         }
 
         private void SetTaxes(so_sale entitySale)
@@ -404,7 +506,51 @@ namespace SmartOrderService.Services
 
         }
 
-      
+        public void UpdateRouteTeamInventory(Sale sale)
+        {
+            RoleTeamService roleTeamService = new RoleTeamService();
+            ERolTeam userRole = roleTeamService.getUserRole(sale.UserId);
+            if (userRole == ERolTeam.SinAsignar)
+            {
+                return;
+            }
+            RouteTeamInventoryAvailableService routeTeamInventoryAvailable = new RouteTeamInventoryAvailableService();
+            routeTeamInventoryAvailable.UpdateRouteTeamInventory(sale);
+        }
+
+        public void RestoreInventoryAvailability(int saleId)
+        {
+            var sales = db.so_sale_detail
+                .Join(db.so_sale,
+                saleDetail => saleDetail.saleId,
+                sale => sale.saleId,
+                (saleDetail, sale) => new { SaleDetail = saleDetail, SaleInventory = sale.inventoryId })
+                .Where(e => e.SaleDetail.saleId.Equals(saleId)).ToList();
+
+            using (var dbContextTransaction = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    foreach (var sale in sales)
+                    {
+                        int amountSold = sale.SaleDetail.amount;
+                        int saleInventory = sale.SaleInventory.GetValueOrDefault();
+                        int saleProductId = sale.SaleDetail.productId;
+                        so_route_team_inventory_available routeTeamInventory = db.so_route_team_inventory_available
+                            .Where(e => e.inventoryId.Equals(saleInventory) && e.productId.Equals(saleProductId)).FirstOrDefault();
+                        routeTeamInventory.Available_Amount += amountSold;
+                        db.SaveChanges();
+                    }
+                    dbContextTransaction.Commit();
+                }
+                catch (Exception e)
+                {
+                    dbContextTransaction.Rollback();
+                    throw new Exception();
+                }
+            }
+
+        }
 
         private ICollection<so_sale_promotion_detail> createPromotionDetails(List<SalePromotionDetailProduct> details, int userId)
         {
@@ -606,6 +752,25 @@ namespace SmartOrderService.Services
             detail.stps_rate = Math.Truncate(stps_rate * 100) / 100;
             detail.stps_fee_rate = Math.Truncate(stps_fee_rate * 100) / 100;
             detail.stps_snack_rate = Math.Truncate(stps_snack_rate * 100) / 100;
+        }
+
+        public Sale SaleTeamTransaction(Sale sale)
+        {
+                Sale saleResult = CreateSaleResultFromSale(sale);
+                if (sale.SaleDetails.Count() > 0)
+                {
+                    if (!checkIfSaleExist(sale))
+                    {
+                        UnlockCreate(sale);
+                        if (sale.SaleId == 0)
+                        {
+                            throw new BadRequestException();
+                        }
+                        saleResult.SaleId = sale.SaleId;
+                        UpdateRouteTeamInventory(sale);
+                    }
+                }
+                return saleResult;
         }
 
         private void SetPromotionTax(so_sale_promotion_detail detail, so_branch_tax branch_tax, so_products_price_list master_price_list, so_products_price_list price_list)

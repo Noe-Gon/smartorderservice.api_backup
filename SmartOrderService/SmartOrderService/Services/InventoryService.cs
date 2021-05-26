@@ -161,6 +161,7 @@ namespace SmartOrderService.Services
         public void OpenInventory(int inventoryId, int userId)
         {
             ERolTeam userTeamRole = roleTeamService.getUserRole(userId);
+            RouteTeamInventoryAvailableService routeTeamInventoryAvailable = new RouteTeamInventoryAvailableService();
             if (userTeamRole == ERolTeam.SinAsignar)
             {
                 OpenInventory(inventoryId);
@@ -170,6 +171,7 @@ namespace SmartOrderService.Services
             {
                 OpenInventory(inventoryId);
                 recordRouteTeamTravelStatus(userId,inventoryId);
+                routeTeamInventoryAvailable.RecordRouteTeamInventory(inventoryId);
                 return;
             }
             if (userTeamRole == ERolTeam.Ayudante)
@@ -476,6 +478,22 @@ namespace SmartOrderService.Services
             };
             db.so_route_team_travels.Add(routeTeamTravel);
             db.SaveChanges();
+        }
+
+        public bool CheckInventoryAvailability(int inventoryId, int productId, int amount)
+        {
+            RouteTeamInventoryAvailableService routeTeamInventoryAvailableService = new RouteTeamInventoryAvailableService();
+            var inventoryTeam = routeTeamInventoryAvailableService.GetInventoryTeamByInventoryId(inventoryId);
+            var inventoryProduct = inventoryTeam.Where(s => s.productId.Equals(productId)).FirstOrDefault();
+            if (inventoryProduct == null)
+            {
+                throw new ProductNotFoundBillingException("No se encontro el producto con el id " + productId);
+            }
+            if (amount <= inventoryProduct.Available_Amount)
+            {
+                return true;
+            }
+            return false;
         }
 
         private List<ProductState> getSubClassifications(int productId, int productAmount, IQueryable<so_user_devolutions> userDevolutions)
