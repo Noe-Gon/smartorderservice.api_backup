@@ -1,1 +1,3 @@
-# bbe2101.smartorderservice.api
+# PA-Segundo-Dispositivo
+
+Plan Acelerado. Proyecto para el manejo del segundo dispositivo WBC. Solución Android.

@@ -104,10 +104,11 @@ namespace SmartOrderService.Mappers
                     .ForMember(dest => dest.Value, opt => opt.MapFrom(src => Int32.Parse(src.value)));
 
                     cfg.CreateMap<InvoiceOpeFacturaResponse, so_invoice_opefactura>();
+
+                    cfg.CreateMap<so_route_team_inventory_available, RouteTeamInventoryDto>()
+                    .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.productId))
+                    .ForMember(dest => dest.AvailableAmount, opt => opt.MapFrom(src => src.Available_Amount));
                 }
-
-
-
 
                );
 

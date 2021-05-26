@@ -7,5 +7,14 @@ namespace SmartOrderService.CustomExceptions
 {
     public class ProductNotFoundBillingException : Exception
     {
+        public ProductNotFoundBillingException() : base()
+        {
+
+        }
+
+        public ProductNotFoundBillingException(string errorMessage) : base(errorMessage)
+        {
+
+        }
     }
 }

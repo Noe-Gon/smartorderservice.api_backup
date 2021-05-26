@@ -18,6 +18,7 @@ using SmartOrderService.CustomExceptions;
 using SmartOrderService.Utils;
 using SmartOrderService.Models.DTO;
 using Newtonsoft.Json;
+using System.Text;
 
 namespace SmartOrderService.Controllers
 {
@@ -25,6 +26,7 @@ namespace SmartOrderService.Controllers
     {
         private SmartOrderModel db = new SmartOrderModel();
 
+        private static SaleService objectService = new SaleService();
         SaleService service;
 
         [HttpGet,Route("api/sales/{SaleId}/Lines")]
@@ -173,8 +175,67 @@ namespace SmartOrderService.Controllers
             //return StatusCode(HttpStatusCode.Created);
         }
 
+        // POST: api/Sales
+        [ResponseType(typeof(so_sale))]
+        [HttpPost, Route("api/sales/saleteam")]
+        public IHttpActionResult so_sale_team(Sale sale)
+        {
+            IHttpActionResult responseActionResult;
+            HttpResponseMessage responseMessage;
+            Sale saleResult;
+            try
+            {
+                lock (objectService) {
+                    saleResult = objectService.SaleTeamTransaction(sale);
+                }
+            }
+            catch (ProductNotFoundBillingException e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.NotFound, e.Message);
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
+            }
+            catch (BadRequestException e)
+            {
+                return BadRequest();
+            }
+
+            responseMessage = Request.CreateResponse(HttpStatusCode.OK, saleResult);
+            responseActionResult = ResponseMessage(responseMessage);
+            return responseActionResult;
+
+        }
+
+        [HttpDelete, Route("api/sales/saleteam")]
+        public HttpResponseMessage Deleteso_sale_team(int id)
+        {
+            HttpResponseMessage response;
+
+            try
+            {
+                var service = new SaleService();
+                var sale = service.Delete(id);
+                service.RestoreInventoryAvailability(id);
+                response = Request.CreateResponse(HttpStatusCode.OK, sale);
+            }
+            catch (DeviceNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Unauthorized, "no estas autorizado");
+            }
+            catch (EntityNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.NotFound);
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, "la venta no fue afectada");
+            }
+
+            return response;
+        }
+
         // DELETE: api/Sales/5
-       
+
         public HttpResponseMessage Delete(int id)
         {
             HttpResponseMessage response;
@@ -218,6 +279,15 @@ namespace SmartOrderService.Controllers
         private bool so_saleExists(int id)
         {
             return db.so_sale.Count(e => e.saleId == id) > 0;
+        }
+
+        private String buildResponseProductAmount(List<Product> listProducts)
+        {
+            StringBuilder response = new StringBuilder("Los siguientes articulos no se pudieron registrar por falta de producto en el inventario: ");
+            foreach (Product product in listProducts) {
+                response.Append("\n" + product.productName + ", cantidad disponible: " + product.amount);
+            }
+            return response.ToString();
         }
     }
 }

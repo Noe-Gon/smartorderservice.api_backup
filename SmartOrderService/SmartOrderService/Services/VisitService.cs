@@ -5,6 +5,7 @@ using System.Linq;
 using System.Web;
 using SmartOrderService.Models.DTO;
 using System.Data.Entity;
+using SmartOrderService.CustomExceptions;
 
 namespace SmartOrderService.Services
 {
@@ -21,7 +22,13 @@ namespace SmartOrderService.Services
             if (soUser.type == so_user.POAC_TYPE || soUser.type == so_user.CCEH_TYPE)
             {
                 InventoryService inventoryService = new InventoryService();
-                userId = inventoryService.SearchDrivingId(userId);
+                try
+                {
+                    userId = inventoryService.SearchDrivingId(userId);
+                }
+                catch (RelatedDriverNotFoundException e)
+                {}
+
                 so_inventory inventory = inventoryService.getCurrentInventory(userId, null);
 
                 List<VisitDto> visits = new List<VisitDto>();

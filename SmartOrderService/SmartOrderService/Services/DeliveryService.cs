@@ -21,7 +21,7 @@ namespace SmartOrderService.Services
             var so_user = db.so_inventory.Where(i => i.inventoryId == InventoryId && i.status).FirstOrDefault().so_user;
 
 
-            if (!InventoryDeliveries.Any() && so_user.type != so_user.CCEH_TYPE && so_user.type != so_user.POAC_TYPE)
+            if ((!InventoryDeliveries.Any() || InventoryDeliveries.Count() == 0)&& so_user.type != so_user.CCEH_TYPE && so_user.type != so_user.POAC_TYPE)
 
                 throw new InventoryEmptyException();
             
