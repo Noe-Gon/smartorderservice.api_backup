@@ -226,7 +226,7 @@ namespace SmartOrderService.Services
                     entitySale.so_sale_replacement = createReplacements(sale.SaleReplacements, userId);
                     entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
                     SetTaxes(entitySale);
-                sale.SaleId = SaveSale(entitySale);
+                sale.SaleId = UntransactionalSaveSale(entitySale);
                 }
 
                 else
@@ -658,6 +658,16 @@ namespace SmartOrderService.Services
             return saleId;
         }
 
+        private int UntransactionalSaveSale(so_sale sale)
+        {
+            int saleId = 0;
+            db.so_sale.Add(sale);
+            db.SaveChanges();
+            saleId = sale.saleId;
+            return saleId;
+        }
+
+
         private so_control_download createControlDownload(int saleId,int userId) {
             return   new so_control_download() {
                 userId = userId,
@@ -773,22 +783,33 @@ namespace SmartOrderService.Services
         }
 
         public Sale SaleTeamTransaction(Sale sale)
-        {
+        {using (var transaction = db.Database.BeginTransaction()) {
                 Sale saleResult = CreateSaleResultFromSale(sale);
-                if (sale.SaleDetails.Count() > 0)
+                try
                 {
-                    if (!checkIfSaleExist(sale))
+                    if (sale.SaleDetails.Count() > 0)
                     {
-                        UnlockCreate(sale);
-                        if (sale.SaleId == 0)
+                        if (!checkIfSaleExist(sale))
                         {
-                            throw new BadRequestException();
+                            UnlockCreate(sale);
+                            if (sale.SaleId == 0)
+                            {
+                                throw new BadRequestException();
+                            }
+                            saleResult.SaleId = sale.SaleId;
+                            UpdateRouteTeamInventory(sale);
                         }
-                        saleResult.SaleId = sale.SaleId;
-                        UpdateRouteTeamInventory(sale);
+                        transaction.Commit();
                     }
                 }
+                catch (Exception exception)
+                {
+                    transaction.Rollback();
+                    throw exception;
+                }
                 return saleResult;
+            }
+
         }
 
         private void SetPromotionTax(so_sale_promotion_detail detail, so_branch_tax branch_tax, so_products_price_list master_price_list, so_products_price_list price_list)
