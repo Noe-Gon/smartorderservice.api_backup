@@ -783,7 +783,8 @@ namespace SmartOrderService.Services
         }
 
         public Sale SaleTeamTransaction(Sale sale)
-        {using (var transaction = db.Database.BeginTransaction()) {
+        {
+            using (var transaction = db.Database.BeginTransaction()) {
                 Sale saleResult = CreateSaleResultFromSale(sale);
                 try
                 {
