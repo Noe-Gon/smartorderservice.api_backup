@@ -38,6 +38,14 @@ namespace SmartOrderService.Services
             return false;
         }
 
+        public List<int> GetTeamIds(int userId)
+        {
+            int routeId = searchRouteId(userId);
+            return db.so_route_team
+                .Where(s => s.routeId.Equals(routeId))
+                .Select(s => s.userId).ToList();
+        }
+
         public bool checkDriverWorkDay(int userId)
         {
             ERolTeam userRole = roleTeamService.getUserRole(userId);
@@ -156,6 +164,24 @@ namespace SmartOrderService.Services
             int assistantRouteId = searchRouteId(assistantId);
             int driverId = searchDriverByRouteId(assistantRouteId).userId;
             return driverId;
+        }
+
+        public bool IsImpulsor(int userId)
+        {
+            int actualUserId = userId;
+            try
+            {
+                int driverId = SearchDrivingId(userId);
+                if (actualUserId == driverId)
+                {
+                    return true;
+                }
+                return false;
+            }
+            catch (RelatedDriverNotFoundException e)
+            {
+                return false;
+            }
         }
 
         private int SearchDrivingId(int actualUserId)
