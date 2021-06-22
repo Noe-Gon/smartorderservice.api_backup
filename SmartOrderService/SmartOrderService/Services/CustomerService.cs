@@ -206,7 +206,7 @@ namespace SmartOrderService.Services
                     var impulsorId = routeTeamService.SearchDrivingId(visit.userId);
                     var inventory = inventoryService.getCurrentInventory(impulsorId, DateTime.Today);
                     var routeId = routeTeamService.searchRouteId(visit.userId);
-                    var workDay = routeTeamService.GetWorkdayByUserAndDate(visit.userId, DateTime.Today);
+                    var workDay = routeTeamService.GetWorkdayByUserAndDate(impulsorId, DateTime.Today);
 
                     db.so_route_team_travels_visits.Add(new so_route_team_travels_visit
                     {
