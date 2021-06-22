@@ -414,6 +414,7 @@
     <Compile Include="DB\so_route_team.cs" />
     <Compile Include="DB\so_route_team_inventory_available.cs" />
     <Compile Include="DB\so_route_team_travels.cs" />
+    <Compile Include="DB\so_route_team_travels_visit.cs" />
     <Compile Include="DB\so_sale.cs" />
     <Compile Include="DB\so_sale_detail.cs" />
     <Compile Include="DB\so_sale_inventory.cs" />
@@ -556,6 +557,7 @@
     <Compile Include="Models\Responses\PriceResponse.cs" />
     <Compile Include="Models\Responses\ProductResponse.cs" />
     <Compile Include="Models\Responses\Response.cs" />
+    <Compile Include="Models\Responses\RouteTeamResponse.cs" />
     <Compile Include="Models\Responses\SaleResponse.cs" />
     <Compile Include="Models\DTO\Sale.cs" />
     <Compile Include="Models\DTO\SaleDetail.cs" />
@@ -634,6 +636,7 @@
     <Compile Include="Utils\DB\so_sale_detail.cs" />
     <Compile Include="Utils\DB\so_site.cs" />
     <Compile Include="Utils\DB\so_user.cs" />
+    <Compile Include="Utils\Enums\TeamTravelStatus.cs" />
     <Compile Include="Utils\HttpUtil.cs" />
     <Compile Include="Utils\InvoiceData.cs" />
     <Compile Include="Utils\NumberUtil.cs" />
@@ -665,6 +668,7 @@
     <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\CollectionModelDescription.cshtml" />
     <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ApiGroup.cshtml" />
     <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
+    <None Include="Properties\PublishProfiles\FolderProfile.pubxml" />
     <None Include="Properties\PublishProfiles\WBCDS.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />

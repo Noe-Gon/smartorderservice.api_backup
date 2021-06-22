@@ -55,5 +55,8 @@ namespace SmartOrderService.DB
         public virtual so_customer so_customer { get; set; }
 
         public virtual so_user so_user { get; set; }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<so_route_team_travels_visit> so_route_team_travels_visits { get; set; }
     }
 }

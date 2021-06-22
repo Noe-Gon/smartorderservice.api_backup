@@ -4,6 +4,7 @@ using SmartOrderService.DB;
 using SmartOrderService.DB.OpeCdBi;
 using SmartOrderService.Models;
 using SmartOrderService.Models.DTO;
+using SmartOrderService.Models.Enum;
 using SmartOrderService.Models.Requests;
 using System;
 using System.Collections.Generic;
@@ -161,6 +162,64 @@ namespace SmartOrderService.Services
 
                     dbContextTransaction.Commit();
               
+            }
+
+            return dto;
+        }
+
+        public CustomerVisitDto CreateTeamVisit(CustomerVisitDto dto, int UserId)
+        {
+            RoleTeamService roleTeamService = new RoleTeamService();
+            RouteTeamService routeTeamService = new RouteTeamService();
+            InventoryService inventoryService = new InventoryService();
+
+            var visit = Mapper.Map<so_binnacle_visit>(dto);
+
+            visit.createdby = UserId;
+            visit.createdon = DateTime.Now;
+            visit.modifiedby = UserId;
+            visit.modifiedon = DateTime.Now;
+            visit.userId = UserId;
+            visit.is_visit = true;
+            visit.status = true;
+
+
+            using (var dbContextTransaction = db.Database.BeginTransaction())
+            {
+
+                db.so_binnacle_visit.Add(visit);
+
+                db.SaveChanges();
+
+                dto.VisitId = visit.binnacleId;
+
+                var ItemToDownload = new ControlDownloadService().createControlDownload(visit.binnacleId, UserId, ControlDownloadService.MODEL_TYPE_BINNACLE_VISIT);
+
+                db.so_control_download.Add(ItemToDownload);
+
+                db.SaveChanges();
+
+                //Si es de un quipo hacer el guardado de so_reoute_team
+                ERolTeam userRole = roleTeamService.getUserRole(visit.userId);
+                if (userRole == ERolTeam.Ayudante || userRole == ERolTeam.Impulsor)
+                {
+                    var impulsorId = routeTeamService.SearchDrivingId(visit.userId);
+                    var inventory = inventoryService.getCurrentInventory(impulsorId, DateTime.Today);
+                    var routeId = routeTeamService.searchRouteId(visit.userId);
+                    var workDay = routeTeamService.GetWorkdayByUserAndDate(visit.userId, DateTime.Today);
+
+                    db.so_route_team_travels_visits.Add(new so_route_team_travels_visit
+                    {
+                        binnacleId = visit.binnacleId,
+                        inventoryId = inventory.inventoryId,
+                        routeId = routeId,
+                        workDayId = workDay.work_dayId
+                    });
+                    db.SaveChanges();
+                }
+
+                dbContextTransaction.Commit();
+
             }
 
             return dto;

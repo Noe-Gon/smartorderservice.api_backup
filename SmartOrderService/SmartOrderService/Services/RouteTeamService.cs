@@ -184,7 +184,7 @@ namespace SmartOrderService.Services
             }
         }
 
-        private int SearchDrivingId(int actualUserId)
+        public int SearchDrivingId(int actualUserId)
         {
             so_route_team teamRoute = db.so_route_team.Where(i => i.userId == actualUserId).ToList().FirstOrDefault();
             if (teamRoute == null)
