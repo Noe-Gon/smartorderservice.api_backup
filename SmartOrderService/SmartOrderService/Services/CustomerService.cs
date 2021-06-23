@@ -225,7 +225,6 @@ namespace SmartOrderService.Services
             return dto;
         }
 
-
         internal List<CustomerDataDto> getDataByRoute(int RouteId)
         {
             List<CustomerDataDto> customers = new List<CustomerDataDto>();
