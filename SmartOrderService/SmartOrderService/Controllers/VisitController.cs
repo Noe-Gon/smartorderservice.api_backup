@@ -51,16 +51,20 @@ namespace SmartOrderService.Controllers
             HttpResponseMessage response;
             try
             {
-                var visits = new VisitService().getTeamVisits(request.UserId);
+                var visits = new VisitService().getTeamVisits(request.UserId, request.InventoryId);
                 response = Request.CreateResponse(HttpStatusCode.OK, visits);
             }
             catch (NoUserFoundException e)
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict, "Usuario no registrado");
             }
+            catch (WorkdayNotFoundException)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, "No se encontro la jornada para el usuario " + request.UserId + " y el dia " + DateTime.Today);
+            }
             catch (InventoryEmptyException e)
             {
-                response = Request.CreateResponse(HttpStatusCode.NotAcceptable, "no tiene inventario para trabajar");
+                response = Request.CreateResponse(HttpStatusCode.NotAcceptable, "No tiene inventario para trabajar");
             }
 
             catch (Exception e)
