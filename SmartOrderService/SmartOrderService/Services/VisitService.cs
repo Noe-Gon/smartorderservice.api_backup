@@ -177,99 +177,39 @@ namespace SmartOrderService.Services
 
         }
 
-        public List<GetTeamVisitResponse> getTeamVisits(int userId)
+        public List<GetTeamVisitResponse> getTeamVisits(int userId, int inventoryId)
         {
+            RoleTeamService roleTeamService = new RoleTeamService();
+            RouteTeamService routeTeamService = new RouteTeamService();
+            InventoryService inventoryService = new InventoryService();
 
             var soUser = db.so_user.Where(u => u.userId == userId).FirstOrDefault();
-            int day = (int)DateTime.Today.DayOfWeek;
-            day++;
+            var date = DateTime.Today;
+            
+            var impulsor = inventoryService.SearchDrivingId(userId);
+            var routeId = routeTeamService.searchRouteId(impulsor);
+            var workDay = routeTeamService.GetWorkdayByUserAndDate(impulsor, DateTime.Today);
 
-            InventoryService inventoryService = new InventoryService();
-            try
-            {
-                userId = inventoryService.SearchDrivingId(userId);
-            }
-            catch (RelatedDriverNotFoundException e)
-            { }
-
-            so_inventory inventory = inventoryService.getCurrentInventory(userId, null);
-
-            List<GetTeamVisitResponse> visits = new List<GetTeamVisitResponse>();
-
-            var customers = new List<int>();
-
-            if (inventory != null)
-            {
-                int inventoryId = inventory.inventoryId;
-
-                customers = db.so_delivery.Where(d => d.inventoryId.Equals(inventoryId) && d.status).Select(c => c.customerId).ToList();
-            }
-
-            var routeVisits = db.so_user_route
-            .Join(db.so_route_customer,
-                userRoute => userRoute.routeId,
-                customerRoute => customerRoute.routeId,
-                (userRoute, customerRoute) => new { userRoute.userId, customerRoute.customerId, customerRoute.day, customerRoute.order, customerRoute.status, userRouteStatus = userRoute.status }
-            )
-            .Where(
-                v => v.userId.Equals(userId)
-                && v.userRouteStatus
-                && v.status
-                && day.Equals(v.day)
-            )
-            .Select(c => new { c.customerId, c.order });
-
-            foreach (var data in routeVisits)
-            {
-                int order = data.order;
-
-                if (inventory != null && inventory.status)
+            var visits = db.so_route_team_travels_visits
+                .Where(x => x.inventoryId == inventoryId && x.workDayId == workDay.work_dayId && x.routeId == routeId)
+                .Select(x => x.So_Binnacle_Visit)
+                .Select(x => new GetTeamVisitResponse
                 {
-                    var delivery = db.so_delivery.Where(d => d.customerId == data.customerId && d.status && d.inventoryId == inventory.inventoryId).FirstOrDefault();
-                    if (delivery != null && delivery.visit_order != null && delivery.visit_order != 0)
-                    {
-                        order = (int)delivery.visit_order;
-                    }
-                }
+                    VisitId = x.binnacleId,
+                    CustomerId = x.customerId,
+                    UserId = x.userId,
+                    CheckIn = x.checkin,
+                    CheckOut = x.checkout,
+                    LatitudeIn = x.latitudein,
+                    LatitudeOut = x.latitudeout,
+                    LongitudeIn = x.longitudein,
+                    LongitudeOut = x.longitudeout,
+                    ReasonFailed = x.so_binnacle_reason_failed.Count > 0 ? x.so_binnacle_reason_failed.FirstOrDefault().reasonId : (int?)null,
+                    Scanned = x.scanned
+                })
+                .ToList();
 
-                so_binnacle_visit so_Binnacle_Visit = db.so_binnacle_visit.Where(bv => bv.customerId == data.customerId &&
-                        DbFunctions.TruncateTime(bv.createdon) == DbFunctions.TruncateTime(DateTime.Now))
-                        .FirstOrDefault();
-
-                GetTeamVisitResponse dto = new GetTeamVisitResponse()
-                {
-                    CustomerId = data.customerId,
-                    UserId = so_Binnacle_Visit != null ? so_Binnacle_Visit.userId : 0,
-                    CheckIn = so_Binnacle_Visit != null ? so_Binnacle_Visit.checkin : (DateTime?)null,
-                    CheckOut = so_Binnacle_Visit != null ? so_Binnacle_Visit.checkout : (DateTime?)null,
-                    LatitudeIn = so_Binnacle_Visit != null ? so_Binnacle_Visit.latitudein : (double?)null,
-                    LatitudeOut = so_Binnacle_Visit != null ? so_Binnacle_Visit.latitudeout : (double?)null,
-                    LongitudeIn = so_Binnacle_Visit != null ? so_Binnacle_Visit.longitudein : (double?)null,
-                    LongitudeOut = so_Binnacle_Visit != null ? so_Binnacle_Visit.longitudeout : (double?)null,
-                    ReasonFailed = so_Binnacle_Visit != null ? (so_Binnacle_Visit.so_binnacle_reason_failed.Count > 0 ? so_Binnacle_Visit.so_binnacle_reason_failed.FirstOrDefault().reasonId : (int?)null) : (int?)null,
-                    Scanned = so_Binnacle_Visit != null ? so_Binnacle_Visit.scanned : false,
-                    VisitId = so_Binnacle_Visit != null ? so_Binnacle_Visit.binnacleId : (int?)null
-                };
-
-                visits.Add(dto);
-            }
-
-            var otherVisits = customers.Where(c => !routeVisits.Select(rv => rv.customerId).Contains(c));
-
-            foreach (var otherVisit in customers)
-            {
-                if (!routeVisits.Select(rv => rv.customerId).Contains(otherVisit))
-                {
-                    GetTeamVisitResponse dto = new GetTeamVisitResponse()
-                    {
-                        CustomerId = otherVisit,
-                    };
-                    visits.Add(dto);
-                }
-
-            }
             return visits;
-
         }
 
         public int getDay(DateTime datetime)
@@ -293,8 +233,6 @@ namespace SmartOrderService.Services
                 default:
                     return 0;
             }
-
-
         }
     }
 }
