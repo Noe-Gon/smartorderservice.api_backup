@@ -177,11 +177,14 @@ namespace SmartOrderService.Services
 
         }
 
-        public List<GetTeamVisitResponse> getTeamVisits(int userId, int inventoryId)
+        public List<GetTeamVisitResponse> getTeamVisits(int userId, int? inventoryId)
         {
             RoleTeamService roleTeamService = new RoleTeamService();
             RouteTeamService routeTeamService = new RouteTeamService();
             InventoryService inventoryService = new InventoryService();
+
+            if (inventoryId == null || inventoryId == 0)
+                inventoryId = inventoryService.getCurrentInventory(userId, null).inventoryId;
 
             var soUser = db.so_user.Where(u => u.userId == userId).FirstOrDefault();
             var date = DateTime.Today;

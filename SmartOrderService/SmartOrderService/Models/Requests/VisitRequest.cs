@@ -8,6 +8,6 @@ namespace SmartOrderService.Models.Requests
     public class VisitRequest
     {
         public int UserId { get; set; }
-        public int InventoryId { get; set; }
+        public int? InventoryId { get; set; }
     }
 }
