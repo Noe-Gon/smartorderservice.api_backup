@@ -69,5 +69,10 @@ namespace SmartOrderService.Services
             return db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(inventoryId)).ToList();
         }
 
+        public List<so_route_team_inventory_available> GetRemainingInventory(int inventoryId)
+        {
+            return GetInventoryTeamByInventoryId(inventoryId).Where(s => s.Available_Amount > 0).ToList();
+        }
+
     }
 }

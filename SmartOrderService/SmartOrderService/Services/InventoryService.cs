@@ -82,6 +82,7 @@ namespace SmartOrderService.Services
             {
                 if (CloseInventory(inventoryId)) {
                     closingRouteTeamTravelStatus(userId, inventoryId, userTeamRole);
+                    TransferUnsoldInventory(inventoryId,userId);
                     return true;
                 }
                 return false;
@@ -494,6 +495,66 @@ namespace SmartOrderService.Services
                 return true;
             }
             return false;
+        }
+
+        public void TransferUnsoldInventory(int inventoryId, int userId)
+        {
+            var unsoldProducts = GetUnsoldProducts(inventoryId);
+            //si la lista esta vacia, entonces no existen productos no vendidos
+            if (!unsoldProducts.Any())
+            {
+                return;
+            }
+            var nextInventory = GetNextInventory(userId);
+            //si no se encuentra un siguiente inventario, entonces ya se termino la jornada
+            if (nextInventory == null)
+            {
+                return;
+            }
+            SetNextTeamInventory(unsoldProducts, nextInventory.inventoryId);
+        }
+
+        private void SetNextTeamInventory(List<so_route_team_inventory_available> routeTeamInventory, int nextInventoryId)
+        {
+            foreach (var inventoryProduct in routeTeamInventory)
+            {
+                var inventoryDetail = db.so_inventory_detail.Where(
+                    s => s.inventoryId.Equals(nextInventoryId)
+                    && s.productId.Equals(inventoryProduct.productId)).FirstOrDefault();
+                if (inventoryDetail == null)
+                {
+                    var newInventoryDetail = new so_inventory_detail
+                    {
+                        productId = inventoryProduct.productId,
+                        inventoryId = nextInventoryId,
+                        amount = inventoryProduct.Available_Amount,
+                        createdon = DateTime.Today,
+                        modifiedon = DateTime.Today,
+                        status = true,
+                        price = 0
+                    };
+                    db.so_inventory_detail.Add(newInventoryDetail);
+                    continue;
+                }
+                inventoryDetail.amount += inventoryProduct.Available_Amount;
+            }
+            db.SaveChanges();
+        }
+
+        private List<so_route_team_inventory_available> GetUnsoldProducts(int inventoryId)
+        {
+            RouteTeamInventoryAvailableService routeTeamInventoryAvailableService = new RouteTeamInventoryAvailableService();
+            return routeTeamInventoryAvailableService.GetRemainingInventory(inventoryId);
+        }
+
+        private so_inventory GetNextInventory(int userId)
+        {
+            var nextInventory = db.so_inventory.Where(i => i.userId.Equals(userId)
+                && i.state.Equals(INVENTORY_AVAILABLE)
+                && i.status
+                && DbFunctions.TruncateTime(i.date) == DbFunctions.TruncateTime(DateTime.Today)
+                ).OrderBy(i => i.order).FirstOrDefault();
+            return nextInventory;
         }
 
         private List<ProductState> getSubClassifications(int productId, int productAmount, IQueryable<so_user_devolutions> userDevolutions)
