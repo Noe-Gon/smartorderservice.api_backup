@@ -82,7 +82,7 @@ namespace SmartOrderService.Services
             {
                 if (CloseInventory(inventoryId)) {
                     closingRouteTeamTravelStatus(userId, inventoryId, userTeamRole);
-                    TransferUnsoldInventory(inventoryId,userId);
+                    //TransferUnsoldInventory(inventoryId,userId);
                     return true;
                 }
                 return false;
@@ -499,19 +499,24 @@ namespace SmartOrderService.Services
 
         public void TransferUnsoldInventory(int inventoryId, int userId)
         {
-            var unsoldProducts = GetUnsoldProducts(inventoryId);
-            //si la lista esta vacia, entonces no existen productos no vendidos
-            if (!unsoldProducts.Any())
-            {
-                return;
+            ERolTeam userTeamRole = roleTeamService.getUserRole(userId);
+
+            if (userTeamRole == ERolTeam.Impulsor) {
+
+                var unsoldProducts = GetUnsoldProducts(inventoryId);
+                //si la lista esta vacia, entonces no existen productos no vendidos
+                if (!unsoldProducts.Any())
+                {
+                    return;
+                }
+                var nextInventory = GetNextInventory(userId);
+                //si no se encuentra un siguiente inventario, entonces ya se termino la jornada
+                if (nextInventory == null)
+                {
+                    return;
+                }
+                SetNextTeamInventory(unsoldProducts, nextInventory.inventoryId);
             }
-            var nextInventory = GetNextInventory(userId);
-            //si no se encuentra un siguiente inventario, entonces ya se termino la jornada
-            if (nextInventory == null)
-            {
-                return;
-            }
-            SetNextTeamInventory(unsoldProducts, nextInventory.inventoryId);
         }
 
         private void SetNextTeamInventory(List<so_route_team_inventory_available> routeTeamInventory, int nextInventoryId)
