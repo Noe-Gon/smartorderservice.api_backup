@@ -187,7 +187,7 @@ namespace SmartOrderService.Controllers
             {
                 var inventoryService = new InventoryService();
                 inventoryService.TransferUnsoldInventory(request.InventoryId.Value,request.UserId);
-                response = Request.CreateResponse(HttpStatusCode.OK);
+                response = Request.CreateResponse(HttpStatusCode.Created);
             }
             catch (Exception e)
             {
