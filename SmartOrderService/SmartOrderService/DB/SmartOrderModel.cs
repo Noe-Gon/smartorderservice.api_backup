@@ -149,6 +149,9 @@ namespace SmartOrderService.DB
 
         public virtual DbSet<so_route_team_travels_visit> so_route_team_travels_visits { get; set; }
 
+        public virtual DbSet<so_consumer> so_consumers { get; set; }
+        public virtual DbSet<so_consumer_removal_request> so_consumer_romoval_requests { get; set; }
+
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<so_role_team>()
@@ -1732,6 +1735,23 @@ namespace SmartOrderService.DB
                 .HasRequired(x => x.So_Binnacle_Visit)
                 .WithMany(x => x.so_route_team_travels_visits)
                 .HasForeignKey(x => x.binnacleId);
+
+            modelBuilder.Entity<so_consumer>()
+                .HasKey(x => x.Id)
+                .HasRequired(x => x.Customer)
+                .WithMany(x => x.Consumers)
+                .HasForeignKey(x => x.CustomerId);
+
+            modelBuilder.Entity<so_consumer_removal_request>()
+                .HasKey(x => x.Id)
+                .HasRequired(x => x.Consumer)
+                .WithMany(x => x.ConsumerRemovalRequests)
+                .HasForeignKey(x => x.ConsumerId);
+
+            modelBuilder.Entity<so_consumer_removal_request>()
+                .HasRequired(x => x.User)
+                .WithMany(x => x.ConsumerRemovalRequests)
+                .HasForeignKey(x => x.UserId);
 
         }
     }

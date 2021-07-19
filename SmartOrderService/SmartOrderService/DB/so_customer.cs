@@ -46,6 +46,7 @@ namespace SmartOrderService.DB
         public double? longitude { get; set; }
 
         public string email { get; set; }
+        public string email_2 { get; set; }
 
         public DateTime? createdon { get; set; }
 
@@ -89,6 +90,9 @@ namespace SmartOrderService.DB
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<so_tag> so_tag { get; set; }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<so_consumer> Consumers { get; set; }
 
         public string getSingleEmail()
         {
