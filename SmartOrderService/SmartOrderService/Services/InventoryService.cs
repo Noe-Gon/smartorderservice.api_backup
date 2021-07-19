@@ -526,6 +526,7 @@ namespace SmartOrderService.Services
                 var inventoryDetail = db.so_inventory_detail.Where(
                     s => s.inventoryId.Equals(nextInventoryId)
                     && s.productId.Equals(inventoryProduct.productId)).FirstOrDefault();
+
                 if (inventoryDetail == null)
                 {
                     var newInventoryDetail = new so_inventory_detail
@@ -539,9 +540,12 @@ namespace SmartOrderService.Services
                         price = 0
                     };
                     db.so_inventory_detail.Add(newInventoryDetail);
-                    continue;
                 }
-                inventoryDetail.amount += inventoryProduct.Available_Amount;
+                else
+                {
+                    inventoryDetail.amount += inventoryProduct.Available_Amount;
+                }
+                inventoryProduct.Available_Amount = 0;
             }
             db.SaveChanges();
         }
