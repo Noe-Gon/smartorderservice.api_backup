@@ -27,9 +27,9 @@ namespace SmartOrderService.Controllers
                 var response = service.InsertConsumer(request);
 
                 if (response.Status)
-                    return (IHttpActionResult)Request.CreateResponse(HttpStatusCode.Created, response);
+                    return Ok(response);
                 else
-                    return (IHttpActionResult)Request.CreateResponse(HttpStatusCode.BadRequest, response);
+                    return Content(HttpStatusCode.BadRequest, response);
             }
         }
 
@@ -42,17 +42,32 @@ namespace SmartOrderService.Controllers
                 var response = service.UpdateConsumer(request);
 
                 if (response.Status)
-                    return (IHttpActionResult)Request.CreateResponse(HttpStatusCode.OK, response);
+                    return Ok(response);
                 else
-                    return (IHttpActionResult)Request.CreateResponse(HttpStatusCode.BadRequest, response);
+                    return Content(HttpStatusCode.BadRequest, response);
             }
         }
 
-        //[HttpPost]
-        //[Route("~/api/consumer/removalrequest")]
-        //public IHttpActionResult ConsumerRemovalRequest(ConsumerRemovalRequestRequest request)
-        //{
+        [HttpPost]
+        [Route("~/api/consumer/removalrequest")]
+        public IHttpActionResult ConsumerRemovalRequest(ConsumerRemovalRequestRequest request)
+        {
+            using (var service = GetService())
+            {
+                try
+                {
+                    var response = service.ConsumerRemovalRequestRequest(request);
 
-        //}
+                    if (response.Status)
+                        return Ok(response);
+                    else
+                        return Content(HttpStatusCode.BadRequest, response);
+                }
+                catch (Exception e)
+                {
+                    return InternalServerError(e);
+                }
+            }
+        }
     }
 }

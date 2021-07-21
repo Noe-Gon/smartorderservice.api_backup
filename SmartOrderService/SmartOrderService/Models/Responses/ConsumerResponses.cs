@@ -14,4 +14,9 @@ namespace SmartOrderService.Models.Responses
     {
         public string Msg { get; set; }
     }
+
+    public class ConsumerRemovalResponse
+    {
+        public string Msg { get; set; }
+    }
 }

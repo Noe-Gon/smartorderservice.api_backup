@@ -149,7 +149,7 @@ namespace SmartOrderService.DB
 
         public virtual DbSet<so_route_team_travels_visit> so_route_team_travels_visits { get; set; }
 
-        public virtual DbSet<so_customer_additional_data> so_consumers { get; set; }
+        public virtual DbSet<so_customer_additional_data> so_customerr_additional_data { get; set; }
         public virtual DbSet<so_customer_removal_request> so_customer_romoval_requests { get; set; }
         public virtual DbSet<so_portal_links_log> so_portal_links_logs { get; set; }
 
@@ -1740,7 +1740,7 @@ namespace SmartOrderService.DB
             modelBuilder.Entity<so_customer_additional_data>()
                 .HasKey(x => x.Id)
                 .HasRequired(x => x.Customer)
-                .WithMany(x => x.Consumers)
+                .WithMany(x => x.CustomerAdditionalData)
                 .HasForeignKey(x => x.CustomerId);
 
             modelBuilder.Entity<so_customer_additional_data>()
@@ -1748,9 +1748,9 @@ namespace SmartOrderService.DB
 
             modelBuilder.Entity<so_customer_removal_request>()
                 .HasKey(x => x.Id)
-                .HasRequired(x => x.CustomerAdditionalData)
+                .HasRequired(x => x.Customer)
                 .WithMany(x => x.CustomerRemovalRequests)
-                .HasForeignKey(x => x.CustomerAdditionalDataId);
+                .HasForeignKey(x => x.CustomerId);
 
             modelBuilder.Entity<so_customer_removal_request>()
                 .HasRequired(x => x.User)
@@ -1759,9 +1759,9 @@ namespace SmartOrderService.DB
 
             modelBuilder.Entity<so_portal_links_log>()
                 .HasKey(x => x.Id)
-                .HasRequired(x => x.CustomerAdditionalData)
+                .HasRequired(x => x.Customer)
                 .WithMany(x => x.PortalLinksLog)
-                .HasForeignKey(x => x.CustomerAdditionalDataId);
+                .HasForeignKey(x => x.CustomerId);
         }
     }
 }

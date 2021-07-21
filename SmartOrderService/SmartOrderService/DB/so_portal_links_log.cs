@@ -23,9 +23,9 @@ namespace SmartOrderService.DB
         public int Type { get; set; }
 
         #region Relation
-        [Column("customer_additional_dataId")]
-        public int CustomerAdditionalDataId { get; set; }
-        public so_customer_additional_data CustomerAdditionalData { get; set; }
+        [Column("customerId")]
+        public int CustomerId { get; set; }
+        public so_customer Customer { get; set; }
         #endregion
     }
 }

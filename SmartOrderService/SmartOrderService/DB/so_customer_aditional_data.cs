@@ -23,10 +23,6 @@ namespace SmartOrderService.DB
         [Column("status")]
         public int Status { get; set; }
 
-        [Column("cfe_code")]
-        [MaxLength(200)]
-        public string CFECode { get; set; }
-
         [Column("code_place")]
         [MaxLength(100)]
         public string CodePlace { get; set; }
@@ -61,10 +57,6 @@ namespace SmartOrderService.DB
         public so_customer Customer { get; set; }
         #endregion
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<so_customer_removal_request> CustomerRemovalRequests { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<so_portal_links_log> PortalLinksLog { get; set; }
+        
     }
 }

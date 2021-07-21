@@ -17,7 +17,10 @@ namespace SmartOrderService.UnitOfWork
             CustomerAdditionalDataRepository = new GenericRepository<so_customer_additional_data>(Context);
             CustomerRepository = new GenericRepository<so_customer>(Context);
             CustomerRemovalRequestRepository = new GenericRepository<so_customer_removal_request>(Context);
-            CustomerDataRepository =  new GenericRepository<so_customer_data>(Context);
+            CustomerDataRepository = new GenericRepository<so_customer_data>(Context);
+            RouteRepository = new GenericRepository<so_route>(Context);
+            BranchRepository = new GenericRepository<so_branch>(Context);
+            RouteCustomerRepository = new GenericRepository<so_route_customer>(Context);
         }
 
         private SmartOrderModel Context { get; set; }
@@ -25,6 +28,9 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_customer> CustomerRepository { get; set; }
         public GenericRepository<so_customer_removal_request> CustomerRemovalRequestRepository { get; set; }
         public GenericRepository<so_customer_data> CustomerDataRepository { get; set; }
+        public GenericRepository<so_route> RouteRepository { get; set; }
+        public GenericRepository<so_branch> BranchRepository { get; set; }
+        public GenericRepository<so_route_customer> RouteCustomerRepository { get; set; }
 
         public void Save()
         {
