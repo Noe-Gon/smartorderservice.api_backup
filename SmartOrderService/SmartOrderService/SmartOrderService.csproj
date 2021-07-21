@@ -243,6 +243,7 @@
     <Compile Include="Controllers\CategoryController.cs" />
     <Compile Include="Controllers\CellarNoticeController.cs" />
     <Compile Include="Controllers\CollectBottleController.cs" />
+    <Compile Include="Controllers\ConsumerController.cs" />
     <Compile Include="Controllers\CountConfigurationController.cs" />
     <Compile Include="Controllers\CustomerController.cs" />
     <Compile Include="Controllers\CustomerDevolutionController.cs" />
@@ -341,7 +342,7 @@
     <Compile Include="DB\so_collect_bottle_detail.cs" />
     <Compile Include="DB\so_company.cs" />
     <Compile Include="DB\so_configuration_customer.cs" />
-    <Compile Include="DB\so_consumer.cs" />
+    <Compile Include="DB\so_customer_aditional_data.cs" />
     <Compile Include="DB\so_consumer_removal_request.cs" />
     <Compile Include="DB\so_container.cs" />
     <Compile Include="DB\so_container_customer.cs" />
@@ -381,6 +382,7 @@
     <Compile Include="DB\so_loan_order.cs" />
     <Compile Include="DB\so_loan_sale.cs" />
     <Compile Include="DB\so_log_errors.cs" />
+    <Compile Include="DB\so_portal_links_log.cs" />
     <Compile Include="DB\so_preventa_View.cs" />
     <Compile Include="DB\so_price_list_products_detail.cs" />
     <Compile Include="DB\so_process.cs" />
@@ -520,8 +522,11 @@
     <Compile Include="Models\DTO\UserReasonDevolutionDto.cs" />
     <Compile Include="Models\DTO\VisitDto.cs" />
     <Compile Include="Models\DTO\Workday.cs" />
+    <Compile Include="Models\Enum\Consumer.cs" />
+    <Compile Include="Models\Enum\ConsumerRemovalRequest.cs" />
     <Compile Include="Models\Enum\EInventoryTeamStatus.cs" />
     <Compile Include="Models\Enum\ERolTeam.cs" />
+    <Compile Include="Models\Enum\PortalLinksStatus.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\DTO\PriceDto.cs" />
     <Compile Include="Models\DTO\PriceList.cs" />
@@ -532,6 +537,7 @@
     <Compile Include="Models\Requests\BinnacleVisitRequest.cs" />
     <Compile Include="Models\Requests\CellarNoticeRequest.cs" />
     <Compile Include="Models\Requests\ConfigurationRequest.cs" />
+    <Compile Include="Models\Requests\ConsumerRequests.cs" />
     <Compile Include="Models\Requests\CustomerInvoiceDataRequest.cs" />
     <Compile Include="Models\Requests\InvoiceOpeFacturaRequest.cs" />
     <Compile Include="Models\Requests\ReplacementRequest.cs" />
@@ -553,9 +559,11 @@
     <Compile Include="Models\Requests\UserRequest.cs" />
     <Compile Include="Models\Requests\VisitRequest.cs" />
     <Compile Include="Models\Requests\WorkDayRequest.cs" />
+    <Compile Include="Models\Responses\ConsumerResponses.cs" />
     <Compile Include="Models\Responses\CountConfigurationResponse.cs" />
     <Compile Include="Models\Responses\CustomerResponse.cs" />
     <Compile Include="Models\Responses\InvoiceOpeFacturaResponse.cs" />
+    <Compile Include="Models\Responses\MsgResponseBase.cs" />
     <Compile Include="Models\Responses\PriceResponse.cs" />
     <Compile Include="Models\Responses\ProductResponse.cs" />
     <Compile Include="Models\Responses\Response.cs" />
@@ -576,6 +584,7 @@
     <Compile Include="Results\ChallengeResult.cs" />
     <Compile Include="Services\ApiVersionService.cs" />
     <Compile Include="Services\ApplicationService.cs" />
+    <Compile Include="Services\ConsumerService.cs" />
     <Compile Include="Services\RoleTeamService.cs" />
     <Compile Include="Services\RouteTeamInventoryAvailableService.cs" />
     <Compile Include="Services\RouteTeamService.cs" />
@@ -621,6 +630,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>InsertCliente.tt</DependentUpon>
     </Compile>
+    <Compile Include="UnitOfWork\Repositories\GenericRepository.cs" />
+    <Compile Include="UnitOfWork\UoWConsumer.cs" />
     <Compile Include="Utils\DateUtils.cs" />
     <Compile Include="Utils\DatosFacturas.cs" />
     <Compile Include="Utils\DB\factdet.cs" />

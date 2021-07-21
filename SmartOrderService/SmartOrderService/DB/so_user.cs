@@ -125,6 +125,6 @@ namespace SmartOrderService.DB
         public virtual ICollection<so_tracking> so_tracking { get; set; }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<so_consumer_removal_request> ConsumerRemovalRequests { get; set; }
+        public virtual ICollection<so_customer_removal_request> CustomerRemovalRequests { get; set; }
     }
 }
