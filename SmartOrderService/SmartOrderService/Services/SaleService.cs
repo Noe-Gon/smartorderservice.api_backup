@@ -41,8 +41,10 @@ namespace SmartOrderService.Services
             return sales;
         }
 
-        public List<Venta> getSalesByRoute(string BranchCode, string UserCode,int Trip,DateTime Date, bool Unmodifiable)
+        public List<Venta> getSalesByRoute(string BranchCode, string UserCode, int Trip, DateTime Date, bool Unmodifiable)
         {
+            RouteTeamService routeTeamService = new RouteTeamService();
+
             var user = db.so_user.Where(
                 u => u.code.Equals(UserCode) 
                 && u.so_branch.code.Equals(BranchCode)
@@ -51,14 +53,30 @@ namespace SmartOrderService.Services
             if (user == null)
                 throw new NoUserFoundException();
 
-            var salesDB =
-                db.so_sale
-                .Where(
-                    sale => sale.userId.Equals(user.userId)
-                    && DbFunctions.TruncateTime(sale.so_inventory.date) == DbFunctions.TruncateTime(Date)
-                    && sale.status
-                    && sale.so_inventory.order.Equals(Trip) 
-                ).ToList();
+            List<so_sale> salesDB = new List<so_sale>();
+
+            if (!routeTeamService.IsImpulsor(user.userId)) {
+                 salesDB =
+                    db.so_sale
+                    .Where(
+                        sale => sale.userId.Equals(user.userId)
+                        && DbFunctions.TruncateTime(sale.so_inventory.date) == DbFunctions.TruncateTime(Date)
+                        && sale.status
+                        && sale.so_inventory.order.Equals(Trip)
+                    ).ToList();
+            }
+            else
+            {
+                List<int> ids = routeTeamService.GetTeamIds(user.userId);
+                 salesDB =
+                    db.so_sale
+                    .Where(
+                        sale => ids.Contains(sale.userId)
+                        && DbFunctions.TruncateTime(sale.so_inventory.date) == DbFunctions.TruncateTime(Date)
+                        && sale.status
+                        && sale.so_inventory.order.Equals(Trip)
+                    ).ToList();
+            }
 
             if (Unmodifiable)
                 salesDB = salesDB.Where(s => s.facturas_so_sale.FirstOrDefault() != null).ToList();
@@ -201,20 +219,19 @@ namespace SmartOrderService.Services
 
 
             if (registeredSale == null)
-                {
+            {
+                so_sale entitySale = createSale(sale);
+                entitySale.so_sale_detail = createDetails(sale.SaleDetails, userId);
+                entitySale.so_sale_replacement = createReplacements(sale.SaleReplacements, userId);
+                entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
+                SetTaxes(entitySale);
+                sale.SaleId = UntransactionalSaveSale(entitySale);
 
-                    so_sale entitySale = createSale(sale);
-                    entitySale.so_sale_detail = createDetails(sale.SaleDetails, userId);
-                    entitySale.so_sale_replacement = createReplacements(sale.SaleReplacements, userId);
-                    entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
-                    SetTaxes(entitySale);
-                sale.SaleId = SaveSale(entitySale);
-                }
-
-                else
-                {
+            }
+            else
+            {
                 sale.SaleId = registeredSale.saleId;
-                }
+            }
 
             return sale;
         }
@@ -520,12 +537,33 @@ namespace SmartOrderService.Services
 
         public void RestoreInventoryAvailability(int saleId)
         {
-            var sales = db.so_sale_detail
-                .Join(db.so_sale,
-                saleDetail => saleDetail.saleId,
-                sale => sale.saleId,
-                (saleDetail, sale) => new { SaleDetail = saleDetail, SaleInventory = sale.inventoryId })
-                .Where(e => e.SaleDetail.saleId.Equals(saleId)).ToList();
+            int inventoryId = db.so_sale.Where(s => s.saleId.Equals(saleId)).FirstOrDefault().inventoryId.Value;
+
+            var saleDetail = db.so_sale_detail.Where(s => s.saleId.Equals(saleId))
+                .Select(a => new
+                {
+                    a.amount,
+                    a.productId
+                }).ToList();
+
+            int promotionId = db.so_sale_promotion.Where(s => s.saleId.Equals(saleId)).FirstOrDefault().sale_promotionId;
+
+            var promotionDetail = db.so_sale_promotion_detail.Where(s => s.sale_promotionId.Equals(promotionId))
+                .Select(a => new
+                {
+                    a.amount,
+                    a.productId
+                }).ToList();
+
+            var sales = saleDetail
+                .Concat(promotionDetail)
+                .GroupBy(a => a.productId)
+                .Select(
+                g => new
+                {
+                    productId = g.Key,
+                    amount = g.Sum(s => s.amount)
+                });
 
             using (var dbContextTransaction = db.Database.BeginTransaction())
             {
@@ -533,14 +571,15 @@ namespace SmartOrderService.Services
                 {
                     foreach (var sale in sales)
                     {
-                        int amountSold = sale.SaleDetail.amount;
-                        int saleInventory = sale.SaleInventory.GetValueOrDefault();
-                        int saleProductId = sale.SaleDetail.productId;
+                        int amountSold = sale.amount;
+                        int saleInventory = inventoryId;
+                        int saleProductId = sale.productId;
                         so_route_team_inventory_available routeTeamInventory = db.so_route_team_inventory_available
                             .Where(e => e.inventoryId.Equals(saleInventory) && e.productId.Equals(saleProductId)).FirstOrDefault();
                         routeTeamInventory.Available_Amount += amountSold;
                         db.SaveChanges();
                     }
+                    
                     dbContextTransaction.Commit();
                 }
                 catch (Exception e)
@@ -639,6 +678,16 @@ namespace SmartOrderService.Services
            
             return saleId;
         }
+
+        private int UntransactionalSaveSale(so_sale sale)
+        {
+            int saleId = 0;
+            db.so_sale.Add(sale);
+            db.SaveChanges();
+            saleId = sale.saleId;
+            return saleId;
+        }
+
 
         private so_control_download createControlDownload(int saleId,int userId) {
             return   new so_control_download() {
@@ -756,21 +805,33 @@ namespace SmartOrderService.Services
 
         public Sale SaleTeamTransaction(Sale sale)
         {
+            using (var transaction = db.Database.BeginTransaction()) {
                 Sale saleResult = CreateSaleResultFromSale(sale);
-                if (sale.SaleDetails.Count() > 0)
+                try
                 {
-                    if (!checkIfSaleExist(sale))
+                    if (sale.SaleDetails.Count() > 0)
                     {
-                        UnlockCreate(sale);
-                        if (sale.SaleId == 0)
+                        if (!checkIfSaleExist(sale))
                         {
-                            throw new BadRequestException();
+                            UnlockCreate(sale);
+                            if (sale.SaleId == 0)
+                            {
+                                throw new BadRequestException();
+                            }
+                            saleResult.SaleId = sale.SaleId;
+                            UpdateRouteTeamInventory(sale);
                         }
-                        saleResult.SaleId = sale.SaleId;
-                        UpdateRouteTeamInventory(sale);
+                        transaction.Commit();
                     }
                 }
+                catch (Exception exception)
+                {
+                    transaction.Rollback();
+                    throw exception;
+                }
                 return saleResult;
+            }
+
         }
 
         private void SetPromotionTax(so_sale_promotion_detail detail, so_branch_tax branch_tax, so_products_price_list master_price_list, so_products_price_list price_list)

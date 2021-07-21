@@ -6,6 +6,7 @@ using System.Web;
 using SmartOrderService.Models.DTO;
 using System.Data.Entity;
 using SmartOrderService.CustomExceptions;
+using SmartOrderService.Models.Responses;
 
 namespace SmartOrderService.Services
 {
@@ -176,6 +177,44 @@ namespace SmartOrderService.Services
 
         }
 
+        public List<GetTeamVisitResponse> getTeamVisits(int userId, int? inventoryId)
+        {
+            RoleTeamService roleTeamService = new RoleTeamService();
+            RouteTeamService routeTeamService = new RouteTeamService();
+            InventoryService inventoryService = new InventoryService();
+
+            if (inventoryId == null || inventoryId == 0)
+                inventoryId = inventoryService.getCurrentInventory(userId, null).inventoryId;
+
+            var soUser = db.so_user.Where(u => u.userId == userId).FirstOrDefault();
+            var date = DateTime.Today;
+            
+            var impulsor = inventoryService.SearchDrivingId(userId);
+            var routeId = routeTeamService.searchRouteId(impulsor);
+            var workDay = routeTeamService.GetWorkdayByUserAndDate(impulsor, DateTime.Today);
+
+            var visits = db.so_route_team_travels_visits
+                .Where(x => x.inventoryId == inventoryId && x.workDayId == workDay.work_dayId && x.routeId == routeId)
+                .Select(x => x.So_Binnacle_Visit)
+                .Select(x => new GetTeamVisitResponse
+                {
+                    VisitId = x.binnacleId,
+                    CustomerId = x.customerId,
+                    UserId = x.userId,
+                    CheckIn = x.checkin,
+                    CheckOut = x.checkout,
+                    LatitudeIn = x.latitudein,
+                    LatitudeOut = x.latitudeout,
+                    LongitudeIn = x.longitudein,
+                    LongitudeOut = x.longitudeout,
+                    ReasonFailed = x.so_binnacle_reason_failed.Count > 0 ? x.so_binnacle_reason_failed.FirstOrDefault().reasonId : (int?)null,
+                    Scanned = x.scanned
+                })
+                .ToList();
+
+            return visits;
+        }
+
         public int getDay(DateTime datetime)
         {
             switch (datetime.DayOfWeek)
@@ -197,8 +236,6 @@ namespace SmartOrderService.Services
                 default:
                     return 0;
             }
-
-
         }
     }
 }

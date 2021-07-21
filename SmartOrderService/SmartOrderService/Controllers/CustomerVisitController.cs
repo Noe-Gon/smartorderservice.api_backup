@@ -83,6 +83,35 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
+        [HttpPost]
+        [Route("api/Customer/TeamVisit")]
+        public HttpResponseMessage PostTeamVisit([FromBody] CustomerVisitDto dto)
+        {
+            HttpResponseMessage response;
+            try
+            {
+                var UserId = 0;
+
+                var user = new UserService().getUser((int)dto.UserId);
+                if (user != null)
+                    UserId = user.UserId;
+
+                var visit = new CustomerService().CreateTeamVisit(dto, UserId);
+                response = Request.CreateResponse(HttpStatusCode.Created, visit);
+
+            }
+            catch (NoUserFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Unauthorized, "El usuario no existe en WBC");
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, "No se pudo registrar la visita, valida estar registrado e" + e.InnerException.Message + " d " + e.InnerException.ToString());
+            }
+
+            return response;
+        }
+
         // PUT: api/CustomerVisit/5
         public void Put(int id, [FromBody]string value)
         {

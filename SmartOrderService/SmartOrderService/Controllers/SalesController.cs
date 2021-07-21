@@ -182,7 +182,7 @@ namespace SmartOrderService.Controllers
         {
             IHttpActionResult responseActionResult;
             HttpResponseMessage responseMessage;
-            Sale saleResult;
+            Sale saleResult = new Sale();
             try
             {
                 lock (objectService) {
@@ -198,6 +198,12 @@ namespace SmartOrderService.Controllers
             catch (BadRequestException e)
             {
                 return BadRequest();
+            }
+            catch (Exception e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
             }
 
             responseMessage = Request.CreateResponse(HttpStatusCode.OK, saleResult);

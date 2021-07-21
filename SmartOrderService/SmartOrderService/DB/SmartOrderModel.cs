@@ -147,6 +147,8 @@ namespace SmartOrderService.DB
 
         public virtual DbSet<so_route_team_inventory_available> so_route_team_inventory_available { get; set; }
 
+        public virtual DbSet<so_route_team_travels_visit> so_route_team_travels_visits { get; set; }
+
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<so_role_team>()
@@ -1717,6 +1719,20 @@ namespace SmartOrderService.DB
             modelBuilder.Entity<User_Visit_Plan>()
                 .Property(e => e.code_customer)
                 .IsUnicode(false);
+
+            modelBuilder.Entity<so_route_team_travels_visit>()
+                .HasKey(x => new { x.binnacleId, x.routeId, x.inventoryId, x.workDayId });
+
+            modelBuilder.Entity<so_route_team_travels_visit>()
+                .HasRequired(x => x.so_route_team_travels)
+                .WithMany(x => x.so_route_team_travels_visits)
+                .HasForeignKey(x => new { x.routeId, x.inventoryId, x.workDayId });
+
+            modelBuilder.Entity<so_route_team_travels_visit>()
+                .HasRequired(x => x.So_Binnacle_Visit)
+                .WithMany(x => x.so_route_team_travels_visits)
+                .HasForeignKey(x => x.binnacleId);
+
         }
     }
 }
