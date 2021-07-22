@@ -10,6 +10,8 @@ using SmartOrderService.Models.Requests;
 using SmartOrderService.CustomExceptions;
 using OpeCDLib.Models;
 using SmartOrderService.Models.Enum;
+using RestSharp;
+using System.Configuration;
 
 namespace SmartOrderService.Services
 {
@@ -78,6 +80,15 @@ namespace SmartOrderService.Services
             {
                 return CloseInventory(inventoryId);
             }
+
+            //Start Load Inventory Process OPCD
+            int impulsorId = SearchDrivingId(userId);
+            var routeTeam = db.so_route_team.Where(x => x.userId == impulsorId).First();
+            var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
+
+            CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
+            //End Load Inventory Process
+
             if (userTeamRole == ERolTeam.Impulsor)
             {
                 if (CloseInventory(inventoryId)) {
@@ -168,6 +179,15 @@ namespace SmartOrderService.Services
                 OpenInventory(inventoryId);
                 return;
             }
+
+            //Start Load Inventory Process OPCD
+            int impulsorId = SearchDrivingId(userId);
+            var routeTeam = db.so_route_team.Where(x => x.userId == userId).First();
+            var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
+
+            CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
+            //End Load Inventory Process
+
             if (userTeamRole == ERolTeam.Impulsor)
             {
                 OpenInventory(inventoryId);
@@ -746,6 +766,26 @@ namespace SmartOrderService.Services
                 && i.routeId.Equals(routeId)
                 && i.work_dayId.Equals(workdayId)).FirstOrDefault();
             return routeTeamTravels;
+        }
+
+        public void CallLoadInventoryProcess(int userId, string branchCode, string routeCode, DateTime? deliveryDate)
+        {
+            if (deliveryDate == null)
+                deliveryDate = DateTime.Now;
+
+            var client = new RestClient();
+            client.BaseUrl = new Uri(ConfigurationManager.AppSettings["ApiV2Url"]);
+            var request = new RestRequest("api/CargaInventario", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddBody(new
+            {
+                userId = userId,
+                posId = branchCode,
+                routeId = routeCode,
+                deliveryDate = deliveryDate,
+            });
+
+            var response = client.Execute(request);
         }
     }
 }
