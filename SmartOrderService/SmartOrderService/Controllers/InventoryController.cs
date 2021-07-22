@@ -172,5 +172,29 @@ namespace SmartOrderService.Controllers
             }
             return response;
         }
+
+        
+        [HttpPost,Route("api/inventory/transferunsoldinventory")]
+        public HttpResponseMessage TransferUnsoldInventory([FromBody] InventoryRequest request)
+        {
+            HttpResponseMessage response;
+            if (!request.InventoryId.HasValue)
+            {
+                response = Request.CreateResponse(HttpStatusCode.BadRequest, "Falta el parametro InventoryId");
+                return response;
+            }
+            try
+            {
+                var inventoryService = new InventoryService();
+                inventoryService.TransferUnsoldInventory(request.InventoryId.Value,request.UserId);
+                response = Request.CreateResponse(HttpStatusCode.Created);
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError,"No fue posible completar la transferencia de inventario");
+            }
+            return response;
+        }
+        
     }
 }
