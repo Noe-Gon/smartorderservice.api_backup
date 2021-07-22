@@ -219,20 +219,19 @@ namespace SmartOrderService.Services
 
 
             if (registeredSale == null)
-                {
-
-                    so_sale entitySale = createSale(sale);
-                    entitySale.so_sale_detail = createDetails(sale.SaleDetails, userId);
-                    entitySale.so_sale_replacement = createReplacements(sale.SaleReplacements, userId);
-                    entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
-                    SetTaxes(entitySale);
+            {
+                so_sale entitySale = createSale(sale);
+                entitySale.so_sale_detail = createDetails(sale.SaleDetails, userId);
+                entitySale.so_sale_replacement = createReplacements(sale.SaleReplacements, userId);
+                entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
+                SetTaxes(entitySale);
                 sale.SaleId = UntransactionalSaveSale(entitySale);
-                }
 
-                else
-                {
+            }
+            else
+            {
                 sale.SaleId = registeredSale.saleId;
-                }
+            }
 
             return sale;
         }
@@ -538,12 +537,33 @@ namespace SmartOrderService.Services
 
         public void RestoreInventoryAvailability(int saleId)
         {
-            var sales = db.so_sale_detail
-                .Join(db.so_sale,
-                saleDetail => saleDetail.saleId,
-                sale => sale.saleId,
-                (saleDetail, sale) => new { SaleDetail = saleDetail, SaleInventory = sale.inventoryId })
-                .Where(e => e.SaleDetail.saleId.Equals(saleId)).ToList();
+            int inventoryId = db.so_sale.Where(s => s.saleId.Equals(saleId)).FirstOrDefault().inventoryId.Value;
+
+            var saleDetail = db.so_sale_detail.Where(s => s.saleId.Equals(saleId))
+                .Select(a => new
+                {
+                    a.amount,
+                    a.productId
+                }).ToList();
+
+            int promotionId = db.so_sale_promotion.Where(s => s.saleId.Equals(saleId)).FirstOrDefault().sale_promotionId;
+
+            var promotionDetail = db.so_sale_promotion_detail.Where(s => s.sale_promotionId.Equals(promotionId))
+                .Select(a => new
+                {
+                    a.amount,
+                    a.productId
+                }).ToList();
+
+            var sales = saleDetail
+                .Concat(promotionDetail)
+                .GroupBy(a => a.productId)
+                .Select(
+                g => new
+                {
+                    productId = g.Key,
+                    amount = g.Sum(s => s.amount)
+                });
 
             using (var dbContextTransaction = db.Database.BeginTransaction())
             {
@@ -551,14 +571,15 @@ namespace SmartOrderService.Services
                 {
                     foreach (var sale in sales)
                     {
-                        int amountSold = sale.SaleDetail.amount;
-                        int saleInventory = sale.SaleInventory.GetValueOrDefault();
-                        int saleProductId = sale.SaleDetail.productId;
+                        int amountSold = sale.amount;
+                        int saleInventory = inventoryId;
+                        int saleProductId = sale.productId;
                         so_route_team_inventory_available routeTeamInventory = db.so_route_team_inventory_available
                             .Where(e => e.inventoryId.Equals(saleInventory) && e.productId.Equals(saleProductId)).FirstOrDefault();
                         routeTeamInventory.Available_Amount += amountSold;
                         db.SaveChanges();
                     }
+                    
                     dbContextTransaction.Commit();
                 }
                 catch (Exception e)
