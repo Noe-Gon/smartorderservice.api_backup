@@ -47,7 +47,7 @@ namespace SmartOrderService.Services
                 .Join(db.so_route_customer,
                     userRoute => userRoute.routeId,
                     customerRoute => customerRoute.routeId,
-                    (userRoute, customerRoute) => new { userRoute.userId, customerRoute.customerId, customerRoute.day, customerRoute.order, customerRoute.status, userRouteStatus = userRoute.status }
+                    (userRoute, customerRoute) => new { userRoute.userId, customerRoute.customerId, customerRoute.day, customerRoute.order, customerRoute.status, userRouteStatus = userRoute.status, routeId = userRoute.routeId }
                 )
                 .Where(
                     v => v.userId.Equals(userId)
@@ -55,13 +55,16 @@ namespace SmartOrderService.Services
                     && v.userRouteStatus
                     && v.status
                     && day.Equals(v.day)
-                )
-                    .Select(c => new { c.customerId, c.order });
+                ).Select(c => new { c.customerId, c.order, c.routeId });
+                
                 foreach (var data in routeVisits)
                 {
-
-
                     int order = data.order;
+
+                    var daysInRoute = db.so_route_customer
+                        .Where(x => x.customerId == data.customerId && x.routeId == data.routeId)
+                        .Select(x => x.day)
+                        .ToList();
 
                     if (inventory != null && inventory.status)
                     {
@@ -78,7 +81,8 @@ namespace SmartOrderService.Services
                         Order = order,
                         Visited = db.so_binnacle_visit.Where(bv => bv.customerId == data.customerId &&
                             DbFunctions.TruncateTime(bv.createdon) == DbFunctions.TruncateTime(DateTime.Now))
-                            .FirstOrDefault() != null
+                            .FirstOrDefault() != null,
+                        Days = daysInRoute
                     };
 
                     visits.Add(dto);
@@ -89,6 +93,7 @@ namespace SmartOrderService.Services
 
                 foreach (var otherVisit in customers)
                 {
+
                     if (routeVisits.Select(rv => rv.customerId).Contains(otherVisit))
                     {
                         VisitDto dtotemp = visits.Where(v => v.CustomerId == otherVisit).FirstOrDefault();
@@ -97,12 +102,12 @@ namespace SmartOrderService.Services
                     }
                     else
                     {
-
                         VisitDto dto = new VisitDto()
                         {
                             CustomerId = otherVisit,
                             Order = 0,
-                            Visited = false
+                            Visited = false,
+                            Days = new List<int>() { day }
                         };
                         visits.Add(dto);
                     }

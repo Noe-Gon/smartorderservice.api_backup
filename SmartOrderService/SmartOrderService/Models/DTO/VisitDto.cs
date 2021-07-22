@@ -9,8 +9,8 @@ namespace SmartOrderService.Models.DTO
     {
         public int CustomerId {get;set;}
         public int Order { get; set; }
-
         public Boolean Visited { get; set; }
-   
+        public List<int> Days { get; set; }
+
     }
 }

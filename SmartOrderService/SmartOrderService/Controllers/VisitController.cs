@@ -9,6 +9,7 @@ using System.Web.Http;
 
 using SmartOrderService.Services;
 using SmartOrderService.CustomExceptions;
+using SmartOrderService.Models.DTO;
 
 namespace SmartOrderService.Controllers
 {
