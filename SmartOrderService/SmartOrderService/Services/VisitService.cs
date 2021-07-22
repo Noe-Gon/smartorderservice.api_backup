@@ -7,6 +7,7 @@ using SmartOrderService.Models.DTO;
 using System.Data.Entity;
 using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.Responses;
+using System.Configuration;
 
 namespace SmartOrderService.Services
 {
@@ -15,10 +16,12 @@ namespace SmartOrderService.Services
         SmartOrderModel db = new SmartOrderModel();
         public List<VisitDto> getVisits(int userId)
         {
-
+            bool isConsumer = false;
             var soUser = db.so_user.Where(u => u.userId == userId).FirstOrDefault();
             int day = (int)DateTime.Today.DayOfWeek;
             day++;
+            string daysWithoutSalesToDisableString = ConfigurationManager.AppSettings["DaysWithoutSalesToDisable"];
+            int daysWithoutSalesToDisable = string.IsNullOrEmpty(daysWithoutSalesToDisableString) ? 3 : Convert.ToInt32(daysWithoutSalesToDisableString);
 
             if (soUser.type == so_user.POAC_TYPE || soUser.type == so_user.CCEH_TYPE)
             {
@@ -47,7 +50,7 @@ namespace SmartOrderService.Services
                 .Join(db.so_route_customer,
                     userRoute => userRoute.routeId,
                     customerRoute => customerRoute.routeId,
-                    (userRoute, customerRoute) => new { userRoute.userId, customerRoute.customerId, customerRoute.day, customerRoute.order, customerRoute.status, userRouteStatus = userRoute.status }
+                    (userRoute, customerRoute) => new { userRoute.userId, customerRoute.customerId, customerRoute.day, customerRoute.order, customerRoute.status, userRouteStatus = userRoute.status, routeId = userRoute.routeId }
                 )
                 .Where(
                     v => v.userId.Equals(userId)
@@ -55,13 +58,28 @@ namespace SmartOrderService.Services
                     && v.userRouteStatus
                     && v.status
                     && day.Equals(v.day)
-                )
-                    .Select(c => new { c.customerId, c.order });
+                ).Select(c => new { c.customerId, c.order, c.routeId });
+                
                 foreach (var data in routeVisits)
                 {
-
-
                     int order = data.order;
+
+                    //var daysInRoute = db.so_route_customer
+                    //    .Where(x => x.customerId == data.customerId && x.routeId == data.routeId)
+                    //    .Select(x => x.day)
+                    //    .ToList();
+
+                    int counterVisitsWithoutSales = 0;
+                    var customerAdditionalData = db.so_customer
+                        .Where(x => x.customerId == data.customerId)
+                        .Select(x => x.CustomerAdditionalData)
+                        .FirstOrDefault();
+
+                    if (customerAdditionalData != null && customerAdditionalData.Count() != 0)
+                    {
+                        counterVisitsWithoutSales = customerAdditionalData.FirstOrDefault().CounterVisitsWithoutSales;
+                        isConsumer = true;
+                    }
 
                     if (inventory != null && inventory.status)
                     {
@@ -78,7 +96,10 @@ namespace SmartOrderService.Services
                         Order = order,
                         Visited = db.so_binnacle_visit.Where(bv => bv.customerId == data.customerId &&
                             DbFunctions.TruncateTime(bv.createdon) == DbFunctions.TruncateTime(DateTime.Now))
-                            .FirstOrDefault() != null
+                            .FirstOrDefault() != null,
+                        CounterVisitsWithoutSales = counterVisitsWithoutSales,
+                        CanBeRemoved = counterVisitsWithoutSales >= daysWithoutSalesToDisable,
+                        IsConsumer = isConsumer
                     };
 
                     visits.Add(dto);
@@ -89,6 +110,18 @@ namespace SmartOrderService.Services
 
                 foreach (var otherVisit in customers)
                 {
+                    int counterVisitsWithoutSales = 0;
+                    var customerAdditionalData = db.so_customer
+                        .Where(x => x.customerId == otherVisit)
+                        .Select(x => x.CustomerAdditionalData)
+                        .FirstOrDefault();
+
+                    if (customerAdditionalData != null && customerAdditionalData.Count() != 0)
+                    {
+                        counterVisitsWithoutSales = customerAdditionalData.FirstOrDefault().CounterVisitsWithoutSales;
+                        isConsumer = true;
+                    }
+
                     if (routeVisits.Select(rv => rv.customerId).Contains(otherVisit))
                     {
                         VisitDto dtotemp = visits.Where(v => v.CustomerId == otherVisit).FirstOrDefault();
@@ -97,12 +130,14 @@ namespace SmartOrderService.Services
                     }
                     else
                     {
-
                         VisitDto dto = new VisitDto()
                         {
                             CustomerId = otherVisit,
                             Order = 0,
-                            Visited = false
+                            Visited = false,
+                            CounterVisitsWithoutSales = counterVisitsWithoutSales,
+                            CanBeRemoved = counterVisitsWithoutSales >= daysWithoutSalesToDisable,
+                            IsConsumer = isConsumer
                         };
                         visits.Add(dto);
                     }
