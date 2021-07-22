@@ -1,4 +1,5 @@
-﻿using SmartOrderService.DB;
+﻿using SmartOrderService.CustomExceptions;
+using SmartOrderService.DB;
 using SmartOrderService.Models.Enum;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;
@@ -265,6 +266,23 @@ namespace SmartOrderService.Services
             }
         }
 
+        public int SearchDrivingId(int actualUserId)
+        {
+            so_route_team teamRoute = UoWConsumer.RouteTeamRepository
+                .Get(i => i.userId == actualUserId)
+                .FirstOrDefault();
+
+            if (teamRoute == null)
+            {
+                throw new RelatedDriverNotFoundException(actualUserId);
+            }
+            int DrivingId = UoWConsumer.RouteTeamRepository
+                .Get(i => i.routeId == teamRoute.routeId && i.roleTeamId == (int)ERolTeam.Impulsor)
+                .Select(x => x.userId)
+                .FirstOrDefault();
+
+            return DrivingId;
+        }
         public void Dispose()
         {
             this.UoWConsumer.Dispose();
