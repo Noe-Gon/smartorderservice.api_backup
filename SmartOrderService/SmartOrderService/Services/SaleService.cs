@@ -821,6 +821,17 @@ namespace SmartOrderService.Services
                             saleResult.SaleId = sale.SaleId;
                             UpdateRouteTeamInventory(sale);
                         }
+
+                        var updateCustomerAdditionalData = db.so_customerr_additional_data
+                            .Where(x => x.CustomerId == sale.CustomerId)
+                            .FirstOrDefault();
+
+                        if (updateCustomerAdditionalData != null)
+                        {
+                            updateCustomerAdditionalData.CounterVisitsWithoutSales = 0;
+                            db.SaveChanges();
+                        }
+
                         transaction.Commit();
                     }
                 }

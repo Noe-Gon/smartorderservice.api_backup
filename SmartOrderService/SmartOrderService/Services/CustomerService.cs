@@ -196,6 +196,12 @@ namespace SmartOrderService.Services
                 var ItemToDownload = new ControlDownloadService().createControlDownload(visit.binnacleId, UserId, ControlDownloadService.MODEL_TYPE_BINNACLE_VISIT);
 
                 db.so_control_download.Add(ItemToDownload);
+                //Aumentar el contador de visitas sin ventas 
+                var updateCustomerAdditionalData = db.so_customerr_additional_data
+                            .Where(x => x.CustomerId == dto.CustomerId)
+                            .FirstOrDefault();
+                if (updateCustomerAdditionalData != null)
+                    updateCustomerAdditionalData.CounterVisitsWithoutSales ++;
 
                 db.SaveChanges();
 
