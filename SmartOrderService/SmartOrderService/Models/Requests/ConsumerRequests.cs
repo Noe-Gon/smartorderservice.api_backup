@@ -9,7 +9,6 @@ namespace SmartOrderService.Models.Requests
     {
         public int UserId { get; set; }
         public int RouteId { get; set; }
-        public string Contact { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
         public string Email_2 { get; set; }
@@ -36,7 +35,6 @@ namespace SmartOrderService.Models.Requests
         public int CustomerId { get; set; }
         public int RouteId { get; set; }
         public string Name { get; set; }
-        public string Contact { get; set; }
         public string Email { get; set; }
         public string Email_2 { get; set; }
         public string Phone { get; set; }
@@ -62,5 +60,10 @@ namespace SmartOrderService.Models.Requests
         public int UserId { get; set; }
         public int CustomerId { get; set; }
         public string Reason { get; set; }
+    }
+
+    public class GetConsumersRequest
+    {
+        public int userId { get; set; }
     }
 }

@@ -69,5 +69,27 @@ namespace SmartOrderService.Controllers
                 }
             }
         }
+
+        [HttpGet]
+        [Route("~/api/consumer")]
+        public IHttpActionResult GetConsumers(GetConsumersRequest request)
+        {
+            using (var service = GetService())
+            {
+                try
+                {
+                    var response = service.GetConsumers(request);
+
+                    if(response.Status)
+                        return Ok(response);
+                    else
+                        return Content(HttpStatusCode.BadRequest, response);
+                }
+                catch (Exception e)
+                {
+                    return InternalServerError(e);
+                }
+            }
+        }
     }
 }

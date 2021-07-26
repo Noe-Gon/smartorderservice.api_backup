@@ -22,6 +22,16 @@ namespace SmartOrderService.Services
             {
                 return true;
             }
+
+            //Start Load Inventory Process OPCD
+            var inventoryService = new InventoryService();
+            int impulsorId = SearchDrivingId(userId);
+            var routeTeam = db.so_route_team.Where(x => x.userId == impulsorId).First();
+            var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
+
+            inventoryService.CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
+            //End Load Inventory Process
+
             int inventoryState = getInventoryState(userId,DateTime.Today);
             if ((inventoryState == 0 && userRole == ERolTeam.Impulsor))
             {
@@ -84,6 +94,16 @@ namespace SmartOrderService.Services
             {
                 return true;
             }
+
+            //Start Load Inventory Process OPCD
+            var inventoryService = new InventoryService();
+            int impulsorId = SearchDrivingId(userId);
+            var routeTeam = db.so_route_team.Where(x => x.userId == impulsorId).First();
+            var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
+
+            inventoryService.CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
+            //End Load Inventory Process
+
             if (userRole == ERolTeam.Impulsor)
             {
                 if (getInventoryState(userId,DateTime.Today) == 1 && routeTeamTravelsService.getTravelStatusByInventoryId(inventoryId) == EInventoryTeamStatus.InventarioCerradoPorAsistente)

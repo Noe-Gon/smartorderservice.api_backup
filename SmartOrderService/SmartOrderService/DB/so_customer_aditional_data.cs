@@ -54,7 +54,7 @@ namespace SmartOrderService.DB
         #region Relationship
         [Column("customerId")]
         public int CustomerId { get; set; }
-        public so_customer Customer { get; set; }
+        public virtual so_customer Customer { get; set; }
         #endregion
 
         
