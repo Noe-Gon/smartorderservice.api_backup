@@ -38,15 +38,22 @@ namespace SmartOrderService.Services
                 var newCustomer = new so_customer
                 {
                     name = request.Name,
-                    createdby = request.UserId,
+                    createdby = 2777,
                     createdon = DateTime.Now,
                     email = request.Email,
                     latitude = request.Latitude,
                     longitude = request.Longitude,
                     code = request.CFECode,
-                    contact = request.Contact,
-                    status = true
+                    contact = request.Name,
+                    status = true,
                 };
+
+                string address = "";
+                address += string.IsNullOrEmpty(request.Street) ? "" : "C." + request.Street;
+                address += string.IsNullOrEmpty(request.ExternalNumber) ? "" : " #" + request.ExternalNumber;
+                address += string.IsNullOrEmpty(request.Crossroads) ? "" : " X " + request.Crossroads;
+                address += string.IsNullOrEmpty(request.Crossroads_2) ? "" : " Y " + request.Crossroads_2;
+                newCustomer.address = address;
 
                 var newCustomerAdditionalData= new so_customer_additional_data
                 {
@@ -89,7 +96,8 @@ namespace SmartOrderService.Services
                         day = day,
                         order = 0,
                         so_customer = newCustomer,
-                        status = true
+                        status = true,
+                        visit_type = 1
                     });
 
                 }
@@ -150,7 +158,7 @@ namespace SmartOrderService.Services
                 updateCustomer.modifiedon = DateTime.Now;
                 updateCustomer.modifiedby = request.UserId;
                 updateCustomer.code = request.CFECode ?? updateCustomer.code;
-                updateCustomer.contact = request.Contact ?? updateCustomer.contact;
+                updateCustomer.contact = request.Name ?? updateCustomer.name;
 
                 var updateCustomerAdditionalData = updateCustomer.CustomerAdditionalData
                     .FirstOrDefault();
@@ -175,6 +183,13 @@ namespace SmartOrderService.Services
                 updateCustomerData.address_number_cross2 = request.Crossroads_2 ?? updateCustomerData.address_number_cross2;
                 updateCustomerData.address_street = request.Street ?? updateCustomerData.address_street;
 
+                string address = "";
+                address += string.IsNullOrEmpty(request.Street) ? updateCustomerData.address_street : "C." + request.Street;
+                address += string.IsNullOrEmpty(request.ExternalNumber) ? updateCustomerData.address_number : " #" + request.ExternalNumber;
+                address += string.IsNullOrEmpty(request.Crossroads) ? updateCustomerData.address_number_cross1 : " X " + request.Crossroads;
+                address += string.IsNullOrEmpty(request.Crossroads_2) ? updateCustomerData.address_number_cross2  : " Y " + request.Crossroads_2;
+                updateCustomer.address = address;
+
                 //Ágregar y eliminar dias
                 var daysInRoute = UoWConsumer.RouteCustomerRepository
                     .Get(x => x.customerId == request.CustomerId && x.routeId == request.RouteId)
@@ -197,7 +212,8 @@ namespace SmartOrderService.Services
                             day = day,
                             order = 0,
                             customerId = request.CustomerId,
-                            status = true
+                            status = true,
+                            visit_type = 1
                         });
                 }
                 UoWConsumer.RouteCustomerRepository.InsertByRange(newDaysInRoute);
