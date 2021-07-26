@@ -541,6 +541,8 @@ namespace SmartOrderService.Services
 
         private void SetNextTeamInventory(List<so_route_team_inventory_available> routeTeamInventory, int nextInventoryId)
         {
+            var inventorySummary = db.so_inventory_summary
+                .Where(s => s.inventoryId.Equals(nextInventoryId)).FirstOrDefault();
             foreach (var inventoryProduct in routeTeamInventory)
             {
                 var inventoryDetail = db.so_inventory_detail.Where(
@@ -560,11 +562,13 @@ namespace SmartOrderService.Services
                         price = 0
                     };
                     db.so_inventory_detail.Add(newInventoryDetail);
+                    inventorySummary.articles_amount = inventorySummary.articles_amount + 1;
                 }
                 else
                 {
                     inventoryDetail.amount += inventoryProduct.Available_Amount;
                 }
+                inventorySummary.products_amount = inventorySummary.products_amount + inventoryProduct.Available_Amount;
                 inventoryProduct.Available_Amount = 0;
             }
             db.SaveChanges();
