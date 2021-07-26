@@ -194,7 +194,7 @@ namespace SmartOrderService.Services
             var workDay = routeTeamService.GetWorkdayByUserAndDate(impulsor, DateTime.Today);
 
             var visits = db.so_route_team_travels_visits
-                .Where(x => x.inventoryId == inventoryId && x.workDayId == workDay.work_dayId && x.routeId == routeId)
+                .Where(x => x.workDayId == workDay.work_dayId && x.routeId == routeId)
                 .Select(x => x.So_Binnacle_Visit)
                 .Select(x => new GetTeamVisitResponse
                 {
