@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using SmartOrderService.Models.Requests;
-using SmartOrderService.Models.Responses;
 using System.Web.Http;
-
 using SmartOrderService.Services;
 using SmartOrderService.CustomExceptions;
-using SmartOrderService.Models.DTO;
 
 namespace SmartOrderService.Controllers
 {

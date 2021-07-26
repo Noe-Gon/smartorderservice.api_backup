@@ -81,14 +81,6 @@ namespace SmartOrderService.Services
                 return CloseInventory(inventoryId);
             }
 
-            //Start Load Inventory Process OPCD
-            int impulsorId = SearchDrivingId(userId);
-            var routeTeam = db.so_route_team.Where(x => x.userId == impulsorId).First();
-            var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
-
-            CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
-            //End Load Inventory Process
-
             if (userTeamRole == ERolTeam.Impulsor)
             {
                 if (CloseInventory(inventoryId)) {
@@ -179,14 +171,6 @@ namespace SmartOrderService.Services
                 OpenInventory(inventoryId);
                 return;
             }
-
-            //Start Load Inventory Process OPCD
-            int impulsorId = SearchDrivingId(userId);
-            var routeTeam = db.so_route_team.Where(x => x.userId == userId).First();
-            var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
-
-            CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
-            //End Load Inventory Process
 
             if (userTeamRole == ERolTeam.Impulsor)
             {
