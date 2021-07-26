@@ -182,14 +182,14 @@ namespace SmartOrderService.Services
             RoleTeamService roleTeamService = new RoleTeamService();
             RouteTeamService routeTeamService = new RouteTeamService();
             InventoryService inventoryService = new InventoryService();
+            var impulsor = inventoryService.SearchDrivingId(userId);
 
             if (inventoryId == null || inventoryId == 0)
                 inventoryId = inventoryService.getCurrentInventory(userId, null).inventoryId;
 
             var soUser = db.so_user.Where(u => u.userId == userId).FirstOrDefault();
-            var date = DateTime.Today;
+            var date = DateTime.Today; 
             
-            var impulsor = inventoryService.SearchDrivingId(userId);
             var routeId = routeTeamService.searchRouteId(impulsor);
             var workDay = routeTeamService.GetWorkdayByUserAndDate(impulsor, DateTime.Today);
 
