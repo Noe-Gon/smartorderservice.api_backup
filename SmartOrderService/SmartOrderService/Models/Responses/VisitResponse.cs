@@ -24,5 +24,6 @@ namespace SmartOrderService.Models.Responses
         public double? LongitudeOut { get; set; }
         public int? ReasonFailed { get; set; }
         public int? VisitId { get; set; }
+        public int InventoryId { get; set; }
     }
 }
