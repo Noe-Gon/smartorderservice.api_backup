@@ -32,11 +32,10 @@ namespace SmartOrderService.Models.Responses
         public string Email_2 { get; set; }
         public string Phone { get; set; }
         public string Phone_2 { get; set; }
-        public int Status { get; set; }
         public double? Longitude { get; set; }
         public double? Latitude { get; set; }
         public string CFECode { get; set; }
-        public string CodePlace { get; set; }
+        public int? CodePlace { get; set; }
         public string ReferenceCode { get; set; }
         public string Street { get; set; }
         public string ExternalNumber { get; set; }
@@ -47,5 +46,9 @@ namespace SmartOrderService.Models.Responses
         public int CounterVisitsWithoutSales { get; set; }
         public bool IsActive { get; set; }
         public List<int> Days { get; set; }
+        public bool IsMailingActive { get; set; }
+        public bool IsSMSActive { get; set; }
+        public bool IsTermsAndConditionsAccepted { get; set; }
+        public bool CanBeRemoved { get; set; }
     }
 }

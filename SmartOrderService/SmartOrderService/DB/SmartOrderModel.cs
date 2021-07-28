@@ -152,6 +152,7 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_customer_additional_data> so_customerr_additional_data { get; set; }
         public virtual DbSet<so_customer_removal_request> so_customer_romoval_requests { get; set; }
         public virtual DbSet<so_portal_links_log> so_portal_links_logs { get; set; }
+        public virtual DbSet<so_code_place> so_code_places { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -1746,6 +1747,11 @@ namespace SmartOrderService.DB
             modelBuilder.Entity<so_customer_additional_data>()
                 .Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
 
+            modelBuilder.Entity<so_customer_additional_data>()
+                .HasOptional(x => x.CodePlace)
+                .WithMany(x => x.CustomerAdditionalData)
+                .HasForeignKey(x => x.CodePlaceId);
+
             modelBuilder.Entity<so_customer_removal_request>()
                 .HasKey(x => x.Id)
                 .HasRequired(x => x.Customer)
@@ -1762,6 +1768,11 @@ namespace SmartOrderService.DB
                 .HasRequired(x => x.Customer)
                 .WithMany(x => x.PortalLinksLog)
                 .HasForeignKey(x => x.CustomerId);
+
+            var codePlace = modelBuilder.Entity<so_code_place>();
+            codePlace.HasKey(x => x.Id);
+            codePlace.Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+
         }
     }
 }

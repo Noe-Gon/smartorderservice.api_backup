@@ -18,7 +18,7 @@ namespace SmartOrderService.Models.Requests
         public double? Longitude { get; set; }
         public double? Latitude { get; set; }
         public string CFECode { get; set; }
-        public string CodePlace { get; set; }
+        public int? CodePlace { get; set; }
         public string ReferenceCode { get; set; }
         public string Street { get; set; }
         public string ExternalNumber { get; set; }
@@ -43,7 +43,7 @@ namespace SmartOrderService.Models.Requests
         public double? Longitude { get; set; }
         public double? Latitude { get; set; }
         public string CFECode { get; set; }
-        public string CodePlace { get; set; }
+        public int? CodePlace { get; set; }
         public string ReferenceCode { get; set; }
         public string Street { get; set; }
         public string ExternalNumber { get; set; }

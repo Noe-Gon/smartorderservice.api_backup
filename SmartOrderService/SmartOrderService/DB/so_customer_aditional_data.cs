@@ -23,10 +23,6 @@ namespace SmartOrderService.DB
         [Column("status")]
         public int Status { get; set; }
 
-        [Column("code_place")]
-        [MaxLength(100)]
-        public string CodePlace { get; set; }
-
         [Column("reference_code")]
         [MaxLength(200)]
         public string ReferenceCode { get; set; }
@@ -55,6 +51,11 @@ namespace SmartOrderService.DB
         [Column("customerId")]
         public int CustomerId { get; set; }
         public virtual so_customer Customer { get; set; }
+
+        [Column("codePlaceId")]
+        public int? CodePlaceId { get; set; } 
+
+        public virtual so_code_place CodePlace { get; set; }
         #endregion
 
         
