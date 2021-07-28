@@ -251,6 +251,7 @@
     <Compile Include="Controllers\BranchController.cs" />
     <Compile Include="Controllers\CategoryController.cs" />
     <Compile Include="Controllers\CellarNoticeController.cs" />
+    <Compile Include="Controllers\CodePlaceController.cs" />
     <Compile Include="Controllers\CollectBottleController.cs" />
     <Compile Include="Controllers\ConsumerController.cs" />
     <Compile Include="Controllers\CountConfigurationController.cs" />
@@ -347,6 +348,7 @@
     <Compile Include="DB\so_category_restriction.cs" />
     <Compile Include="DB\SO_CAT_TYPE_USER_VISIT.cs" />
     <Compile Include="DB\so_cellar_notice.cs" />
+    <Compile Include="DB\so_code_place.cs" />
     <Compile Include="DB\so_collect_bottle.cs" />
     <Compile Include="DB\so_collect_bottle_detail.cs" />
     <Compile Include="DB\so_company.cs" />
@@ -568,6 +570,7 @@
     <Compile Include="Models\Requests\UserRequest.cs" />
     <Compile Include="Models\Requests\VisitRequest.cs" />
     <Compile Include="Models\Requests\WorkDayRequest.cs" />
+    <Compile Include="Models\Responses\CodePlaceResponses.cs" />
     <Compile Include="Models\Responses\ConsumerResponses.cs" />
     <Compile Include="Models\Responses\CountConfigurationResponse.cs" />
     <Compile Include="Models\Responses\CustomerResponse.cs" />
@@ -594,6 +597,7 @@
     <Compile Include="Results\ChallengeResult.cs" />
     <Compile Include="Services\ApiVersionService.cs" />
     <Compile Include="Services\ApplicationService.cs" />
+    <Compile Include="Services\CodePlaceService.cs" />
     <Compile Include="Services\ConsumerService.cs" />
     <Compile Include="Services\RoleTeamService.cs" />
     <Compile Include="Services\RouteTeamInventoryAvailableService.cs" />

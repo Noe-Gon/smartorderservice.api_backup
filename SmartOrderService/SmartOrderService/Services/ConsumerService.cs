@@ -35,6 +35,20 @@ namespace SmartOrderService.Services
                     return ResponseBase<InsertConsumerResponse>
                     .Create(new List<string>() { "No se encontró la ruta" });
 
+                if (request.CodePlace == 0)
+                    request.CodePlace = null;
+
+                if (request.CodePlace != null)
+                {
+                    var codePlace = UoWConsumer.CodePlaceRepository
+                        .Get(x => x.Id == request.CodePlace && x.Status)
+                        .FirstOrDefault();
+
+                    if (codePlace == null)
+                        return ResponseBase<InsertConsumerResponse>
+                        .Create(new List<string>() { "No se encontró la ubicación del código" });
+                }
+
                 var newCustomer = new so_customer
                 {
                     name = request.Name,
@@ -65,7 +79,7 @@ namespace SmartOrderService.Services
                     AcceptedTermsAndConditions = false,
                     IsMailingActive = true,
                     IsSMSActive = false,
-                    CodePlace = request.CodePlace,
+                    CodePlaceId = request.CodePlace,
                     CounterVisitsWithoutSales = 0,
                     InteriorNumber = request.InteriorNumber,
                     Neighborhood = request.Neighborhood,
@@ -151,6 +165,20 @@ namespace SmartOrderService.Services
                         "No se encontró al cliente"
                     });
 
+                if (request.CodePlace == 0)
+                    request.CodePlace = null;
+
+                if (request.CodePlace != null)
+                {
+                    var codePlace = UoWConsumer.CodePlaceRepository
+                        .Get(x => x.Id == request.CodePlace && x.Status)
+                        .FirstOrDefault();
+
+                    if (codePlace == null)
+                        return ResponseBase<UpdateConsumerResponse>
+                        .Create(new List<string>() { "No se encontró la ubicación del código" });
+                }
+
                 updateCustomer.name = request.Name ?? updateCustomer.name;
                 updateCustomer.email = request.Email ?? updateCustomer.email;
                 updateCustomer.latitude = request.Latitude ?? updateCustomer.latitude;
@@ -166,7 +194,7 @@ namespace SmartOrderService.Services
                 updateCustomerAdditionalData.Email_2 = request.Email_2 ?? updateCustomerAdditionalData.Email_2;
                 updateCustomerAdditionalData.Phone = request.Phone ?? updateCustomerAdditionalData.Phone;
                 updateCustomerAdditionalData.Phone_2 = request.Phone_2 ?? updateCustomerAdditionalData.Phone_2;
-                updateCustomerAdditionalData.CodePlace = request.CodePlace ?? updateCustomerAdditionalData.CodePlace;
+                updateCustomerAdditionalData.CodePlaceId = request.CodePlace ?? updateCustomerAdditionalData.CodePlaceId;
                 updateCustomerAdditionalData.ReferenceCode = request.ReferenceCode ?? updateCustomerAdditionalData.ReferenceCode;
                 updateCustomerAdditionalData.InteriorNumber = request.InteriorNumber ?? updateCustomerAdditionalData.InteriorNumber;
                 updateCustomerAdditionalData.Neighborhood = request.Neighborhood ?? updateCustomerAdditionalData.Neighborhood;
@@ -373,7 +401,7 @@ namespace SmartOrderService.Services
                             .FirstOrDefault() != null,
                         Name = customer.name,
                         CFECode = customer.code,
-                        CodePlace = customerAdditionalData.CodePlace,
+                        CodePlace = customerAdditionalData.CodePlaceId,
                         Contact = customerAdditionalData.Customer.contact,
                         Crossroads = customerData != null ? customerData.address_number_cross1 : string.Empty,
                         Crossroads_2 = customerData != null ? customerData.address_number_cross2 : string.Empty,
@@ -391,7 +419,11 @@ namespace SmartOrderService.Services
                         Street = customerData.address_street,
                         Days = daysInRoute,
                         CounterVisitsWithoutSales = customerAdditionalData.CounterVisitsWithoutSales,
-                        IsActive = customerAdditionalData.Status == (int)Consumer.STATUS.CONSUMER
+                        IsActive = customerAdditionalData.Status == (int)Consumer.STATUS.CONSUMER,
+                        IsMailingActive = customerAdditionalData.IsMailingActive,
+                        IsSMSActive = customerAdditionalData.IsSMSActive,
+                        IsTermsAndConditionsAccepted = customerAdditionalData.AcceptedTermsAndConditions,
+                        CanBeRemoved = customerAdditionalData.CounterVisitsWithoutSales >= daysWithoutSalesToDisable
                     };
 
                     visits.Add(dto);
