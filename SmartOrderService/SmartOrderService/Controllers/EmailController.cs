@@ -3,6 +3,7 @@ using SmartOrderService.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Web;
 using System.Web.Http;
 
@@ -19,10 +20,25 @@ namespace SmartOrderService.Controllers
                 var service = new EmailService();
                 var response = service.SendWellcomeEmail(request);
 
-                if (response)
-                    return Ok();
+                if (response.Status)
+                    return Ok(response);
 
-                return BadRequest();
+                return Content(HttpStatusCode.BadRequest, response);
+            }
+            catch (Exception e)
+            {
+                return InternalServerError(e);
+            }
+        }
+
+        [HttpPost]
+        [Route("~/api/SendEmail/TicketDigital")]
+        public IHttpActionResult SendTicketDigital()
+        {
+            try
+            {
+
+                return Ok();
             }
             catch (Exception e)
             {

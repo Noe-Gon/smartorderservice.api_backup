@@ -212,6 +212,44 @@ namespace SmartOrderService.Controllers
 
         }
 
+        // POST: api/Sales
+        [ResponseType(typeof(so_sale))]
+        [HttpPost, Route("api/sales/saleTeam_v2")]
+        public IHttpActionResult so_sale_team_v2(SaleTeam sale)
+        {
+            IHttpActionResult responseActionResult;
+            HttpResponseMessage responseMessage;
+            SaleTeam saleResult = new SaleTeam();
+            try
+            {
+                lock (objectService)
+                {
+                    saleResult = objectService.SaleTeamTransaction(sale);
+                }
+            }
+            catch (ProductNotFoundBillingException e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.NotFound, e.Message);
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
+            }
+            catch (BadRequestException e)
+            {
+                return BadRequest();
+            }
+            catch (Exception e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
+            }
+
+            responseMessage = Request.CreateResponse(HttpStatusCode.OK, saleResult);
+            responseActionResult = ResponseMessage(responseMessage);
+            return responseActionResult;
+
+        }
+
         [HttpDelete, Route("api/sales/saleteam")]
         public HttpResponseMessage Deleteso_sale_team(int id)
         {

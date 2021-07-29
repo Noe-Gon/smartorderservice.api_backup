@@ -13,7 +13,7 @@ namespace SmartOrderService.Models.Requests
         public string CustomerEmail { get; set; }
     }
 
-    public class RequestSendSaleTicket
+    public class SendTicketDigitalEmail
     {
         public string CustomerName { get; set; }
         public string CustomerEmail { get; set; }

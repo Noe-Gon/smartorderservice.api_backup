@@ -10,12 +10,13 @@ using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 using System.Configuration;
+using SmartOrderService.Models.Responses;
 
 namespace SmartOrderService.Services
 {
     public class EmailService
     {
-        public bool SendWellcomeEmail(WellcomeEmailRequest request)
+        public ResponseBase<SendWellcomeEmailResponse> SendWellcomeEmail(WellcomeEmailRequest request)
         {
             try
             {
@@ -24,7 +25,7 @@ namespace SmartOrderService.Services
                     string body = reader.ReadToEnd();
 
                     body = body.Replace("{CustomerName}", request.CustomerName);
-                    body = body.Replace("{TermsAndConsitionLink}", request.TermsAndConditionLink);
+                    body = body.Replace("{TermsAndConditionLink}", request.TermsAndConditionLink);
                     body = body.Replace("{CanceledLink}", request.CanceledLink);
 
                     var mailInfo = new SendAPIEmailrequest()
@@ -37,11 +38,37 @@ namespace SmartOrderService.Services
                     DummySendEmail(mailInfo);
                 }
 
-                return true;
+                return ResponseBase<SendWellcomeEmailResponse>.Create(new SendWellcomeEmailResponse
+                {
+                    Msg = "Se envió correctamente"
+                });
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                return false;
+                return ResponseBase<SendWellcomeEmailResponse>.Create(new List<string>()
+                {
+                    e.Message
+                });
+            }
+        }
+
+        public ResponseBase<SendTicketDigitalEmailResponse> SendTicketDigitalEmail(SendTicketDigitalEmail request)
+        {
+            try
+            {
+
+
+                return ResponseBase<SendTicketDigitalEmailResponse>.Create(new SendTicketDigitalEmailResponse
+                {
+                    Msg = "El correo se envió correctamente"
+                });
+            }
+            catch (Exception e)
+            {
+                return ResponseBase<SendTicketDigitalEmailResponse>.Create(new List<string>()
+                {
+                    e.Message
+                });
             }
         }
 
@@ -72,9 +99,9 @@ namespace SmartOrderService.Services
             {
                 client.Send(mmsg);
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                var error = e.Message;
+                throw;
             }
         }
     }
