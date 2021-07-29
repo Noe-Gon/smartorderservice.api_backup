@@ -260,6 +260,7 @@
     <Compile Include="Controllers\CustomerVisitController.cs" />
     <Compile Include="Controllers\DeliveryController.cs" />
     <Compile Include="Controllers\DeviceController.cs" />
+    <Compile Include="Controllers\EmailController.cs" />
     <Compile Include="Controllers\InventoryController.cs" />
     <Compile Include="Controllers\InventoryRevisionController.cs" />
     <Compile Include="Controllers\InvoiceController.cs" />
@@ -470,6 +471,7 @@
     <Compile Include="Mappers\SalePromotionMapper.cs" />
     <Compile Include="Mappers\SalePromotionDetailProductMapper.cs" />
     <Compile Include="Mappers\SaleReplacementMapper.cs" />
+    <Compile Include="Mappers\SaleTeamMapper.cs" />
     <Compile Include="Mappers\TrackingConfigurationMapper.cs" />
     <Compile Include="Models\AccountBindingModels.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -533,6 +535,7 @@
     <Compile Include="Models\DTO\UserReasonDevolutionDto.cs" />
     <Compile Include="Models\DTO\VisitDto.cs" />
     <Compile Include="Models\DTO\Workday.cs" />
+    <Compile Include="Models\Email\EmailAPIRequests.cs" />
     <Compile Include="Models\Enum\Consumer.cs" />
     <Compile Include="Models\Enum\ConsumerRemovalRequest.cs" />
     <Compile Include="Models\Enum\EInventoryTeamStatus.cs" />
@@ -550,6 +553,7 @@
     <Compile Include="Models\Requests\ConfigurationRequest.cs" />
     <Compile Include="Models\Requests\ConsumerRequests.cs" />
     <Compile Include="Models\Requests\CustomerInvoiceDataRequest.cs" />
+    <Compile Include="Models\Requests\EmailRequest.cs" />
     <Compile Include="Models\Requests\InvoiceOpeFacturaRequest.cs" />
     <Compile Include="Models\Requests\ReplacementRequest.cs" />
     <Compile Include="Models\Requests\SurveyCustomerRequest.cs" />
@@ -574,6 +578,7 @@
     <Compile Include="Models\Responses\ConsumerResponses.cs" />
     <Compile Include="Models\Responses\CountConfigurationResponse.cs" />
     <Compile Include="Models\Responses\CustomerResponse.cs" />
+    <Compile Include="Models\Responses\EmailResponse.cs" />
     <Compile Include="Models\Responses\InvoiceOpeFacturaResponse.cs" />
     <Compile Include="Models\Responses\MsgResponseBase.cs" />
     <Compile Include="Models\Responses\PriceResponse.cs" />
@@ -599,6 +604,7 @@
     <Compile Include="Services\ApplicationService.cs" />
     <Compile Include="Services\CodePlaceService.cs" />
     <Compile Include="Services\ConsumerService.cs" />
+    <Compile Include="Services\EmailService.cs" />
     <Compile Include="Services\RoleTeamService.cs" />
     <Compile Include="Services\RouteTeamInventoryAvailableService.cs" />
     <Compile Include="Services\RouteTeamService.cs" />
@@ -672,6 +678,8 @@
     <Content Include="Areas\HelpPage\HelpPage.css" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\Template\TicketDigitalEmail.html" />
+    <Content Include="Content\Template\WellcomeEmail.html" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Scripts\bootstrap.js" />
