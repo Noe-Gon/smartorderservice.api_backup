@@ -72,13 +72,13 @@ namespace SmartOrderService.Controllers
 
         [HttpGet]
         [Route("~/api/consumer")]
-        public IHttpActionResult GetConsumers(GetConsumersRequest request)
+        public IHttpActionResult GetConsumers([FromUri]int userId)
         {
             using (var service = GetService())
             {
                 try
                 {
-                    var response = service.GetConsumers(request);
+                    var response = service.GetConsumers(new GetConsumersRequest { userId = userId});
 
                     if(response.Status)
                         return Ok(response);
