@@ -13,19 +13,23 @@ namespace SmartOrderService.Models.Requests
         public string CustomerEmail { get; set; }
     }
 
-    public class SendTicketDigitalEmail
+    public class SendTicketDigitalEmailRequest
     {
         public string CustomerName { get; set; }
         public string CustomerEmail { get; set; }
-        public string TermsAndConditionLink { get; set; }
+        public DateTime Date { get; set; }
+        public string RouteAddress { get; set; }
+        public string SellerName { get; set; }
+        public string PaymentMethod { get; set; }
+        public List<SendTicketDigitalEmailSales> Sales { get; set; }
     }
 
-    public class ThanksBuyingWithUs
+    public class SendTicketDigitalEmailSales
     {
-        public string CustomerName { get; set; }
-        public string CustomerEmail { get; set; }
-        public DateTime BuyDate { get; set; }
-        public string CustomerCode { get; set; }
-        public string Vendedor { get; set; }
+        public string ProductName { get; set; }
+        public int Amount { get; set; }
+        public double UnitPrice { get; set; }
+        public double TotalPrice { get; set; }
     }
+
 }

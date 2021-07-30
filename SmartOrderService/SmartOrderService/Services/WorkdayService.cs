@@ -8,6 +8,8 @@ using SmartOrderService.Models.DTO;
 using System.Data.Entity;
 using OpeCDLib.Models;
 using SmartOrderService.Models.Enum;
+using RestSharp;
+using System.Configuration;
 
 namespace SmartOrderService.Services
 {
@@ -168,6 +170,14 @@ namespace SmartOrderService.Services
             {
                 FinishWorkdayProcess(workday);
                 new RouteTeamTravelsService().SetClosingStatusRoutTeamTravels(workday.WorkdayId);
+                if (userRol == ERolTeam.Impulsor)
+                {
+                    //OPCD Start
+                    var routeTeam = db.so_route_team.Where(x => x.userId == workday.UserId).First();
+                    var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
+                    finalizarJornadaOPCD(route.so_branch.code, route.code, DateTime.Now, DateTime.Now);
+                    //OPCD End
+                }
             }
             workday.IsOpen = false;
             return workday;
@@ -315,5 +325,23 @@ namespace SmartOrderService.Services
             return workDayDto;
         }
 
+        public string finalizarJornadaOPCD(string branchCode, string routeCode, DateTime deliveryDate, DateTime createdOnWbc)
+        {
+            var client = new RestClient();
+            client.BaseUrl = new Uri(ConfigurationManager.AppSettings["API_Integraciones"]);
+            var requestConfig = new RestRequest("api/jornadasFinalizadasV2", Method.POST);
+            requestConfig.RequestFormat = DataFormat.Json;
+            requestConfig.AddBody(new { CedisIdOpecd = branchCode, Route = routeCode, DeliveryDate = deliveryDate, State = 0, CreatedOnWbc = createdOnWbc });
+            var RestResponse = client.Execute(requestConfig);
+            if (RestResponse.StatusCode == System.Net.HttpStatusCode.Created)
+            {
+                return "OPCD finalizadó con exito";
+            }
+            if (RestResponse.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                return "No insertado. Ya existe un registro con los mismos datos";
+            }
+            return "OPCD Falló en notificación";
+        }
     }
 }

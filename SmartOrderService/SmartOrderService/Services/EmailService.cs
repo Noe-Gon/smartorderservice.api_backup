@@ -11,6 +11,7 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 using System.Configuration;
 using SmartOrderService.Models.Responses;
+using System.Net.Mime;
 
 namespace SmartOrderService.Services
 {
@@ -52,11 +53,50 @@ namespace SmartOrderService.Services
             }
         }
 
-        public ResponseBase<SendTicketDigitalEmailResponse> SendTicketDigitalEmail(SendTicketDigitalEmail request)
+        public ResponseBase<SendTicketDigitalEmailResponse> SendTicketDigitalEmail(SendTicketDigitalEmailRequest request)
         {
             try
             {
+                using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath("~/Content/Template/TicketDigitalEmail.html")))
+                {
+                    string body = reader.ReadToEnd();
 
+                    body = body.Replace("{CustomerName}", request.CustomerName);
+                    body = body.Replace("{Date}", request.Date.ToString("dd/MMM/yy hh:mmtt"));
+                    body = body.Replace("{RouteAddress}", request.RouteAddress);
+                    body = body.Replace("{SellerName}", request.SellerName);
+                    body = body.Replace("{PaymentMethod}", request.PaymentMethod);
+
+                    string tdBody = "";
+                    int totalProductsSold = 0;
+                    int totalBoxesSold = 0;
+                    double total = 0.0;
+                    //Make Table
+                    foreach (var row in request.Sales)
+                    {
+                        totalProductsSold++;
+                        tdBody += "<tr><td>" + totalProductsSold + ")" + row.ProductName + "</td>";
+                        tdBody += "<td>" + row.Amount + "</td>";
+                        tdBody += "<td>" + String.Format("{0:0.00}", row.UnitPrice) + "</td>";
+                        tdBody += "<td>" + String.Format("{0:0.00}", row.TotalPrice) + "</td></tr>";
+                        totalBoxesSold += row.Amount;
+                        total += row.TotalPrice;
+                    }
+
+                    body = body.Replace("{TdBody}", tdBody);
+                    body = body.Replace("{TotalProductsSold}", totalProductsSold.ToString());
+                    body = body.Replace("{TotalBoxesSold}", totalBoxesSold.ToString());
+                    body = body.Replace("{TotalPrice}", String.Format("{0:0.00}", total));
+
+                    var mailInfo = new SendAPIEmailrequest()
+                    {
+                        To = request.CustomerEmail,
+                        Subject = "¡Gracias por ser cliente Bepensa!",
+                        Body = body
+                    };
+
+                    DummySendEmail(mailInfo);
+                }
 
                 return ResponseBase<SendTicketDigitalEmailResponse>.Create(new SendTicketDigitalEmailResponse
                 {
@@ -80,9 +120,19 @@ namespace SmartOrderService.Services
             mmsg.Subject = request.Subject;
             mmsg.SubjectEncoding = System.Text.Encoding.UTF8;
 
+            //Add image
+            Attachment att = new Attachment(HttpContext.Current.Server.MapPath("~/Src/bepensa.png"));
+            att.ContentDisposition.Inline = true;
+            att.ContentDisposition.DispositionType = DispositionTypeNames.Inline;
+            att.ContentId = "Bepensa";
+            att.ContentType.MediaType = "image/png";
+            att.ContentType.Name = Path.GetFileName(HttpContext.Current.Server.MapPath("~/Src/bepensa.png"));
+            request.Body = request.Body.Replace("{image}", "<img class=\"image\" src=\"cid:Bepensa\" />");
+
             mmsg.Body = request.Body;
             mmsg.BodyEncoding = System.Text.Encoding.UTF8;
             mmsg.IsBodyHtml = true;
+            mmsg.Attachments.Add(att);
 
             mmsg.From = new MailAddress("kevmkc2@gmail.com");
 
