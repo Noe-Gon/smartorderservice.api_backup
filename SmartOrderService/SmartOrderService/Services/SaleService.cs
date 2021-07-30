@@ -5,6 +5,7 @@ using SmartOrderService.Mappers;
 using SmartOrderService.Models;
 using SmartOrderService.Models.DTO;
 using SmartOrderService.Models.Enum;
+using SmartOrderService.Models.Requests;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -1007,7 +1008,14 @@ namespace SmartOrderService.Services
                             db.SaveChanges();
 
                             //Envio de Ticket
-
+                            if (sale.EmailDeliveryTicket == true)
+                            {
+                                //var reqestMail = new SendTicketDigitalEmailRequest()
+                                //{
+                                //    RouteAddress = 
+                                //};
+                            }
+                            
                             #endregion
                         }
 

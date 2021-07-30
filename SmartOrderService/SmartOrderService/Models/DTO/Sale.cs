@@ -38,6 +38,7 @@ namespace SmartOrderService.Models
     {
         public bool? SmsDeliveryTicket { get; set; }
         public bool? EmailDeliveryTicket { get; set; }
+        public string PaymentMethod { get; set; }
         public int UserId;
 
         public double TotalCash;
