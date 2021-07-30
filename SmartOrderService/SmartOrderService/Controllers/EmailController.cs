@@ -33,12 +33,17 @@ namespace SmartOrderService.Controllers
 
         [HttpPost]
         [Route("~/api/SendEmail/TicketDigital")]
-        public IHttpActionResult SendTicketDigital()
+        public IHttpActionResult SendTicketDigital(SendTicketDigitalEmailRequest request)
         {
             try
             {
+                var service = new EmailService();
+                var response = service.SendTicketDigitalEmail(request);
 
-                return Ok();
+                if (response.Status)
+                    return Ok(response);
+
+                return Content(HttpStatusCode.BadRequest, response);
             }
             catch (Exception e)
             {

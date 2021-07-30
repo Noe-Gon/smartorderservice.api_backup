@@ -3,10 +3,107 @@
 <head>
     <meta charset="utf-8" />
     <title></title>
+    <style>
+        .divimage {
+            width: 35%;
+            height: 100%;
+            text-align: center;
+        }
+        .image{
+            margin-top: 15%;
+        }
+        .right {
+            text-align: right;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
+    <div style="margin-left: 2%; margin-right: 2%;">
+        <div>
+            <h2>!GRACIAS POR TU COMPRA¡</h2>
+            <h3>Hola {CustomerName}, que disfrutes tu compra, aquí puedes consultar el resumen: </h3>
+        </div>
+        <div style="display: inline-flex; width: 100%; height: 100%; align-items: center; ">
+            <div class="divimage">
+                {image}
+            </div>
+            <div style="width: 65%; margin-left: 10px; margin-top: 10px; margin-bottom: 10px; border: double;">
+                <table style="margin-left: 10px;margin-top: 10px;margin-bottom: 10px;">
+                    <tr>
+                        <td><strong>Fecha:</strong></td>
+                        <td>{Date}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cliente:</strong></td>
+                        <td>{CustomerName}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ruta:</strong></td>
+                        <td>{RouteAddress}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Vendedor:</strong></td>
+                        <td>{SellerName}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div style="text-align-last: center;">
+            FAVOR DE VERIFICAR ENTREGA COMPLETA DE PRODUCTOS Y CANTIDADES
+        </div>
+        <div style="border: double; background-color: aqua; text-align-last: center;">
+            <strong>Venta</strong>
+        </div>
+        <div style="width: 100%; margin-top: 5px; margin-bottom: 5px; margin-left: 51%;">
+            <strong>Forma de pago: {PaymentMethod}</strong>
+        </div>
+        <div >
 
+
+            <table style="margin-left: 10px;margin-top: 10px;margin-bottom: 10px; width: 100%;">
+                <tr>
+                    <th><strong>Producto</strong></th>
+                    <th><strong>Cantidad</strong></th>
+                    <th><strong>Precio</strong></th>
+                    <th><strong>Total</strong></th>
+                </tr>
+                {TdBody}
+            </table>
+
+        </div>
+        <div style="margin-bottom: 20px; width: 100%; display:inline-flex">
+            <div style="width: 35%; height: 10px;">
+
+            </div>
+            <div style="width: 65%; margin-left: 10px; margin-top: 10px; margin-bottom: 10px;">
+                <table style="width: 100%">
+                    <tr>
+                        <td>Total de productos vendidos:</td>
+                        <td class="right">{TotalProductsSold}</td>
+                    </tr>
+                    <tr>
+                        <td>Total de cajas vendidas:</td>
+                        <td class="right">{TotalBoxesSold}</td>
+                    </tr>
+                    <tr>
+                        <td>Total:</td>
+                        <td class="right">{TotalPrice}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div style="text-align-last: center; margin-bottom: 5px;">
+            !Gracias por tu preferencia¡
+        </div>
+        <div style="text-align-last: center; margin-bottom: 5px;">
+            Tu opinión es muy importante para nosotros y nos ayuda a mejorar, te invitamos a responder esta breve encuesta: <a href="{LinkEncuesta}">Ir a la encuesta</a>
+        </div>
+        <div style="text-align-last: center;">
+            Quieres felicitar a alguien, tienes alguna queja o comentario,
+        </div>
+        <div style="text-align-last: center;">
+            llámanos al 800 CIC
+        </div>
     </div>
 </body>
 </html>
