@@ -149,6 +149,11 @@ namespace SmartOrderService.DB
 
         public virtual DbSet<so_route_team_travels_visit> so_route_team_travels_visits { get; set; }
 
+        public virtual DbSet<so_customer_additional_data> so_customerr_additional_data { get; set; }
+        public virtual DbSet<so_customer_removal_request> so_customer_romoval_requests { get; set; }
+        public virtual DbSet<so_portal_links_log> so_portal_links_logs { get; set; }
+        public virtual DbSet<so_code_place> so_code_places { get; set; }
+
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<so_role_team>()
@@ -1732,6 +1737,41 @@ namespace SmartOrderService.DB
                 .HasRequired(x => x.So_Binnacle_Visit)
                 .WithMany(x => x.so_route_team_travels_visits)
                 .HasForeignKey(x => x.binnacleId);
+
+            modelBuilder.Entity<so_customer_additional_data>()
+                .HasKey(x => x.Id)
+                .HasRequired(x => x.Customer)
+                .WithMany(x => x.CustomerAdditionalData)
+                .HasForeignKey(x => x.CustomerId);
+
+            modelBuilder.Entity<so_customer_additional_data>()
+                .Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+
+            modelBuilder.Entity<so_customer_additional_data>()
+                .HasOptional(x => x.CodePlace)
+                .WithMany(x => x.CustomerAdditionalData)
+                .HasForeignKey(x => x.CodePlaceId);
+
+            modelBuilder.Entity<so_customer_removal_request>()
+                .HasKey(x => x.Id)
+                .HasRequired(x => x.Customer)
+                .WithMany(x => x.CustomerRemovalRequests)
+                .HasForeignKey(x => x.CustomerId);
+
+            modelBuilder.Entity<so_customer_removal_request>()
+                .HasRequired(x => x.User)
+                .WithMany(x => x.CustomerRemovalRequests)
+                .HasForeignKey(x => x.UserId);
+
+            modelBuilder.Entity<so_portal_links_log>()
+                .HasKey(x => x.Id)
+                .HasRequired(x => x.Customer)
+                .WithMany(x => x.PortalLinksLog)
+                .HasForeignKey(x => x.CustomerId);
+
+            var codePlace = modelBuilder.Entity<so_code_place>();
+            codePlace.HasKey(x => x.Id);
+            codePlace.Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
 
         }
     }

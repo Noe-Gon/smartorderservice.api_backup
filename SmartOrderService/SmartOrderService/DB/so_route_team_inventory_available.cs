@@ -6,7 +6,7 @@ namespace SmartOrderService.DB
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Data.Entity.Spatial;
 
-    public partial class so_route_team_inventory_available
+    public partial class so_route_team_inventory_available : ICloneable
     {
         [Key]
         [Column(Order = 0)]
@@ -21,5 +21,11 @@ namespace SmartOrderService.DB
         public DateTime createOn { get; set; }
 
         public int Available_Amount { get; set; }
+
+        public object Clone()
+        {
+            var routeTeamInventory = (so_route_team_inventory_available)MemberwiseClone();
+            return routeTeamInventory;
+        }
     }
 }

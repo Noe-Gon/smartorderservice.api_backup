@@ -7,6 +7,7 @@ using SmartOrderService.Models.DTO;
 using System.Data.Entity;
 using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.Responses;
+using System.Configuration;
 
 namespace SmartOrderService.Services
 {
@@ -15,10 +16,11 @@ namespace SmartOrderService.Services
         SmartOrderModel db = new SmartOrderModel();
         public List<VisitDto> getVisits(int userId)
         {
-
             var soUser = db.so_user.Where(u => u.userId == userId).FirstOrDefault();
             int day = (int)DateTime.Today.DayOfWeek;
             day++;
+            string daysWithoutSalesToDisableString = ConfigurationManager.AppSettings["DaysWithoutSalesToDisable"];
+            int daysWithoutSalesToDisable = string.IsNullOrEmpty(daysWithoutSalesToDisableString) ? 3 : Convert.ToInt32(daysWithoutSalesToDisableString);
 
             if (soUser.type == so_user.POAC_TYPE || soUser.type == so_user.CCEH_TYPE)
             {
@@ -47,7 +49,7 @@ namespace SmartOrderService.Services
                 .Join(db.so_route_customer,
                     userRoute => userRoute.routeId,
                     customerRoute => customerRoute.routeId,
-                    (userRoute, customerRoute) => new { userRoute.userId, customerRoute.customerId, customerRoute.day, customerRoute.order, customerRoute.status, userRouteStatus = userRoute.status }
+                    (userRoute, customerRoute) => new { userRoute.userId, customerRoute.customerId, customerRoute.day, customerRoute.order, customerRoute.status, userRouteStatus = userRoute.status, routeId = userRoute.routeId }
                 )
                 .Where(
                     v => v.userId.Equals(userId)
@@ -55,13 +57,21 @@ namespace SmartOrderService.Services
                     && v.userRouteStatus
                     && v.status
                     && day.Equals(v.day)
-                )
-                    .Select(c => new { c.customerId, c.order });
+                ).Select(c => new { c.customerId, c.order, c.routeId });
+                
                 foreach (var data in routeVisits)
                 {
-
-
                     int order = data.order;
+
+                    var customerAdditionalData = db.so_customer
+                        .Where(x => x.customerId == data.customerId)
+                        .Select(x => x.CustomerAdditionalData)
+                        .FirstOrDefault();
+
+                    if (customerAdditionalData != null && customerAdditionalData.Count() != 0)
+                    {
+                        continue;
+                    }
 
                     if (inventory != null && inventory.status)
                     {
@@ -89,6 +99,16 @@ namespace SmartOrderService.Services
 
                 foreach (var otherVisit in customers)
                 {
+                    var customerAdditionalData = db.so_customer
+                        .Where(x => x.customerId == otherVisit)
+                        .Select(x => x.CustomerAdditionalData)
+                        .FirstOrDefault();
+
+                    if (customerAdditionalData != null && customerAdditionalData.Count() != 0)
+                    {
+                        continue;
+                    }
+
                     if (routeVisits.Select(rv => rv.customerId).Contains(otherVisit))
                     {
                         VisitDto dtotemp = visits.Where(v => v.CustomerId == otherVisit).FirstOrDefault();
@@ -97,7 +117,6 @@ namespace SmartOrderService.Services
                     }
                     else
                     {
-
                         VisitDto dto = new VisitDto()
                         {
                             CustomerId = otherVisit,
