@@ -663,7 +663,24 @@ namespace SmartOrderService.Services
                     a.productId
                 }).ToList();
 
-            int promotionId = db.so_sale_promotion.Where(s => s.saleId.Equals(saleId)).FirstOrDefault().sale_promotionId;
+            var promotion = db.so_sale_promotion.Where(s => s.saleId.Equals(saleId)).FirstOrDefault();
+
+            if (promotion == null)
+            {
+                foreach (var sale in saleDetail)
+                {
+                    int amountSold = sale.amount;
+                    int saleInventory = inventoryId;
+                    int saleProductId = sale.productId;
+                    db.so_route_team_inventory_available
+                        .Where(e => e.inventoryId.Equals(saleInventory) && e.productId.Equals(saleProductId)).FirstOrDefault()
+                        .Available_Amount += amountSold;
+                }
+                db.SaveChanges();
+                return;
+            }
+
+            int promotionId = promotion.sale_promotionId;
 
             var promotionDetail = db.so_sale_promotion_detail.Where(s => s.sale_promotionId.Equals(promotionId))
                 .Select(a => new
@@ -676,11 +693,11 @@ namespace SmartOrderService.Services
                 .Concat(promotionDetail)
                 .GroupBy(a => a.productId)
                 .Select(
-                g => new
-                {
-                    productId = g.Key,
-                    amount = g.Sum(s => s.amount)
-                });
+                    g => new
+                    {
+                        productId = g.Key,
+                        amount = g.Sum(s => s.amount)
+                    });
 
             using (var dbContextTransaction = db.Database.BeginTransaction())
             {
@@ -691,12 +708,11 @@ namespace SmartOrderService.Services
                         int amountSold = sale.amount;
                         int saleInventory = inventoryId;
                         int saleProductId = sale.productId;
-                        so_route_team_inventory_available routeTeamInventory = db.so_route_team_inventory_available
-                            .Where(e => e.inventoryId.Equals(saleInventory) && e.productId.Equals(saleProductId)).FirstOrDefault();
-                        routeTeamInventory.Available_Amount += amountSold;
-                        db.SaveChanges();
+                        db.so_route_team_inventory_available
+                            .Where(e => e.inventoryId.Equals(saleInventory) && e.productId.Equals(saleProductId)).FirstOrDefault()
+                            .Available_Amount += amountSold;
                     }
-                    
+                    db.SaveChanges();
                     dbContextTransaction.Commit();
                 }
                 catch (Exception e)

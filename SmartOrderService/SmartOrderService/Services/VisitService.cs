@@ -201,33 +201,34 @@ namespace SmartOrderService.Services
             RoleTeamService roleTeamService = new RoleTeamService();
             RouteTeamService routeTeamService = new RouteTeamService();
             InventoryService inventoryService = new InventoryService();
+            var impulsor = inventoryService.SearchDrivingId(userId);
 
             if (inventoryId == null || inventoryId == 0)
                 inventoryId = inventoryService.getCurrentInventory(userId, null).inventoryId;
 
             var soUser = db.so_user.Where(u => u.userId == userId).FirstOrDefault();
-            var date = DateTime.Today;
+            var date = DateTime.Today; 
             
-            var impulsor = inventoryService.SearchDrivingId(userId);
             var routeId = routeTeamService.searchRouteId(impulsor);
             var workDay = routeTeamService.GetWorkdayByUserAndDate(impulsor, DateTime.Today);
 
             var visits = db.so_route_team_travels_visits
-                .Where(x => x.inventoryId == inventoryId && x.workDayId == workDay.work_dayId && x.routeId == routeId)
-                .Select(x => x.So_Binnacle_Visit)
+                .Where(x => x.workDayId == workDay.work_dayId && x.routeId == routeId)
+                .Select(x => new { BinnalceVisit = x.So_Binnacle_Visit, InventoryId = x.inventoryId })
                 .Select(x => new GetTeamVisitResponse
                 {
-                    VisitId = x.binnacleId,
-                    CustomerId = x.customerId,
-                    UserId = x.userId,
-                    CheckIn = x.checkin,
-                    CheckOut = x.checkout,
-                    LatitudeIn = x.latitudein,
-                    LatitudeOut = x.latitudeout,
-                    LongitudeIn = x.longitudein,
-                    LongitudeOut = x.longitudeout,
-                    ReasonFailed = x.so_binnacle_reason_failed.Count > 0 ? x.so_binnacle_reason_failed.FirstOrDefault().reasonId : (int?)null,
-                    Scanned = x.scanned
+                    VisitId = x.BinnalceVisit.binnacleId,
+                    CustomerId = x.BinnalceVisit.customerId,
+                    UserId = x.BinnalceVisit.userId,
+                    CheckIn = x.BinnalceVisit.checkin,
+                    CheckOut = x.BinnalceVisit.checkout,
+                    LatitudeIn = x.BinnalceVisit.latitudein,
+                    LatitudeOut = x.BinnalceVisit.latitudeout,
+                    LongitudeIn = x.BinnalceVisit.longitudein,
+                    LongitudeOut = x.BinnalceVisit.longitudeout,
+                    ReasonFailed = x.BinnalceVisit.so_binnacle_reason_failed.Count > 0 ? x.BinnalceVisit.so_binnacle_reason_failed.FirstOrDefault().reasonId : (int?)null,
+                    Scanned = x.BinnalceVisit.scanned,
+                    InventoryId = x.InventoryId
                 })
                 .ToList();
 
