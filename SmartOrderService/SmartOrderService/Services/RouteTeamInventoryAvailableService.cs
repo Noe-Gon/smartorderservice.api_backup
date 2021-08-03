@@ -69,5 +69,18 @@ namespace SmartOrderService.Services
             return db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(inventoryId)).ToList();
         }
 
+        public List<so_route_team_inventory_available> GetRemainingInventory(int inventoryId)
+        {
+            var inventoryAvailable = db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(inventoryId)).ToList();
+            var inventoryCloneObject = new List<so_route_team_inventory_available>();
+            foreach (var routeProduct in inventoryAvailable)
+            {
+                inventoryCloneObject.Add((so_route_team_inventory_available)routeProduct.Clone());
+                routeProduct.Available_Amount = 0;
+            }
+            db.SaveChanges();
+            return inventoryCloneObject.Where(s => s.Available_Amount > 0).ToList();
+        }
+
     }
 }

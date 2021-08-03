@@ -15,10 +15,25 @@ namespace SmartOrderService.Services
     {
         private SmartOrderModel db = new SmartOrderModel();
         private RoleTeamService roleTeamService = new RoleTeamService();
+        private RouteTeamInventoryAvailableService routeTeamInventoryAvailable = new RouteTeamInventoryAvailableService();
+        private InventoryService inventoryService = new InventoryService();
+        private SmartOrderModel inventoryContext = new SmartOrderModel();
 
         public Workday createWorkday(int userId)
         {
-            
+            ERolTeam userTeamRole = roleTeamService.getUserRole(userId);
+
+            if (userTeamRole != ERolTeam.SinAsignar)
+            {
+                //Start Load Inventory Process OPCD
+                int impulsorId = inventoryService.SearchDrivingId(userId);
+                var routeTeam = inventoryContext.so_route_team.Where(x => x.userId == userId).First();
+                var route = inventoryContext.so_route.Where(x => x.routeId == routeTeam.routeId).First();
+
+                inventoryService.CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
+                //End Load Inventory Process
+            }
+
             Workday workday = new Workday();
 
             var currentWorkday = searchWorkDay(userId);
