@@ -282,6 +282,17 @@ namespace SmartOrderService.Services
                         "No se encontró al cliente"
                     });
 
+                //Comprobar si exita una petición activa para ese usuario
+                var previousRequestExist = UoWConsumer.CustomerRemovalRequestRepository
+                    .Get(x => x.CustomerId == request.CustomerId && (x.Status == (int)ConsumerRemovalRequest.STATUS.PENDING))
+                    .FirstOrDefault();
+
+                if (previousRequestExist != null)
+                    return ResponseBase<ConsumerRemovalResponse>.Create(new List<string>()
+                    {
+                        "Ya existe una petición para ese usuario"
+                    });
+
                 var id = Guid.NewGuid();
                 var newCustomerRemovalRequest = new so_customer_removal_request
                 {
