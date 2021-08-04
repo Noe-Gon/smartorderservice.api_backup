@@ -523,6 +523,41 @@ namespace SmartOrderService.Services
             }
         }
 
+        public void TransferUnsoldInventory(int userId)
+        {
+            ERolTeam userTeamRole = roleTeamService.getUserRole(userId);
+
+            if (userTeamRole == ERolTeam.Impulsor)
+            {
+
+                var currentInventory = GetCurrentInventory(userId);
+
+                var unsoldProducts = GetUnsoldProducts(currentInventory.inventoryId);
+                //si la lista esta vacia, entonces no existen productos no vendidos
+                if (!unsoldProducts.Any())
+                {
+                    return;
+                }
+                var nextInventory = GetNextInventory(userId);
+                //si no se encuentra un siguiente inventario, entonces ya se termino la jornada
+                if (nextInventory == null)
+                {
+                    return;
+                }
+                SetNextTeamInventory(unsoldProducts, nextInventory.inventoryId);
+            }
+        }
+
+        private so_inventory GetCurrentInventory(int userId)
+        {
+            var currentInventory = db.so_inventory.Where(i => i.userId.Equals(userId)
+                && i.state.Equals(INVENTORY_CLOSED)
+                && i.status
+                && DbFunctions.TruncateTime(i.date) == DbFunctions.TruncateTime(DateTime.Today)
+                ).OrderByDescending(i => i.order).FirstOrDefault();
+            return currentInventory;
+        }
+
         private void SetNextTeamInventory(List<so_route_team_inventory_available> routeTeamInventory, int nextInventoryId)
         {
             var inventorySummary = db.so_inventory_summary
