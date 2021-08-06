@@ -27,6 +27,9 @@ namespace SmartOrderService.UnitOfWork
             UserRouteRepository = new GenericRepository<so_user_route>(Context);
             BinnacleVisitRepository = new GenericRepository<so_binnacle_visit>(Context);
             CodePlaceRepository = new GenericRepository<so_code_place>(Context);
+            SaleRepository = new GenericRepository<so_sale>(Context);
+            CustomerProductPriceList = new GenericRepository<so_customer_products_price_list>(Context);
+            ProductPriceList = new GenericRepository<so_products_price_list>(Context);
         }
 
         private SmartOrderModel Context { get; set; }
@@ -43,6 +46,10 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_user_route> UserRouteRepository { get; set; }
         public GenericRepository<so_binnacle_visit> BinnacleVisitRepository { get; set; }
         public GenericRepository<so_code_place> CodePlaceRepository { get; set; }
+        public GenericRepository<so_sale> SaleRepository { get; set; }
+        public GenericRepository<so_customer_products_price_list> CustomerProductPriceList { get; set; }
+        public GenericRepository<so_products_price_list> ProductPriceList { get; set; }
+
 
         public void Save()
         {
