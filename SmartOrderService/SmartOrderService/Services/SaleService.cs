@@ -538,7 +538,6 @@ namespace SmartOrderService.Services
         public void RestoreInventoryAvailability(int saleId)
         {
             int inventoryId = db.so_sale.Where(s => s.saleId.Equals(saleId)).FirstOrDefault().inventoryId.Value;
-
             var saleDetail = db.so_sale_detail.Where(s => s.saleId.Equals(saleId))
                 .Select(a => new
                 {
@@ -571,7 +570,6 @@ namespace SmartOrderService.Services
                     a.amount,
                     a.productId
                 }).ToList();
-
             var sales = saleDetail
                 .Concat(promotionDetail)
                 .GroupBy(a => a.productId)
@@ -604,7 +602,6 @@ namespace SmartOrderService.Services
                     throw new Exception();
                 }
             }
-
         }
 
         private ICollection<so_sale_promotion_detail> createPromotionDetails(List<SalePromotionDetailProduct> details, int userId)

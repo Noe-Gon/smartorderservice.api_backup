@@ -523,8 +523,45 @@ namespace SmartOrderService.Services
             }
         }
 
+        public void TransferUnsoldInventory(int userId)
+        {
+            ERolTeam userTeamRole = roleTeamService.getUserRole(userId);
+
+            if (userTeamRole == ERolTeam.Impulsor)
+            {
+
+                var currentInventory = GetCurrentInventory(userId);
+
+                var unsoldProducts = GetUnsoldProducts(currentInventory.inventoryId);
+                //si la lista esta vacia, entonces no existen productos no vendidos
+                if (!unsoldProducts.Any())
+                {
+                    return;
+                }
+                var nextInventory = GetNextInventory(userId);
+                //si no se encuentra un siguiente inventario, entonces ya se termino la jornada
+                if (nextInventory == null)
+                {
+                    return;
+                }
+                SetNextTeamInventory(unsoldProducts, nextInventory.inventoryId);
+            }
+        }
+
+        private so_inventory GetCurrentInventory(int userId)
+        {
+            var currentInventory = db.so_inventory.Where(i => i.userId.Equals(userId)
+                && i.state.Equals(INVENTORY_CLOSED)
+                && i.status
+                && DbFunctions.TruncateTime(i.date) == DbFunctions.TruncateTime(DateTime.Today)
+                ).OrderByDescending(i => i.order).FirstOrDefault();
+            return currentInventory;
+        }
+
         private void SetNextTeamInventory(List<so_route_team_inventory_available> routeTeamInventory, int nextInventoryId)
         {
+            var inventorySummary = db.so_inventory_summary
+                .Where(s => s.inventoryId.Equals(nextInventoryId)).FirstOrDefault();
             foreach (var inventoryProduct in routeTeamInventory)
             {
                 var inventoryDetail = db.so_inventory_detail.Where(
@@ -544,11 +581,13 @@ namespace SmartOrderService.Services
                         price = 0
                     };
                     db.so_inventory_detail.Add(newInventoryDetail);
+                    inventorySummary.articles_amount = inventorySummary.articles_amount + 1;
                 }
                 else
                 {
                     inventoryDetail.amount += inventoryProduct.Available_Amount;
                 }
+                inventorySummary.products_amount = inventorySummary.products_amount + inventoryProduct.Available_Amount;
                 inventoryProduct.Available_Amount = 0;
             }
             db.SaveChanges();
