@@ -91,5 +91,27 @@ namespace SmartOrderService.Controllers
                 }
             }
         }
+
+        [HttpPost]
+        [Route("~/api/ResendEmail/TicketDigital")]
+        public IHttpActionResult ResendTicketDigital(ResendTicketDigitalRequest request)
+        {
+            try
+            {
+                using (var service = GetService())
+                {
+                    var response = service.ResendTicketDigital(request);
+
+                    if (response.Status)
+                        return Ok(response);
+                    else
+                        return Content(HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (Exception e)
+            {
+                return InternalServerError(e);
+            }
+        }
     }
 }

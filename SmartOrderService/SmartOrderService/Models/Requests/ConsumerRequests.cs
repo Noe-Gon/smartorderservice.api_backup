@@ -66,4 +66,12 @@ namespace SmartOrderService.Models.Requests
     {
         public int userId { get; set; }
     }
+
+    #region Resend TicketDigital
+    public class ResendTicketDigitalRequest
+    {
+        public int SaleId { get; set; }
+        public string PaymentMethod { get; set; }
+    }
+    #endregion
 }

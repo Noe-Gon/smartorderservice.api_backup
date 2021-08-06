@@ -1010,12 +1010,49 @@ namespace SmartOrderService.Services
                             //Envio de Ticket
                             if (sale.EmailDeliveryTicket == true)
                             {
-                                //var reqestMail = new SendTicketDigitalEmailRequest()
-                                //{
-                                //    RouteAddress = 
-                                //};
+                                var customer = db.so_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
+
+                                if (customer.CustomerAdditionalData != null)
+                                {
+                                    if (customer.CustomerAdditionalData.FirstOrDefault().IsMailingActive)
+                                    {
+                                        //Se prepara la información
+                                        var route = db.so_route_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
+                                        var user = db.so_user.Where(x => x.userId == sale.UserId).FirstOrDefault();
+
+                                        var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
+                                        {
+                                            RouteAddress = Convert.ToString(route.routeId),
+                                            CustomerEmail = customer.email,
+                                            CustomerName = customer.customerId + " - " + customer.name + " " + customer.address,
+                                            Date = DateTime.Now,
+                                            PaymentMethod = sale.PaymentMethod,
+                                            SellerName = user.code + " - " + user.name
+                                        };
+
+                                        var sales = new List<SendTicketDigitalEmailSales>();
+                                        foreach (var detail in saleResult.SaleDetails)
+                                        {
+                                            var product = db.so_product.Where(x => x.productId == detail.ProductId).FirstOrDefault();
+                                            if (product == null)
+                                                continue;
+
+                                            sales.Add(new SendTicketDigitalEmailSales
+                                            {
+                                                Amount = detail.Amount,
+                                                ProductName = detail.ProductId + " - " + product.name,
+                                                TotalPrice = Convert.ToDouble(detail.Amount) * Convert.ToDouble(detail.price),
+                                                UnitPrice = Convert.ToDouble(detail.price)
+                                            });
+                                        }
+
+                                        //Se envia el ticket
+                                        var emailService = new EmailService();
+                                        var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);
+                                    }
+                                }
                             }
-                            
+
                             #endregion
                         }
 

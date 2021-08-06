@@ -51,4 +51,9 @@ namespace SmartOrderService.Models.Responses
         public bool IsTermsAndConditionsAccepted { get; set; }
         public bool CanBeRemoved { get; set; }
     }
+
+    public class ResendTicketDigitalResponse
+    {
+        public string Msg { get; set; }
+    }
 }

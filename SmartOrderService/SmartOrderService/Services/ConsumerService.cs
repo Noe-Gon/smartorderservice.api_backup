@@ -118,6 +118,35 @@ namespace SmartOrderService.Services
 
                 UoWConsumer.CustomerRepository.Insert(newCustomer);
 
+                //Agregar el Price List
+                var customerIds = UoWConsumer.RouteCustomerRepository
+                    .Get(x => x.routeId == request.RouteId && x.so_customer.code.Length > 10)
+                    .Select(x => x.customerId);
+
+                if (customerIds.Count() == 0)
+                    return ResponseBase<InsertConsumerResponse>.Create(new List<string>()
+                    {
+                        "No hay usuarios para esa ruta"
+                    });
+
+                var productPriceListId = UoWConsumer.CustomerProductPriceList
+                    .Get(x => customerIds.Contains(x.customerId))
+                    .Select(x => x.products_price_listId)
+                    .FirstOrDefault();
+
+                var newCustomerProductPriceList = new so_customer_products_price_list
+                {
+                    createdby = 2777,
+                    createdon = DateTime.Now,
+                    customerId = newCustomer.customerId,
+                    modifiedby = 2777,
+                    modifiedon = DateTime.Now,
+                    products_price_listId = productPriceListId,
+                    status = true
+                };
+
+                UoWConsumer.CustomerProductPriceList.Insert(newCustomerProductPriceList);
+
                 //Generar el link para cancelar el envio de correo
                 Guid id = Guid.NewGuid();
                 var cancelEmail = new so_portal_links_log
@@ -129,8 +158,31 @@ namespace SmartOrderService.Services
                     Status = (int)PortalLinks.STATUS.PENDING,
                     Type = (int)PortalLinks.TYPE.EMAIL_DEACTIVATION
                 };
-                string cancelEmailURL = ConfigurationManager.AppSettings["ApiV2Url"] + "" + id;
+                string cancelEmailURL = ConfigurationManager.AppSettings["ApiV2Url"] + "Portal/Consumer/CancelTicketDigital/" + id;
+
+                //Generar Link de Aceptación de terminos y consiciones
+                Guid termsId = Guid.NewGuid();
+                var termsEmail = new so_portal_links_log
+                {
+                    CustomerId = newCustomer.customerId,
+                    CreatedDate = DateTime.Today,
+                    Id = termsId,
+                    LimitDays = 0,
+                    Status = (int)PortalLinks.STATUS.PENDING,
+                    Type = (int)PortalLinks.TYPE.TERMSANDCONDITIONS_ACCEPT
+                };
+                string termsEmailURL = ConfigurationManager.AppSettings["ApiV2Url"] + "Portal/Consumer/TermsAndConditions/" + termsId;
+
                 //Se envia el Correo
+                var emailService = new EmailService();
+
+                emailService.SendWellcomeEmail(new WellcomeEmailRequest
+                {
+                    CustomerName = newCustomer.name,
+                    TermsAndConditionLink = termsEmailURL,
+                    CustomerEmail = newCustomer.email,
+                    CanceledLink = cancelEmailURL
+                });
 
                 //Se notifica al CMR
 
@@ -446,6 +498,69 @@ namespace SmartOrderService.Services
             catch (Exception e)
             {
                 return ResponseBase<List<GetConsumersResponse>>.Create( new List<string>()
+                {
+                    e.Message
+                });
+            }
+        }
+
+        public ResponseBase<ResendTicketDigitalResponse> ResendTicketDigital(ResendTicketDigitalRequest request)
+        {
+            try
+            {
+                //Obtención del sale
+                var sale = UoWConsumer.SaleRepository
+                    .GetByID(request.SaleId);
+
+                if (sale == null)
+                    return ResponseBase<ResendTicketDigitalResponse>.Create(new List<string>()
+                    {
+                        "No se encontró una venta con ese id"
+                    });
+
+                if(sale.so_customer.CustomerAdditionalData == null)
+                    return ResponseBase<ResendTicketDigitalResponse>.Create(new List<string>()
+                    {
+                        "No cuenta con la información necesaria para enviar el Ticket"
+                    });
+
+                var route = UoWConsumer.RouteCustomerRepository
+                    .Get(x => x.customerId == sale.customerId)
+                    .FirstOrDefault();
+
+                var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
+                {
+                    RouteAddress = Convert.ToString(route.routeId),
+                    CustomerEmail = sale.so_customer.email,
+                    CustomerName = sale.customerId + " - " + sale.so_customer.name + " " + sale.so_customer.address,
+                    Date = sale.date,
+                    PaymentMethod = request.PaymentMethod,
+                    SellerName = sale.so_user.code + " - " + sale.so_user.name
+                };
+
+                var sales = new List<SendTicketDigitalEmailSales>();
+                foreach (var detail in sale.so_sale_detail)
+                {
+                    sales.Add(new SendTicketDigitalEmailSales
+                    {
+                        Amount = detail.amount,
+                        ProductName = detail.so_product.productId + " - " + detail.so_product.name,
+                        TotalPrice = Convert.ToDouble(detail.amount) * Convert.ToDouble(detail.sale_price),
+                        UnitPrice = Convert.ToDouble(detail.sale_price)
+                    });
+                }
+
+                var emailService = new EmailService();
+                var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);
+
+                return ResponseBase<ResendTicketDigitalResponse>.Create(new ResendTicketDigitalResponse
+                {
+                    Msg = "Se ha enviado el correo"
+                });
+            }
+            catch (Exception e)
+            {
+                return ResponseBase<ResendTicketDigitalResponse>.Create(new List<string>()
                 {
                     e.Message
                 });
