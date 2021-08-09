@@ -175,7 +175,8 @@ namespace SmartOrderService.Services
                     //OPCD Start
                     var routeTeam = db.so_route_team.Where(x => x.userId == workday.UserId).First();
                     var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
-                    finalizarJornadaOPCD(route.so_branch.code, route.code, DateTime.Today, DateTime.Now);
+                  
+                    finalizarJornadaOPCD(route.so_branch.code, route.code, DateTime.Now, DateTime.Now);
                     //OPCD End
                 }
             }
@@ -324,6 +325,7 @@ namespace SmartOrderService.Services
 
             return workDayDto;
         }
+
         public string finalizarJornadaOPCD(string branchCode, string routeCode, DateTime deliveryDate, DateTime createdOnWbc)
         {
             var client = new RestClient();
