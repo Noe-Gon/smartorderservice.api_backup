@@ -56,4 +56,9 @@ namespace SmartOrderService.Models.Responses
     {
         public string Msg { get; set; }
     }
+
+    public class ReactivationTicketDigitalResponse
+    {
+        public string Msg { get; set; }
+    }
 }

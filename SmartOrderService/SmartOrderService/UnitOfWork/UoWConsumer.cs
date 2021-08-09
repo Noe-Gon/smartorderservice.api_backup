@@ -30,6 +30,7 @@ namespace SmartOrderService.UnitOfWork
             SaleRepository = new GenericRepository<so_sale>(Context);
             CustomerProductPriceList = new GenericRepository<so_customer_products_price_list>(Context);
             ProductPriceList = new GenericRepository<so_products_price_list>(Context);
+            PortalLinksLogRepository = new GenericRepository<so_portal_links_log>(Context);
         }
 
         private SmartOrderModel Context { get; set; }
@@ -49,6 +50,7 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_sale> SaleRepository { get; set; }
         public GenericRepository<so_customer_products_price_list> CustomerProductPriceList { get; set; }
         public GenericRepository<so_products_price_list> ProductPriceList { get; set; }
+        public GenericRepository<so_portal_links_log> PortalLinksLogRepository { get; set; }
 
 
         public void Save()
