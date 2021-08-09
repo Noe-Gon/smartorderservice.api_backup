@@ -74,4 +74,10 @@ namespace SmartOrderService.Models.Requests
         public string PaymentMethod { get; set; }
     }
     #endregion
+
+    public class ReactivationTicketDigitalRequest
+    {
+        public int CustomerId { get; set; }
+        public string CustomerEmail { get; set; }
+    }
 }

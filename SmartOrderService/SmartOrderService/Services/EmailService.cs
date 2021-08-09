@@ -112,6 +112,41 @@ namespace SmartOrderService.Services
             }
         }
 
+        public ResponseBase<SendReactivationTicketDigitalResponse> SendReactivationTicketDigital(SendReactivationTicketDigitalRequest request)
+        {
+            try
+            {
+                using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath("~/Content/Template/ReactivationTicketDigitalEmail.html")))
+                {
+                    string body = reader.ReadToEnd();
+
+                    body = body.Replace("{CustomerName}", request.CustomerName);
+                    body = body.Replace("{TermsAndConditionLink}", request.TermsAndConditionLink);
+
+                    var mailInfo = new SendAPIEmailrequest()
+                    {
+                        To = request.CustomerEmail,
+                        Subject = "Solicitud envío de ticket de compra",
+                        Body = body
+                    };
+
+                    DummySendEmail(mailInfo);
+                }
+
+                return ResponseBase<SendReactivationTicketDigitalResponse>.Create(new SendReactivationTicketDigitalResponse()
+                {
+                    Msg = "Se envió correctamente"
+                });
+            }
+            catch (Exception e)
+            {
+                return ResponseBase<SendReactivationTicketDigitalResponse>.Create(new List<string>()
+                {
+                    e.Message
+                });
+            }
+        }
+
         public void DummySendEmail(SendAPIEmailrequest request)
         {
             MailMessage mmsg = new MailMessage();

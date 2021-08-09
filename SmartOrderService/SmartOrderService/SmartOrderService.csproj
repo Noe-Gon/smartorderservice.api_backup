@@ -678,6 +678,7 @@
     <Content Include="Areas\HelpPage\HelpPage.css" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\Template\ReactivationTicketDigitalEmail.html" />
     <Content Include="Content\Template\TicketDigitalEmail.html" />
     <Content Include="Content\Template\WellcomeEmail.html" />
     <Content Include="favicon.ico" />

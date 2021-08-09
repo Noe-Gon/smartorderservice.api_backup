@@ -32,4 +32,11 @@ namespace SmartOrderService.Models.Requests
         public double TotalPrice { get; set; }
     }
 
+    public class SendReactivationTicketDigitalRequest
+    {
+        public string CustomerName { get; set; }
+        public string CustomerEmail { get; set; }
+        public string TermsAndConditionLink { get; set; }
+    }
+
 }

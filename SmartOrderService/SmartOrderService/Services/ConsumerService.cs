@@ -189,6 +189,8 @@ namespace SmartOrderService.Services
                 UoWConsumer.CustomerAdditionalDataRepository.Insert(newCustomerAdditionalData);
                 UoWConsumer.CustomerDataRepository.Insert(newCustomerData);
                 UoWConsumer.RouteCustomerRepository.InsertByRange(newListRouteCustomer);
+                UoWConsumer.PortalLinksLogRepository.Insert(termsEmail);
+                UoWConsumer.PortalLinksLogRepository.Insert(cancelEmail);
                 UoWConsumer.Save();
                 return ResponseBase<InsertConsumerResponse>.Create(new InsertConsumerResponse()
                 {
@@ -561,6 +563,80 @@ namespace SmartOrderService.Services
             catch (Exception e)
             {
                 return ResponseBase<ResendTicketDigitalResponse>.Create(new List<string>()
+                {
+                    e.Message
+                });
+            }
+        }
+
+        public ResponseBase<ReactivationTicketDigitalResponse> ReactivationTicketDigital(ReactivationTicketDigitalRequest request)
+        {
+            try
+            {
+                var customer = UoWConsumer.CustomerRepository
+                    .GetByID(request.CustomerId);
+
+                if (customer == null)
+                    return ResponseBase<ReactivationTicketDigitalResponse>.Create(new List<string>()
+                    {
+                        "No se encontró al cliente"
+                    });
+
+                if (string.IsNullOrEmpty(request.CustomerEmail))
+                    request.CustomerEmail = customer.email;
+
+                if (string.IsNullOrEmpty(request.CustomerEmail))
+                    return ResponseBase<ReactivationTicketDigitalResponse>.Create(new List<string>()
+                    {
+                        "No se encontró ningun email para el envio"
+                    });
+
+                //TermsAndConditios
+                //Verificar si el cliente cuenta con uno activo
+                var termsObject = UoWConsumer.PortalLinksLogRepository
+                    .Get(x => x.CustomerId == request.CustomerId && x.Type == (int)PortalLinks.TYPE.TERMSANDCONDITIONS_ACCEPT && x.Status == (int)PortalLinks.STATUS.PENDING)
+                    .FirstOrDefault();
+
+                var emailInfo = new SendReactivationTicketDigitalRequest() {
+                    CustomerEmail = request.CustomerEmail,
+                    CustomerName = customer.name
+                };
+
+                if(termsObject == null)
+                {
+                    //Generar Link de Aceptación de terminos y consiciones
+                    Guid termsId = Guid.NewGuid();
+                    var termsEmail = new so_portal_links_log
+                    {
+                        CustomerId = customer.customerId,
+                        CreatedDate = DateTime.Today,
+                        Id = termsId,
+                        LimitDays = 0,
+                        Status = (int)PortalLinks.STATUS.PENDING,
+                        Type = (int)PortalLinks.TYPE.TERMSANDCONDITIONS_ACCEPT
+                    };
+                    UoWConsumer.PortalLinksLogRepository.Insert(termsEmail);
+                    UoWConsumer.Save();
+                    emailInfo.TermsAndConditionLink = ConfigurationManager.AppSettings["ApiV2Url"] + "Portal/Consumer/TermsAndConditions/" + termsId;
+
+                }
+                else
+                    emailInfo.TermsAndConditionLink = ConfigurationManager.AppSettings["ApiV2Url"] + "Portal/Consumer/TermsAndConditions/" + termsObject.Id;
+
+                var emailService = new EmailService();
+                var response = emailService.SendReactivationTicketDigital(emailInfo);
+
+                if(response.Status)
+                    return ResponseBase<ReactivationTicketDigitalResponse>.Create(new ReactivationTicketDigitalResponse
+                    {
+                        Msg = response.Data.Msg
+                    });
+
+                return ResponseBase<ReactivationTicketDigitalResponse>.Create(response.Errors);
+            }
+            catch (Exception e)
+            {
+                return ResponseBase<ReactivationTicketDigitalResponse>.Create(new List<string>()
                 {
                     e.Message
                 });

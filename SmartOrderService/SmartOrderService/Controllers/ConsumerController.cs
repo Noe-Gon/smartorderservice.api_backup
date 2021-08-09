@@ -113,5 +113,27 @@ namespace SmartOrderService.Controllers
                 return InternalServerError(e);
             }
         }
+
+        [HttpPost]
+        [Route("~/api/ReactivationTicket")]
+        public IHttpActionResult ReactivationTicketDigital(ReactivationTicketDigitalRequest request)
+        {
+            try
+            {
+                using (var service = GetService())
+                {
+                    var response = service.ReactivationTicketDigital(request);
+
+                    if (response.Status)
+                        return Ok(response);
+                    else
+                        return Content(HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (Exception e)
+            {
+                return InternalServerError(e);
+            }
+        }
     }
 }
