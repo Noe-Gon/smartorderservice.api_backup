@@ -532,6 +532,11 @@ namespace SmartOrderService.Services
 
                 var currentInventory = GetCurrentInventory(userId);
 
+                if (currentInventory == null)
+                {
+                    return;
+                }
+
                 var unsoldProducts = GetUnsoldProducts(currentInventory.inventoryId);
                 //si la lista esta vacia, entonces no existen productos no vendidos
                 if (!unsoldProducts.Any())

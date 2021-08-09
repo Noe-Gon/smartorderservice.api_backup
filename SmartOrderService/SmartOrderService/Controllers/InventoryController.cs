@@ -180,13 +180,13 @@ namespace SmartOrderService.Controllers
             HttpResponseMessage response;
             try
             {
-                var inventoryService = new InventoryService();
+                InventoryService inventoryService = new InventoryService();
                 inventoryService.TransferUnsoldInventory(request.UserId);
                 response = Request.CreateResponse(HttpStatusCode.Created);
             }
             catch (Exception e)
             {
-                response = Request.CreateResponse(HttpStatusCode.InternalServerError,"No fue posible completar la transferencia de inventario");
+                response = Request.CreateResponse(HttpStatusCode.Conflict,e);
             }
             return response;
         }
