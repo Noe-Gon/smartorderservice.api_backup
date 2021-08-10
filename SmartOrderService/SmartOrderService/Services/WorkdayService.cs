@@ -332,7 +332,7 @@ namespace SmartOrderService.Services
             client.BaseUrl = new Uri(ConfigurationManager.AppSettings["API_Integraciones"]);
             var requestConfig = new RestRequest("api/jornadasFinalizadasV2", Method.POST);
             requestConfig.RequestFormat = DataFormat.Json;
-            requestConfig.AddBody(new { CedisIdOpecd = branchCode, Route = routeCode, DeliveryDate = deliveryDate, State = 0, CreatedOnWbc = createdOnWbc });
+            requestConfig.AddBody(new { CedisIdOpecd = branchCode, Route = routeCode, DeliveryDate = deliveryDate.ToString("yyyy-MM-dd"), State = 0, CreatedOnWbc = createdOnWbc });
             var RestResponse = client.Execute(requestConfig);
             if (RestResponse.StatusCode == System.Net.HttpStatusCode.Created)
             {
