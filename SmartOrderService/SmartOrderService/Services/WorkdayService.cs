@@ -176,7 +176,7 @@ namespace SmartOrderService.Services
                     var routeTeam = db.so_route_team.Where(x => x.userId == workday.UserId).First();
                     var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
                   
-                    finalizarJornadaOPCD(route.so_branch.code, route.code, DateTime.Now, DateTime.Now);
+                    finalizarJornadaOPCD(route.so_branch.code, route.code, DateTime.Today, DateTime.Now);
                     //OPCD End
                 }
             }
