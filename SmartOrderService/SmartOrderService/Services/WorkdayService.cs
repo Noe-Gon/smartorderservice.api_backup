@@ -324,6 +324,7 @@ namespace SmartOrderService.Services
 
             return workDayDto;
         }
+
         public string finalizarJornadaOPCD(string branchCode, string routeCode, DateTime deliveryDate, DateTime createdOnWbc)
         {
             var client = new RestClient();

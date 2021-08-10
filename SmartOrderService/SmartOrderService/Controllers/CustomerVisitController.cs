@@ -57,7 +57,6 @@ namespace SmartOrderService.Controllers
             HttpResponseMessage response;
             try
             {
-
                 var UserId = 0;
                
                     var user = new UserService().getUser((int)dto.UserId);
