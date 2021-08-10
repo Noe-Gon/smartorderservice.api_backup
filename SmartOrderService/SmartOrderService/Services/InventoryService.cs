@@ -523,6 +523,56 @@ namespace SmartOrderService.Services
             }
         }
 
+        public void TransferUnsoldInventory(int userId)
+        {
+            ERolTeam userTeamRole = roleTeamService.getUserRole(userId);
+
+            if (userTeamRole == ERolTeam.Impulsor)
+            {
+                using (var context = db.Database.BeginTransaction()) {
+                    try
+                    {
+                        var currentInventory = GetCurrentInventory(userId);
+
+                        if (currentInventory == null)
+                        {
+                            return;
+                        }
+
+                        var unsoldProducts = GetUnsoldProducts(currentInventory.inventoryId);
+                        //si la lista esta vacia, entonces no existen productos no vendidos
+                        if (!unsoldProducts.Any())
+                        {
+                            return;
+                        }
+                        var nextInventory = GetNextInventory(userId);
+                        //si no se encuentra un siguiente inventario, entonces ya se termino la jornada
+                        if (nextInventory == null)
+                        {
+                            return;
+                        }
+                        SetNextTeamInventory(unsoldProducts, nextInventory.inventoryId);
+                        context.Commit();
+                    }
+                    catch (Exception e)
+                    {
+                        context.Rollback();
+                        throw new Exception(e.Message);
+                    }
+                }
+            }
+        }
+
+        private so_inventory GetCurrentInventory(int userId)
+        {
+            var currentInventory = db.so_inventory.Where(i => i.userId.Equals(userId)
+                && i.state.Equals(INVENTORY_CLOSED)
+                && i.status
+                && DbFunctions.TruncateTime(i.date) == DbFunctions.TruncateTime(DateTime.Today)
+                ).OrderByDescending(i => i.order).FirstOrDefault();
+            return currentInventory;
+        }
+
         private void SetNextTeamInventory(List<so_route_team_inventory_available> routeTeamInventory, int nextInventoryId)
         {
             var inventorySummary = db.so_inventory_summary
@@ -560,8 +610,15 @@ namespace SmartOrderService.Services
 
         private List<so_route_team_inventory_available> GetUnsoldProducts(int inventoryId)
         {
-            RouteTeamInventoryAvailableService routeTeamInventoryAvailableService = new RouteTeamInventoryAvailableService();
-            return routeTeamInventoryAvailableService.GetRemainingInventory(inventoryId);
+            var inventoryAvailable = db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(inventoryId)).ToList();
+            var inventoryCloneObject = new List<so_route_team_inventory_available>();
+            foreach (var routeProduct in inventoryAvailable)
+            {
+                inventoryCloneObject.Add((so_route_team_inventory_available)routeProduct.Clone());
+                routeProduct.Available_Amount = 0;
+            }
+            db.SaveChanges();
+            return inventoryCloneObject.Where(s => s.Available_Amount > 0).ToList();
         }
 
         private so_inventory GetNextInventory(int userId)
