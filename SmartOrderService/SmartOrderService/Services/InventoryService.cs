@@ -529,27 +529,37 @@ namespace SmartOrderService.Services
 
             if (userTeamRole == ERolTeam.Impulsor)
             {
+                using (var context = db.Database.BeginTransaction()) {
+                    try
+                    {
+                        var currentInventory = GetCurrentInventory(userId);
 
-                var currentInventory = GetCurrentInventory(userId);
+                        if (currentInventory == null)
+                        {
+                            return;
+                        }
 
-                if (currentInventory == null)
-                {
-                    return;
+                        var unsoldProducts = GetUnsoldProducts(currentInventory.inventoryId);
+                        //si la lista esta vacia, entonces no existen productos no vendidos
+                        if (!unsoldProducts.Any())
+                        {
+                            return;
+                        }
+                        var nextInventory = GetNextInventory(userId);
+                        //si no se encuentra un siguiente inventario, entonces ya se termino la jornada
+                        if (nextInventory == null)
+                        {
+                            return;
+                        }
+                        SetNextTeamInventory(unsoldProducts, nextInventory.inventoryId);
+                        context.Commit();
+                    }
+                    catch (Exception e)
+                    {
+                        context.Rollback();
+                        throw new Exception(e.Message);
+                    }
                 }
-
-                var unsoldProducts = GetUnsoldProducts(currentInventory.inventoryId);
-                //si la lista esta vacia, entonces no existen productos no vendidos
-                if (!unsoldProducts.Any())
-                {
-                    return;
-                }
-                var nextInventory = GetNextInventory(userId);
-                //si no se encuentra un siguiente inventario, entonces ya se termino la jornada
-                if (nextInventory == null)
-                {
-                    return;
-                }
-                SetNextTeamInventory(unsoldProducts, nextInventory.inventoryId);
             }
         }
 
@@ -600,8 +610,15 @@ namespace SmartOrderService.Services
 
         private List<so_route_team_inventory_available> GetUnsoldProducts(int inventoryId)
         {
-            RouteTeamInventoryAvailableService routeTeamInventoryAvailableService = new RouteTeamInventoryAvailableService();
-            return routeTeamInventoryAvailableService.GetRemainingInventory(inventoryId);
+            var inventoryAvailable = db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(inventoryId)).ToList();
+            var inventoryCloneObject = new List<so_route_team_inventory_available>();
+            foreach (var routeProduct in inventoryAvailable)
+            {
+                inventoryCloneObject.Add((so_route_team_inventory_available)routeProduct.Clone());
+                routeProduct.Available_Amount = 0;
+            }
+            db.SaveChanges();
+            return inventoryCloneObject.Where(s => s.Available_Amount > 0).ToList();
         }
 
         private so_inventory GetNextInventory(int userId)
