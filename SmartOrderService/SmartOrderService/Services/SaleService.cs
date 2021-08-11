@@ -322,7 +322,7 @@ namespace SmartOrderService.Services
         public Sale CreateSaleResultFromSale(Sale sale)
         {
                 RoleTeamService roleTeamService = new RoleTeamService();
-                ERolTeam userRole = roleTeamService.getUserRole(sale.UserId);
+                ERolTeam userRole = roleTeamService.GetUserRole(sale.UserId);
                 if (userRole == ERolTeam.SinAsignar)
                 {
                     return sale;
@@ -367,7 +367,7 @@ namespace SmartOrderService.Services
         public SaleTeam CreateSaleResultFromSale(SaleTeam sale)
         {
             RoleTeamService roleTeamService = new RoleTeamService();
-            ERolTeam userRole = roleTeamService.getUserRole(sale.UserId);
+            ERolTeam userRole = roleTeamService.GetUserRole(sale.UserId);
             if (userRole == ERolTeam.SinAsignar)
             {
                 return sale;
@@ -631,7 +631,7 @@ namespace SmartOrderService.Services
         public void UpdateRouteTeamInventory(Sale sale)
         {
             RoleTeamService roleTeamService = new RoleTeamService();
-            ERolTeam userRole = roleTeamService.getUserRole(sale.UserId);
+            ERolTeam userRole = roleTeamService.GetUserRole(sale.UserId);
             if (userRole == ERolTeam.SinAsignar)
             {
                 return;
@@ -643,7 +643,7 @@ namespace SmartOrderService.Services
         public void UpdateRouteTeamInventory(SaleTeam sale)
         {
             RoleTeamService roleTeamService = new RoleTeamService();
-            ERolTeam userRole = roleTeamService.getUserRole(sale.UserId);
+            ERolTeam userRole = roleTeamService.GetUserRole(sale.UserId);
             if (userRole == ERolTeam.SinAsignar)
             {
                 return;

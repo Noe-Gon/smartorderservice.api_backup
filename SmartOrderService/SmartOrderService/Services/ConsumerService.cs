@@ -395,7 +395,7 @@ namespace SmartOrderService.Services
                 catch (RelatedDriverNotFoundException e)
                 { }
 
-                so_inventory inventory = inventoryService.getCurrentInventory(request.userId, null);
+                so_inventory inventory = inventoryService.GetCurrentInventory(request.userId, null);
 
                 List<GetConsumersResponse> visits = new List<GetConsumersResponse>();
 

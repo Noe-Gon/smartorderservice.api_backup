@@ -11,7 +11,7 @@ namespace SmartOrderService.Services
     {
         private SmartOrderModel db = new SmartOrderModel();
 
-        public ERolTeam getUserRole(int userId)
+        public ERolTeam GetUserRole(int userId)
         {
             so_route_team userRoleTeam = db.so_route_team.Where(i => i.userId == userId).FirstOrDefault();
             if (userRoleTeam == null)

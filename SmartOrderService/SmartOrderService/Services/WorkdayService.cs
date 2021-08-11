@@ -23,7 +23,7 @@ namespace SmartOrderService.Services
 
         public Workday createWorkday(int userId)
         {
-            ERolTeam userTeamRole = roleTeamService.getUserRole(userId);
+            ERolTeam userTeamRole = roleTeamService.GetUserRole(userId);
 
             if (userTeamRole != ERolTeam.SinAsignar)
             {
@@ -48,7 +48,7 @@ namespace SmartOrderService.Services
                 return workday;
             }
 
-            ERolTeam userRol = roleTeamService.getUserRole(userId);
+            ERolTeam userRol = roleTeamService.GetUserRole(userId);
 
             if (userRol != ERolTeam.Ayudante)
             {
@@ -59,7 +59,6 @@ namespace SmartOrderService.Services
                 var time = DateTime.Now;
 
                 var device = db.so_device.Where(d => d.userId == userId && d.status);
-
 
                 //validamos que este registrado
                 if (!device.Any())
@@ -115,11 +114,9 @@ namespace SmartOrderService.Services
 
             List<Jornada> Jornadas = new List<Jornada>();
 
-
             foreach (var trip in trips) {
 
                 var currentJourney = Jornadas.Where(j => j.Ruta.Equals(trip.RouteCode)).FirstOrDefault();
-                
 
                 var viaje = new Viaje() { Numero = trip.Order, Finalizado = trip.IsFinished };
 
@@ -142,20 +139,13 @@ namespace SmartOrderService.Services
                         jornada.Inicio = journey.date_start.Value;
                         jornada.Fin = journey.date_end.HasValue ? journey.date_end : null;
                     }
-                    
 
                     jornada.Viajes.Add(viaje);
-
                     Jornadas.Add(jornada);
                 }
-
-
-
             }
 
-            
             return Jornadas;
-
         }
 
         public bool onOpenWorkDay(Workday workday)
@@ -165,11 +155,11 @@ namespace SmartOrderService.Services
 
         public Workday FinishWorkday(Workday workday)
         {
-            ERolTeam userRol = roleTeamService.getUserRole(workday.UserId);
+            ERolTeam userRol = roleTeamService.GetUserRole(workday.UserId);
             if (userRol == ERolTeam.SinAsignar || userRol == ERolTeam.Impulsor)
             {
                 FinishWorkdayProcess(workday);
-                new RouteTeamTravelsService().SetClosingStatusRoutTeamTravels(workday.WorkdayId);
+                //new RouteTeamTravelsService().SetClosingStatusRoutTeamTravels(workday.WorkdayId);
                 if (userRol == ERolTeam.Impulsor)
                 {
                     //OPCD Start

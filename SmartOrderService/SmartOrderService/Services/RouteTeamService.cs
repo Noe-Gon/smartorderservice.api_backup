@@ -15,9 +15,9 @@ namespace SmartOrderService.Services
         private RoleTeamService roleTeamService = new RoleTeamService();
         private RouteTeamTravelsService routeTeamTravelsService = new RouteTeamTravelsService();
 
-        public bool checkCurrentTravelState(int userId)
+        public bool CheckCurrentTravelState(int userId)
         {
-            ERolTeam userRole = roleTeamService.getUserRole(userId);
+            ERolTeam userRole = roleTeamService.GetUserRole(userId);
             if (userRole == ERolTeam.SinAsignar)
             {
                 return true;
@@ -32,7 +32,7 @@ namespace SmartOrderService.Services
             inventoryService.CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
             //End Load Inventory Process
 
-            int inventoryState = getInventoryState(userId,DateTime.Today);
+            int inventoryState = GetInventoryState(userId,DateTime.Today);
             if ((inventoryState == 0 && userRole == ERolTeam.Impulsor))
             {
                 return true;
@@ -58,7 +58,8 @@ namespace SmartOrderService.Services
 
         public bool checkDriverWorkDay(int userId)
         {
-            ERolTeam userRole = roleTeamService.getUserRole(userId);
+            /*
+            ERolTeam userRole = roleTeamService.GetUserRole(userId);
             if (userRole == ERolTeam.Impulsor)
             {
                 try
@@ -84,12 +85,13 @@ namespace SmartOrderService.Services
                 }
                 return true;
             }
+            */
             return true;
         }
 
         public bool CheckTravelClosingStatus(int userId, int inventoryId)
         {
-            ERolTeam userRole = roleTeamService.getUserRole(userId);
+            ERolTeam userRole = roleTeamService.GetUserRole(userId);
             if (userRole == ERolTeam.SinAsignar)
             {
                 return true;
@@ -106,13 +108,13 @@ namespace SmartOrderService.Services
 
             if (userRole == ERolTeam.Impulsor)
             {
-                if (getInventoryState(userId,DateTime.Today) == 1 && routeTeamTravelsService.getTravelStatusByInventoryId(inventoryId) == EInventoryTeamStatus.InventarioCerradoPorAsistente)
+                if (GetInventoryState(userId,DateTime.Today) == 1 && routeTeamTravelsService.getTravelStatusByInventoryId(inventoryId) == EInventoryTeamStatus.InventarioCerradoPorAsistente)
                 {
                     return true;
                 }
                 return false;
             }
-            if (getInventoryState(userId, DateTime.Today) == 1 && routeTeamTravelsService.getTravelStatusByInventoryId(inventoryId) == EInventoryTeamStatus.InventarioAbiertoPorAyudante)
+            if (GetInventoryState(userId, DateTime.Today) == 1 && routeTeamTravelsService.getTravelStatusByInventoryId(inventoryId) == EInventoryTeamStatus.InventarioAbiertoPorAyudante)
             {
                 return true;
             }
@@ -139,12 +141,12 @@ namespace SmartOrderService.Services
                 ).FirstOrDefault();
             if (workday == null)
             {
-                throw new WorkdayNotFoundException("No se encontro la jornada para el usuario " + userId + "y el dia " + date);
+                throw new WorkdayNotFoundException("No se encontro la jornada para el usuario " + userId + " y el dia " + date);
             }
             return workday;
         }
 
-        public int getInventoryState(int userId, DateTime date)
+        public int GetInventoryState(int userId, DateTime date)
         {
             InventoryService inventoryService = new InventoryService();
             if (date == null)
@@ -152,13 +154,14 @@ namespace SmartOrderService.Services
                 date = DateTime.Today;
             }
             userId = SearchDrivingId(userId);
-            var inventory = inventoryService.getCurrentInventory(userId,date);
+            var inventory = inventoryService.GetCurrentInventory(userId,date);
             return inventory.state;
         }
 
         public bool CheckWorkDayClosingStatus(int userId)
         {
-            ERolTeam userRole = roleTeamService.getUserRole(userId);
+            /*
+            ERolTeam userRole = roleTeamService.GetUserRole(userId);
             if (userRole == ERolTeam.SinAsignar)
             {
                 return true;
@@ -174,6 +177,15 @@ namespace SmartOrderService.Services
                 {
                     return true;
                 }
+                return false;
+            }
+            return true;
+            */
+            int userTravel = db.so_route_team_travels_employees
+                .Where(s => s.userId.Equals(userId) & s.active)
+                .Count();
+            if (userTravel > 0)
+            {
                 return false;
             }
             return true;

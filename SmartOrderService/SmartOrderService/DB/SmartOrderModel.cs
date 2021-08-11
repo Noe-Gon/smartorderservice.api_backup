@@ -153,6 +153,8 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_customer_removal_request> so_customer_romoval_requests { get; set; }
         public virtual DbSet<so_portal_links_log> so_portal_links_logs { get; set; }
         public virtual DbSet<so_code_place> so_code_places { get; set; }
+        public virtual DbSet<so_route_team_travels_employees> so_route_team_travels_employees { get; set; }
+        public virtual DbSet<so_route_team_travels2> so_route_team_travels2 { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -1772,6 +1774,11 @@ namespace SmartOrderService.DB
             var codePlace = modelBuilder.Entity<so_code_place>();
             codePlace.HasKey(x => x.Id);
             codePlace.Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+
+            modelBuilder.Entity<so_route_team_travels2>()
+                .HasMany(e => e.so_route_team_travels_employees)
+                .WithRequired(e => e.so_route_team_travels2)
+                .WillCascadeOnDelete(false);
 
         }
     }

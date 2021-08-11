@@ -15,7 +15,7 @@ using System.Configuration;
 
 namespace SmartOrderService.Services
 {
-    public class InventoryService
+    public class InventoryService : IDisposable
     {
         public static int INVENTORY_AVAILABLE = 0;
         public static int INVENTORY_OPEN = 1;
@@ -25,7 +25,7 @@ namespace SmartOrderService.Services
         private RoleTeamService roleTeamService = new RoleTeamService();
         private RouteTeamService routeTeamService = new RouteTeamService();
 
-        public so_inventory getCurrentInventory(int userId, DateTime? Date)
+        public so_inventory GetCurrentInventory(int userId, DateTime? Date)
         {
             DateTime today = DateTime.Today;
 
@@ -75,7 +75,7 @@ namespace SmartOrderService.Services
 
         public bool CloseInventory(int inventoryId, int userId)
         {
-            ERolTeam userTeamRole = roleTeamService.getUserRole(userId);
+            ERolTeam userTeamRole = roleTeamService.GetUserRole(userId);
             if (userTeamRole == ERolTeam.SinAsignar)
             {
                 return CloseInventory(inventoryId);
@@ -83,15 +83,32 @@ namespace SmartOrderService.Services
 
             if (userTeamRole == ERolTeam.Impulsor)
             {
-                if (CloseInventory(inventoryId)) {
-                    closingRouteTeamTravelStatus(userId, inventoryId, userTeamRole);
-                    //TransferUnsoldInventory(inventoryId,userId);
-                    return true;
+                using (var dbContextTransaction = db.Database.BeginTransaction())
+                {
+                    if (CloseInventory(inventoryId))
+                    {
+                        //closingRouteTeamTravelStatus(userId, inventoryId, userTeamRole);
+                        CloseUserTravel(inventoryId, userId);
+                        dbContextTransaction.Commit();
+                        return true;
+                    }
+                    return false;
                 }
-                return false;
             }
-            closingRouteTeamTravelStatus(userId, inventoryId, userTeamRole);
+            CloseUserTravel(inventoryId, userId);
             return true;
+        }
+
+        private void CloseUserTravel(int inventoryId, int userId)
+        {
+            var routeTeamTravel = db.so_route_team_travels2
+                .Where(s => s.inventoryId.Equals(inventoryId))
+                .FirstOrDefault();
+            var userTravel = routeTeamTravel.so_route_team_travels_employees
+                .Where(s => s.userId.Equals(userId))
+                .FirstOrDefault();
+            userTravel.active = false;
+            db.SaveChanges();
         }
 
         [Obsolete]
@@ -112,8 +129,6 @@ namespace SmartOrderService.Services
 
 
             return deliveryIdsFromInventory.Count() == 0;
-            return true;
-
         }
 
         public List<TripDto> getTrips(string BranchCode, DateTime Date)
@@ -164,7 +179,7 @@ namespace SmartOrderService.Services
 
         public void OpenInventory(int inventoryId, int userId)
         {
-            ERolTeam userTeamRole = roleTeamService.getUserRole(userId);
+            ERolTeam userTeamRole = roleTeamService.GetUserRole(userId);
             RouteTeamInventoryAvailableService routeTeamInventoryAvailable = new RouteTeamInventoryAvailableService();
             if (userTeamRole == ERolTeam.SinAsignar)
             {
@@ -174,15 +189,48 @@ namespace SmartOrderService.Services
 
             if (userTeamRole == ERolTeam.Impulsor)
             {
-                OpenInventory(inventoryId);
-                recordRouteTeamTravelStatus(userId,inventoryId);
-                routeTeamInventoryAvailable.RecordRouteTeamInventory(inventoryId);
+                using (var dbContextTransaction = db.Database.BeginTransaction())
+                {
+                    OpenInventory(inventoryId);
+                    RecordRouteTeamTravelStatus(userId, inventoryId);
+                    RecordRouteTeamEmployees(inventoryId, userId);
+                    RecordRouteTeamInventory(inventoryId);
+                    dbContextTransaction.Commit();
+                }
                 return;
             }
             if (userTeamRole == ERolTeam.Ayudante)
             {
-                openingRouteTeamTravelStatus(userId,inventoryId,userTeamRole);
+                RecordRouteTeamEmployees(inventoryId, userId);
             }
+        }
+
+        private void RecordRouteTeamInventory(int inventoryId)
+        {
+            var inventoryDetailList = db.so_inventory_detail.Where(s => s.inventoryId.Equals(inventoryId)).ToList();
+            foreach (var inventoryDetail in inventoryDetailList)
+            {
+                so_route_team_inventory_available routeTeamInventory = new so_route_team_inventory_available();
+                routeTeamInventory.inventoryId = inventoryDetail.inventoryId;
+                routeTeamInventory.productId = inventoryDetail.productId;
+                routeTeamInventory.createOn = DateTime.Now.ToUniversalTime();
+                routeTeamInventory.Available_Amount = inventoryDetail.amount;
+                db.so_route_team_inventory_available.Add(routeTeamInventory);
+            }
+            db.SaveChanges();
+        }
+
+        private void RecordRouteTeamEmployees(int inventoryId, int userId)
+        {
+            var routeTravel = db.so_route_team_travels2.Where(s => s.inventoryId.Equals(inventoryId)).FirstOrDefault();
+            var routeTeamEmployees = new so_route_team_travels_employees()
+            {
+                routeTeamTravelId = routeTravel.routeTeamTravelId,
+                userId = userId,
+                active = true
+            };
+            db.so_route_team_travels_employees.Add(routeTeamEmployees);
+            db.SaveChanges();
         }
 
         public bool IsReady(int InventoryId)
@@ -198,7 +246,7 @@ namespace SmartOrderService.Services
             List<InventoryDto> Inventories = new List<InventoryDto>();
 
             var Today = DateTime.Today;
-            ERolTeam userTeamRole = roleTeamService.getUserRole(request.UserId);
+            ERolTeam userTeamRole = roleTeamService.GetUserRole(request.UserId);
             int UserId;
 
             if (!request.OnlyCurrent.HasValue)
@@ -218,7 +266,7 @@ namespace SmartOrderService.Services
 
             if (OnlyCurrent)
             {
-                var currentInventory = getCurrentInventory(UserId, null);
+                var currentInventory = GetCurrentInventory(UserId, null);
 
                 if (currentInventory == null)
                     throw new InventoryEmptyException();
@@ -295,7 +343,7 @@ namespace SmartOrderService.Services
             if (user == null || !existRevision)
                 throw new InventoryEmptyException();
 
-            var inventory = getCurrentInventory(user.userId, Date);
+            var inventory = GetCurrentInventory(user.userId, Date);
 
             var saleService = new SaleService();
 
@@ -440,7 +488,6 @@ namespace SmartOrderService.Services
                 Classifications = inventoryClassification
             };
 
-
             return dto;
         }
 
@@ -470,8 +517,9 @@ namespace SmartOrderService.Services
 
         }
 
-        public void recordRouteTeamTravelStatus(int userId, int inventoryId)
+        public void RecordRouteTeamTravelStatus(int userId, int inventoryId)
         {
+            /*
             int routeId = routeTeamService.searchRouteId(userId);
             Guid workDayId = routeTeamService.GetWorkdayByUserAndDate(userId,DateTime.Today).work_dayId;
             var routeTeamTravel = new so_route_team_travels()
@@ -483,6 +531,32 @@ namespace SmartOrderService.Services
             };
             db.so_route_team_travels.Add(routeTeamTravel);
             db.SaveChanges();
+            */
+            Guid workDayId = routeTeamService.GetWorkdayByUserAndDate(userId, DateTime.Today).work_dayId;
+            int routeId = routeTeamService.searchRouteId(userId);
+            int lastTravelNumber = SearchLastTravelNumber(workDayId);
+            var routeTeamTravel = new so_route_team_travels2()
+            {
+                inventoryId = inventoryId,
+                work_dayId = workDayId,
+                routeId = routeId,
+                travelNumber = lastTravelNumber + 1
+            };
+            db.so_route_team_travels2.Add(routeTeamTravel);
+            db.SaveChanges();
+        }
+
+        private int SearchLastTravelNumber(Guid workDay)
+        {
+            var travel = db.so_route_team_travels2
+                .Where(s => s.work_dayId.Equals(workDay))
+                .OrderBy(s => s.travelNumber)
+                .FirstOrDefault();
+            if (travel == null)
+            {
+                return 0;
+            }
+            return travel.travelNumber;
         }
 
         public bool CheckInventoryAvailability(int inventoryId, int productId, int amount)
@@ -503,7 +577,7 @@ namespace SmartOrderService.Services
 
         public void TransferUnsoldInventory(int inventoryId, int userId)
         {
-            ERolTeam userTeamRole = roleTeamService.getUserRole(userId);
+            ERolTeam userTeamRole = roleTeamService.GetUserRole(userId);
 
             if (userTeamRole == ERolTeam.Impulsor) {
 
@@ -525,7 +599,7 @@ namespace SmartOrderService.Services
 
         public void TransferUnsoldInventory(int userId)
         {
-            ERolTeam userTeamRole = roleTeamService.getUserRole(userId);
+            ERolTeam userTeamRole = roleTeamService.GetUserRole(userId);
 
             if (userTeamRole == ERolTeam.Impulsor)
             {
@@ -777,7 +851,7 @@ namespace SmartOrderService.Services
             db.SaveChanges();
         }
 
-        private void openingRouteTeamTravelStatus(int userId, int inventoryId, ERolTeam userRol)
+        private void OpeningRouteTeamTravelStatus(int userId, int inventoryId, ERolTeam userRol)
         {
             RouteTeamTravelsService roleTeamService = new RouteTeamTravelsService();
             int routeId = routeTeamService.searchRouteId(userId);
@@ -835,6 +909,20 @@ namespace SmartOrderService.Services
             });
 
             var response = client.Execute(request);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                db.Dispose();
+            }
         }
     }
 }

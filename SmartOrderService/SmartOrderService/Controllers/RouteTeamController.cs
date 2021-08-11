@@ -19,7 +19,7 @@ namespace SmartOrderService.Services
             try
             {
                 RouteTeamService service = new RouteTeamService();
-                bool result = service.checkCurrentTravelState(userId);
+                bool result = service.CheckCurrentTravelState(userId);
                 response = Request.CreateResponse(HttpStatusCode.OK, result);
             }
             catch (RelatedDriverNotFoundException e)
