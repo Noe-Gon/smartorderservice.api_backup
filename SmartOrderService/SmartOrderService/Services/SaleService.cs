@@ -1010,8 +1010,8 @@ namespace SmartOrderService.Services
                         }
 
                         var updateCustomerAdditionalData = db.so_customerr_additional_data
-                            .Where(x => x.CustomerId == sale.CustomerId)
-                            .FirstOrDefault();
+                                .Where(x => x.CustomerId == sale.CustomerId)
+                                .FirstOrDefault();
 
                         if (updateCustomerAdditionalData != null)
                         {
@@ -1054,11 +1054,11 @@ namespace SmartOrderService.Services
                                             {
                                                 Amount = detail.Amount,
                                                 ProductName = detail.ProductId + " - " + product.name,
-                                                TotalPrice = Convert.ToDouble(detail.Amount) * Convert.ToDouble(detail.price),
-                                                UnitPrice = Convert.ToDouble(detail.price)
+                                                TotalPrice = Convert.ToDouble(detail.Amount) * Convert.ToDouble(detail.PriceValue),
+                                                UnitPrice = Convert.ToDouble(detail.PriceValue)
                                             });
                                         }
-
+                                        sendTicketDigitalEmail.Sales = sales;
                                         //Se envia el ticket
                                         var emailService = new EmailService();
                                         var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);
@@ -1068,7 +1068,6 @@ namespace SmartOrderService.Services
 
                             #endregion
                         }
-
                         transaction.Commit();
                     }
                 }

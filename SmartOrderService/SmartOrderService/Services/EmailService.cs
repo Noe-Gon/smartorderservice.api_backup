@@ -65,7 +65,10 @@ namespace SmartOrderService.Services
                     body = body.Replace("{Date}", request.Date.ToString("dd/MMM/yy hh:mmtt"));
                     body = body.Replace("{RouteAddress}", request.RouteAddress);
                     body = body.Replace("{SellerName}", request.SellerName);
-                    body = body.Replace("{PaymentMethod}", request.PaymentMethod);
+                    if (request.PaymentMethod == null)
+                        body = body.Replace("{PaymentMethod}", "");
+                    else
+                        body = body.Replace("{PaymentMethod}", "Forma de pago: " + request.PaymentMethod);
 
                     string tdBody = "";
                     int totalProductsSold = 0;
@@ -75,7 +78,7 @@ namespace SmartOrderService.Services
                     foreach (var row in request.Sales)
                     {
                         totalProductsSold++;
-                        tdBody += "<tr><td>" + totalProductsSold + ")" + row.ProductName + "</td>";
+                        tdBody += "<tr><td>" + totalProductsSold + ") " + row.ProductName + "</td>";
                         tdBody += "<td>" + row.Amount + "</td>";
                         tdBody += "<td>" + String.Format("{0:0.00}", row.UnitPrice) + "</td>";
                         tdBody += "<td>" + String.Format("{0:0.00}", row.TotalPrice) + "</td></tr>";
