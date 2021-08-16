@@ -85,7 +85,7 @@ namespace SmartOrderService.Services
             {
                 if (CloseInventory(inventoryId)) {
                     closingRouteTeamTravelStatus(userId, inventoryId, userTeamRole);
-                    //TransferUnsoldInventory(inventoryId,userId);
+                    //TransferUnsoldInventory(inventoryId, userId);
                     return true;
                 }
                 return false;
