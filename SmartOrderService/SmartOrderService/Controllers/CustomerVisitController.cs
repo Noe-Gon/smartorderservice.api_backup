@@ -105,7 +105,7 @@ namespace SmartOrderService.Controllers
             }
             catch (Exception e)
             {
-                response = Request.CreateResponse(HttpStatusCode.InternalServerError, "No se pudo registrar la visita, valida estar registrado e" + e.InnerException.Message + " d " + e.InnerException.ToString());
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, "No se pudo registrar la visita, " + e.Message);
             }
 
             return response;

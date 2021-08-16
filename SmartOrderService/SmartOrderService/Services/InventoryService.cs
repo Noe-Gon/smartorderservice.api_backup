@@ -101,13 +101,10 @@ namespace SmartOrderService.Services
 
         private void CloseUserTravel(int inventoryId, int userId)
         {
-            var routeTeamTravel = db.so_route_team_travels2
-                .Where(s => s.inventoryId.Equals(inventoryId))
+            var routeTeamTravel = db.so_route_team_travels_employees
+                .Where(s => s.inventoryId.Equals(inventoryId) && s.userId.Equals(userId))
                 .FirstOrDefault();
-            var userTravel = routeTeamTravel.so_route_team_travels_employees
-                .Where(s => s.userId.Equals(userId))
-                .FirstOrDefault();
-            userTravel.active = false;
+            routeTeamTravel.active = false;
             db.SaveChanges();
         }
 
@@ -193,7 +190,6 @@ namespace SmartOrderService.Services
                 {
                     OpenInventory(inventoryId);
                     RecordRouteTeamTravelStatus(userId, inventoryId);
-                    RecordRouteTeamEmployees(inventoryId, userId);
                     RecordRouteTeamInventory(inventoryId);
                     dbContextTransaction.Commit();
                 }
@@ -201,7 +197,7 @@ namespace SmartOrderService.Services
             }
             if (userTeamRole == ERolTeam.Ayudante)
             {
-                RecordRouteTeamEmployees(inventoryId, userId);
+                RecordRouteTeamTravelStatus(userId, inventoryId);
             }
         }
 
@@ -217,19 +213,6 @@ namespace SmartOrderService.Services
                 routeTeamInventory.Available_Amount = inventoryDetail.amount;
                 db.so_route_team_inventory_available.Add(routeTeamInventory);
             }
-            db.SaveChanges();
-        }
-
-        private void RecordRouteTeamEmployees(int inventoryId, int userId)
-        {
-            var routeTravel = db.so_route_team_travels2.Where(s => s.inventoryId.Equals(inventoryId)).FirstOrDefault();
-            var routeTeamEmployees = new so_route_team_travels_employees()
-            {
-                routeTeamTravelId = routeTravel.routeTeamTravelId,
-                userId = userId,
-                active = true
-            };
-            db.so_route_team_travels_employees.Add(routeTeamEmployees);
             db.SaveChanges();
         }
 
@@ -532,24 +515,27 @@ namespace SmartOrderService.Services
             db.so_route_team_travels.Add(routeTeamTravel);
             db.SaveChanges();
             */
-            Guid workDayId = routeTeamService.GetWorkdayByUserAndDate(userId, DateTime.Today).work_dayId;
+            var imppulsorId = SearchDrivingId(userId);
+            Guid workDayId = routeTeamService.GetWorkdayByUserAndDate(imppulsorId, DateTime.Today).work_dayId;
             int routeId = routeTeamService.searchRouteId(userId);
-            int lastTravelNumber = SearchLastTravelNumber(workDayId);
-            var routeTeamTravel = new so_route_team_travels2()
+            int lastTravelNumber = SearchLastTravelNumber(workDayId, userId);
+            var routeTeamTravel = new so_route_team_travels_employees()
             {
                 inventoryId = inventoryId,
                 work_dayId = workDayId,
                 routeId = routeId,
-                travelNumber = lastTravelNumber + 1
+                travelNumber = lastTravelNumber + 1,
+                active = true,
+                userId = userId
             };
-            db.so_route_team_travels2.Add(routeTeamTravel);
+            db.so_route_team_travels_employees.Add(routeTeamTravel);
             db.SaveChanges();
         }
 
-        private int SearchLastTravelNumber(Guid workDay)
+        private int SearchLastTravelNumber(Guid workDay, int userId)
         {
-            var travel = db.so_route_team_travels2
-                .Where(s => s.work_dayId.Equals(workDay))
+            var travel = db.so_route_team_travels_employees
+                .Where(s => s.work_dayId.Equals(workDay) && s.userId == userId)
                 .OrderBy(s => s.travelNumber)
                 .FirstOrDefault();
             if (travel == null)

@@ -6,22 +6,29 @@ using System.Data.Entity.Spatial;
 
 namespace SmartOrderService.DB
 {
-    public partial class so_route_team_travels_employees
+    public class so_route_team_travels_employees
     {
         [Key]
         [Column(Order = 0)]
-        [DatabaseGenerated(DatabaseGeneratedOption.None)]
-        public int routeTeamTravelId { get; set; }
+        public int routeId { get; set; }
 
         [Key]
         [Column(Order = 1)]
-        [DatabaseGenerated(DatabaseGeneratedOption.None)]
+        public int inventoryId { get; set; }
+
+        [Key]
+        [Column(Order = 2)]
+        public Guid work_dayId { get; set; }
+
+        [Key]
+        [Column(Order = 3)]
         public int userId { get; set; }
+
+        public int travelNumber { get; set; }
 
         public int? employeeCode { get; set; }
 
         public bool active { get; set; }
 
-        public virtual so_route_team_travels2 so_route_team_travels2 { get; set; }
     }
 }
