@@ -28,7 +28,11 @@ namespace SmartOrderService.Services
             }
             catch (InventoryEmptyException e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict, false);
+                response = Request.CreateResponse(HttpStatusCode.NotFound, false);
+            }
+            catch (InventoryInProgressException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.BadRequest, false);
             }
             catch (Exception e)
             {

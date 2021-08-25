@@ -50,11 +50,19 @@ namespace SmartOrderService.Services
 
             ERolTeam userRol = roleTeamService.GetUserRole(userId);
 
-            if (userRol != ERolTeam.Ayudante)
+            if (userRol != ERolTeam.SinAsignar)
             {
                 var id = Guid.NewGuid();
+                int driverId = inventoryService.SearchDrivingId(userId);
+                var currentWorkdayTeam = searchWorkDay(driverId);
 
-                //userId = checkDriverWorkDay(userId);
+                if (currentWorkdayTeam != null)
+                {
+                    workday.UserId = userId;
+                    workday.WorkdayId = currentWorkdayTeam.work_dayId;
+                    workday.IsOpen = true;
+                    return workday;
+                }
 
                 var time = DateTime.Now;
 
@@ -64,20 +72,18 @@ namespace SmartOrderService.Services
                 if (!device.Any())
                     throw new NoUserFoundException();
 
-
                 int deviceId = device.FirstOrDefault().deviceId;
 
                 var newWorkday = new so_work_day()
                 {
                     work_dayId = id,
-                    userId = userId,
+                    userId = driverId,
                     date_start = time,
                     createdon = time,
                     deviceId = deviceId,
                     openby_device = userId,
                     modifiedon = time,
                     status = true
-
                 };
 
                 db.so_work_day.Add(newWorkday);
@@ -158,7 +164,7 @@ namespace SmartOrderService.Services
             ERolTeam userRol = roleTeamService.GetUserRole(workday.UserId);
             if (userRol == ERolTeam.SinAsignar || userRol == ERolTeam.Impulsor)
             {
-                FinishWorkdayProcess(workday);
+                var workDayUpdated = FinishWorkdayProcess(workday);
                 //new RouteTeamTravelsService().SetClosingStatusRoutTeamTravels(workday.WorkdayId);
                 if (userRol == ERolTeam.Impulsor)
                 {
@@ -166,7 +172,7 @@ namespace SmartOrderService.Services
                     var routeTeam = db.so_route_team.Where(x => x.userId == workday.UserId).First();
                     var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
                   
-                    finalizarJornadaOPCD(route.so_branch.code, route.code, DateTime.Today, DateTime.Now);
+                    finalizarJornadaOPCD(route.so_branch.code, route.code, DateTime.Today, workDayUpdated.DateEnd);
                     //OPCD End
                 }
             }
@@ -190,7 +196,10 @@ namespace SmartOrderService.Services
             var start = currentWorkDay.FirstOrDefault().date_start.Value;
 
             if (currentWorkDay.FirstOrDefault().date_end.HasValue)
+            {
                 workday.IsOpen = false;
+                workday.DateEnd = currentWorkDay.FirstOrDefault().date_end.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+            }
 
             else
             {
@@ -221,7 +230,7 @@ namespace SmartOrderService.Services
                         finishWorkDay.closedby_device = UserId;
                         finishWorkDay.date_end = DateTime.Now;
                         finishWorkDay.modifiedon = DateTime.Now;
-
+                        workday.DateEnd = finishWorkDay.date_end.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
                         TemporalCloseInventory(finishWorkDay.so_user);
 
                         db.SaveChanges();
@@ -316,7 +325,7 @@ namespace SmartOrderService.Services
             return workDayDto;
         }
 
-        public string finalizarJornadaOPCD(string branchCode, string routeCode, DateTime deliveryDate, DateTime createdOnWbc)
+        public string finalizarJornadaOPCD(string branchCode, string routeCode, DateTime deliveryDate, string createdOnWbc)
         {
             var client = new RestClient();
             client.BaseUrl = new Uri(ConfigurationManager.AppSettings["API_Integraciones"]);

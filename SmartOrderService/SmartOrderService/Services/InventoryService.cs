@@ -81,6 +81,9 @@ namespace SmartOrderService.Services
                 return CloseInventory(inventoryId);
             }
 
+            int driverId = SearchDrivingId(userId);
+            var workDay = routeTeamService.GetWorkdayByUserAndDate(driverId, DateTime.Today);
+
             if (userTeamRole == ERolTeam.Impulsor)
             {
                 using (var dbContextTransaction = db.Database.BeginTransaction())
@@ -88,21 +91,21 @@ namespace SmartOrderService.Services
                     if (CloseInventory(inventoryId))
                     {
                         //closingRouteTeamTravelStatus(userId, inventoryId, userTeamRole);
-                        CloseUserTravel(inventoryId, userId);
+                        CloseUserTravel(inventoryId, userId, workDay);
                         dbContextTransaction.Commit();
                         return true;
                     }
                     return false;
                 }
             }
-            CloseUserTravel(inventoryId, userId);
+            CloseUserTravel(inventoryId, userId, workDay);
             return true;
         }
 
-        private void CloseUserTravel(int inventoryId, int userId)
+        private void CloseUserTravel(int inventoryId, int userId, so_work_day workDay)
         {
             var routeTeamTravel = db.so_route_team_travels_employees
-                .Where(s => s.inventoryId.Equals(inventoryId) && s.userId.Equals(userId))
+                .Where(s => s.inventoryId.Equals(inventoryId) && s.userId.Equals(userId) && s.work_dayId == workDay.work_dayId)
                 .FirstOrDefault();
             routeTeamTravel.active = false;
             db.SaveChanges();

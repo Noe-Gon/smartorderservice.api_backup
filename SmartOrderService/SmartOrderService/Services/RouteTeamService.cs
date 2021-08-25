@@ -17,35 +17,52 @@ namespace SmartOrderService.Services
 
         public bool CheckCurrentTravelState(int userId)
         {
-            ERolTeam userRole = roleTeamService.GetUserRole(userId);
-            if (userRole == ERolTeam.SinAsignar)
+            try
             {
-                return true;
-            }
+                ERolTeam userRole = roleTeamService.GetUserRole(userId);
+                if (userRole == ERolTeam.SinAsignar)
+                {
+                    return true;
+                }
 
-            //Start Load Inventory Process OPCD
-            var inventoryService = new InventoryService();
-            int impulsorId = SearchDrivingId(userId);
-            var routeTeam = db.so_route_team.Where(x => x.userId == impulsorId).First();
-            var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
+                int inventoryState = GetInventoryState(userId, DateTime.Today);
 
-            inventoryService.CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
-            //End Load Inventory Process
+                //Start Load Inventory Process OPCD
+                var inventoryService = new InventoryService();
+                int impulsorId = SearchDrivingId(userId);
+                var routeTeam = db.so_route_team.Where(x => x.userId == impulsorId).First();
+                var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
 
-            int inventoryState = GetInventoryState(userId,DateTime.Today);
-            if ((inventoryState == 0 && userRole == ERolTeam.Impulsor))
-            {
-                return true;
-            }
-            if (((inventoryState == 1 || inventoryState == 2) && userRole == ERolTeam.Impulsor))
-            {
+                inventoryService.CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
+                //End Load Inventory Process
+
+                if ((inventoryState == 0 && userRole == ERolTeam.Impulsor))
+                {
+                    return true;
+                }
+                if (((inventoryState == 1 || inventoryState == 2) && userRole == ERolTeam.Impulsor))
+                {
+                    return false;
+                }
+                if (inventoryState == 1)
+                {
+                    return true;
+                }
                 return false;
-            }
-            if (inventoryState == 1)
+            }catch (InventoryInProgressException)
             {
-                return true;
+                //Start Load Inventory Process OPCD
+                var inventoryService = new InventoryService();
+                int impulsorId = SearchDrivingId(userId);
+                var routeTeam = db.so_route_team.Where(x => x.userId == impulsorId).First();
+                var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
+
+                inventoryService.CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
+                //End Load Inventory Process
+
+                throw new InventoryInProgressException();
             }
-            return false;
+
         }
 
         public List<int> GetTeamIds(int userId)
@@ -106,6 +123,16 @@ namespace SmartOrderService.Services
             inventoryService.CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
             //End Load Inventory Process
 
+            //Si es de Viaje no sincronizado devolver true
+            var workDay = GetWorkdayByUserAndDate(impulsorId, DateTime.Today);
+            var isInTravelsemployees = db.so_route_team_travels_employees
+                .Where(x => x.userId == userId && x.inventoryId == inventoryId && x.work_dayId == workDay.work_dayId)
+                .FirstOrDefault() != null;
+
+            if (isInTravelsemployees)
+                return true;
+            //Fin de validación de viaje no sincronizado
+
             if (userRole == ERolTeam.Impulsor)
             {
                 if (GetInventoryState(userId,DateTime.Today) == 1 && routeTeamTravelsService.getTravelStatusByInventoryId(inventoryId) == EInventoryTeamStatus.InventarioCerradoPorAsistente)
@@ -160,13 +187,13 @@ namespace SmartOrderService.Services
 
         public bool CheckWorkDayClosingStatus(int userId)
         {
-            /*
+            
             ERolTeam userRole = roleTeamService.GetUserRole(userId);
             if (userRole == ERolTeam.SinAsignar)
             {
                 return true;
             }
-            if (userRole == ERolTeam.Impulsor)
+            /*if (userRole == ERolTeam.Impulsor)
             {
                 var userWorkDay = GetWorkdayByUserAndDate(userId, DateTime.Today);
                 if (userWorkDay == null)
@@ -181,8 +208,11 @@ namespace SmartOrderService.Services
             }
             return true;
             */
+            int impulsorId = SearchDrivingId(userId);
+            var workDay = GetWorkdayByUserAndDate(impulsorId, DateTime.Today);
+
             int userTravel = db.so_route_team_travels_employees
-                .Where(s => s.userId.Equals(userId) & s.active)
+                .Where(x => x.work_dayId == workDay.work_dayId && x.active)
                 .Count();
             if (userTravel > 0)
             {

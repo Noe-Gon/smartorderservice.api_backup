@@ -186,11 +186,9 @@ namespace SmartOrderService.Controllers
             HttpResponseMessage response;
             try
             {
-                using (var inventoryService = new InventoryService())
-                {
-                    inventoryService.TransferUnsoldInventory(request.InventoryId.Value, request.UserId);
-                    response = Request.CreateResponse(HttpStatusCode.Created);
-                }
+                var inventoryService = new InventoryService();
+                inventoryService.TransferUnsoldInventory(request.UserId);
+                response = Request.CreateResponse(HttpStatusCode.Created);
             }
             catch (Exception e)
             {
