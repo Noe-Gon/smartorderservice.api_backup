@@ -582,7 +582,7 @@ namespace SmartOrderService.Services
                 {
                     return;
                 }
-                SetNextTeamInventory(unsoldProducts, nextInventory.inventoryId);
+                SetNextTeamInventory(unsoldProducts, nextInventory.inventoryId, inventoryId);
             }
         }
 
@@ -614,7 +614,7 @@ namespace SmartOrderService.Services
                         {
                             return;
                         }
-                        SetNextTeamInventory(unsoldProducts, nextInventory.inventoryId);
+                        SetNextTeamInventory(unsoldProducts, nextInventory.inventoryId, currentInventory.inventoryId);
                         context.Commit();
                     }
                     catch (Exception e)
@@ -636,7 +636,7 @@ namespace SmartOrderService.Services
             return currentInventory;
         }
 
-        private void SetNextTeamInventory(List<so_route_team_inventory_available> routeTeamInventory, int nextInventoryId)
+        private void SetNextTeamInventory(List<so_route_team_inventory_available> routeTeamInventory, int nextInventoryId, int currentInventory)
         {
             var inventorySummary = db.so_inventory_summary
                 .Where(s => s.inventoryId.Equals(nextInventoryId)).FirstOrDefault();
@@ -648,15 +648,21 @@ namespace SmartOrderService.Services
 
                 if (inventoryDetail == null)
                 {
+                    var product = db.so_inventory_detail
+                        .Where(x => x.productId == inventoryProduct.productId && x.inventoryId == currentInventory)
+                        .FirstOrDefault();
+
                     var newInventoryDetail = new so_inventory_detail
                     {
                         productId = inventoryProduct.productId,
                         inventoryId = nextInventoryId,
                         amount = inventoryProduct.Available_Amount,
-                        createdon = DateTime.Today,
-                        modifiedon = DateTime.Today,
+                        createdon = DateTime.Now,
+                        modifiedon = DateTime.Now,
+                        createdby = 2777,
+                        modifiedby = 2777,
                         status = true,
-                        price = 0
+                        price = product.price
                     };
                     db.so_inventory_detail.Add(newInventoryDetail);
                     inventorySummary.articles_amount = inventorySummary.articles_amount + 1;
@@ -664,10 +670,12 @@ namespace SmartOrderService.Services
                 else
                 {
                     inventoryDetail.amount += inventoryProduct.Available_Amount;
+                    inventoryDetail.modifiedon = DateTime.Now;
                 }
                 inventorySummary.products_amount = inventorySummary.products_amount + inventoryProduct.Available_Amount;
                 inventoryProduct.Available_Amount = 0;
             }
+            inventorySummary.modifiedon = DateTime.Now;
             db.SaveChanges();
         }
 
