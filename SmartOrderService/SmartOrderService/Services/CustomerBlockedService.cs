@@ -1,3 +1,5 @@
+
+using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;
@@ -5,6 +7,7 @@ using SmartOrderService.UnitOfWork;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data.Entity;
 using System.Linq;
 using System.Web;
 
@@ -27,9 +30,9 @@ namespace SmartOrderService.Services
             try
             {
                 var workDay = UoWConsumer.GetWorkdayByUserAndDate(request.UserId, DateTime.Today);
-
+                int timeToUnblockCustomer = CustomerBlockedService.TimeToUnblockCustomer();
                 var customerBlocked = UoWConsumer.RouteTeamTravelsCustomerBlocked
-                    .Get(x => x.CreatedDate.AddMinutes(CustomerBlockedService.TimeToUnblockCustomer()) < DateTime.Now
+                    .Get(x => DbFunctions.AddMinutes(x.CreatedDate, timeToUnblockCustomer) >= DateTime.Now
                     && x.WorkDayId == workDay.work_dayId && x.UserId != request.UserId).ToList();
 
                 if (request.InventoryId != null)
@@ -47,12 +50,9 @@ namespace SmartOrderService.Services
 
                 return ResponseBase<List<GetCustomersBlockedResponse>>.Create(response);
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                return ResponseBase<List<GetCustomersBlockedResponse>>.Create(new List<string>()
-                {
-                    e.Message
-                });
+                throw;
             }
         }
 
@@ -91,7 +91,7 @@ namespace SmartOrderService.Services
             if (exist.UserId != request.UserId)
             {
                 //Verificar si esta activo el bloqueo
-                if (exist.CreatedDate.AddMinutes(CustomerBlockedService.TimeToUnblockCustomer()) < DateTime.Now)
+                if (exist.CreatedDate.AddMinutes(CustomerBlockedService.TimeToUnblockCustomer()) >= DateTime.Now)
                     return ResponseBase<BlockCustomerResponse>.Create(new List<string>()
                     {
                         "El cliente se encuentra bloqueado"
@@ -123,7 +123,7 @@ namespace SmartOrderService.Services
             if (exist.UserId == request.UserId)
             {
                 //Verificar si esta activo el bloqueo
-                if (exist.CreatedDate.AddMinutes(CustomerBlockedService.TimeToUnblockCustomer()) < DateTime.Now)
+                if (exist.CreatedDate.AddMinutes(CustomerBlockedService.TimeToUnblockCustomer()) >= DateTime.Now)
                     return ResponseBase<BlockCustomerResponse>.Create(new BlockCustomerResponse
                     {
                         Msg = "El cliente se encuentra bloqueado"
@@ -168,10 +168,7 @@ namespace SmartOrderService.Services
             }
             catch (Exception e)
             {
-                return ResponseBase<UnblockCustomerResponse>.Create(new List<string>()
-                {
-                    e.Message
-                });
+                throw;
             }
         }
 
@@ -193,12 +190,16 @@ namespace SmartOrderService.Services
                     Msg = "Se ha eliminado con exito"
                 });
             }
-            catch (Exception e)
+            catch (WorkdayNotFoundException e)
             {
                 return ResponseBase<ClearBlockedCustomerResponse>.Create(new List<string>()
                 {
                     e.Message
                 });
+            }
+            catch (Exception e)
+            {
+                throw;
             }
         }
 
