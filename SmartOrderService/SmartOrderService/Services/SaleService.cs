@@ -322,7 +322,7 @@ namespace SmartOrderService.Services
         public Sale CreateSaleResultFromSale(Sale sale)
         {
                 RoleTeamService roleTeamService = new RoleTeamService();
-                ERolTeam userRole = roleTeamService.getUserRole(sale.UserId);
+                ERolTeam userRole = roleTeamService.GetUserRole(sale.UserId);
                 if (userRole == ERolTeam.SinAsignar)
                 {
                     return sale;
@@ -367,7 +367,7 @@ namespace SmartOrderService.Services
         public SaleTeam CreateSaleResultFromSale(SaleTeam sale)
         {
             RoleTeamService roleTeamService = new RoleTeamService();
-            ERolTeam userRole = roleTeamService.getUserRole(sale.UserId);
+            ERolTeam userRole = roleTeamService.GetUserRole(sale.UserId);
             if (userRole == ERolTeam.SinAsignar)
             {
                 return sale;
@@ -631,7 +631,7 @@ namespace SmartOrderService.Services
         public void UpdateRouteTeamInventory(Sale sale)
         {
             RoleTeamService roleTeamService = new RoleTeamService();
-            ERolTeam userRole = roleTeamService.getUserRole(sale.UserId);
+            ERolTeam userRole = roleTeamService.GetUserRole(sale.UserId);
             if (userRole == ERolTeam.SinAsignar)
             {
                 return;
@@ -643,7 +643,7 @@ namespace SmartOrderService.Services
         public void UpdateRouteTeamInventory(SaleTeam sale)
         {
             RoleTeamService roleTeamService = new RoleTeamService();
-            ERolTeam userRole = roleTeamService.getUserRole(sale.UserId);
+            ERolTeam userRole = roleTeamService.GetUserRole(sale.UserId);
             if (userRole == ERolTeam.SinAsignar)
             {
                 return;
@@ -967,16 +967,6 @@ namespace SmartOrderService.Services
                             UpdateRouteTeamInventory(sale);
                         }
 
-                        var updateCustomerAdditionalData = db.so_customerr_additional_data
-                            .Where(x => x.CustomerId == sale.CustomerId)
-                            .FirstOrDefault();
-
-                        if (updateCustomerAdditionalData != null)
-                        {
-                            updateCustomerAdditionalData.CounterVisitsWithoutSales = 0;
-                            db.SaveChanges();
-                        }
-
                         transaction.Commit();
                     }
                 }
@@ -1009,65 +999,66 @@ namespace SmartOrderService.Services
                             UpdateRouteTeamInventory(sale);
                         }
 
-                        var updateCustomerAdditionalData = db.so_customerr_additional_data
-                                .Where(x => x.CustomerId == sale.CustomerId)
-                                .FirstOrDefault();
+                        //var updateCustomerAdditionalData = db.so_customerr_additional_data
+                        //    .Where(x => x.CustomerId == sale.CustomerId)
+                        //    .FirstOrDefault();
 
-                        if (updateCustomerAdditionalData != null)
-                        {
-                            #region Consumidores logica
-                            //Actualizar contador
-                            updateCustomerAdditionalData.CounterVisitsWithoutSales = 0;
-                            db.SaveChanges();
+                        //if (updateCustomerAdditionalData != null)
+                        //{
+                        //    #region Consumidores logica
+                        //    //Actualizar contador
+                        //    updateCustomerAdditionalData.CounterVisitsWithoutSales = 0;
+                        //    db.SaveChanges();
 
-                            //Envio de Ticket
-                            if (sale.EmailDeliveryTicket == true)
-                            {
-                                var customer = db.so_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
+                        //    //Envio de Ticket
+                        //    if (sale.EmailDeliveryTicket == true)
+                        //    {
+                        //        var customer = db.so_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
 
-                                if (customer.CustomerAdditionalData != null)
-                                {
-                                    if (customer.CustomerAdditionalData.FirstOrDefault().IsMailingActive)
-                                    {
-                                        //Se prepara la información
-                                        var route = db.so_route_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
-                                        var user = db.so_user.Where(x => x.userId == sale.UserId).FirstOrDefault();
+                        //        if (customer.CustomerAdditionalData != null)
+                        //        {
+                        //            if (customer.CustomerAdditionalData.FirstOrDefault().IsMailingActive)
+                        //            {
+                        //                //Se prepara la información
+                        //                var route = db.so_route_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
+                        //                var user = db.so_user.Where(x => x.userId == sale.UserId).FirstOrDefault();
 
-                                        var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
-                                        {
-                                            RouteAddress = Convert.ToString(route.routeId),
-                                            CustomerEmail = customer.email,
-                                            CustomerName = customer.customerId + " - " + customer.name + " " + customer.address,
-                                            Date = DateTime.Now,
-                                            PaymentMethod = sale.PaymentMethod,
-                                            SellerName = user.code + " - " + user.name
-                                        };
+                        //                var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
+                        //                {
+                        //                    RouteAddress = Convert.ToString(route.routeId),
+                        //                    CustomerEmail = customer.email,
+                        //                    CustomerName = customer.customerId + " - " + customer.name + " " + customer.address,
+                        //                    Date = DateTime.Now,
+                        //                    PaymentMethod = sale.PaymentMethod,
+                        //                    SellerName = user.code + " - " + user.name
+                        //                };
 
-                                        var sales = new List<SendTicketDigitalEmailSales>();
-                                        foreach (var detail in saleResult.SaleDetails)
-                                        {
-                                            var product = db.so_product.Where(x => x.productId == detail.ProductId).FirstOrDefault();
-                                            if (product == null)
-                                                continue;
+                        //                var sales = new List<SendTicketDigitalEmailSales>();
+                        //                foreach (var detail in saleResult.SaleDetails)
+                        //                {
+                        //                    var product = db.so_product.Where(x => x.productId == detail.ProductId).FirstOrDefault();
+                        //                    if (product == null)
+                        //                        continue;
 
-                                            sales.Add(new SendTicketDigitalEmailSales
-                                            {
-                                                Amount = detail.Amount,
-                                                ProductName = detail.ProductId + " - " + product.name,
-                                                TotalPrice = Convert.ToDouble(detail.Amount) * Convert.ToDouble(detail.PriceValue),
-                                                UnitPrice = Convert.ToDouble(detail.PriceValue)
-                                            });
-                                        }
-                                        sendTicketDigitalEmail.Sales = sales;
-                                        //Se envia el ticket
-                                        var emailService = new EmailService();
-                                        var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);
-                                    }
-                                }
-                            }
+                        //                    sales.Add(new SendTicketDigitalEmailSales
+                        //                    {
+                        //                        Amount = detail.Amount,
+                        //                        ProductName = detail.ProductId + " - " + product.name,
+                        //                        TotalPrice = Convert.ToDouble(detail.Amount) * Convert.ToDouble(detail.price),
+                        //                        UnitPrice = Convert.ToDouble(detail.price)
+                        //                    });
+                        //                }
 
-                            #endregion
-                        }
+                        //                //Se envia el ticket
+                        //                var emailService = new EmailService();
+                        //                var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);
+                        //            }
+                        //        }
+                        //    }
+
+                            //#endregion
+                        //}
+
                         transaction.Commit();
                     }
                 }

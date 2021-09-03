@@ -153,6 +153,7 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_customer_removal_request> so_customer_romoval_requests { get; set; }
         public virtual DbSet<so_portal_links_log> so_portal_links_logs { get; set; }
         public virtual DbSet<so_code_place> so_code_places { get; set; }
+        public virtual DbSet<so_route_team_travels_employees> so_route_team_travels_employees { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -1729,11 +1730,6 @@ namespace SmartOrderService.DB
                 .HasKey(x => new { x.binnacleId, x.routeId, x.inventoryId, x.workDayId });
 
             modelBuilder.Entity<so_route_team_travels_visit>()
-                .HasRequired(x => x.so_route_team_travels)
-                .WithMany(x => x.so_route_team_travels_visits)
-                .HasForeignKey(x => new { x.routeId, x.inventoryId, x.workDayId });
-
-            modelBuilder.Entity<so_route_team_travels_visit>()
                 .HasRequired(x => x.So_Binnacle_Visit)
                 .WithMany(x => x.so_route_team_travels_visits)
                 .HasForeignKey(x => x.binnacleId);
@@ -1772,6 +1768,9 @@ namespace SmartOrderService.DB
             var codePlace = modelBuilder.Entity<so_code_place>();
             codePlace.HasKey(x => x.Id);
             codePlace.Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+
+            modelBuilder.Entity<so_route_team_travels_employees>()
+                .HasKey(x => new { x.routeId, x.inventoryId, x.work_dayId, x.userId });
 
         }
     }

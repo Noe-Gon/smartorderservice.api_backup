@@ -19,7 +19,7 @@ namespace SmartOrderService.Services
             try
             {
                 RouteTeamService service = new RouteTeamService();
-                bool result = service.checkCurrentTravelState(userId);
+                bool result = service.CheckCurrentTravelState(userId);
                 response = Request.CreateResponse(HttpStatusCode.OK, result);
             }
             catch (RelatedDriverNotFoundException e)
@@ -28,7 +28,11 @@ namespace SmartOrderService.Services
             }
             catch (InventoryEmptyException e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict, false);
+                response = Request.CreateResponse(HttpStatusCode.NotFound, false);
+            }
+            catch (InventoryInProgressException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.BadRequest, false);
             }
             catch (Exception e)
             {

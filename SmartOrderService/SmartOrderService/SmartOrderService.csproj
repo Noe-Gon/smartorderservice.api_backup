@@ -430,6 +430,7 @@
     <Compile Include="DB\so_route_team.cs" />
     <Compile Include="DB\so_route_team_inventory_available.cs" />
     <Compile Include="DB\so_route_team_travels.cs" />
+    <Compile Include="DB\so_route_team_travels_employees.cs" />
     <Compile Include="DB\so_route_team_travels_visit.cs" />
     <Compile Include="DB\so_sale.cs" />
     <Compile Include="DB\so_sale_detail.cs" />

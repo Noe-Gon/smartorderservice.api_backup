@@ -23,7 +23,7 @@ namespace SmartOrderService.Services
 
         public Workday createWorkday(int userId)
         {
-            ERolTeam userTeamRole = roleTeamService.getUserRole(userId);
+            ERolTeam userTeamRole = roleTeamService.GetUserRole(userId);
 
             if (userTeamRole != ERolTeam.SinAsignar)
             {
@@ -48,37 +48,42 @@ namespace SmartOrderService.Services
                 return workday;
             }
 
-            ERolTeam userRol = roleTeamService.getUserRole(userId);
+            ERolTeam userRol = roleTeamService.GetUserRole(userId);
 
-            if (userRol != ERolTeam.Ayudante)
+            if (userRol != ERolTeam.SinAsignar)
             {
                 var id = Guid.NewGuid();
+                int driverId = inventoryService.SearchDrivingId(userId);
+                var currentWorkdayTeam = searchWorkDay(driverId);
 
-                //userId = checkDriverWorkDay(userId);
+                if (currentWorkdayTeam != null)
+                {
+                    workday.UserId = userId;
+                    workday.WorkdayId = currentWorkdayTeam.work_dayId;
+                    workday.IsOpen = true;
+                    return workday;
+                }
 
                 var time = DateTime.Now;
 
                 var device = db.so_device.Where(d => d.userId == userId && d.status);
 
-
                 //validamos que este registrado
                 if (!device.Any())
                     throw new NoUserFoundException();
-
 
                 int deviceId = device.FirstOrDefault().deviceId;
 
                 var newWorkday = new so_work_day()
                 {
                     work_dayId = id,
-                    userId = userId,
+                    userId = driverId,
                     date_start = time,
                     createdon = time,
                     deviceId = deviceId,
                     openby_device = userId,
                     modifiedon = time,
                     status = true
-
                 };
 
                 db.so_work_day.Add(newWorkday);
@@ -115,11 +120,9 @@ namespace SmartOrderService.Services
 
             List<Jornada> Jornadas = new List<Jornada>();
 
-
             foreach (var trip in trips) {
 
                 var currentJourney = Jornadas.Where(j => j.Ruta.Equals(trip.RouteCode)).FirstOrDefault();
-                
 
                 var viaje = new Viaje() { Numero = trip.Order, Finalizado = trip.IsFinished };
 
@@ -142,20 +145,13 @@ namespace SmartOrderService.Services
                         jornada.Inicio = journey.date_start.Value;
                         jornada.Fin = journey.date_end.HasValue ? journey.date_end : null;
                     }
-                    
 
                     jornada.Viajes.Add(viaje);
-
                     Jornadas.Add(jornada);
                 }
-
-
-
             }
 
-            
             return Jornadas;
-
         }
 
         public bool onOpenWorkDay(Workday workday)
@@ -165,17 +161,18 @@ namespace SmartOrderService.Services
 
         public Workday FinishWorkday(Workday workday)
         {
-            ERolTeam userRol = roleTeamService.getUserRole(workday.UserId);
+            ERolTeam userRol = roleTeamService.GetUserRole(workday.UserId);
             if (userRol == ERolTeam.SinAsignar || userRol == ERolTeam.Impulsor)
             {
-                FinishWorkdayProcess(workday);
-                new RouteTeamTravelsService().SetClosingStatusRoutTeamTravels(workday.WorkdayId);
+                var workDayUpdated = FinishWorkdayProcess(workday);
+                //new RouteTeamTravelsService().SetClosingStatusRoutTeamTravels(workday.WorkdayId);
                 if (userRol == ERolTeam.Impulsor)
                 {
                     //OPCD Start
                     var routeTeam = db.so_route_team.Where(x => x.userId == workday.UserId).First();
                     var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
-                    finalizarJornadaOPCD(route.so_branch.code, route.code, DateTime.Today, DateTime.Now);
+                  
+                    finalizarJornadaOPCD(route.so_branch.code, route.code, DateTime.Today, workDayUpdated.DateEnd);
                     //OPCD End
                 }
             }
@@ -199,7 +196,10 @@ namespace SmartOrderService.Services
             var start = currentWorkDay.FirstOrDefault().date_start.Value;
 
             if (currentWorkDay.FirstOrDefault().date_end.HasValue)
+            {
                 workday.IsOpen = false;
+                workday.DateEnd = currentWorkDay.FirstOrDefault().date_end.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+            }
 
             else
             {
@@ -230,7 +230,7 @@ namespace SmartOrderService.Services
                         finishWorkDay.closedby_device = UserId;
                         finishWorkDay.date_end = DateTime.Now;
                         finishWorkDay.modifiedon = DateTime.Now;
-
+                        workday.DateEnd = finishWorkDay.date_end.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
                         TemporalCloseInventory(finishWorkDay.so_user);
 
                         db.SaveChanges();
@@ -325,13 +325,13 @@ namespace SmartOrderService.Services
             return workDayDto;
         }
 
-        public string finalizarJornadaOPCD(string branchCode, string routeCode, DateTime deliveryDate, DateTime createdOnWbc)
+        public string finalizarJornadaOPCD(string branchCode, string routeCode, DateTime deliveryDate, string createdOnWbc)
         {
             var client = new RestClient();
             client.BaseUrl = new Uri(ConfigurationManager.AppSettings["API_Integraciones"]);
             var requestConfig = new RestRequest("api/jornadasFinalizadasV2", Method.POST);
             requestConfig.RequestFormat = DataFormat.Json;
-            requestConfig.AddBody(new { CedisIdOpecd = branchCode, Route = routeCode, DeliveryDate = deliveryDate, State = 0, CreatedOnWbc = createdOnWbc });
+            requestConfig.AddBody(new { CedisIdOpecd = branchCode, Route = routeCode, DeliveryDate = deliveryDate.ToString("yyyy-MM-dd"), State = 0, CreatedOnWbc = createdOnWbc });
             var RestResponse = client.Execute(requestConfig);
             if (RestResponse.StatusCode == System.Net.HttpStatusCode.Created)
             {

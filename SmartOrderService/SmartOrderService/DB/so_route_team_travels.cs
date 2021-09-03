@@ -24,8 +24,5 @@ namespace SmartOrderService.DB
         [Column(Order = 2)]
         public Guid work_dayId { get; set; }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<so_route_team_travels_visit> so_route_team_travels_visits { get; set; }
-
     }
 }
