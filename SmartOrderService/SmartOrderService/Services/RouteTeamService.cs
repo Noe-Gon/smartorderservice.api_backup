@@ -28,12 +28,7 @@ namespace SmartOrderService.Services
                 int inventoryState = GetInventoryState(userId, DateTime.Today);
 
                 //Start Load Inventory Process OPCD
-                var inventoryService = new InventoryService();
-                int impulsorId = SearchDrivingId(userId);
-                var routeTeam = db.so_route_team.Where(x => x.userId == impulsorId).First();
-                var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
-
-                inventoryService.CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
+                CallLoadInventoryProcess(userId);
                 //End Load Inventory Process
 
                 if ((inventoryState == 0 && userRole == ERolTeam.Impulsor))
@@ -49,20 +44,33 @@ namespace SmartOrderService.Services
                     return true;
                 }
                 return false;
-            }catch (InventoryInProgressException)
+            }
+            catch (InventoryInProgressException)
             {
                 //Start Load Inventory Process OPCD
-                var inventoryService = new InventoryService();
-                int impulsorId = SearchDrivingId(userId);
-                var routeTeam = db.so_route_team.Where(x => x.userId == impulsorId).First();
-                var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
-
-                inventoryService.CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
+                CallLoadInventoryProcess(userId);
                 //End Load Inventory Process
 
                 throw new InventoryInProgressException();
             }
+            catch (InventoryEmptyException)
+            {
+                //Start Load Inventory Process OPCD
+                CallLoadInventoryProcess(userId);
+                //End Load Inventory Process
 
+                throw new InventoryEmptyException();
+            }
+
+        }
+        public void CallLoadInventoryProcess(int userId)
+        {
+            var inventoryService = new InventoryService();
+            int impulsorId = SearchDrivingId(userId);
+            var routeTeam = db.so_route_team.Where(x => x.userId == impulsorId).First();
+            var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
+
+            inventoryService.CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
         }
 
         public List<int> GetTeamIds(int userId)

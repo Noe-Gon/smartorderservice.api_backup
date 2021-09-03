@@ -255,6 +255,7 @@
     <Compile Include="Controllers\CollectBottleController.cs" />
     <Compile Include="Controllers\ConsumerController.cs" />
     <Compile Include="Controllers\CountConfigurationController.cs" />
+    <Compile Include="Controllers\CustomerBlockedController.cs" />
     <Compile Include="Controllers\CustomerController.cs" />
     <Compile Include="Controllers\CustomerDevolutionController.cs" />
     <Compile Include="Controllers\CustomerVisitController.cs" />
@@ -430,6 +431,7 @@
     <Compile Include="DB\so_route_team.cs" />
     <Compile Include="DB\so_route_team_inventory_available.cs" />
     <Compile Include="DB\so_route_team_travels.cs" />
+    <Compile Include="DB\so_route_team_travels_customer_blocked.cs" />
     <Compile Include="DB\so_route_team_travels_employees.cs" />
     <Compile Include="DB\so_route_team_travels_visit.cs" />
     <Compile Include="DB\so_sale.cs" />
@@ -553,6 +555,7 @@
     <Compile Include="Models\Requests\CellarNoticeRequest.cs" />
     <Compile Include="Models\Requests\ConfigurationRequest.cs" />
     <Compile Include="Models\Requests\ConsumerRequests.cs" />
+    <Compile Include="Models\Requests\CustomerBlockedRequests.cs" />
     <Compile Include="Models\Requests\CustomerInvoiceDataRequest.cs" />
     <Compile Include="Models\Requests\EmailRequest.cs" />
     <Compile Include="Models\Requests\InvoiceOpeFacturaRequest.cs" />
@@ -578,6 +581,7 @@
     <Compile Include="Models\Responses\CodePlaceResponses.cs" />
     <Compile Include="Models\Responses\ConsumerResponses.cs" />
     <Compile Include="Models\Responses\CountConfigurationResponse.cs" />
+    <Compile Include="Models\Responses\CustomerBlockedResponses.cs" />
     <Compile Include="Models\Responses\CustomerResponse.cs" />
     <Compile Include="Models\Responses\EmailResponse.cs" />
     <Compile Include="Models\Responses\InvoiceOpeFacturaResponse.cs" />
@@ -605,6 +609,7 @@
     <Compile Include="Services\ApplicationService.cs" />
     <Compile Include="Services\CodePlaceService.cs" />
     <Compile Include="Services\ConsumerService.cs" />
+    <Compile Include="Services\CustomerBlockedService.cs" />
     <Compile Include="Services\EmailService.cs" />
     <Compile Include="Services\RoleTeamService.cs" />
     <Compile Include="Services\RouteTeamInventoryAvailableService.cs" />

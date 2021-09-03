@@ -154,6 +154,7 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_portal_links_log> so_portal_links_logs { get; set; }
         public virtual DbSet<so_code_place> so_code_places { get; set; }
         public virtual DbSet<so_route_team_travels_employees> so_route_team_travels_employees { get; set; }
+        public virtual DbSet<so_route_team_travels_customer_blocked> so_route_team_travel_customer_blockeds { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -1772,6 +1773,28 @@ namespace SmartOrderService.DB
             modelBuilder.Entity<so_route_team_travels_employees>()
                 .HasKey(x => new { x.routeId, x.inventoryId, x.work_dayId, x.userId });
 
+            modelBuilder.Entity<so_route_team_travels_customer_blocked>()
+                .HasKey(x => new { x.CustomerId, x.InventoryId, x.WorkDayId, x.UserId });
+
+            modelBuilder.Entity<so_route_team_travels_customer_blocked>()
+                .HasRequired(x => x.User)
+                .WithMany(x => x.RouteTeamTravelsCustomerBlockeds)
+                .HasForeignKey(x => x.UserId);
+
+            modelBuilder.Entity<so_route_team_travels_customer_blocked>()
+                .HasRequired(x => x.WorkDay)
+                .WithMany(x => x.RouteTeamTravelsCustomerBlockeds)
+                .HasForeignKey(x => x.WorkDayId);
+
+            modelBuilder.Entity<so_route_team_travels_customer_blocked>()
+                .HasRequired(x => x.Inventory)
+                .WithMany(x => x.RouteTeamTravelsCustomerBlockeds)
+                .HasForeignKey(x => x.InventoryId);
+
+            modelBuilder.Entity<so_route_team_travels_customer_blocked>()
+                .HasRequired(x => x.Customer)
+                .WithMany(x => x.RouteTeamTravelsCustomerBlockeds)
+                .HasForeignKey(x => x.CustomerId);
         }
     }
 }

@@ -176,6 +176,13 @@ namespace SmartOrderService.Services
                     //OPCD End
                 }
             }
+            using (var service = CustomerBlockedService.Create())
+            {
+                var response = service.ClearBlockedCustomer(new Models.Requests.ClearBlockedCustomerRequest
+                {
+                    UserId = workday.UserId
+                });
+            }
             workday.IsOpen = false;
             return workday;
         }
