@@ -1141,5 +1141,22 @@ namespace SmartOrderService.Services
             detail.stps_fee_rate = Math.Truncate(stps_fee_rate * 100) / 100;
             detail.stps_snack_rate = Math.Truncate(stps_snack_rate * 100) / 100;
         }
+
+        
+        private SaleDto GetSaleTeam(int UserId, int InventoryId, int CustomerId)
+        {
+            DateTime fechaAct = DateTime.Now;
+            RouteTeamService routeTeamService = new RouteTeamService();
+            var workDay = routeTeamService.GetWorkdayByUserAndDate(UserId, fechaAct);
+
+            var rutasUsuarios = (from ruta in (from r in db.so_route_team.Where(a => a.userId == UserId)
+                                               select r.routeId)
+                                 join r in db.so_route_team.Where(a => a.userId != UserId)
+                                   on ruta equals r.routeId
+                                 join rd in db.so_route_team_travels_visits.Where(a => a.workDayId == workDay.work_dayId)
+                                 select r.routeId).ToList();
+
+            return saleDto;
+        }
     }
 }

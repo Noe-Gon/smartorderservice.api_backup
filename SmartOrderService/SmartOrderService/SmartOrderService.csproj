@@ -498,6 +498,7 @@
     <Compile Include="Models\DTO\RegisterCustomerDto.cs" />
     <Compile Include="Models\DTO\RouteTeamInventoryDto.cs" />
     <Compile Include="Models\DTO\SaleDetailResult.cs" />
+    <Compile Include="Models\DTO\SaleDto.cs" />
     <Compile Include="Models\DTO\TrackingConfigurationDto.cs" />
     <Compile Include="Models\DTO\CountConfigurationDto.cs" />
     <Compile Include="Models\DTO\CustomerDataDto.cs" />
