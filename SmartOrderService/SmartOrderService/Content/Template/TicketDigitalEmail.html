@@ -15,6 +15,15 @@
         .right {
             text-align: right;
         }
+        .cancelSale {
+            background-color: orangered;
+            color: yellow;
+            float: right;
+            height: 30px;
+            width: 190px;
+            text-align: center;
+            padding-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -28,6 +37,9 @@
                 {image}
             </div>
             <div style="width: 65%; margin-left: 10px; margin-top: 10px; margin-bottom: 10px; border: double;">
+                <div class="cancelSale" style="display: {IsACanceledSale}">
+                    COMPRA CANCELADA
+                </div>
                 <table style="margin-left: 10px;margin-top: 10px;margin-bottom: 10px;">
                     <tr>
                         <td><strong>Fecha:</strong></td>
@@ -35,7 +47,7 @@
                     </tr>
                     <tr>
                         <td><strong>Cliente:</strong></td>
-                        <td>{CustomerName}</td>
+                        <td>{CustomerFullName}</td>
                     </tr>
                     <tr>
                         <td><strong>Ruta:</strong></td>

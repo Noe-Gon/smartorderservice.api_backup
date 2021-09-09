@@ -62,9 +62,16 @@ namespace SmartOrderService.Services
                     string body = reader.ReadToEnd();
 
                     body = body.Replace("{CustomerName}", request.CustomerName);
+                    body = body.Replace("{CustomerFullName}", request.CustomerFullName);
                     body = body.Replace("{Date}", request.Date.ToString("dd/MMM/yy hh:mmtt"));
                     body = body.Replace("{RouteAddress}", request.RouteAddress);
                     body = body.Replace("{SellerName}", request.SellerName);
+
+                    if(request.IsACanceledSale)
+                        body = body.Replace("{IsACanceledSale}", "block");
+                    else
+                        body = body.Replace("{IsACanceledSale}", "none");
+
                     if (request.PaymentMethod == null)
                         body = body.Replace("{PaymentMethod}", "");
                     else
@@ -172,22 +179,22 @@ namespace SmartOrderService.Services
             mmsg.IsBodyHtml = true;
             mmsg.Attachments.Add(att);
 
-            mmsg.From = new MailAddress("kevmkc2@gmail.com");
+            mmsg.From = new MailAddress("bepensafullpotentialaws@walook.com.mx");
 
             SmtpClient client = new SmtpClient();
 
-            client.Credentials = new NetworkCredential("kevmkc2@gmail.com", "kevinblablabla");
+            client.Credentials = new NetworkCredential("AKIA4VWPJ4MQA5N5FLVM", "BE7TsEtOBV/9SIIFTZ6r9hDvg8HWTWbvyu/dRgXRvenz");
 
             client.Port = 587;
             client.EnableSsl = true;
 
-            client.Host = "smtp.gmail.com";
+            client.Host = "email-smtp.us-east-2.amazonaws.com";
 
             try
             {
                 client.Send(mmsg);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 throw;
             }

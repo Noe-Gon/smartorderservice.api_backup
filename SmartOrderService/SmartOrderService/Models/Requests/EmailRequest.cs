@@ -16,12 +16,14 @@ namespace SmartOrderService.Models.Requests
     public class SendTicketDigitalEmailRequest
     {
         public string CustomerName { get; set; }
+        public string CustomerFullName { get; set; }
         public string CustomerEmail { get; set; }
         public DateTime Date { get; set; }
         public string RouteAddress { get; set; }
         public string SellerName { get; set; }
         public string PaymentMethod { get; set; }
         public List<SendTicketDigitalEmailSales> Sales { get; set; }
+        public bool IsACanceledSale { get; set; }
     }
 
     public class SendTicketDigitalEmailSales

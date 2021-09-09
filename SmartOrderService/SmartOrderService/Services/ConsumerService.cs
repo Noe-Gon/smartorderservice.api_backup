@@ -532,12 +532,14 @@ namespace SmartOrderService.Services
 
                 var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
                 {
+                    CustomerName = sale.so_customer.name,
                     RouteAddress = Convert.ToString(route.routeId),
                     CustomerEmail = sale.so_customer.email,
-                    CustomerName = sale.customerId + " - " + sale.so_customer.name + " " + sale.so_customer.address,
+                    CustomerFullName = sale.customerId + " - " + sale.so_customer.name + " " + sale.so_customer.address,
                     Date = sale.date,
                     PaymentMethod = request.PaymentMethod,
-                    SellerName = sale.so_user.code + " - " + sale.so_user.name
+                    SellerName = sale.so_user.code + " - " + sale.so_user.name,
+                    IsACanceledSale = false
                 };
 
                 var sales = new List<SendTicketDigitalEmailSales>();
@@ -551,6 +553,7 @@ namespace SmartOrderService.Services
                         UnitPrice = Convert.ToDouble(detail.sale_price)
                     });
                 }
+                sendTicketDigitalEmail.Sales = sales;
 
                 var emailService = new EmailService();
                 var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);

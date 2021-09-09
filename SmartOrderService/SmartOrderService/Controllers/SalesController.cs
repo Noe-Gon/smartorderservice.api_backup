@@ -278,6 +278,34 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
+        [HttpDelete, Route("api/sales/saleteam_v2")]
+        public HttpResponseMessage Deleteso_sale_team_v2(int id)
+        {
+            HttpResponseMessage response;
+
+            try
+            {
+                var service = new SaleService();
+                var sale = service.Cancel(id);
+                service.RestoreInventoryAvailability(id);
+                response = Request.CreateResponse(HttpStatusCode.OK, sale);
+            }
+            catch (DeviceNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Unauthorized, "no estas autorizado");
+            }
+            catch (EntityNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.NotFound);
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, "la venta no fue afectada");
+            }
+
+            return response;
+        }
+
         // DELETE: api/Sales/5
 
         public HttpResponseMessage Delete(int id)
