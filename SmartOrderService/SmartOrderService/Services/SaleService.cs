@@ -165,7 +165,7 @@ namespace SmartOrderService.Services
 
         }
 
-        public Sale Cancel(int saleId)
+        public Sale Cancel(int saleId, string PaymentMethod)
         {
 
             var sale = db.so_sale.Where(s => s.saleId.Equals(saleId)).FirstOrDefault();
@@ -195,16 +195,15 @@ namespace SmartOrderService.Services
                                 var route = db.so_route_customer.Where(x => x.customerId == sale.customerId).FirstOrDefault();
                                 var user = db.so_user.Where(x => x.userId == sale.userId).FirstOrDefault();
 
-                                var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
+                                var sendTicketDigitalEmail = new SendCancelTicketDigitalEmailRequest
                                 {
                                     CustomerName = customer.name,
                                     RouteAddress = Convert.ToString(route.routeId),
                                     CustomerEmail = customer.email,
                                     CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
                                     Date = DateTime.Now,
-                                    //PaymentMethod = sale.PaymentMethod,
-                                    SellerName = user.code + " - " + user.name,
-                                    IsACanceledSale = true
+                                    PaymentMethod = PaymentMethod,
+                                    SellerName = user.code + " - " + user.name
                                 };
 
                                 var sales = new List<SendTicketDigitalEmailSales>();
@@ -218,15 +217,15 @@ namespace SmartOrderService.Services
                                     {
                                         Amount = detail.amount,
                                         ProductName = detail.productId + " - " + product.name,
-                                        TotalPrice = Convert.ToDouble(detail.amount) * Convert.ToDouble(detail.price),
-                                        UnitPrice = Convert.ToDouble(detail.price)
+                                        TotalPrice = Convert.ToDouble(detail.amount) * Convert.ToDouble(detail.base_price_no_tax),
+                                        UnitPrice = Convert.ToDouble(detail.base_price_no_tax)
                                     });
                                 }
                                 sendTicketDigitalEmail.Sales = sales;
 
                                 //Se envia el ticket
                                 var emailService = new EmailService();
-                                var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);
+                                var response = emailService.SendCancelTicketDigitalEmail(sendTicketDigitalEmail);
                             }
                         }
                     }
@@ -1116,8 +1115,7 @@ namespace SmartOrderService.Services
                                             CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
                                             Date = DateTime.Now,
                                             PaymentMethod = sale.PaymentMethod,
-                                            SellerName = user.code + " - " + user.name,
-                                            IsACanceledSale = false
+                                            SellerName = user.code + " - " + user.name
                                         };
 
                                         var sales = new List<SendTicketDigitalEmailSales>();

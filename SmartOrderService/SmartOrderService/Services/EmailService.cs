@@ -67,12 +67,72 @@ namespace SmartOrderService.Services
                     body = body.Replace("{RouteAddress}", request.RouteAddress);
                     body = body.Replace("{SellerName}", request.SellerName);
 
-                    if(request.IsACanceledSale)
-                        body = body.Replace("{IsACanceledSale}", "block");
+                    if (request.PaymentMethod == null || !string.IsNullOrEmpty(request.PaymentMethod))
+                        body = body.Replace("{PaymentMethod}", "");
                     else
-                        body = body.Replace("{IsACanceledSale}", "none");
+                        body = body.Replace("{PaymentMethod}", "Forma de pago: " + request.PaymentMethod);
 
-                    if (request.PaymentMethod == null)
+                    string tdBody = "";
+                    int totalProductsSold = 0;
+                    int totalBoxesSold = 0;
+                    double total = 0.0;
+                    //Make Table
+                    foreach (var row in request.Sales)
+                    {
+                        totalProductsSold++;
+                        tdBody += "<tr><td>" + totalProductsSold + ") " + row.ProductName + "</td>";
+                        tdBody += "<td>" + row.Amount + "</td>";
+                        tdBody += "<td>" + String.Format("{0:0.00}", row.UnitPrice) + "</td>";
+                        tdBody += "<td>" + String.Format("{0:0.00}", row.TotalPrice) + "</td></tr>";
+                        totalBoxesSold += row.Amount;
+                        total += row.TotalPrice;
+                    }
+
+                    body = body.Replace("{TdBody}", tdBody);
+                    body = body.Replace("{TotalProductsSold}", totalProductsSold.ToString());
+                    body = body.Replace("{TotalBoxesSold}", totalBoxesSold.ToString());
+                    body = body.Replace("{TotalPrice}", String.Format("{0:0.00}", total));
+
+                    var mailInfo = new SendAPIEmailrequest()
+                    {
+                        To = request.CustomerEmail,
+                        Subject = "¡Gracias por ser cliente Bepensa!",
+                        Body = body
+                    };
+
+                    DummySendEmail(mailInfo);
+                }
+
+                return ResponseBase<SendTicketDigitalEmailResponse>.Create(new SendTicketDigitalEmailResponse
+                {
+                    Msg = "El correo se envió correctamente"
+                });
+            }
+            catch (Exception e)
+            {
+                return ResponseBase<SendTicketDigitalEmailResponse>.Create(new List<string>()
+                {
+                    e.Message
+                });
+            }
+        }
+
+        public ResponseBase<SendTicketDigitalEmailResponse> SendCancelTicketDigitalEmail(SendCancelTicketDigitalEmailRequest request)
+        {
+            try
+            {
+                using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath("~/Content/Template/CancelTicketDigitalEmail.html")))
+                {
+                    string body = reader.ReadToEnd();
+
+                    body = body.Replace("{CustomerName}", request.CustomerName);
+                    body = body.Replace("{CustomerFullName}", request.CustomerFullName);
+                    body = body.Replace("{Date}", request.Date.ToString("dd/MMM/yy hh:mmtt"));
+                    body = body.Replace("{RouteAddress}", request.RouteAddress);
+                    body = body.Replace("{SellerName}", request.SellerName);
+                    body = body.Replace("{CancelDate}", request.Date.ToString("dd/MMM/yy"));
+
+                    if (request.PaymentMethod == null || !string.IsNullOrEmpty(request.PaymentMethod))
                         body = body.Replace("{PaymentMethod}", "");
                     else
                         body = body.Replace("{PaymentMethod}", "Forma de pago: " + request.PaymentMethod);

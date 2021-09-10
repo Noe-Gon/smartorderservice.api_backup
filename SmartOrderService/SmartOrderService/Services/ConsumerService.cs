@@ -538,8 +538,7 @@ namespace SmartOrderService.Services
                     CustomerFullName = sale.customerId + " - " + sale.so_customer.name + " " + sale.so_customer.address,
                     Date = sale.date,
                     PaymentMethod = request.PaymentMethod,
-                    SellerName = sale.so_user.code + " - " + sale.so_user.name,
-                    IsACanceledSale = false
+                    SellerName = sale.so_user.code + " - " + sale.so_user.name
                 };
 
                 var sales = new List<SendTicketDigitalEmailSales>();

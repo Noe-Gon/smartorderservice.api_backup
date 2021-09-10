@@ -279,14 +279,14 @@ namespace SmartOrderService.Controllers
         }
 
         [HttpDelete, Route("api/sales/saleteam_v2")]
-        public HttpResponseMessage Deleteso_sale_team_v2(int id)
+        public HttpResponseMessage Deleteso_sale_team_v2(int id, string PaymentMethod)
         {
             HttpResponseMessage response;
 
             try
             {
                 var service = new SaleService();
-                var sale = service.Cancel(id);
+                var sale = service.Cancel(id, PaymentMethod);
                 service.RestoreInventoryAvailability(id);
                 response = Request.CreateResponse(HttpStatusCode.OK, sale);
             }
