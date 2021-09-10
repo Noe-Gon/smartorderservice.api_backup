@@ -1,4 +1,4 @@
-﻿using using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace SmartOrderService.Models.DTO
 {
@@ -13,8 +13,8 @@ namespace SmartOrderService.Models.DTO
         public string Date { get; set; }
         public int CustomerId { get; set; }
         public int DeliveryId { get; set; }
-        public List<SaleDetail> saleDetails { get; set; }
+        public List<SaleDetailResponse> saleDetails { get; set; }
         public List<SaleReplacement> saleReplacements { get; set; }
-        public List<SalePromotion> salePromotion { get; set; }
+        public List<SalePromotionResponse> salePromotion { get; set; }
     }
 }

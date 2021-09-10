@@ -278,7 +278,6 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
-       
         [HttpGet, Route("api/sales/PartnerSale/{UserId}/User/{InventoryId}/Inventory/{CustomerId}/Customer")]
         public HttpResponseMessage PartnerSale(int UserId, int InventoryId, int CustomerId)
 
