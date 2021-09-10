@@ -1141,5 +1141,114 @@ namespace SmartOrderService.Services
             detail.stps_fee_rate = Math.Truncate(stps_fee_rate * 100) / 100;
             detail.stps_snack_rate = Math.Truncate(stps_snack_rate * 100) / 100;
         }
+
+        public List<SaleDto> GetSaleTeam(int UserId, int InventoryId, int CustomerId)
+        {
+            DateTime fechaAct = DateTime.Now;
+            RouteTeamService routeTeamService = new RouteTeamService();
+            var workDay = routeTeamService.GetWorkdayByUserAndDate(UserId, fechaAct);
+
+            var usuarios = from ruta in (from r in db.so_route_team.Where(a => a.userId == UserId)
+                                               select r.routeId)
+                                 join r in db.so_route_team.Where(a => a.userId != UserId)
+                                   on ruta equals r.routeId
+                                 join rd in db.so_route_team_travels_employees.Where(a => a.work_dayId == workDay.work_dayId)
+                                    on new { r.routeId, r.userId } equals new { rd.routeId, rd.userId }
+                                 group rd by rd.userId into g
+                                 select new { userId = g.Key };
+
+
+            var filtroRouteTeam = db.so_route_team_travels_employees.Where(a => a.work_dayId == workDay.work_dayId);
+
+            if (InventoryId != 0)
+            {
+                filtroRouteTeam = db.so_route_team_travels_employees.Where(a => a.work_dayId == workDay.work_dayId && 
+                                                                            a.inventoryId == InventoryId);
+            }
+
+            var inventarios = from item in (from rdt in filtroRouteTeam
+                                            group rdt by rdt.inventoryId into g
+                                            select new { inventoryId = g.Key })
+                              select item.inventoryId;
+
+            var filtroSale = db.so_sale.Where(a => a.status == true);
+
+            if (CustomerId != 0)
+            {
+                filtroSale = db.so_sale.Where(a => a.customerId == CustomerId && a.status == true);
+            }
+
+            var qsaleDto = (from venta in filtroSale
+                           join user in usuarios
+                                on new { a = venta.userId } equals new { a = user.userId }
+                           join inv in inventarios
+                                on new { inventoryId = (venta.inventoryId.HasValue ? venta.inventoryId.Value : 0) } equals new { inventoryId = inv }
+                            orderby venta.createdon descending
+                            select new
+                            {
+                                venta.userId,
+                                venta.total_cash,
+                                venta.saleId,
+                                venta.total_credit,
+                                venta.tag,
+                                venta.inventoryId,
+                                venta.date,
+                                venta.customerId,
+                                venta.deliveryId,
+                                venta.so_sale_detail,
+                                venta.so_sale_replacement,
+                                venta.so_sale_promotion
+                            }).ToList();
+
+            var saleDto = (from item in qsaleDto
+                          select new SaleDto 
+                                        {
+                                         UserId = item.userId,
+                                         TotalCash = item.total_cash,
+                                         SaleId = item.saleId,
+                                         TotalCredit = item.total_credit,
+                                         CustomerTag = item.tag ?? "",
+                                         InventoryId = item.inventoryId ?? 0,
+                                         Date = item.date.ToString("dd/MM/yyyy HH:m"),
+                                         CustomerId = item.customerId,
+                                         DeliveryId = item.deliveryId ?? 0,
+                                         saleDetails = (from g in item.so_sale_detail
+                                                        orderby g.createdon descending
+                                                        select new SaleDetailResponse 
+                                                        {
+                                                         Price = g.price,
+                                                         Amount = g.amount,
+                                                         CreditAmount = g.credit_amount,
+                                                         Import = g.import,
+                                                         ProductId = g.productId
+                                                        }).ToList(),
+                                         saleReplacements = (from g in item.so_sale_replacement
+                                                             orderby g.createdon descending
+                                                                select new SaleReplacement 
+                                                             {
+                                                                 ReplacementId = g.replacementId,
+                                                                 Amount = g.amount
+                                                             }).ToList(),
+                                         salePromotion = (from g in item.so_sale_promotion
+                                                          where g.status == true
+                                                          orderby g.createdon descending
+                                                         select new SalePromotionResponse 
+                                                         {
+                                                             PromotionId = g.promotionId,
+                                                             Amount = g.amount,
+                                                             DetailProduct = (from gg in g.so_sale_promotion_detail
+                                                                              where gg.status == true
+                                                                              orderby gg.createdon descending
+                                                                             select new SalePromotionDetailProductResponse 
+                                                                             {
+                                                                                 ProductId = gg.productId,
+                                                                                 Amount = gg.amount,
+                                                                                 PriceValue = gg.price,
+                                                                                 Import = gg.import
+                                                                             }).ToList()
+                                                         }).ToList()
+                                        }).ToList();
+            return saleDto;
+        }
     }
 }
