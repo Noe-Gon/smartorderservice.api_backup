@@ -306,6 +306,24 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
+       
+        [HttpGet, Route("api/sales/PartnerSale/{UserId}/User/{InventoryId}/Inventory/{CustomerId}/Customer")]
+        public HttpResponseMessage PartnerSale(int UserId, int InventoryId, int CustomerId)
+
+        {
+            try
+            {
+                var SaleDto = new SaleService().GetSaleTeam(UserId, InventoryId, CustomerId);
+
+                return Request.CreateResponse(HttpStatusCode.OK, SaleDto);
+            }
+            catch (Exception e)
+            {
+                return Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+            }
+        }
+        
+
         // DELETE: api/Sales/5
 
         public HttpResponseMessage Delete(int id)
