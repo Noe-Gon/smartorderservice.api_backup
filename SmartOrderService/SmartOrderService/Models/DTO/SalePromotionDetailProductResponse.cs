@@ -9,7 +9,7 @@ namespace SmartOrderService.Models.DTO
     {
         public int ProductId;
         public int Amount;
-        public double PriceValue;
+        public decimal PriceValue;
         public double Import;
         public bool Status;
     }

@@ -12,5 +12,6 @@ namespace SmartOrderService.Models.DTO
         public int CreditAmount;
         public double Import;
         public int ProductId;
+        public int AmountSold;
     }
 }
