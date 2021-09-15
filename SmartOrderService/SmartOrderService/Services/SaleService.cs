@@ -1235,23 +1235,34 @@ namespace SmartOrderService.Services
         {
             DateTime fechaAct = DateTime.Now;
             RouteTeamService routeTeamService = new RouteTeamService();
-            var workDay = routeTeamService.GetWorkdayByUserAndDate(UserId, fechaAct);
+
+            so_work_day diaTrabajo = new so_work_day();
+
+            if (routeTeamService.IsImpulsor(UserId))
+            {
+                diaTrabajo = routeTeamService.GetWorkdayByUserAndDate(UserId, fechaAct);
+            } 
+            else
+            {
+                int UserIdImpulsor = routeTeamService.SearchDrivingId(UserId);
+                diaTrabajo = routeTeamService.GetWorkdayByUserAndDate(UserIdImpulsor, fechaAct);
+            }
 
             var usuarios = from ruta in (from r in db.so_route_team.Where(a => a.userId == UserId)
                                                select r.routeId)
                                  join r in db.so_route_team.Where(a => a.userId != UserId)
                                    on ruta equals r.routeId
-                                 join rd in db.so_route_team_travels_employees.Where(a => a.work_dayId == workDay.work_dayId)
+                                 join rd in db.so_route_team_travels_employees.Where(a => a.work_dayId == diaTrabajo.work_dayId)
                                     on new { r.routeId, r.userId } equals new { rd.routeId, rd.userId }
                                  group rd by rd.userId into g
                                  select new { userId = g.Key };
 
 
-            var filtroRouteTeam = db.so_route_team_travels_employees.Where(a => a.work_dayId == workDay.work_dayId);
+            var filtroRouteTeam = db.so_route_team_travels_employees.Where(a => a.work_dayId == diaTrabajo.work_dayId);
 
             if (InventoryId != 0)
             {
-                filtroRouteTeam = db.so_route_team_travels_employees.Where(a => a.work_dayId == workDay.work_dayId && 
+                filtroRouteTeam = db.so_route_team_travels_employees.Where(a => a.work_dayId == diaTrabajo.work_dayId && 
                                                                             a.inventoryId == InventoryId);
             }
 
@@ -1290,7 +1301,8 @@ namespace SmartOrderService.Services
                             }).ToList();
 
             var saleDto = (from item in qsaleDto
-                          select new SaleDto 
+                           where item.date.Date == fechaAct.Date
+                           select new SaleDto 
                                         {
                                          UserId = item.userId,
                                          TotalCash = item.total_cash,
@@ -1301,7 +1313,7 @@ namespace SmartOrderService.Services
                                          Date = item.date.ToString("dd/MM/yyyy HH:m"),
                                          CustomerId = item.customerId,
                                          DeliveryId = item.deliveryId ?? 0,
-                                         saleDetails = (from g in item.so_sale_detail
+                                         SaleDetails = (from g in item.so_sale_detail
                                                         orderby g.createdon descending
                                                         select new SaleDetailResponse 
                                                         {
@@ -1309,16 +1321,17 @@ namespace SmartOrderService.Services
                                                          Amount = g.amount,
                                                          CreditAmount = g.credit_amount,
                                                          Import = g.import,
-                                                         ProductId = g.productId
+                                                         ProductId = g.productId,
+                                                         AmountSold = g.amount
                                                         }).ToList(),
-                                         saleReplacements = (from g in item.so_sale_replacement
+                                         SaleReplacements = (from g in item.so_sale_replacement
                                                              orderby g.createdon descending
                                                                 select new SaleReplacement 
                                                              {
                                                                  ReplacementId = g.replacementId,
                                                                  Amount = g.amount
                                                              }).ToList(),
-                                         salePromotion = (from g in item.so_sale_promotion
+                                         SalePromotion = (from g in item.so_sale_promotion
                                                           where g.status == true
                                                           orderby g.createdon descending
                                                          select new SalePromotionResponse 
@@ -1332,7 +1345,7 @@ namespace SmartOrderService.Services
                                                                              {
                                                                                  ProductId = gg.productId,
                                                                                  Amount = gg.amount,
-                                                                                 PriceValue = gg.price,
+                                                                                 PriceValue = gg.price_without_taxes ?? 0,
                                                                                  Import = gg.import
                                                                              }).ToList()
                                                          }).ToList()
