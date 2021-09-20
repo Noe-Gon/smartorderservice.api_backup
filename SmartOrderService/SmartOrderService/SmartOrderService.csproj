@@ -392,6 +392,7 @@
     <Compile Include="DB\so_inventory_replacement_detail.cs" />
     <Compile Include="DB\so_inventory_summary.cs" />
     <Compile Include="DB\so_invoice_opefactura.cs" />
+    <Compile Include="DB\so_leader_authorization_code.cs" />
     <Compile Include="DB\so_loan_order.cs" />
     <Compile Include="DB\so_loan_sale.cs" />
     <Compile Include="DB\so_log_errors.cs" />
@@ -554,6 +555,8 @@
     <Compile Include="Models\DTO\ProductDto.cs" />
     <Compile Include="Models\DTO\ProductArticle.cs" />
     <Compile Include="Models\DTO\Promotion.cs" />
+    <Compile Include="Models\Message\StaffingComplianceMessage.cs" />
+    <Compile Include="Models\Message\WsEmployeeDataMessage.cs" />
     <Compile Include="Models\Requests\ApiVersionRequest.cs" />
     <Compile Include="Models\Requests\BinnacleVisitRequest.cs" />
     <Compile Include="Models\Requests\CellarNoticeRequest.cs" />
@@ -646,6 +649,7 @@
     <Compile Include="Controllers\RouteTeamController.cs" />
     <Compile Include="Services\RouteTeamTravelsService.cs" />
     <Compile Include="Services\SaleDetailResultService.cs" />
+    <Compile Include="Services\StaffingComplianceService.cs" />
     <Compile Include="Services\SurveyCustomerService.cs" />
     <Compile Include="Services\TrackingService.cs" />
     <Compile Include="Services\UserDevolutionService.cs" />

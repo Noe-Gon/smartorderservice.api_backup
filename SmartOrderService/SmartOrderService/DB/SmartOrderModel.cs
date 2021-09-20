@@ -155,6 +155,7 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_code_place> so_code_places { get; set; }
         public virtual DbSet<so_route_team_travels_employees> so_route_team_travels_employees { get; set; }
         public virtual DbSet<so_route_team_travels_customer_blocked> so_route_team_travel_customer_blockeds { get; set; }
+        public virtual DbSet<so_leader_authorization_code> so_leader_authorization_codes { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -1795,6 +1796,10 @@ namespace SmartOrderService.DB
                 .HasRequired(x => x.Customer)
                 .WithMany(x => x.RouteTeamTravelsCustomerBlockeds)
                 .HasForeignKey(x => x.CustomerId);
+
+            modelBuilder.Entity<so_leader_authorization_code>()
+                .HasKey(x => x.Id)
+                .Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
         }
     }
 }

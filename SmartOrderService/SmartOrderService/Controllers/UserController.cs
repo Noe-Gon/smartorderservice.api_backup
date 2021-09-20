@@ -1,5 +1,6 @@
 ﻿using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.DTO;
+using SmartOrderService.Models.Message;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.Services;
 using System;
@@ -14,6 +15,10 @@ namespace SmartOrderService.Controllers
     public class UserController : ApiController
     {
         // GET: api/User
+        public StaffingComplianceService GetService()
+        {
+            return StaffingComplianceService.Create();
+        }
         public HttpResponseMessage Get([FromUri] UserRequest request)
         {
             
@@ -65,6 +70,24 @@ namespace SmartOrderService.Controllers
             bool success = new UserService().updateTrackingConfiguration(userCode, branchCode, dto.Id);
             response = Request.CreateResponse(success ? HttpStatusCode.OK : HttpStatusCode.Conflict);
             return response;
+        }
+
+        [HttpGet]
+        [Route("~/api/Authenticate/EmployeeCode")]
+        public IHttpActionResult AuthenticateEmployeeCode(string Code)
+        {
+            using (var service = GetService())
+            {
+                var response = service.AuthenticateEmployeeCode(new AuthenticateEmployeeCodeRequest
+                {
+                    EmployeeCode = Code
+                });
+
+                if (response.Status)
+                    return Ok(response);
+                else
+                    return Content(HttpStatusCode.BadRequest, response);
+            }
         }
     }
 }
