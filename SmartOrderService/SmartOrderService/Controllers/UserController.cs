@@ -89,5 +89,23 @@ namespace SmartOrderService.Controllers
                     return Content(HttpStatusCode.BadRequest, response);
             }
         }
+
+        [HttpGet]
+        [Route("~/api/Authenticate/LeaderCode")]
+        public IHttpActionResult AuthenticateLeaderCode(string Code)
+        {
+            using (var service = GetService())
+            {
+                var response = service.AuthenticateLeaderCode(new AuthenticateLeaderCodeRequest
+                {
+                    LeaderCode = Code
+                });
+
+                if (response.Status)
+                    return Ok(response);
+                else
+                    return Content(HttpStatusCode.BadRequest, response);
+            }
+        }
     }
 }

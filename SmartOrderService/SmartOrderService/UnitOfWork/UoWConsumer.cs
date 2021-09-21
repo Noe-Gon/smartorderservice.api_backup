@@ -58,6 +58,7 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_portal_links_log> PortalLinksLogRepository { get; set; }
         public GenericRepository<so_route_team_travels_customer_blocked> RouteTeamTravelsCustomerBlocked { get; set; }
         public GenericRepository<so_work_day> WorkDayRepository { get; set; }
+        public GenericRepository<so_leader_authorization_code> LeaderAuthorizationCodeRepository { get; set; }
 
         public void Save()
         {
