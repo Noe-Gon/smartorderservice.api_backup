@@ -18,10 +18,10 @@ namespace SmartOrderService.DB
         [Column("status")]
         public bool Status { get; set; }
 
-        [Column("modified_date")]
+        [Column("created_date")]
         public DateTime CreatedDate { get; set; }
 
-        [Column("created_date")]
+        [Column("modified_date")]
         public DateTime? ModifiedDate { get; set; }
     }
 }
