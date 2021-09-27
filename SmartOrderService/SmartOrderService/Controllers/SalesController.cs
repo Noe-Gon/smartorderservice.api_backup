@@ -294,7 +294,6 @@ namespace SmartOrderService.Controllers
                 return Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
             }
         }
-        
 
         // DELETE: api/Sales/5
 
