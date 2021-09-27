@@ -9,6 +9,7 @@ namespace SmartOrderService.Models.Message
     public class AuthenticateEmployeeCodeRequest
     {
         public string EmployeeCode { get; set; }
+        public int BranchId { get; set; }
     }
 
     public class AuthenticateEmployeeCodeResponse

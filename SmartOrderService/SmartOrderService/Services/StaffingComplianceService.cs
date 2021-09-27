@@ -30,14 +30,27 @@ namespace SmartOrderService.Services
             try
             {
                 var userList = UoWConsumer.UserRepository
-                    .Get(x => x.code == request.EmployeeCode);
-
+                    .Get(x => x.code == request.EmployeeCode && x.branchId == request.BranchId && x.type == 6);
                 var user = userList.FirstOrDefault();
+
+                if (user == null)
+                    return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                    {
+                        "No se encuentró al usuario"
+                    });
+
                 string idcia = userList.Select(x => x.so_branch.so_company.code).FirstOrDefault();
 
                 var routeTeam = UoWConsumer.RouteTeamRepository
                     .Get(x => x.userId == user.userId)
                     .FirstOrDefault();
+
+                if(routeTeam == null)
+                    return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                    {
+                        "No se encuentró al usuario en un equipo"
+                    });
+
                 var route = UoWConsumer.RouteRepository
                     .Get(x => x.routeId == routeTeam.routeId)
                     .FirstOrDefault();

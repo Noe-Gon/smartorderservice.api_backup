@@ -74,13 +74,14 @@ namespace SmartOrderService.Controllers
 
         [HttpGet]
         [Route("~/api/Authenticate/EmployeeCode")]
-        public IHttpActionResult AuthenticateEmployeeCode(string Code)
+        public IHttpActionResult AuthenticateEmployeeCode(string Code, int branchId)
         {
             using (var service = GetService())
             {
                 var response = service.AuthenticateEmployeeCode(new AuthenticateEmployeeCodeRequest
                 {
-                    EmployeeCode = Code
+                    EmployeeCode = Code,
+                    BranchId = branchId
                 });
 
                 if (response.Status)
