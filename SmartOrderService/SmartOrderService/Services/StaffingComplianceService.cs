@@ -11,6 +11,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Web;
+using System.Xml;
 
 namespace SmartOrderService.Services
 {
@@ -45,7 +46,7 @@ namespace SmartOrderService.Services
                     .Get(x => x.userId == user.userId)
                     .FirstOrDefault();
 
-                if(routeTeam == null)
+                if (routeTeam == null)
                     return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
                     {
                         "No se encuentró al usuario en un equipo"
@@ -55,7 +56,7 @@ namespace SmartOrderService.Services
                     .Get(x => x.routeId == routeTeam.routeId)
                     .FirstOrDefault();
 
-                var employee = SingleEmployee(idcia, request.EmployeeCode);
+                var employee = SingleEmployee(idcia, user.code);
 
                 return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
                 {
@@ -108,6 +109,28 @@ namespace SmartOrderService.Services
             }
         }
 
+        private string GetTokenAWSEmployee()
+        {
+            var client = new RestClient();
+            client.BaseUrl = new Uri(ConfigurationManager.AppSettings["wsempleadosURL"]);
+            var requestConfig = new RestRequest("/AuthenticateUser", Method.POST);
+            requestConfig.RequestFormat = DataFormat.Json;
+
+            requestConfig.AddParameter("username", "usrbepensa");
+            requestConfig.AddParameter("password", "8Aksl8Hh8");
+            requestConfig.AddHeader("Content-Type", "application/x-www-form-urlencoded");
+
+            var RestResponse = client.Execute(requestConfig);
+            if (RestResponse.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var contentString = RestResponse.Content.Replace("</string>", "");
+                var aray = contentString.Split('>');
+                return aray.Last();
+            }
+
+            throw new Exception("Falló al intentar obtener el token");
+        }
+
         private Employee SingleEmployee(string idcia, string emp)
         {
 
@@ -118,7 +141,8 @@ namespace SmartOrderService.Services
             
             requestConfig.AddParameter("cia", idcia);
             requestConfig.AddParameter("emp", emp);
-            requestConfig.AddParameter("token", "3157ee7d-2295-4b1d-8764-eb682af471fc");
+            var token = GetTokenAWSEmployee();
+            requestConfig.AddParameter("token", token);
             requestConfig.AddHeader("Content-Type", "application/x-www-form-urlencoded");
 
             var RestResponse = client.Execute(requestConfig);
@@ -131,7 +155,7 @@ namespace SmartOrderService.Services
                 return singleEmployee.employee.FirstOrDefault();
             }
 
-            return null;
+            throw new Exception("Falló al intentar obtener la información del usuario");
         }
 
         public void Dispose()
