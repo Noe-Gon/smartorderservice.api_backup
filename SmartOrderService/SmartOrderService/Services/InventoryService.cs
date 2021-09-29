@@ -521,7 +521,7 @@ namespace SmartOrderService.Services
             var imppulsorId = SearchDrivingId(userId);
             Guid workDayId = routeTeamService.GetWorkdayByUserAndDate(imppulsorId, DateTime.Today).work_dayId;
             int routeId = routeTeamService.searchRouteId(userId);
-            int lastTravelNumber = SearchLastTravelNumber(workDayId, userId);
+            int lastTravelNumber = SearchLastTravelNumber(workDayId, imppulsorId);
             var routeTeamTravel = new so_route_team_travels_employees()
             {
                 inventoryId = inventoryId,
@@ -537,9 +537,10 @@ namespace SmartOrderService.Services
 
         private int SearchLastTravelNumber(Guid workDay, int userId)
         {
+
             var travel = db.so_route_team_travels_employees
-                .Where(s => s.work_dayId.Equals(workDay) && s.userId == userId)
-                .OrderBy(s => s.travelNumber)
+                .Where(s => s.work_dayId.Equals(workDay) && s.userId == userId && !s.active)
+                .OrderByDescending(s => s.travelNumber)
                 .FirstOrDefault();
             if (travel == null)
             {
