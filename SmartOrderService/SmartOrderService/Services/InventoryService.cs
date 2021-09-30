@@ -84,7 +84,13 @@ namespace SmartOrderService.Services
             int driverId = SearchDrivingId(userId);
             var workDay = routeTeamService.GetWorkdayByUserAndDate(driverId, DateTime.Today);
 
-            if (userTeamRole == ERolTeam.Impulsor)
+            //Verificar que los demas ya hayan finalizado para cerrar el viaje
+            var travelInProgress = db.so_route_team_travels_employees
+                .Where(x => x.userId != userId && x.active && x.inventoryId == inventoryId && x.work_dayId == workDay.work_dayId)
+                .FirstOrDefault();
+
+
+            if (travelInProgress == null)
             {
                 using (var dbContextTransaction = db.Database.BeginTransaction())
                 {
