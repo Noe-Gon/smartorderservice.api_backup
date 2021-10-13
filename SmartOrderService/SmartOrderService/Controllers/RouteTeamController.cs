@@ -34,6 +34,14 @@ namespace SmartOrderService.Services
             {
                 response = Request.CreateResponse(HttpStatusCode.BadRequest, false);
             }
+            catch (InventoryNotOpenException)
+            {
+                response = Request.CreateResponse((HttpStatusCode)211, false);
+            }
+            catch (InventoryNotClosedException)
+            {
+                response = Request.CreateResponse((HttpStatusCode)212, false);
+            }
             catch (Exception e)
             {
                 response = Request.CreateResponse(HttpStatusCode.InternalServerError, false);

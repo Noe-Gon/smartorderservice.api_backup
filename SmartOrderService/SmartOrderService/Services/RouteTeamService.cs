@@ -24,6 +24,7 @@ namespace SmartOrderService.Services
                 {
                     return true;
                 }
+                
 
                 int inventoryState = GetInventoryState(userId, DateTime.Today);
 
@@ -33,6 +34,7 @@ namespace SmartOrderService.Services
 
                 if ((inventoryState == 0 && userRole == ERolTeam.Impulsor))
                 {
+                    CheckOpenedTravalers(userId);
                     return true;
                 }
                 if (((inventoryState == 1 || inventoryState == 2) && userRole == ERolTeam.Impulsor))
@@ -43,6 +45,8 @@ namespace SmartOrderService.Services
                 {
                     return true;
                 }
+                if (inventoryState == 0 && userRole == ERolTeam.Ayudante)
+                    throw new InventoryNotOpenException();
                 return false;
             }
             catch (InventoryInProgressException)
@@ -62,6 +66,20 @@ namespace SmartOrderService.Services
                 throw new InventoryEmptyException();
             }
 
+        }
+
+        public void CheckOpenedTravalers(int impulsorId)
+        {
+            var workDay = GetWorkdayByUserAndDate(impulsorId, DateTime.Today);
+
+            var traval = db.so_route_team_travels_employees
+                .Where(x => x.work_dayId == workDay.work_dayId && x.active)
+                .FirstOrDefault();
+
+            if (traval == null)
+                return;
+
+            throw new InventoryNotClosedException();
         }
         public void CallLoadInventoryProcess(int userId)
         {
