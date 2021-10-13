@@ -2,6 +2,7 @@
 using SmartOrderService.Models.DTO;
 using SmartOrderService.Models.Message;
 using SmartOrderService.Models.Requests;
+using SmartOrderService.Models.Responses;
 using SmartOrderService.Services;
 using System;
 using System.Collections.Generic;
@@ -76,37 +77,83 @@ namespace SmartOrderService.Controllers
         [Route("~/api/Authenticate/EmployeeCode")]
         public IHttpActionResult AuthenticateEmployeeCode(string Code, int branchId)
         {
-            using (var service = GetService())
+            try
             {
-                var response = service.AuthenticateEmployeeCode(new AuthenticateEmployeeCodeRequest
+                using (var service = GetService())
                 {
-                    EmployeeCode = Code,
-                    BranchId = branchId
-                });
+                    var response = service.AuthenticateEmployeeCode(new AuthenticateEmployeeCodeRequest
+                    {
+                        EmployeeCode = Code,
+                        BranchId = branchId
+                    });
 
-                if (response.Status)
-                    return Ok(response);
-                else
-                    return Content(HttpStatusCode.BadRequest, response);
+                    if (response.Status)
+                        return Content(HttpStatusCode.Accepted, response);
+                    else
+                        return Content(HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch(ExternalAPIException e)
+            {
+                return Content(HttpStatusCode.BadRequest, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (EntityNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError ,ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
             }
         }
 
-        [HttpGet]
+        [HttpPost]
         [Route("~/api/Authenticate/LeaderCode")]
-        public IHttpActionResult AuthenticateLeaderCode(string Code)
+        public IHttpActionResult AuthenticateLeaderCode(AuthenticateLeaderCodeRequest request)
         {
-            using (var service = GetService())
+            try
             {
-                var response = service.AuthenticateLeaderCode(new AuthenticateLeaderCodeRequest
+                using (var service = GetService())
                 {
-                    LeaderCode = Code
-                });
+                    var response = service.AuthenticateLeaderCode(request);
 
-                if (response.Status)
-                    return Ok(response);
-                else
-                    return Content(HttpStatusCode.BadRequest, response);
+                    if (response.Data != null)
+                        return Content(HttpStatusCode.Accepted, response);
+
+                    return Content(HttpStatusCode.OK, response);
+                }
             }
+            catch (LeaderCodeNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateLeaderCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (LeaderCodeExpiredException e)
+            {
+                return Content(HttpStatusCode.BadRequest, ResponseBase<AuthenticateLeaderCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<AuthenticateLeaderCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            
         }
     }
 }
