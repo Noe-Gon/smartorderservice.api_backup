@@ -22,15 +22,15 @@ namespace SmartOrderService.Services
                 bool result = service.CheckCurrentTravelState(userId);
                 response = Request.CreateResponse(HttpStatusCode.OK, result);
             }
-            catch (RelatedDriverNotFoundException e)
+            catch (RelatedDriverNotFoundException)
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict, false);
             }
-            catch (InventoryEmptyException e)
+            catch (InventoryEmptyException)
             {
                 response = Request.CreateResponse(HttpStatusCode.NotFound, false);
             }
-            catch (InventoryInProgressException e)
+            catch (InventoryInProgressException)
             {
                 response = Request.CreateResponse(HttpStatusCode.BadRequest, false);
             }
@@ -42,7 +42,11 @@ namespace SmartOrderService.Services
             {
                 response = Request.CreateResponse((HttpStatusCode)212, false);
             }
-            catch (Exception e)
+            catch (InventoryNotClosedByUserException)
+            {
+                response = Request.CreateResponse((HttpStatusCode)213, false);
+            }
+            catch (Exception)
             {
                 response = Request.CreateResponse(HttpStatusCode.InternalServerError, false);
             }

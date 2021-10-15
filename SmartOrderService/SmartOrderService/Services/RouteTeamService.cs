@@ -39,10 +39,12 @@ namespace SmartOrderService.Services
                 }
                 if (((inventoryState == 1 || inventoryState == 2) && userRole == ERolTeam.Impulsor))
                 {
-                    return false;
+                    throw new InventoryNotClosedByUserException("El viaje anterior no ha sido cerrado por otro usuario");
                 }
                 if (inventoryState == 1)
                 {
+                    CheckIfCurrentTravelsIsNewByUser(userId);
+
                     return true;
                 }
                 if (inventoryState == 0 && userRole == ERolTeam.Ayudante)
@@ -66,6 +68,24 @@ namespace SmartOrderService.Services
                 throw new InventoryEmptyException();
             }
 
+        }
+
+        public void CheckIfCurrentTravelsIsNewByUser(int userId)
+        {
+            InventoryService inventoryService = new InventoryService();
+
+            var impulsorId = SearchDrivingId(userId);
+            var inventory = inventoryService.GetCurrentInventory(impulsorId, DateTime.Today);
+            var workDay = GetWorkdayByUserAndDate(impulsorId, DateTime.Today);
+
+            //Verificar que en el inventario actual yo no este
+            var travel = db.so_route_team_travels_employees
+                .Where(x => x.inventoryId == inventory.inventoryId && x.work_dayId == workDay.work_dayId
+                    && x.userId == userId)
+                .FirstOrDefault();
+
+            if (travel != null)
+                throw new InventoryNotClosedByUserException("El viaje anterior no ha sido cerrado por otro usuario");
         }
 
         public void CheckOpenedTravalers(int impulsorId)
