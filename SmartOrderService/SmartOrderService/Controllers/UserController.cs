@@ -16,10 +16,6 @@ namespace SmartOrderService.Controllers
     public class UserController : ApiController
     {
         // GET: api/User
-        public StaffingComplianceService GetService()
-        {
-            return StaffingComplianceService.Create();
-        }
         public HttpResponseMessage Get([FromUri] UserRequest request)
         {
             
@@ -79,7 +75,7 @@ namespace SmartOrderService.Controllers
         {
             try
             {
-                using (var service = GetService())
+                using (var service = StaffingComplianceService.Create())
                 {
                     var response = service.AuthenticateEmployeeCode(new AuthenticateEmployeeCodeRequest
                     {
@@ -122,7 +118,7 @@ namespace SmartOrderService.Controllers
         {
             try
             {
-                using (var service = GetService())
+                using (var service = StaffingComplianceService.Create())
                 {
                     var response = service.AuthenticateLeaderCode(request);
 
