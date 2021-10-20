@@ -158,7 +158,7 @@ namespace SmartOrderService.Services
                     Status = (int)PortalLinks.STATUS.PENDING,
                     Type = (int)PortalLinks.TYPE.EMAIL_DEACTIVATION
                 };
-                string cancelEmailURL = ConfigurationManager.AppSettings["ApiV2Url"] + "Portal/Consumer/CancelTicketDigital/" + id;
+                string cancelEmailURL = ConfigurationManager.AppSettings["PortalUrl"] + "Portal/Consumer/CancelTicketDigital/" + id;
 
                 //Generar Link de Aceptación de terminos y consiciones
                 Guid termsId = Guid.NewGuid();
@@ -171,7 +171,7 @@ namespace SmartOrderService.Services
                     Status = (int)PortalLinks.STATUS.PENDING,
                     Type = (int)PortalLinks.TYPE.TERMSANDCONDITIONS_ACCEPT
                 };
-                string termsEmailURL = ConfigurationManager.AppSettings["ApiV2Url"] + "Portal/Consumer/TermsAndConditions/" + termsId;
+                string termsEmailURL = ConfigurationManager.AppSettings["PortalUrl"] + "Portal/Consumer/TermsAndConditions/" + termsId;
 
                 //Se envia el Correo
                 var emailService = new EmailService();
