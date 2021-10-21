@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNet.Identity;
 using SmartOrderService.Models.Requests;
+using SmartOrderService.Models.Responses;
 using SmartOrderService.Services;
 using System;
 using System.Collections.Generic;
@@ -133,6 +134,96 @@ namespace SmartOrderService.Controllers
             catch (Exception e)
             {
                 return InternalServerError(e);
+            }
+        }
+
+        [HttpGet]
+        [Route("~/api/Countries")]
+        public IHttpActionResult GetCountries()
+        {
+            using (var service = GetService())
+            {
+                var response = service.GetCountries();
+
+                if (response.Status)
+                    return Ok(response);
+                else
+                    return Content(HttpStatusCode.InternalServerError, response);
+            }
+        }
+
+        [HttpGet]
+        [Route("~/api/States")]
+        public IHttpActionResult GetStates([FromUri]GetStatesRequest request)
+        {
+            try
+            {
+                using (var service = GetService())
+                {
+                    var response = service.GetStates(request);
+
+                    if (response.Status)
+                        return Ok(response);
+                    else
+                        return Content(HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<List<GetStatesResponse>>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+        }
+
+        [HttpGet]
+        [Route("~/api/Municipalities")]
+        public IHttpActionResult GetMunicipalities([FromUri]GetMunicipalitiesRequest request)
+        {
+            try
+            {
+                using (var service = GetService())
+                {
+                    var response = service.GetMunicipalities(request);
+
+                    if (response.Status)
+                        return Ok(response);
+                    else
+                        return Content(HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<List<GetMunicipalitiesResponse>>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+        }
+
+        [HttpGet]
+        [Route("~/api/Neighborhoods")]
+        public IHttpActionResult GetNeighborhood([FromUri]GetNeighborhoodsRequest request)
+        {
+            try
+            {
+                using (var service = GetService())
+                {
+                    var response = service.GetNeighborhoods(request);
+
+                    if (response.Status)
+                        return Ok(response);
+                    else
+                        return Content(HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<List<GetNeighborhoodsResponse>>.Create(new List<string>()
+                {
+                    e.Message
+                }));
             }
         }
     }

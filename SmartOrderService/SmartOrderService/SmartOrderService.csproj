@@ -660,7 +660,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>InsertCliente.tt</DependentUpon>
     </Compile>
-    <Compile Include="UnitOfWork\Repositories\GenericRepository.cs" />
     <Compile Include="UnitOfWork\UoWConsumer.cs" />
     <Compile Include="Utils\DateUtils.cs" />
     <Compile Include="Utils\DatosFacturas.cs" />
@@ -766,6 +765,10 @@
     <Content Include="Scripts\jquery-1.10.2.min.map" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CRM.Data\CRM.Data.csproj">
+      <Project>{34992c17-ae63-4141-a2bc-a2a8d66abcf2}</Project>
+      <Name>CRM.Data</Name>
+    </ProjectReference>
     <ProjectReference Include="..\OpeCDLib\OpeCDLib.csproj">
       <Project>{e1c42c31-7046-4cc1-a3da-4bad727d6639}</Project>
       <Name>OpeCDLib</Name>

@@ -42,7 +42,10 @@ namespace SmartOrderService.Models.Responses
         public string InteriorNumber { get; set; }
         public string Crossroads { get; set; }
         public string Crossroads_2 { get; set; }
-        public string Neighborhood { get; set; }
+        public Guid? CountryId { get; set; }
+        public Guid? StateId { get; set; }
+        public Guid? TownId { get; set; }
+        public Guid? Neighborhood { get; set; }
         public int CounterVisitsWithoutSales { get; set; }
         public bool IsActive { get; set; }
         public List<int> Days { get; set; }
@@ -61,4 +64,29 @@ namespace SmartOrderService.Models.Responses
     {
         public string Msg { get; set; }
     }
+
+    public class GetCountriesResponse
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+    }
+
+    public class GetStatesResponse
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+    }
+
+    public class GetMunicipalitiesResponse
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+    }
+
+    public class GetNeighborhoodsResponse
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+    }
+
 }

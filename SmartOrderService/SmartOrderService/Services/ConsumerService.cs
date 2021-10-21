@@ -1,4 +1,6 @@
-﻿using SmartOrderService.CustomExceptions;
+﻿using CRM.Data.UnitOfWork;
+
+using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
 using SmartOrderService.Models.Enum;
 using SmartOrderService.Models.Requests;
@@ -18,10 +20,14 @@ namespace SmartOrderService.Services
         public static ConsumerService Create() => new ConsumerService();
 
         private UoWConsumer UoWConsumer { get; set; }
+        private UoWCRM UoWCRM { get; set; }
+
+        private Guid pais = new Guid("7DCCD172-9F73-E011-8C48-005056977FBC");
 
         public ConsumerService()
         {
             UoWConsumer = new UoWConsumer();
+            UoWCRM = new UoWCRM();
         }
 
         public ResponseBase<InsertConsumerResponse> InsertConsumer(InsertConsumerRequest request)
@@ -31,7 +37,7 @@ namespace SmartOrderService.Services
                 var route = UoWConsumer.RouteRepository
                     .GetByID(request.RouteId);
 
-                if(route == null)
+                if (route == null)
                     return ResponseBase<InsertConsumerResponse>
                     .Create(new List<string>() { "No se encontró la ruta" });
 
@@ -69,7 +75,7 @@ namespace SmartOrderService.Services
                 address += string.IsNullOrEmpty(request.Crossroads_2) ? "" : " Y " + request.Crossroads_2;
                 newCustomer.address = address;
 
-                var newCustomerAdditionalData= new so_customer_additional_data
+                var newCustomerAdditionalData = new so_customer_additional_data
                 {
                     Customer = newCustomer,
                     Phone = request.Phone,
@@ -82,7 +88,7 @@ namespace SmartOrderService.Services
                     CodePlaceId = request.CodePlace,
                     CounterVisitsWithoutSales = 0,
                     InteriorNumber = request.InteriorNumber,
-                    Neighborhood = request.Neighborhood,
+                    NeighborhoodId = request.Neighborhood,
                     ReferenceCode = request.ReferenceCode
                 };
 
@@ -202,7 +208,7 @@ namespace SmartOrderService.Services
                 return ResponseBase<InsertConsumerResponse>
                     .Create(new List<string>() { e.Message });
             }
-            
+
         }
 
         public ResponseBase<UpdateConsumerResponse> UpdateConsumer(UpdateConsumerRequest request)
@@ -251,7 +257,7 @@ namespace SmartOrderService.Services
                 updateCustomerAdditionalData.CodePlaceId = request.CodePlace ?? updateCustomerAdditionalData.CodePlaceId;
                 updateCustomerAdditionalData.ReferenceCode = request.ReferenceCode ?? updateCustomerAdditionalData.ReferenceCode;
                 updateCustomerAdditionalData.InteriorNumber = request.InteriorNumber ?? updateCustomerAdditionalData.InteriorNumber;
-                updateCustomerAdditionalData.Neighborhood = request.Neighborhood ?? updateCustomerAdditionalData.Neighborhood;
+                updateCustomerAdditionalData.NeighborhoodId = request.Neighborhood ?? updateCustomerAdditionalData.NeighborhoodId;
 
                 if (!request.IsActive)
                     updateCustomerAdditionalData.Status = (int)Consumer.STATUS.DEACTIVATED;
@@ -269,7 +275,7 @@ namespace SmartOrderService.Services
                 address += string.IsNullOrEmpty(request.Street) ? updateCustomerData.address_street : "C." + request.Street;
                 address += string.IsNullOrEmpty(request.ExternalNumber) ? updateCustomerData.address_number : " #" + request.ExternalNumber;
                 address += string.IsNullOrEmpty(request.Crossroads) ? updateCustomerData.address_number_cross1 : " X " + request.Crossroads;
-                address += string.IsNullOrEmpty(request.Crossroads_2) ? updateCustomerData.address_number_cross2  : " Y " + request.Crossroads_2;
+                address += string.IsNullOrEmpty(request.Crossroads_2) ? updateCustomerData.address_number_cross2 : " Y " + request.Crossroads_2;
                 updateCustomer.address = address;
 
                 //Ágregar y eliminar dias
@@ -415,13 +421,14 @@ namespace SmartOrderService.Services
                 .Join(UoWConsumer.RouteCustomerRepository.GetAll(),
                     userRoute => userRoute.routeId,
                     customerRoute => customerRoute.routeId,
-                    (userRoute, customerRoute) => new { userRoute.userId, customerRoute.customerId, customerRoute.day, customerRoute.order, customerRoute.status, userRouteStatus = userRoute.status, routeId = userRoute.routeId }
+                    (userRoute, customerRoute) => new { userRoute.userId, customerRoute.customerId, customerRoute.day, customerRoute.order, customerRoute.status, userRouteStatus = userRoute.status, routeId = userRoute.routeId, HasAdditionalData = customerRoute.so_customer.CustomerAdditionalData.Count() != 0 }
                 )
                 .Where(
                     v => v.userId.Equals(request.userId)
                     && v.userRouteStatus
                     && v.status
                     && day.Equals(v.day)
+                    && v.HasAdditionalData
                 ).Select(c => new { c.customerId, c.order, c.routeId });
 
                 foreach (var data in routeVisits)
@@ -476,7 +483,7 @@ namespace SmartOrderService.Services
                         InteriorNumber = customerAdditionalData.InteriorNumber,
                         Latitude = customer.latitude,
                         Longitude = customer.longitude,
-                        Neighborhood = customerAdditionalData.Neighborhood,
+                        Neighborhood = customerAdditionalData.NeighborhoodId,
                         Phone = customerAdditionalData.Phone,
                         Phone_2 = customerAdditionalData.Phone_2,
                         ReferenceCode = customerAdditionalData.ReferenceCode,
@@ -491,6 +498,22 @@ namespace SmartOrderService.Services
                         CanBeRemoved = customerAdditionalData.CounterVisitsWithoutSales >= daysWithoutSalesToDisable
                     };
 
+                    if (customerAdditionalData.NeighborhoodId != null)
+                    {
+                        var ubication = UoWCRM.ColoniasRepository
+                            .Get(x => x.Ope_coloniaId == customerAdditionalData.NeighborhoodId)
+                            .Select(x => new
+                            {
+                                CountryId = x.ope_EstadoId,
+                                StateId = x.ope_EstadoId,
+                                TownId = x.Ope_MunicipioId
+                            }).FirstOrDefault();
+
+                        dto.StateId = ubication.StateId;
+                        dto.CountryId = ubication.CountryId;
+                        dto.TownId = ubication.TownId;
+                    }
+
                     visits.Add(dto);
 
                 }
@@ -499,7 +522,7 @@ namespace SmartOrderService.Services
             }
             catch (Exception e)
             {
-                return ResponseBase<List<GetConsumersResponse>>.Create( new List<string>()
+                return ResponseBase<List<GetConsumersResponse>>.Create(new List<string>()
                 {
                     e.Message
                 });
@@ -520,7 +543,7 @@ namespace SmartOrderService.Services
                         "No se encontró una venta con ese id"
                     });
 
-                if(sale.so_customer.CustomerAdditionalData == null)
+                if (sale.so_customer.CustomerAdditionalData == null)
                     return ResponseBase<ResendTicketDigitalResponse>.Create(new List<string>()
                     {
                         "No cuenta con la información necesaria para enviar el Ticket"
@@ -604,7 +627,7 @@ namespace SmartOrderService.Services
                     CustomerName = customer.name
                 };
 
-                if(termsObject == null)
+                if (termsObject == null)
                 {
                     //Generar Link de Aceptación de terminos y consiciones
                     Guid termsId = Guid.NewGuid();
@@ -628,7 +651,7 @@ namespace SmartOrderService.Services
                 var emailService = new EmailService();
                 var response = emailService.SendReactivationTicketDigital(emailInfo);
 
-                if(response.Status)
+                if (response.Status)
                     return ResponseBase<ReactivationTicketDigitalResponse>.Create(new ReactivationTicketDigitalResponse
                     {
                         Msg = response.Data.Msg
@@ -643,6 +666,117 @@ namespace SmartOrderService.Services
                     e.Message
                 });
             }
+        }
+
+        public ResponseBase<List<GetCountriesResponse>> GetCountries()
+        {
+            try
+            {
+                var countries = UoWCRM.PaisesRepository
+                    .Get(x => x.statecode == 0)
+                    .Select(x => new GetCountriesResponse
+                    {
+                        Id = x.Ope_paisId,
+                        Name = x.Ope_name
+                    }).ToList();
+
+                return ResponseBase<List<GetCountriesResponse>>.Create(countries);
+            }
+            catch (Exception e)
+            {
+                return ResponseBase<List<GetCountriesResponse>>.Create(new List<string>()
+                {
+                    e.Message
+                });
+            }
+        }
+
+        public ResponseBase<List<GetStatesResponse>> GetStates(GetStatesRequest request)
+        {
+            if (request == null)
+                return ResponseBase<List<GetStatesResponse>>.Create(new List<string>()
+                    {
+                        "Es necesario proporcionar el Id del pais"
+                    });
+
+            var states = UoWCRM.EstadosRepository
+            .Get(x => x.statecode == 0 && x.Ope_PaisId == request.CountryId)
+            .Select(x => new GetStatesResponse
+            {
+                Id = x.Ope_estadoId,
+                Name = x.Ope_name
+            }).ToList();
+
+            return ResponseBase<List<GetStatesResponse>>.Create(states);
+        }
+
+        public ResponseBase<List<GetMunicipalitiesResponse>> GetMunicipalities(GetMunicipalitiesRequest request)
+        {
+            if (request == null)
+                return ResponseBase<List<GetMunicipalitiesResponse>>.Create(new List<string>()
+                {
+                    "Este servicio require parametros"
+                });
+
+            if (request.CountryId == null)
+                return ResponseBase<List<GetMunicipalitiesResponse>>.Create(new List<string>()
+                {
+                    "Es necesario proporcionar el Id del País"
+                });
+
+            if (request.StateId == null)
+                return ResponseBase<List<GetMunicipalitiesResponse>>.Create(new List<string>()
+                {
+                    "Es necesario proporcionar el Id del Estado"
+                });
+
+            var towns = UoWCRM.MunicipiosRepository
+                .Get(x => x.statecode == 0 && x.ope_PaisId == request.CountryId && x.Ope_EstadoId == request.StateId)
+                .Select(x => new GetMunicipalitiesResponse
+                {
+                    Id = x.Ope_municipioId,
+                    Name = x.Ope_name
+                }).ToList();
+
+            return ResponseBase<List<GetMunicipalitiesResponse>>.Create(towns);
+        }
+
+        public ResponseBase<List<GetNeighborhoodsResponse>> GetNeighborhoods(GetNeighborhoodsRequest request)
+        {
+            if (request == null)
+                return ResponseBase<List<GetNeighborhoodsResponse>>.Create(new List<string>()
+                {
+                    "Este servicio require parametros"
+                });
+
+            if (request.CountryId == null)
+                return ResponseBase<List<GetNeighborhoodsResponse>>.Create(new List<string>()
+                {
+                    "Es necesario proporcionar el Id del País"
+                });
+
+            if (request.StateId == null)
+                return ResponseBase<List<GetNeighborhoodsResponse>>.Create(new List<string>()
+                {
+                    "Es necesario proporcionar el Id del Estado"
+                });
+
+            if (request.MunicipalityId == null)
+                return ResponseBase<List<GetNeighborhoodsResponse>>.Create(new List<string>()
+                {
+                    "Es necesario proporcionar el Id del Municipio"
+                });
+
+            var colonias = UoWCRM.ColoniasRepository
+                .Get(x => x.statecode == 0 && x.ope_PaisId == request.CountryId && x.ope_EstadoId == request.StateId && x.Ope_MunicipioId == request.MunicipalityId)
+                .Select(x => new GetNeighborhoodsResponse
+                {
+                    Id = x.Ope_coloniaId,
+                    Name = x.Ope_name
+                })
+                .ToList();
+
+            return ResponseBase<List<GetNeighborhoodsResponse>>.Create(colonias);
         }
 
         public int SearchDrivingId(int actualUserId)

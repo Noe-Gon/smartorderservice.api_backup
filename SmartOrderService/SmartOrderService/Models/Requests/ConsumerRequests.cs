@@ -25,7 +25,7 @@ namespace SmartOrderService.Models.Requests
         public string InteriorNumber { get; set; }
         public string Crossroads { get; set; }
         public string Crossroads_2 { get; set; }
-        public string Neighborhood { get; set; }
+        public Guid? Neighborhood { get; set; }
         public List<int> Days { get; set; }
     }
 
@@ -50,7 +50,7 @@ namespace SmartOrderService.Models.Requests
         public string InteriorNumber { get; set; }
         public string Crossroads { get; set; }
         public string Crossroads_2 { get; set; }
-        public string Neighborhood { get; set; }
+        public Guid? Neighborhood { get; set; }
         public bool IsActive { get; set; }
         public List<int> Days { get; set; }
     }
@@ -79,5 +79,23 @@ namespace SmartOrderService.Models.Requests
     {
         public int CustomerId { get; set; }
         public string CustomerEmail { get; set; }
+    }
+
+    public class GetStatesRequest
+    {
+        public Guid? CountryId { get; set; }
+    }
+
+    public class GetMunicipalitiesRequest
+    {
+        public Guid? CountryId { get; set; }
+        public Guid? StateId { get; set; }
+    }
+
+    public class GetNeighborhoodsRequest
+    {
+        public Guid? CountryId { get; set; }
+        public Guid? StateId { get; set; }
+        public Guid? MunicipalityId { get; set; }
     }
 }
