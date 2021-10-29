@@ -226,5 +226,20 @@ namespace SmartOrderService.Controllers
                 }));
             }
         }
+
+        [HttpDelete]
+        [Route("~/api/consumer")]
+        public IHttpActionResult RemoveConsumer([FromUri]int customerId)
+        {
+            using (var service = GetService())
+            {
+                var response = service.RemoveConsumer(new RemoveConsumerRequest { CustomerId = customerId });
+
+                if (response.Status)
+                    return Ok(response);
+
+                return Content(HttpStatusCode.BadRequest, response);
+            }
+        }
     }
 }

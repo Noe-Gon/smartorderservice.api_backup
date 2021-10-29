@@ -89,4 +89,9 @@ namespace SmartOrderService.Models.Responses
         public string Name { get; set; }
     }
 
+    public class RemoveConsumerResponse
+    {
+        public string Msg { get; set; }
+    }
+
 }

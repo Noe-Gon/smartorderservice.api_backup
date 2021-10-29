@@ -1,5 +1,5 @@
 ﻿using CRM.Data.UnitOfWork;
-
+using RestSharp;
 using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
 using SmartOrderService.Models.Enum;
@@ -191,6 +191,30 @@ namespace SmartOrderService.Services
                 });
 
                 //Se notifica al CMR
+                var CRMService = new CRMService();
+                
+                var crmRequest = new CRMConsumerRequest
+                {
+                    Name = newCustomer.name,
+                    Email = newCustomer.email,
+                    Phone = newCustomerAdditionalData.Phone,
+                    CFECode = newCustomer.code,
+                    CountryId = request.CountryId,
+                    StateId = request.StateId,
+                    MunicipalityId = request.MunicipalityId,
+                    Neighborhood = newCustomerAdditionalData.NeighborhoodId,
+                    InteriorNumber = newCustomerAdditionalData.InteriorNumber,
+                    ExternalNumber = newCustomerData.address_number,
+                    Crossroads = newCustomerData.address_number_cross1,
+                    Crossroads_2 = newCustomerData.address_number_cross2,
+                    Street = newCustomerData.address_street,
+                    Latitude = newCustomer.latitude,
+                    Longitude = newCustomer.longitude,
+                    Address = address,
+                    Days = request.Days,
+                    EntityId = null
+                };
+                newCustomerAdditionalData.Code = CRMService.ConsumerToCRM(crmRequest, CRMService.TypeCreate, Method.POST);
 
                 UoWConsumer.CustomerAdditionalDataRepository.Insert(newCustomerAdditionalData);
                 UoWConsumer.CustomerDataRepository.Insert(newCustomerData);
@@ -198,6 +222,7 @@ namespace SmartOrderService.Services
                 UoWConsumer.PortalLinksLogRepository.Insert(termsEmail);
                 UoWConsumer.PortalLinksLogRepository.Insert(cancelEmail);
                 UoWConsumer.Save();
+
                 return ResponseBase<InsertConsumerResponse>.Create(new InsertConsumerResponse()
                 {
                     Msg = "Se guardo con exito"
@@ -313,6 +338,30 @@ namespace SmartOrderService.Services
                 UoWConsumer.Save();
 
                 //Notificar al CRM
+                var CRMService = new CRMService();
+                var crmRequest = new CRMConsumerRequest
+                {
+                    Name = updateCustomer.name,
+                    Email = updateCustomer.email,
+                    Phone = updateCustomerAdditionalData.Phone,
+                    CFECode = updateCustomer.code,
+                    CountryId = request.CountryId,
+                    StateId = request.StateId,
+                    MunicipalityId = request.MunicipalityId,
+                    Neighborhood = updateCustomerAdditionalData.NeighborhoodId,
+                    InteriorNumber = updateCustomerAdditionalData.InteriorNumber,
+                    ExternalNumber = updateCustomerData.address_number,
+                    Crossroads = updateCustomerData.address_number_cross1,
+                    Crossroads_2 = updateCustomerData.address_number_cross2,
+                    Street = updateCustomerData.address_street,
+                    Latitude = updateCustomer.latitude,
+                    Longitude = updateCustomer.longitude,
+                    Address = address,
+                    Days = request.Days,
+                    EntityId = updateCustomerAdditionalData.Code
+                };
+
+                CRMService.ConsumerToCRM(crmRequest, CRMService.TypeUpdate, Method.POST);
 
                 return ResponseBase<UpdateConsumerResponse>.Create(new UpdateConsumerResponse()
                 {
@@ -777,6 +826,53 @@ namespace SmartOrderService.Services
                 .ToList();
 
             return ResponseBase<List<GetNeighborhoodsResponse>>.Create(colonias);
+        }
+
+        public ResponseBase<RemoveConsumerResponse> RemoveConsumer(RemoveConsumerRequest request)
+        {
+            try
+            {
+                var customer = UoWConsumer.CustomerRepository
+                    .Get(x => x.customerId == request.CustomerId && x.status)
+                    .FirstOrDefault();
+
+                if (customer == null)
+                    return ResponseBase<RemoveConsumerResponse>.Create(new List<string>()
+                    {
+                        "No se encontró al cliente"
+                    });
+
+                var customerAdditionalData = customer.CustomerAdditionalData
+                    .FirstOrDefault();
+
+                //Notificar al CRM
+                if(customerAdditionalData.Code != null)
+                {
+                    var CRMService = new CRMService();
+                    var crmRequest = new CRMConsumerRequest
+                    {
+                        CFECode = null,
+                        EntityId = customerAdditionalData.Code
+                    };
+                    CRMService.ConsumerToCRM(crmRequest, CRMService.TypeUpdate, Method.POST);
+                }
+
+                customer.status = false;
+                UoWConsumer.CustomerRepository.Update(customer);
+                UoWConsumer.Save();
+
+                return ResponseBase<RemoveConsumerResponse>.Create(new RemoveConsumerResponse
+                {
+                    Msg = "Se elimino con exito"
+                });
+            }
+            catch (Exception e)
+            {
+                return ResponseBase<RemoveConsumerResponse>.Create(new List<string>()
+                {
+                    e.Message
+                });
+            }
         }
 
         public int SearchDrivingId(int actualUserId)
