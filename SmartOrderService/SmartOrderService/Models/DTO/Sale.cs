@@ -34,6 +34,12 @@ namespace SmartOrderService.Models
 
     }
 
+    public class SaleAdjusmentResult
+    {
+        public Sale NewSale { get; set; }
+        public Sale DeletedSale { get; set; }
+    }
+
     public class SaleTeam
     {
         public bool? SmsDeliveryTicket { get; set; }

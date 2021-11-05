@@ -328,6 +328,56 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
+        [HttpPost]
+        [Route("~/api/sales/adjustment")]
+        public IHttpActionResult SalesAdjustment([FromUri]int deleteSaleId, [FromBody]Sale newSale)
+        {
+            IHttpActionResult responseActionResult;
+            HttpResponseMessage responseMessage;
+            SaleAdjusmentResult saleResult = new SaleAdjusmentResult();
+            try
+            {
+                saleResult.DeletedSale = service.Delete(deleteSaleId);
+                service.RestoreInventoryAvailability(deleteSaleId);
+                lock (objectService)
+                {
+                    saleResult.NewSale = objectService.SaleTeamTransaction(newSale);
+                }
+            }
+            catch (ProductNotFoundBillingException e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.NotFound, e.Message);
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
+            }
+            catch (BadRequestException e)
+            {
+                return BadRequest();
+            }
+            catch (DeviceNotFoundException e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.Unauthorized, "no estas autorizado");
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
+            }
+            catch (EntityNotFoundException e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.NotFound);
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
+            }
+            catch (Exception e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
+            }
+
+            responseMessage = Request.CreateResponse(HttpStatusCode.OK, saleResult);
+            responseActionResult = ResponseMessage(responseMessage);
+            return responseActionResult;
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)

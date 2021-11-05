@@ -36,8 +36,8 @@ namespace SmartOrderService.UnitOfWork
             PortalLinksLogRepository = new GenericRepository<so_portal_links_log>(Context);
             RouteTeamTravelsCustomerBlocked = new GenericRepository<so_route_team_travels_customer_blocked>(Context);
             WorkDayRepository = new GenericRepository<so_work_day>(Context);
-            LeaderAuthorizationCodeRepository = new GenericRepository<so_leader_authorization_code>(Context);
-            AuthentificationLogRepository = new GenericRepository<so_authentication_log>(Context);
+            //LeaderAuthorizationCodeRepository = new GenericRepository<so_leader_authorization_code>(Context);
+            //AuthentificationLogRepository = new GenericRepository<so_authentication_log>(Context);
 
         }
 
@@ -61,8 +61,8 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_portal_links_log> PortalLinksLogRepository { get; set; }
         public GenericRepository<so_route_team_travels_customer_blocked> RouteTeamTravelsCustomerBlocked { get; set; }
         public GenericRepository<so_work_day> WorkDayRepository { get; set; }
-        public GenericRepository<so_leader_authorization_code> LeaderAuthorizationCodeRepository { get; set; }
-        public GenericRepository<so_authentication_log> AuthentificationLogRepository { get; set; }
+        //public GenericRepository<so_leader_authorization_code> LeaderAuthorizationCodeRepository { get; set; }
+        //public GenericRepository<so_authentication_log> AuthentificationLogRepository { get; set; }
 
         public void Save()
         {
