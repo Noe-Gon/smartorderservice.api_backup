@@ -53,4 +53,35 @@ namespace SmartOrderService.Models.Requests
         public string TermsAndConditionLink { get; set; }
     }
 
+    public class SendRemovalRequestEmailRequest
+    {
+        public List<SendRemovalRequestTable> Table { get; set; }
+        public List<string> LeaderEmail { get; set; }
+    }
+
+    public class SendRemovalRequestTable
+    {
+        public string CFECode { get; set; }
+        public string ConsumerName { get; set; }
+        public string Route { get; set; }
+        public string ImpulsorName { get; set; }
+        public string Reason { get; set; }
+        public DateTime Date { get; set; }
+    }
+
+    #region API EMAIL
+    public class APIEmailSendEmailRequest
+    {
+        public string To { get; set; }
+        public string Body { get; set; }
+        public string Subject { get; set; }
+    }
+
+    public class APIEmailSendEmailToManyUsersRequest
+    {
+        public List<string> To { get; set; }
+        public string Subject { get; set; }
+        public string Body { get; set; }
+    }
+    #endregion
 }

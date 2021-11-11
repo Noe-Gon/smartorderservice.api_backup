@@ -691,6 +691,7 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\Template\CancelTicketDigitalEmail.html" />
     <Content Include="Content\Template\ReactivationTicketDigitalEmail.html" />
+    <Content Include="Content\Template\RemovalRequestEmail.html" />
     <Content Include="Content\Template\TicketDigitalEmail.html" />
     <Content Include="Content\Template\WellcomeEmail.html" />
     <Content Include="favicon.ico" />
@@ -767,6 +768,10 @@
     <Content Include="Scripts\jquery-1.10.2.min.map" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Algoritmos.Data\Algoritmos.Data.csproj">
+      <Project>{28C92429-205E-4BA5-A355-EC6AEFF0EE35}</Project>
+      <Name>Algoritmos.Data</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CRM.Data\CRM.Data.csproj">
       <Project>{34992c17-ae63-4141-a2bc-a2a8d66abcf2}</Project>
       <Name>CRM.Data</Name>

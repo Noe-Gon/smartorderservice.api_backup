@@ -12,6 +12,7 @@ using System.Web.UI.WebControls;
 using System.Configuration;
 using SmartOrderService.Models.Responses;
 using System.Net.Mime;
+using RestSharp;
 
 namespace SmartOrderService.Services
 {
@@ -217,6 +218,51 @@ namespace SmartOrderService.Services
             }
         }
 
+        public ResponseBase<SendRemovalRequestEmailResponse> SendRemovalRequestEmail(SendRemovalRequestEmailRequest request)
+        {
+            try
+            {
+                using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath("~/Content/Template/RemovalRequestEmail.html")))
+                {
+                    string body = reader.ReadToEnd();
+                    string tableData = "";
+
+                    foreach (var info in request.Table)
+                    {
+                        tableData += "<tr><td style='border: 1px solid black;'>" + info.CFECode + "</td>";
+                        tableData += "<td style='border: 1px solid black;'>" + info.ConsumerName + "</td>";
+                        tableData += "<td style='border: 1px solid black;'>" + info.Route + "</td>";
+                        tableData += "<td style='border: 1px solid black;'>" + info.ImpulsorName + "</td>";
+                        tableData += "<td style='border: 1px solid black;'>" + info.Reason + "</td>";
+                        tableData += "<td style='border: 1px solid black;'>" + info.Date.ToString("dd/MM/yyyy") + "</td></tr>";
+
+                    }
+                    body = body.Replace("{TableData}", tableData);
+
+                    var routeIds = request.Table.GroupBy(x => x.Route).Select(x => x.Key);
+
+                    APIEmailSendEmailToManyUsers(new APIEmailSendEmailToManyUsersRequest
+                    {
+                        Body = body,
+                        Subject = "Solicitud de baja consumidores ruta: " + string.Join(",", routeIds),
+                        To = request.LeaderEmail
+                    });
+                }
+
+                return ResponseBase<SendRemovalRequestEmailResponse>.Create(new SendRemovalRequestEmailResponse
+                {
+                    Msg = "La notificación se envió con exito"
+                });
+            }
+            catch (Exception e)
+            {
+                return ResponseBase<SendRemovalRequestEmailResponse>.Create(new List<string>()
+                {
+                    e.Message
+                });
+            }
+        }
+
         public void DummySendEmail(SendAPIEmailrequest request)
         {
             MailMessage mmsg = new MailMessage();
@@ -258,6 +304,31 @@ namespace SmartOrderService.Services
             {
                 throw;
             }
+        }
+
+        public void APIEmailSendEmail(APIEmailSendEmailRequest request)
+        {
+            var client = new RestClient();
+            client.BaseUrl = new Uri(ConfigurationManager.AppSettings["APIEmail"]);
+            var requesto = new RestRequest("api/SendEmail", Method.POST);
+            requesto.RequestFormat = DataFormat.Json;
+
+            requesto.AddJsonBody(request);
+
+            var RestResponse = client.Execute(requesto);
+        }
+
+        public void APIEmailSendEmailToManyUsers(APIEmailSendEmailToManyUsersRequest request)
+        {
+
+            var client = new RestClient();
+            client.BaseUrl = new Uri(ConfigurationManager.AppSettings["APIEmail"]);
+            var requesto = new RestRequest("api/SendEmailToManyUsers", Method.POST);
+            requesto.RequestFormat = DataFormat.Json;
+
+            requesto.AddJsonBody(request);
+
+            var RestResponse = client.Execute(requesto);
         }
     }
 }

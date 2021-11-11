@@ -1,4 +1,6 @@
-﻿using CRM.Data.UnitOfWork;
+﻿using Algoritmos.Data.Enums;
+using Algoritmos.Data.UnitofWork;
+using CRM.Data.UnitOfWork;
 using RestSharp;
 using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
@@ -21,13 +23,16 @@ namespace SmartOrderService.Services
 
         private UoWConsumer UoWConsumer { get; set; }
         private UoWCRM UoWCRM { get; set; }
+        public UoWEmBeAlgoritmo UoWEmBeAlgoritmo { get; set; }
 
-        private Guid pais = new Guid("7DCCD172-9F73-E011-8C48-005056977FBC");
+        private Guid MEXICO = new Guid("7DCCD172-9F73-E011-8C48-005056977FBC");
 
         public ConsumerService()
         {
             UoWConsumer = new UoWConsumer();
             UoWCRM = new UoWCRM();
+            UoWEmBeAlgoritmo = new UoWEmBeAlgoritmo();
+
         }
 
         public ResponseBase<InsertConsumerResponse> InsertConsumer(InsertConsumerRequest request)
@@ -164,7 +169,7 @@ namespace SmartOrderService.Services
                     Status = (int)PortalLinks.STATUS.PENDING,
                     Type = (int)PortalLinks.TYPE.EMAIL_DEACTIVATION
                 };
-                string cancelEmailURL = ConfigurationManager.AppSettings["PortalUrl"] + "Portal/Consumer/CancelTicketDigital/" + id;
+                string cancelEmailURL = ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/CancelTicketDigital/" + id;
 
                 //Generar Link de Aceptación de terminos y consiciones
                 Guid termsId = Guid.NewGuid();
@@ -177,7 +182,7 @@ namespace SmartOrderService.Services
                     Status = (int)PortalLinks.STATUS.PENDING,
                     Type = (int)PortalLinks.TYPE.TERMSANDCONDITIONS_ACCEPT
                 };
-                string termsEmailURL = ConfigurationManager.AppSettings["PortalUrl"] + "Portal/Consumer/TermsAndConditions/" + termsId;
+                string termsEmailURL = ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/TermsAndConditions/" + termsId;
 
                 //Se envia el Correo
                 var emailService = new EmailService();
@@ -416,6 +421,50 @@ namespace SmartOrderService.Services
 
                 UoWConsumer.CustomerRemovalRequestRepository.Insert(newCustomerRemovalRequest);
                 UoWConsumer.Save();
+
+                //Enviar correo al supervisor
+                //Obtener a los leaderes
+                try
+                {
+                    var info = UoWConsumer.UserRepository
+                        .Get(x => x.userId == request.UserId)
+                        .Select(x => new
+                        {
+                            name = x.name,
+                            routeId = x.so_user_route.FirstOrDefault().so_route.name,
+                            branchCode = x.so_user_route.FirstOrDefault().so_route.so_branch.code
+                        })
+                        .FirstOrDefault();
+
+                    int branchCode = Convert.ToInt32(info.branchCode);
+                    var leaderEmails = UoWEmBeAlgoritmo.UsuariosRepository
+                            .Get(x => x.Estatus && x.IdRole == (int)UsuariosRole.CODES.LEADERCEDIS && !string.IsNullOrEmpty(x.Email) && x.IdCedis == branchCode)
+                            .Select(x => x.Email)
+                            .ToList();
+
+                    //Generar Cuerpo del correo
+                    var emailService = new EmailService();
+
+                    var table = new List<SendRemovalRequestTable>();
+                    table.Add(new SendRemovalRequestTable
+                    {
+                        ConsumerName = customer.name,
+                        ImpulsorName = info.name,
+                        CFECode = customer.code,
+                        Date = DateTime.Now,
+                        Reason = request.Reason,
+                        Route = info.routeId
+                    });
+
+                    emailService.SendRemovalRequestEmail(new SendRemovalRequestEmailRequest
+                    {
+                        LeaderEmail = leaderEmails,
+                        Table = table
+                    });
+                }
+                catch (Exception)
+                {
+                }
 
                 return ResponseBase<ConsumerRemovalResponse>.Create(new ConsumerRemovalResponse()
                 {
@@ -742,21 +791,58 @@ namespace SmartOrderService.Services
 
         public ResponseBase<List<GetStatesResponse>> GetStates(GetStatesRequest request)
         {
-            if (request == null)
-                return ResponseBase<List<GetStatesResponse>>.Create(new List<string>()
-                    {
-                        "Es necesario proporcionar el Id del pais"
-                    });
+            //if (request == null)
+            //    return ResponseBase<List<GetStatesResponse>>.Create(new List<string>()
+            //        {
+            //            "Es necesario proporcionar el Id del pais"
+            //        });
 
-            var states = UoWCRM.EstadosRepository
-            .Get(x => x.statecode == 0 && x.Ope_PaisId == request.CountryId)
-            .Select(x => new GetStatesResponse
+            //var states = UoWCRM.EstadosRepository
+            //.Get(x => x.statecode == 0 && x.Ope_PaisId == request.CountryId)
+            //.Select(x => new GetStatesResponse
+            //{
+            //    Id = x.Ope_estadoId,
+            //    Name = x.Ope_name
+            //}).ToList();
+
+            var response = new List<GetStatesResponse>();
+            response.Add(new GetStatesResponse
             {
-                Id = x.Ope_estadoId,
-                Name = x.Ope_name
-            }).ToList();
-
-            return ResponseBase<List<GetStatesResponse>>.Create(states);
+                Id = new Guid("e8bf3631-a173-e011-8c48-005056977fbc"),
+                Name = "Yucatán"
+            });
+            response.Add(new GetStatesResponse
+            {
+                Id = new Guid("cdbf3631-a173-e011-8c48-005056977fbc"),
+                Name = "Campeche"
+            });
+            response.Add(new GetStatesResponse
+            {
+                Id = new Guid("e0bf3631-a173-e011-8c48-005056977fbc"),
+                Name = "Quintana Roo"
+            });
+            response.Add(new GetStatesResponse
+            {
+                Id = new Guid("e4bf3631-a173-e011-8c48-005056977fbc"),
+                Name = "Tabasco"
+            });
+            response.Add(new GetStatesResponse
+            {
+                Id = new Guid("ddbf3631-a173-e011-8c48-005056977fbc"),
+                Name = "Oaxaca"
+            });
+            response.Add(new GetStatesResponse
+            {
+                Id = new Guid("d0bf3631-a173-e011-8c48-005056977fbc"),
+                Name = "Chiapas"
+            });
+            response.Add(new GetStatesResponse
+            {
+                Id = new Guid("e7bf3631-a173-e011-8c48-005056977fbc"),
+                Name = "Veracruz"
+            });
+            
+            return ResponseBase<List<GetStatesResponse>>.Create(response.OrderBy(x => x.Name).ToList());
         }
 
         public ResponseBase<List<GetMunicipalitiesResponse>> GetMunicipalities(GetMunicipalitiesRequest request)
@@ -768,10 +854,7 @@ namespace SmartOrderService.Services
                 });
 
             if (request.CountryId == null)
-                return ResponseBase<List<GetMunicipalitiesResponse>>.Create(new List<string>()
-                {
-                    "Es necesario proporcionar el Id del País"
-                });
+                request.CountryId = MEXICO;
 
             if (request.StateId == null)
                 return ResponseBase<List<GetMunicipalitiesResponse>>.Create(new List<string>()
@@ -799,10 +882,7 @@ namespace SmartOrderService.Services
                 });
 
             if (request.CountryId == null)
-                return ResponseBase<List<GetNeighborhoodsResponse>>.Create(new List<string>()
-                {
-                    "Es necesario proporcionar el Id del País"
-                });
+                request.CountryId = MEXICO;
 
             if (request.StateId == null)
                 return ResponseBase<List<GetNeighborhoodsResponse>>.Create(new List<string>()
