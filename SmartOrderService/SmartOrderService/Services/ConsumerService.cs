@@ -228,10 +228,35 @@ namespace SmartOrderService.Services
                 UoWConsumer.PortalLinksLogRepository.Insert(cancelEmail);
                 UoWConsumer.Save();
 
-                return ResponseBase<InsertConsumerResponse>.Create(new InsertConsumerResponse()
+                var response = new InsertConsumerResponse
                 {
-                    Msg = "Se guardo con exito"
-                });
+                    CustomerId = newCustomer.customerId,
+                    CFECode = request.CFECode,
+                    CodePlace = request.CodePlace,
+                    CountryId = request.CountryId,
+                    Crossroads = request.Crossroads,
+                    Crossroads_2 = request.Crossroads_2,
+                    Days = request.Days,
+                    Email = request.Email,
+                    Email_2 = request.Email_2,
+                    ExternalNumber = request.ExternalNumber,
+                    InteriorNumber = request.InteriorNumber,
+                    Latitude = request.Latitude,
+                    Longitude = request.Longitude,
+                    MunicipalityId = request.MunicipalityId,
+                    Name = request.Name,
+                    Neighborhood = request.Neighborhood,
+                    Phone = request.Phone,
+                    Phone_2 = request.Phone_2,
+                    ReferenceCode = request.ReferenceCode,
+                    RouteId = request.RouteId,
+                    StateId = request.StateId,
+                    Status = request.Status,
+                    Street = request.Street,
+                    UserId = request.UserId
+                };
+
+                return ResponseBase<InsertConsumerResponse>.Create(response);
             }
             catch (Exception e)
             {
