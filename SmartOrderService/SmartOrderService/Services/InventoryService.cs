@@ -84,7 +84,13 @@ namespace SmartOrderService.Services
             int driverId = SearchDrivingId(userId);
             var workDay = routeTeamService.GetWorkdayByUserAndDate(driverId, DateTime.Today);
 
-            if (userTeamRole == ERolTeam.Impulsor)
+            //Verificar que los demas ya hayan finalizado para cerrar el viaje
+            var travelInProgress = db.so_route_team_travels_employees
+                .Where(x => x.userId != userId && x.active && x.inventoryId == inventoryId && x.work_dayId == workDay.work_dayId)
+                .FirstOrDefault();
+
+
+            if (travelInProgress == null)
             {
                 using (var dbContextTransaction = db.Database.BeginTransaction())
                 {
@@ -521,7 +527,7 @@ namespace SmartOrderService.Services
             var imppulsorId = SearchDrivingId(userId);
             Guid workDayId = routeTeamService.GetWorkdayByUserAndDate(imppulsorId, DateTime.Today).work_dayId;
             int routeId = routeTeamService.searchRouteId(userId);
-            int lastTravelNumber = SearchLastTravelNumber(workDayId, userId);
+            int lastTravelNumber = SearchLastTravelNumber(workDayId, imppulsorId);
             var routeTeamTravel = new so_route_team_travels_employees()
             {
                 inventoryId = inventoryId,
@@ -537,9 +543,10 @@ namespace SmartOrderService.Services
 
         private int SearchLastTravelNumber(Guid workDay, int userId)
         {
+
             var travel = db.so_route_team_travels_employees
-                .Where(s => s.work_dayId.Equals(workDay) && s.userId == userId)
-                .OrderBy(s => s.travelNumber)
+                .Where(s => s.work_dayId.Equals(workDay) && s.userId == userId && !s.active)
+                .OrderByDescending(s => s.travelNumber)
                 .FirstOrDefault();
             if (travel == null)
             {

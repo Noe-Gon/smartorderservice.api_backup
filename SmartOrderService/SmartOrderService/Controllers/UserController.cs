@@ -1,6 +1,8 @@
 ﻿using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.DTO;
+using SmartOrderService.Models.Message;
 using SmartOrderService.Models.Requests;
+using SmartOrderService.Models.Responses;
 using SmartOrderService.Services;
 using System;
 using System.Collections.Generic;
@@ -66,5 +68,88 @@ namespace SmartOrderService.Controllers
             response = Request.CreateResponse(success ? HttpStatusCode.OK : HttpStatusCode.Conflict);
             return response;
         }
+
+        //[HttpGet]
+        //[Route("~/api/Authenticate/EmployeeCode")]
+        //public IHttpActionResult AuthenticateEmployeeCode(string Code, int branchId)
+        //{
+        //    try
+        //    {
+        //        using (var service = StaffingComplianceService.Create())
+        //        {
+        //            var response = service.AuthenticateEmployeeCode(new AuthenticateEmployeeCodeRequest
+        //            {
+        //                EmployeeCode = Code,
+        //                BranchId = branchId
+        //            });
+
+        //            if (response.Status)
+        //                return Content(HttpStatusCode.Accepted, response);
+        //            else
+        //                return Content(HttpStatusCode.BadRequest, response);
+        //        }
+        //    }
+        //    catch(ExternalAPIException e)
+        //    {
+        //        return Content(HttpStatusCode.BadRequest, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+        //        {
+        //            e.Message
+        //        }));
+        //    }
+        //    catch (EntityNotFoundException e)
+        //    {
+        //        return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+        //        {
+        //            e.Message
+        //        }));
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        return Content(HttpStatusCode.InternalServerError ,ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+        //        {
+        //            e.Message
+        //        }));
+        //    }
+        //}
+
+        //[HttpPost]
+        //[Route("~/api/Authenticate/LeaderCode")]
+        //public IHttpActionResult AuthenticateLeaderCode(AuthenticateLeaderCodeRequest request)
+        //{
+        //    try
+        //    {
+        //        using (var service = StaffingComplianceService.Create())
+        //        {
+        //            var response = service.AuthenticateLeaderCode(request);
+
+        //            if (response.Data != null)
+        //                return Content(HttpStatusCode.Accepted, response);
+
+        //            return Content(HttpStatusCode.OK, response);
+        //        }
+        //    }
+        //    catch (LeaderCodeNotFoundException e)
+        //    {
+        //        return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateLeaderCodeResponse>.Create(new List<string>()
+        //        {
+        //            e.Message
+        //        }));
+        //    }
+        //    catch (LeaderCodeExpiredException e)
+        //    {
+        //        return Content(HttpStatusCode.BadRequest, ResponseBase<AuthenticateLeaderCodeResponse>.Create(new List<string>()
+        //        {
+        //            e.Message
+        //        }));
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        return Content(HttpStatusCode.InternalServerError, ResponseBase<AuthenticateLeaderCodeResponse>.Create(new List<string>()
+        //        {
+        //            e.Message
+        //        }));
+        //    }
+            
+        //}
     }
 }

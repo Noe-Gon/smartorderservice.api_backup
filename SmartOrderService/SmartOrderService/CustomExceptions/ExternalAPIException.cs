@@ -5,15 +5,16 @@ using System.Web;
 
 namespace SmartOrderService.CustomExceptions
 {
-    public class EntityNotFoundException : Exception
+    public class ExternalAPIException : Exception
     {
-        public EntityNotFoundException() : base()
+        public ExternalAPIException() : base()
         {
 
         }
 
-        public EntityNotFoundException(string message) : base(message)
+        public ExternalAPIException(string message) : base(message)
         {
+
         }
     }
 }

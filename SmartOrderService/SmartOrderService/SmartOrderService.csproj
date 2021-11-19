@@ -294,11 +294,13 @@
     <Compile Include="CustomExceptions\DeliveryNotFoundException.cs" />
     <Compile Include="CustomExceptions\DeviceNotFoundException.cs" />
     <Compile Include="CustomExceptions\EntityNotFoundException.cs" />
+    <Compile Include="CustomExceptions\ExternalAPIException.cs" />
     <Compile Include="CustomExceptions\InventoryEmptyException.cs" />
     <Compile Include="CustomExceptions\InventoryInProgressException.cs" />
     <Compile Include="CustomExceptions\InventoryNotClosedException.cs" />
     <Compile Include="CustomExceptions\InventoryNotFoundException.cs" />
     <Compile Include="CustomExceptions\InvoiceException.cs" />
+    <Compile Include="CustomExceptions\LeaderCodeExceptions.cs" />
     <Compile Include="CustomExceptions\NoCustomerVisitException.cs" />
     <Compile Include="CustomExceptions\NotEnoughProductAmountException.cs" />
     <Compile Include="CustomExceptions\NotFoundUsersConfigException.cs" />
@@ -555,6 +557,8 @@
     <Compile Include="Models\DTO\ProductDto.cs" />
     <Compile Include="Models\DTO\ProductArticle.cs" />
     <Compile Include="Models\DTO\Promotion.cs" />
+    <Compile Include="Models\Message\StaffingComplianceMessage.cs" />
+    <Compile Include="Models\Message\WsEmployeeDataMessage.cs" />
     <Compile Include="Models\Requests\ApiVersionRequest.cs" />
     <Compile Include="Models\Requests\BinnacleVisitRequest.cs" />
     <Compile Include="Models\Requests\CellarNoticeRequest.cs" />
@@ -647,6 +651,7 @@
     <Compile Include="Controllers\RouteTeamController.cs" />
     <Compile Include="Services\RouteTeamTravelsService.cs" />
     <Compile Include="Services\SaleDetailResultService.cs" />
+    <Compile Include="Services\StaffingComplianceService.cs" />
     <Compile Include="Services\SurveyCustomerService.cs" />
     <Compile Include="Services\TrackingService.cs" />
     <Compile Include="Services\UserDevolutionService.cs" />

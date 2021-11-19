@@ -1113,9 +1113,9 @@ namespace SmartOrderService.Services
                 diaTrabajo = routeTeamService.GetWorkdayByUserAndDate(UserIdImpulsor, fechaAct);
             }
 
-            var usuarios = from ruta in (from r in db.so_route_team.Where(a => a.userId == UserId)
+            var usuarios = from ruta in (from r in db.so_route_team
                                                select r.routeId)
-                                 join r in db.so_route_team.Where(a => a.userId != UserId)
+                                 join r in db.so_route_team
                                    on ruta equals r.routeId
                                  join rd in db.so_route_team_travels_employees.Where(a => a.work_dayId == diaTrabajo.work_dayId)
                                     on new { r.routeId, r.userId } equals new { rd.routeId, rd.userId }
@@ -1124,12 +1124,6 @@ namespace SmartOrderService.Services
 
 
             var filtroRouteTeam = db.so_route_team_travels_employees.Where(a => a.work_dayId == diaTrabajo.work_dayId);
-
-            if (InventoryId != 0)
-            {
-                filtroRouteTeam = db.so_route_team_travels_employees.Where(a => a.work_dayId == diaTrabajo.work_dayId && 
-                                                                            a.inventoryId == InventoryId);
-            }
 
             var inventarios = from item in (from rdt in filtroRouteTeam
                                             group rdt by rdt.inventoryId into g
@@ -1220,6 +1214,11 @@ namespace SmartOrderService.Services
                                                                              }).ToList()
                                                          }).ToList()
                                         }).ToList();
+
+            if(InventoryId != 0){
+                saleDto = saleDto.Where(x => x.InventoryId != InventoryId || x.UserId != UserId).ToList();
+            }
+            
             return saleDto;
         }
     }
