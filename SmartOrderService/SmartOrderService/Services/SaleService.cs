@@ -997,67 +997,8 @@ namespace SmartOrderService.Services
                             }
                             saleResult.SaleId = sale.SaleId;
                             UpdateRouteTeamInventory(sale);
+                            CreatePaymentMethod(sale);
                         }
-
-                        //var updateCustomerAdditionalData = db.so_customerr_additional_data
-                        //    .Where(x => x.CustomerId == sale.CustomerId)
-                        //    .FirstOrDefault();
-
-                        //if (updateCustomerAdditionalData != null)
-                        //{
-                        //    #region Consumidores logica
-                        //    //Actualizar contador
-                        //    updateCustomerAdditionalData.CounterVisitsWithoutSales = 0;
-                        //    db.SaveChanges();
-
-                        //    //Envio de Ticket
-                        //    if (sale.EmailDeliveryTicket == true)
-                        //    {
-                        //        var customer = db.so_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
-
-                        //        if (customer.CustomerAdditionalData != null)
-                        //        {
-                        //            if (customer.CustomerAdditionalData.FirstOrDefault().IsMailingActive)
-                        //            {
-                        //                //Se prepara la información
-                        //                var route = db.so_route_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
-                        //                var user = db.so_user.Where(x => x.userId == sale.UserId).FirstOrDefault();
-
-                        //                var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
-                        //                {
-                        //                    RouteAddress = Convert.ToString(route.routeId),
-                        //                    CustomerEmail = customer.email,
-                        //                    CustomerName = customer.customerId + " - " + customer.name + " " + customer.address,
-                        //                    Date = DateTime.Now,
-                        //                    PaymentMethod = sale.PaymentMethod,
-                        //                    SellerName = user.code + " - " + user.name
-                        //                };
-
-                        //                var sales = new List<SendTicketDigitalEmailSales>();
-                        //                foreach (var detail in saleResult.SaleDetails)
-                        //                {
-                        //                    var product = db.so_product.Where(x => x.productId == detail.ProductId).FirstOrDefault();
-                        //                    if (product == null)
-                        //                        continue;
-
-                        //                    sales.Add(new SendTicketDigitalEmailSales
-                        //                    {
-                        //                        Amount = detail.Amount,
-                        //                        ProductName = detail.ProductId + " - " + product.name,
-                        //                        TotalPrice = Convert.ToDouble(detail.Amount) * Convert.ToDouble(detail.price),
-                        //                        UnitPrice = Convert.ToDouble(detail.price)
-                        //                    });
-                        //                }
-
-                        //                //Se envia el ticket
-                        //                var emailService = new EmailService();
-                        //                var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);
-                        //            }
-                        //        }
-                        //    }
-
-                            //#endregion
-                        //}
 
                         transaction.Commit();
                     }
@@ -1070,6 +1011,19 @@ namespace SmartOrderService.Services
                 return saleResult;
             }
 
+        }
+
+        public void CreatePaymentMethod(SaleTeam sale)
+        {
+            var findResult = db.so_sale_aditional_data.Where(a => a.saleId == sale.SaleId && a.paymentMethod.Trim() == sale.PaymentMethod).FirstOrDefault();
+            if (findResult == null)
+            {
+                so_sale_aditional_data entitySale = new so_sale_aditional_data();
+                entitySale.saleId = sale.SaleId;
+                entitySale.paymentMethod = sale.PaymentMethod;
+                db.so_sale_aditional_data.Add(entitySale);
+                db.SaveChanges();
+            }
         }
 
         private void SetPromotionTax(so_sale_promotion_detail detail, so_branch_tax branch_tax, so_products_price_list master_price_list, so_products_price_list price_list)
@@ -1188,6 +1142,7 @@ namespace SmartOrderService.Services
                                 on new { a = venta.userId } equals new { a = user.userId }
                            join inv in inventarios
                                 on new { inventoryId = (venta.inventoryId.HasValue ? venta.inventoryId.Value : 0) } equals new { inventoryId = inv }
+                            join ad in db.so_sale_aditional_data on venta.saleId equals ad.saleId
                             orderby venta.createdon descending
                             select new
                             {
@@ -1202,7 +1157,9 @@ namespace SmartOrderService.Services
                                 venta.deliveryId,
                                 venta.so_sale_detail,
                                 venta.so_sale_replacement,
-                                venta.so_sale_promotion
+                                venta.so_sale_promotion,
+                                ad.paymentMethod,
+                                venta.createdon
                             }).ToList();
 
             var saleDto = (from item in qsaleDto
@@ -1218,6 +1175,8 @@ namespace SmartOrderService.Services
                                          Date = item.date.ToString("dd/MM/yyyy HH:m"),
                                          CustomerId = item.customerId,
                                          DeliveryId = item.deliveryId ?? 0,
+                                         PaymentMethod = item.paymentMethod,
+                                         CreateDate = item.createdon.HasValue ? item.createdon.Value.ToString("dd/MM/yyyy HH:m") : "",
                                          SaleDetails = (from g in item.so_sale_detail
                                                         orderby g.createdon descending
                                                         select new SaleDetailResponse 
