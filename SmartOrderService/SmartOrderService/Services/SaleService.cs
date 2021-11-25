@@ -1321,7 +1321,7 @@ namespace SmartOrderService.Services
                                          TotalCredit = item.total_credit,
                                          CustomerTag = item.tag ?? "",
                                          InventoryId = item.inventoryId ?? 0,
-                                         Date = item.date.ToString("dd/MM/yyyy HH:m"),
+                                         Date = item.date.ToString("dd/MM/yyyy HH:m:s"),
                                          CustomerId = item.customerId,
                                          DeliveryId = item.deliveryId ?? 0,
                                          PaymentMethod = item.paymentMethod,
