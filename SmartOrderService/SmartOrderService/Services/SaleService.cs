@@ -1102,7 +1102,8 @@ namespace SmartOrderService.Services
 
                                 if (customer.CustomerAdditionalData != null)
                                 {
-                                    if (customer.CustomerAdditionalData.FirstOrDefault().IsMailingActive)
+                                    var customerAux = customer.CustomerAdditionalData.FirstOrDefault();
+                                    if (customerAux.IsMailingActive && customerAux.AcceptedTermsAndConditions)
                                     {
                                         //Se prepara la información
                                         var route = db.so_route_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
