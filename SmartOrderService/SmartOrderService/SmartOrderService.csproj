@@ -265,6 +265,7 @@
     <Compile Include="Controllers\InventoryController.cs" />
     <Compile Include="Controllers\InventoryRevisionController.cs" />
     <Compile Include="Controllers\InvoiceController.cs" />
+    <Compile Include="Controllers\LiquidationController.cs" />
     <Compile Include="Controllers\PriceController.cs" />
     <Compile Include="Controllers\ProductController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
@@ -550,6 +551,7 @@
     <Compile Include="Models\Enum\ConsumerRemovalRequest.cs" />
     <Compile Include="Models\Enum\EInventoryTeamStatus.cs" />
     <Compile Include="Models\Enum\ERolTeam.cs" />
+    <Compile Include="Models\Enum\PaymentMethod.cs" />
     <Compile Include="Models\Enum\PortalLinksStatus.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\DTO\PriceDto.cs" />
@@ -557,6 +559,7 @@
     <Compile Include="Models\DTO\ProductDto.cs" />
     <Compile Include="Models\DTO\ProductArticle.cs" />
     <Compile Include="Models\DTO\Promotion.cs" />
+    <Compile Include="Models\Message\LiquidationMessage.cs" />
     <Compile Include="Models\Requests\CRMRequests.cs" />
     <Compile Include="Models\Message\StaffingComplianceMessage.cs" />
     <Compile Include="Models\Message\WsEmployeeDataMessage.cs" />
@@ -622,6 +625,7 @@
     <Compile Include="Services\CRMService.cs" />
     <Compile Include="Services\CustomerBlockedService.cs" />
     <Compile Include="Services\EmailService.cs" />
+    <Compile Include="Services\LiquidationService.cs" />
     <Compile Include="Services\RoleTeamService.cs" />
     <Compile Include="Services\RouteTeamInventoryAvailableService.cs" />
     <Compile Include="Services\RouteTeamService.cs" />
