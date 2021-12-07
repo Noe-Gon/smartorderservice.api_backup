@@ -1292,7 +1292,8 @@ namespace SmartOrderService.Services
                                 on new { a = venta.userId } equals new { a = user.userId }
                            join inv in inventarios
                                 on new { inventoryId = (venta.inventoryId.HasValue ? venta.inventoryId.Value : 0) } equals new { inventoryId = inv }
-                            join ad in db.so_sale_aditional_data on venta.saleId equals ad.saleId
+                            join ad in db.so_sale_aditional_data on venta.saleId equals ad.saleId into ventaSaleAD
+                            from result in ventaSaleAD.DefaultIfEmpty()
                             orderby venta.createdon descending
                             select new
                             {
@@ -1308,7 +1309,7 @@ namespace SmartOrderService.Services
                                 venta.so_sale_detail,
                                 venta.so_sale_replacement,
                                 venta.so_sale_promotion,
-                                ad.paymentMethod,
+                                result.paymentMethod,
                                 venta.createdon
                             }).ToList();
 
