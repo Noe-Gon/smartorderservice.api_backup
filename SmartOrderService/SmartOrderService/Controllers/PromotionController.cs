@@ -69,7 +69,6 @@ namespace SmartOrderService.Controllers
             try
             {
                 var PromotionsDto = new PromotionService().GetSalePromotions(UserId, InventaryId);
-
                 return Request.CreateResponse(HttpStatusCode.OK, PromotionsDto);
             }
             catch (Exception e)

@@ -165,6 +165,90 @@ namespace SmartOrderService.Services
 
         }
 
+        public Sale Cancel(int saleId, string PaymentMethod)
+        {
+
+            var sale = db.so_sale.Where(s => s.saleId.Equals(saleId)).FirstOrDefault();
+
+            if (sale == null)
+                throw new EntityNotFoundException();
+
+            using (var dbContextTransaction = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    sale.status = false;
+                    sale.state = 2;
+                    sale.modifiedon = DateTime.Now;
+
+                    db.SaveChanges();
+                    //Enviar Ticket
+                    try
+                    {
+                        var customer = db.so_customer.Where(x => x.customerId == sale.customerId).FirstOrDefault();
+
+                        if (customer.CustomerAdditionalData != null)
+                        {
+                            if (customer.CustomerAdditionalData.FirstOrDefault().IsMailingActive)
+                            {
+                                //Se prepara la información
+                                var route = db.so_route_customer.Where(x => x.customerId == sale.customerId).FirstOrDefault();
+                                var user = db.so_user.Where(x => x.userId == sale.userId).FirstOrDefault();
+
+                                var sendTicketDigitalEmail = new SendCancelTicketDigitalEmailRequest
+                                {
+                                    CustomerName = customer.name,
+                                    RouteAddress = Convert.ToString(route.routeId),
+                                    CustomerEmail = customer.email,
+                                    CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
+                                    Date = DateTime.Now,
+                                    PaymentMethod = PaymentMethod,
+                                    SellerName = user.code + " - " + user.name
+                                };
+
+                                var sales = new List<SendTicketDigitalEmailSales>();
+                                foreach (var detail in sale.so_sale_detail)
+                                {
+                                    var product = db.so_product.Where(x => x.productId == detail.productId).FirstOrDefault();
+                                    if (product == null)
+                                        continue;
+
+                                    sales.Add(new SendTicketDigitalEmailSales
+                                    {
+                                        Amount = detail.amount,
+                                        ProductName = detail.productId + " - " + product.name,
+                                        TotalPrice = Convert.ToDouble(detail.amount) * Convert.ToDouble(detail.base_price_no_tax),
+                                        UnitPrice = Convert.ToDouble(detail.base_price_no_tax)
+                                    });
+                                }
+                                sendTicketDigitalEmail.Sales = sales;
+
+                                //Se envia el ticket
+                                var emailService = new EmailService();
+                                var response = emailService.SendCancelTicketDigitalEmail(sendTicketDigitalEmail);
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                    }
+                    dbContextTransaction.Commit();
+                }
+                catch (Exception e)
+                {
+                    dbContextTransaction.Rollback();
+                    throw new Exception();
+                }
+
+            }
+
+
+
+            var SaleDto = new SaleMapper().toModel(sale);
+
+            return SaleDto;
+
+        }
 
         public Sale create(Sale sale) {
 
@@ -1000,6 +1084,72 @@ namespace SmartOrderService.Services
                             CreatePaymentMethod(sale);
                         }
 
+                        var updateCustomerAdditionalData = db.so_customerr_additional_data
+                            .Where(x => x.CustomerId == sale.CustomerId)
+                            .FirstOrDefault();
+
+                        if (updateCustomerAdditionalData != null)
+                        {
+                            #region Consumidores logica
+                            //Actualizar contador
+                            updateCustomerAdditionalData.CounterVisitsWithoutSales = 0;
+                            db.SaveChanges();
+
+                            //Envio de Ticket
+                            if (sale.EmailDeliveryTicket == true)
+                            {
+                                var customer = db.so_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
+
+                                if (customer.CustomerAdditionalData != null)
+                                {
+                                    var customerAux = customer.CustomerAdditionalData.FirstOrDefault();
+                                    if (customerAux.IsMailingActive && customerAux.AcceptedTermsAndConditions)
+                                    {
+                                        //Se prepara la información
+                                        var route = db.so_route_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
+                                        var user = db.so_user.Where(x => x.userId == sale.UserId).FirstOrDefault();
+
+                                        var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
+                                        {
+                                            CustomerName = customer.name,
+                                            RouteAddress = Convert.ToString(route.routeId),
+                                            CustomerEmail = customer.email,
+                                            CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
+                                            Date = DateTime.Now,
+                                            PaymentMethod = sale.PaymentMethod,
+                                            SellerName = user.code + " - " + user.name
+                                        };
+
+                                        var sales = new List<SendTicketDigitalEmailSales>();
+                                        foreach (var detail in saleResult.SaleDetails)
+                                        {
+                                            var product = db.so_product.Where(x => x.productId == detail.ProductId).FirstOrDefault();
+                                            if (product == null)
+                                                continue;
+
+                                            sales.Add(new SendTicketDigitalEmailSales
+                                            {
+                                                Amount = detail.Amount,
+                                                ProductName = detail.ProductId + " - " + product.name,
+                                                TotalPrice = Convert.ToDouble(detail.Amount) * Convert.ToDouble(detail.PriceValue),
+                                                UnitPrice = Convert.ToDouble(detail.PriceValue)
+                                            });
+                                        }
+                                        sendTicketDigitalEmail.Sales = sales;
+
+                                        //Se envia el ticket
+                                        if (sales != null)
+                                        {
+                                            var emailService = new EmailService();
+                                            var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);
+                                        }
+                                    }
+                                }
+                            }
+
+                            #endregion
+                        }
+
                         transaction.Commit();
                     }
                 }
@@ -1142,7 +1292,8 @@ namespace SmartOrderService.Services
                                 on new { a = venta.userId } equals new { a = user.userId }
                            join inv in inventarios
                                 on new { inventoryId = (venta.inventoryId.HasValue ? venta.inventoryId.Value : 0) } equals new { inventoryId = inv }
-                            join ad in db.so_sale_aditional_data on venta.saleId equals ad.saleId
+                            join ad in db.so_sale_aditional_data on venta.saleId equals ad.saleId into ventaSaleAD
+                            from result in ventaSaleAD.DefaultIfEmpty()
                             orderby venta.createdon descending
                             select new
                             {
@@ -1158,7 +1309,7 @@ namespace SmartOrderService.Services
                                 venta.so_sale_detail,
                                 venta.so_sale_replacement,
                                 venta.so_sale_promotion,
-                                ad.paymentMethod,
+                                result.paymentMethod,
                                 venta.createdon
                             }).ToList();
 

@@ -197,13 +197,13 @@ namespace SmartOrderService.Services
 
                 db.so_control_download.Add(ItemToDownload);
                 //Aumentar el contador de visitas sin ventas 
-                //var updateCustomerAdditionalData = db.so_customerr_additional_data
-                //            .Where(x => x.CustomerId == dto.CustomerId)
-                //            .FirstOrDefault();
-                //if (updateCustomerAdditionalData != null)
-                //    updateCustomerAdditionalData.CounterVisitsWithoutSales ++;
+                var updateCustomerAdditionalData = db.so_customerr_additional_data
+                            .Where(x => x.CustomerId == dto.CustomerId)
+                            .FirstOrDefault();
+                if (updateCustomerAdditionalData != null)
+                    updateCustomerAdditionalData.CounterVisitsWithoutSales++;
 
-                //db.SaveChanges();
+                db.SaveChanges();
 
                 //Si es de un quipo hacer el guardado de so_reoute_team
                 ERolTeam userRole = roleTeamService.GetUserRole(visit.userId);

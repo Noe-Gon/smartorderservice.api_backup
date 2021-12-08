@@ -1,7 +1,7 @@
 ﻿using SmartOrderService.CustomExceptions;
+using SmartOrderService.UnitOfWork.Repositories;
 using SmartOrderService.DB;
 using SmartOrderService.Models.Enum;
-using SmartOrderService.UnitOfWork.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;

@@ -563,6 +563,7 @@
     <Compile Include="Models\DTO\ProductDto.cs" />
     <Compile Include="Models\DTO\ProductArticle.cs" />
     <Compile Include="Models\DTO\Promotion.cs" />
+    <Compile Include="Models\Requests\CRMRequests.cs" />
     <Compile Include="Models\Message\StaffingComplianceMessage.cs" />
     <Compile Include="Models\Message\WsEmployeeDataMessage.cs" />
     <Compile Include="Models\Requests\ApiVersionRequest.cs" />
@@ -624,6 +625,7 @@
     <Compile Include="Services\ApplicationService.cs" />
     <Compile Include="Services\CodePlaceService.cs" />
     <Compile Include="Services\ConsumerService.cs" />
+    <Compile Include="Services\CRMService.cs" />
     <Compile Include="Services\CustomerBlockedService.cs" />
     <Compile Include="Services\EmailService.cs" />
     <Compile Include="Services\RoleTeamService.cs" />
@@ -672,7 +674,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>InsertCliente.tt</DependentUpon>
     </Compile>
-    <Compile Include="UnitOfWork\Repositories\GenericRepository.cs" />
     <Compile Include="UnitOfWork\UoWConsumer.cs" />
     <Compile Include="Utils\DateUtils.cs" />
     <Compile Include="Utils\DatosFacturas.cs" />
@@ -700,7 +701,9 @@
     <Content Include="Areas\HelpPage\HelpPage.css" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\Template\CancelTicketDigitalEmail.html" />
     <Content Include="Content\Template\ReactivationTicketDigitalEmail.html" />
+    <Content Include="Content\Template\RemovalRequestEmail.html" />
     <Content Include="Content\Template\TicketDigitalEmail.html" />
     <Content Include="Content\Template\WellcomeEmail.html" />
     <Content Include="favicon.ico" />
@@ -777,6 +780,14 @@
     <Content Include="Scripts\jquery-1.10.2.min.map" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Algoritmos.Data\Algoritmos.Data.csproj">
+      <Project>{28C92429-205E-4BA5-A355-EC6AEFF0EE35}</Project>
+      <Name>Algoritmos.Data</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CRM.Data\CRM.Data.csproj">
+      <Project>{34992c17-ae63-4141-a2bc-a2a8d66abcf2}</Project>
+      <Name>CRM.Data</Name>
+    </ProjectReference>
     <ProjectReference Include="..\OpeCDLib\OpeCDLib.csproj">
       <Project>{e1c42c31-7046-4cc1-a3da-4bad727d6639}</Project>
       <Name>OpeCDLib</Name>
