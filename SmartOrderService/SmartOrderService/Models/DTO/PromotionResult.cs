@@ -4,17 +4,10 @@ namespace SmartOrderService.Models.DTO
 {
     public class PromotionResult
     {
-        public int SaleProductId { get; set; }
-        public int AmountSaleProduct { get; set; }
-        public int GiftProductId { get; set; }
-        public int AmountGiftProduct { get; set; }
-        public int GiftArticleId { get; set; }
-        public int AmountGiftArticle { get; set; }
-        public int AvailableGiftArticle { get; set; }
-        public string NamePromotion { get; set; }
-        public string Validity { get; set; }
-        public string TypePromotion { get; set; }
-        public decimal AmountMaxCustomer { get; set; }
-        public int TotalAvailablePromotions { get; set; }
+        public List<PromotionGiftArticleCatalogDto> PromotionGiftArticleCatalogDto { get; set; }
+        public List<PromotionCatalogDto> PromotionCatalogDto { get; set; }
+        public List<PromotionProductDto> PromotionProductDto { get; set; }
+        public List<PromotionGiftProductDto> PromotionGiftProductDto { get; set; }
+        public List<PromotionGiftArticleDto> PromotionGiftArticleDto { get; set; }
     }
 }
