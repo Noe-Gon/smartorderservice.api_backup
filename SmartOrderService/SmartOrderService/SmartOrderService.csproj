@@ -497,6 +497,11 @@
     <Compile Include="Models\DTO\Invoice\InvoiceOpeFacturaDto.cs" />
     <Compile Include="Models\DTO\Invoice\SimpleInvoiceLineOpeFactura.cs" />
     <Compile Include="Models\DTO\Product.cs" />
+    <Compile Include="Models\DTO\PromotionCatalogDto.cs" />
+    <Compile Include="Models\DTO\PromotionGiftArticleCatalogDto.cs" />
+    <Compile Include="Models\DTO\PromotionGiftArticleDto.cs" />
+    <Compile Include="Models\DTO\PromotionGiftProductDto.cs" />
+    <Compile Include="Models\DTO\PromotionProductDto.cs" />
     <Compile Include="Models\DTO\PromotionResult.cs" />
     <Compile Include="Models\DTO\RegisterCustomerDataDto.cs" />
     <Compile Include="Models\DTO\RegisterCustomerDto.cs" />

@@ -63,12 +63,12 @@ namespace SmartOrderService.Controllers
         {
         }
 
-        [HttpGet, Route("api/promotion/user/{UserId}/product/{ProductId}")]
-        public HttpResponseMessage GetPromotions(int UserId, int ProductId)
+        [HttpGet, Route("api/promotion/user/{UserId}/inventary/{InventaryId}")]
+        public HttpResponseMessage GetPromotions(int UserId, int InventaryId)
         {
             try
             {
-                var PromotionsDto = new PromotionService().GetSalePromotions(UserId, ProductId);
+                var PromotionsDto = new PromotionService().GetSalePromotions(UserId, InventaryId);
 
                 return Request.CreateResponse(HttpStatusCode.OK, PromotionsDto);
             }
