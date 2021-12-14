@@ -76,5 +76,19 @@ namespace SmartOrderService.Controllers
                 return Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
             }
         }
+
+        [HttpGet, Route("api/promotion/Delivered/user/{UserId}/inventary/{InventaryId}")]
+        public HttpResponseMessage GetSalePromotionsDelivered(int UserId, int InventaryId)
+        {
+            try
+            {
+                var PromotionsDeliveredDto = new PromotionService().GetSalePromotionsDelivered(UserId, InventaryId);
+                return Request.CreateResponse(HttpStatusCode.OK, PromotionsDeliveredDto);
+            }
+            catch (Exception e)
+            {
+                return Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+            }
+        }
     }
 }
