@@ -10,7 +10,7 @@ namespace SmartOrderService.Models.DTO
 
         public int saleId { get; set; }
         public int userId { get; set; }
-        public DateTime fecha { get; set; }
+        public DateTime date_sale { get; set; }
         public int customerId { get; set; }
         public string contact { get; set; }
         public string name { get; set; }
