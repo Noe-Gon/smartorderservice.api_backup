@@ -521,7 +521,7 @@ namespace SmartOrderService.Services
                 {
                     request.userId = inventoryService.SearchDrivingId(request.userId);
                 }
-                catch (RelatedDriverNotFoundException e)
+                catch (RelatedDriverNotFoundException)
                 { }
 
                 so_inventory inventory = inventoryService.GetCurrentInventory(request.userId, null);
@@ -978,6 +978,47 @@ namespace SmartOrderService.Services
                     e.Message
                 });
             }
+        }
+
+        public ResponseBase<GetCustomerVarioResponse> GetCustomerVario(GetCustomerVarioRequest request)
+        {
+            int? customerId = UoWConsumer.RouteCustomerVarioRepository
+                .Get(x => x.RouteId == request.RouteId && x.Status)
+                .Select(x => x.CustomerId)
+                .FirstOrDefault();
+
+            if (customerId == null)
+                return ResponseBase<GetCustomerVarioResponse>.Create(new List<string>()
+                {
+                    "La ruta no cuenta con cliente vario o este ha sido eliminado de la ruta"
+                });
+
+            var response = UoWConsumer.CustomerRepository
+                .Get(x => x.customerId == customerId)
+                .Select(x => new GetCustomerVarioResponse
+                {
+                    Address = x.address,
+                    Code = x.code,
+                    Contact = x.contact,
+                    CustomerId = x.customerId,
+                    Description = x.description,
+                    Email = x.email,
+                    Latitude = x.latitude ?? 0,
+                    Longitude = x.longitude ?? 0,
+                    Name = x.name,
+                    Status = x.status,
+                    Tags = x.so_tag.Select(x => x.tag).ToList(),
+                    
+                })
+                .FirstOrDefault();
+
+            if (response == null)
+                return ResponseBase<GetCustomerVarioResponse>.Create(new List<string>()
+                {
+                    "Cliente no encontrado"
+                });
+
+            return ResponseBase<GetCustomerVarioResponse>.Create(response);
         }
 
         public int SearchDrivingId(int actualUserId)

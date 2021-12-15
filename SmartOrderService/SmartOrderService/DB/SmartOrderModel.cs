@@ -158,6 +158,7 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_route_team_travels_customer_blocked> so_route_team_travel_customer_blockeds { get; set; }
         //public virtual DbSet<so_leader_authorization_code> so_leader_authorization_codes { get; set; }
         //public virtual DbSet<so_authentication_log> so_authentication_logs { get; set; }
+        public virtual DbSet<so_route_customer_vario> so_route_customer_vario { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -1816,6 +1817,15 @@ namespace SmartOrderService.DB
             //    .WithMany(x => x.AuthenticationLogs)
             //    .HasForeignKey(x => x.LeaderAuthenticationCodeId);
 
+            var routeCustomerVario = modelBuilder.Entity<so_route_customer_vario>();
+            routeCustomerVario.HasKey(x => x.Id);
+            routeCustomerVario.Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            routeCustomerVario.HasRequired(x => x.Customer)
+                .WithMany(x => x.RouteCustomerVario)
+                .HasForeignKey(x => x.CustomerId);
+            routeCustomerVario.HasRequired(x => x.Route)
+                .WithMany(x => x.RouteCustomerVario)
+                .HasForeignKey(x => x.RouteId);
         }
     }
 }

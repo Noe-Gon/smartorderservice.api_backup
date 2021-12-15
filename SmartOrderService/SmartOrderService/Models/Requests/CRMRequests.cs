@@ -8,7 +8,7 @@ namespace SmartOrderService.Models.Requests
     public class CRMBase
     {
         public string entityName { get; set; }
-        public Guid? entityId { get; set; }
+        public string entityId { get; set; }
         public Object referenceId { get; set; }
         public List<AttributeCrm> attributes { get; set; }
 

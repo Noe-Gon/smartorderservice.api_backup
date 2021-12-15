@@ -38,7 +38,8 @@ namespace SmartOrderService.UnitOfWork
             WorkDayRepository = new GenericRepository<so_work_day>(Context);
             //LeaderAuthorizationCodeRepository = new GenericRepository<so_leader_authorization_code>(Context);
             //AuthentificationLogRepository = new GenericRepository<so_authentication_log>(Context);
-
+            RouteCustomerVarioRepository = new GenericRepository<so_route_customer_vario>(Context);
+            ProductBottleRepository = new GenericRepository<so_product_bottle>(Context);
         }
 
         private SmartOrderModel Context { get; set; }
@@ -63,7 +64,9 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_work_day> WorkDayRepository { get; set; }
         //public GenericRepository<so_leader_authorization_code> LeaderAuthorizationCodeRepository { get; set; }
         //public GenericRepository<so_authentication_log> AuthentificationLogRepository { get; set; }
-
+        public GenericRepository<so_route_customer_vario> RouteCustomerVarioRepository { get; set; }
+        public GenericRepository<so_sale_promotion> SalePromotionRepository { get; set; }
+        public GenericRepository<so_product_bottle> ProductBottleRepository { get; set; }
         public void Save()
         {
             Context.SaveChanges();

@@ -431,6 +431,7 @@
     <Compile Include="DB\so_route_category.cs" />
     <Compile Include="DB\so_route_customer.cs" />
     <Compile Include="DB\so_inventory_revisions.cs" />
+    <Compile Include="DB\so_route_customer_vario.cs" />
     <Compile Include="DB\so_route_team.cs" />
     <Compile Include="DB\so_route_team_inventory_available.cs" />
     <Compile Include="DB\so_route_team_travels.cs" />

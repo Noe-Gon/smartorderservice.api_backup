@@ -37,7 +37,7 @@ namespace SmartOrderService.Services
             {
                 UserId = inventoryService.SearchDrivingId(UserId);
             }
-            catch (RelatedDriverNotFoundException e)
+            catch (RelatedDriverNotFoundException)
             {
             }
 
