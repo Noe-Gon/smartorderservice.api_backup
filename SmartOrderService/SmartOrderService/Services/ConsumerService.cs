@@ -88,7 +88,7 @@ namespace SmartOrderService.Services
                     Email_2 = request.Email_2,
                     Status = (int)Consumer.STATUS.CONSUMER,
                     AcceptedTermsAndConditions = false,
-                    IsMailingActive = true,
+                    IsMailingActive = false,
                     IsSMSActive = false,
                     CodePlaceId = request.CodePlace,
                     CounterVisitsWithoutSales = 0,
