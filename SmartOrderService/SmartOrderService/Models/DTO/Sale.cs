@@ -17,7 +17,6 @@ namespace SmartOrderService.Models
 
         public String CustomerTag;
 
-
         public int InventoryId;
 
         public string Date;
@@ -55,7 +54,6 @@ namespace SmartOrderService.Models
 
         public String CustomerTag;
 
-
         public int InventoryId;
 
         public string Date;
@@ -68,7 +66,23 @@ namespace SmartOrderService.Models
 
         public List<SaleReplacement> SaleReplacements;
 
-        public List<SalePromotion> SalePromotions;
+        //public List<SalePromotion> SalePromotions;
+
+        public PromocionData PromocionData;
+
+        public int RouteId;
+
+        public int BranchId;
+
+        public List<PromotionCatalog> PromotionCatalog;
+
+        public List<PromotionProductDto> PromotionProductDto;
+
+        public List<PromotionGiftProductDto> PromotionGiftProductDto;
+
+        public List<PromotionGiftArticleDto> PromotionGiftArticleDto;
+
+        public List<SaleDetailsArticles> SaleDetailsArticles;
 
     }
 
