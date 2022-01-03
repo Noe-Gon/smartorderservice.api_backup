@@ -8,7 +8,9 @@ using SmartOrderService.Models.Enum;
 using SmartOrderService.Models.Requests;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Entity;
+using System.Data.SqlClient;
 using System.Linq;
 
 
@@ -342,7 +344,7 @@ namespace SmartOrderService.Services
                 so_sale entitySale = createSale(sale);
                 entitySale.so_sale_detail = createDetails(sale.SaleDetails, userId);
                 entitySale.so_sale_replacement = createReplacements(sale.SaleReplacements, userId);
-                entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
+                //entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
                 SetTaxes(entitySale);
                 sale.SaleId = UntransactionalSaveSale(entitySale);
 
@@ -491,7 +493,7 @@ namespace SmartOrderService.Services
             }
             saleResult.TotalCash = Math.Round(sale.TotalCash, 3);
             saleResult.SaleReplacements = sale.SaleReplacements;
-            saleResult.SalePromotions = sale.SalePromotions;
+            //saleResult.SalePromotions = sale.SalePromotions;
             return saleResult;
         }
 
@@ -514,10 +516,11 @@ namespace SmartOrderService.Services
                                                 Select(x => x.PL).FirstOrDefault();
             foreach (so_sale_detail sd in entitySale.so_sale_detail)
                 SetSaleTax(sd, branch_tax, master_price_list, price_list);
-
+            
+            /*
             foreach (so_sale_promotion p in entitySale.so_sale_promotion)
                 foreach (so_sale_promotion_detail pd in p.so_sale_promotion_detail)
-                    SetPromotionTax(pd, branch_tax, master_price_list, price_list);
+                    SetPromotionTax(pd, branch_tax, master_price_list, price_list);*/
         }
 
         private ICollection<so_sale_promotion> createPromotions(List<SalePromotion> salePromotions, int userId)
@@ -1068,6 +1071,7 @@ namespace SmartOrderService.Services
             using (var transaction = db.Database.BeginTransaction())
             {
                 SaleTeam saleResult = CreateSaleResultFromSale(sale);
+                string sRespuesta = "";
                 try
                 {
                     if (sale.SaleDetails.Count() > 0)
@@ -1082,6 +1086,9 @@ namespace SmartOrderService.Services
                             saleResult.SaleId = sale.SaleId;
                             UpdateRouteTeamInventory(sale);
                             CreatePaymentMethod(sale);
+                            sRespuesta = CreatePromotion(sale, db, transaction);
+                            if (sRespuesta != string.Empty)
+                                throw new Exception(sRespuesta);
                         }
 
                         var updateCustomerAdditionalData = db.so_customerr_additional_data
@@ -1174,6 +1181,233 @@ namespace SmartOrderService.Services
                 db.so_sale_aditional_data.Add(entitySale);
                 db.SaveChanges();
             }
+        }
+
+        public string CreatePromotion(SaleTeam sale, DbContext db, DbContextTransaction transaction)
+        {
+            List<DataTable> dataTables = createDataTableParameters(sale);
+            DataTable dtPromotionCatalog = dataTables[0];
+            DataTable dtPromotionProduct = dataTables[1];
+            DataTable dtPromotionGiftProduct = dataTables[2];
+            DataTable dtPromotionGiftArticle = dataTables[3];
+            DataTable dtPromotionSaleArticle = dataTables[4];
+            DataTable dtPromotionData = dataTables[5];
+            string sRespuesta = "";
+
+            var command = db.Database.Connection.CreateCommand();
+            command.Transaction = db.Database.CurrentTransaction.UnderlyingTransaction;
+            command.CommandText = "sp_createPromotions";
+            command.CommandType = CommandType.StoredProcedure;
+
+            SqlParameter pSaleId = new SqlParameter("@SaleId", sale.SaleId);
+            command.Parameters.Add(pSaleId);
+
+            SqlParameter pRouteId = new SqlParameter("@RouteId", sale.RouteId);
+            command.Parameters.Add(pRouteId);
+
+            SqlParameter pBranchId = new SqlParameter("@BranchId", sale.BranchId);
+            command.Parameters.Add(pBranchId);
+
+            SqlParameter pPromotionCatalog = new SqlParameter("@PromotionCatalog", SqlDbType.Structured);
+            pPromotionCatalog.TypeName = "dbo.PromotionCatalog";
+            pPromotionCatalog.Value = dtPromotionCatalog;
+            command.Parameters.Add(pPromotionCatalog);
+
+            SqlParameter pPromotionProduct = new SqlParameter("@PromotionProduct", SqlDbType.Structured);
+            pPromotionProduct.TypeName = "dbo.PromotionProduct";
+            pPromotionProduct.Value = dtPromotionProduct;
+            command.Parameters.Add(pPromotionProduct);
+
+            SqlParameter pPromotionGiftProduct = new SqlParameter("@PromotionGiftProduct", SqlDbType.Structured);
+            pPromotionGiftProduct.TypeName = "dbo.PromotionProduct";
+            pPromotionGiftProduct.Value = dtPromotionGiftProduct;
+            command.Parameters.Add(pPromotionGiftProduct);
+
+            SqlParameter pPromotionGiftArticle = new SqlParameter("@PromotionGiftArticle", SqlDbType.Structured);
+            pPromotionGiftArticle.TypeName = "dbo.PromotionGiftArticle";
+            pPromotionGiftArticle.Value = dtPromotionGiftArticle;
+            command.Parameters.Add(pPromotionGiftArticle);
+
+            SqlParameter pSaleDetailArticle = new SqlParameter("@SaleDetailArticle", SqlDbType.Structured);
+            pSaleDetailArticle.TypeName = "dbo.SaleDetailArticle";
+            pSaleDetailArticle.Value = dtPromotionSaleArticle;
+            command.Parameters.Add(pSaleDetailArticle);
+
+            SqlParameter pPromotionData = new SqlParameter("@PromotionData", SqlDbType.Structured);
+            pPromotionData.TypeName = "dbo.PromocionData";
+            pPromotionData.Value = dtPromotionData;
+            command.Parameters.Add(pPromotionData);
+
+            SqlParameter pMensaje = new SqlParameter();
+            pMensaje.ParameterName = "@Mensaje";
+            pMensaje.DbType = DbType.String;
+            pMensaje.Direction = ParameterDirection.Output;
+            pMensaje.Size = 1000;
+            command.Parameters.Add(pMensaje);
+
+            command.ExecuteNonQuery();
+            sRespuesta = Convert.ToString(command.Parameters["@Mensaje"].Value);
+
+            return sRespuesta;
+        }
+
+        public List<DataTable> createDataTableParameters(SaleTeam sale)
+        {
+            List<DataTable> dataTables = new List<DataTable>();
+            //Crear DataTables a enviar
+            DataTable dtPromotionCatalog = new DataTable();
+            DataTable dtPromotionProduct = new DataTable();
+            DataTable dtPromotionGiftProduct = new DataTable();
+            DataTable dtPromotionGiftArticle = new DataTable();
+            DataTable dtPromotionData = new DataTable();
+            DataTable dtPromotionSaleArticle = new DataTable();
+
+            #region Creación de Cabeceros
+
+            DataColumn column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Int32");
+            column.ColumnName = "promotion_catalogId";
+            dtPromotionCatalog.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Decimal");
+            column.ColumnName = "additional_cost";
+            dtPromotionCatalog.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Int32");
+            column.ColumnName = "amountSale";
+            dtPromotionCatalog.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Int32");
+            column.ColumnName = "promotion_catalogId";
+            dtPromotionProduct.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Int32");
+            column.ColumnName = "productId";
+            dtPromotionProduct.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Int32");
+            column.ColumnName = "amount";
+            dtPromotionProduct.Columns.Add(column);
+
+            dtPromotionGiftProduct = dtPromotionProduct.Clone();
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Int32");
+            column.ColumnName = "promotion_catalogId";
+            dtPromotionGiftArticle.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Int32");
+            column.ColumnName = "article_promotionalId";
+            dtPromotionGiftArticle.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Int32");
+            column.ColumnName = "amount";
+            dtPromotionGiftArticle.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.String");
+            column.ColumnName = "firma";
+            dtPromotionData.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.String");
+            column.ColumnName = "motivoNoFirma";
+            dtPromotionData.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.String");
+            column.ColumnName = "Location";
+            dtPromotionData.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Int32");
+            column.ColumnName = "article_promotionalId";
+            dtPromotionSaleArticle.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Int32");
+            column.ColumnName = "amount";
+            dtPromotionSaleArticle.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Decimal");
+            column.ColumnName = "import";
+            dtPromotionSaleArticle.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Decimal");
+            column.ColumnName = "priceValue";
+            dtPromotionSaleArticle.Columns.Add(column);
+
+            #endregion
+
+            foreach (var item in sale.PromotionCatalog)
+            {
+                DataRow row = dtPromotionCatalog.NewRow();
+                row["promotion_catalogId"] = item.promotion_catalogId;
+                row["additional_cost"] = item.additional_cost;
+                row["amountSale"] = item.amountSale;
+                dtPromotionCatalog.Rows.Add(row);
+            }
+
+            foreach (var item in sale.PromotionProductDto)
+            {
+                DataRow row = dtPromotionProduct.NewRow();
+                row["promotion_catalogId"] = item.promotion_catalogId;
+                row["productId"] = item.productId;
+                row["amount"] = item.amount;
+                dtPromotionProduct.Rows.Add(row);
+            }
+
+            foreach (var item in sale.PromotionGiftProductDto)
+            {
+                DataRow row = dtPromotionGiftProduct.NewRow();
+                row["promotion_catalogId"] = item.promotion_catalogId;
+                row["productId"] = item.productId;
+                row["amount"] = item.amount;
+                dtPromotionGiftProduct.Rows.Add(row);
+            }
+
+            foreach (var item in sale.PromotionGiftArticleDto)
+            {
+                DataRow row = dtPromotionGiftArticle.NewRow();
+                row["promotion_catalogId"] = item.promotion_catalogId;
+                row["article_promotionalId"] = item.article_promotionalId;
+                row["amount"] = item.amount;
+                dtPromotionGiftArticle.Rows.Add(row);
+            }
+
+            foreach (var item in sale.SaleDetailsArticles)
+            {
+                DataRow row = dtPromotionSaleArticle.NewRow();
+                row["article_promotionalId"] = item.article_promotionalId;
+                row["amount"] = item.amount;
+                row["import"] = item.import;
+                row["priceValue"] = item.priceValue;
+                dtPromotionSaleArticle.Rows.Add(row);
+            }
+
+            DataRow rowData = dtPromotionData.NewRow();
+            rowData["firma"] = sale.PromocionData.firma;
+            rowData["motivoNoFirma"] = sale.PromocionData.motivoNoFirma;
+            rowData["location"] = sale.PromocionData.location;
+            dtPromotionData.Rows.Add(rowData);
+
+            dataTables.Add(dtPromotionCatalog);
+            dataTables.Add(dtPromotionProduct);
+            dataTables.Add(dtPromotionGiftProduct);
+            dataTables.Add(dtPromotionGiftArticle);
+            dataTables.Add(dtPromotionSaleArticle);
+            dataTables.Add(dtPromotionData);
+
+            return dataTables;
         }
 
         private void SetPromotionTax(so_sale_promotion_detail detail, so_branch_tax branch_tax, so_products_price_list master_price_list, so_products_price_list price_list)

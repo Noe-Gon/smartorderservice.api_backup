@@ -2,11 +2,11 @@
 
 namespace SmartOrderService.Models.DTO
 {
-    public class PromotionGiftArticleCatalogDto
+    public class SaleDetailsArticles
     {
         public int article_promotionalId { get; set; }
-        public string name { get; set; }
-        public decimal price { get; set; }
         public int amount { get; set; }
+        public decimal import { get; set; }
+        public decimal priceValue { get; set; }
     }
 }
