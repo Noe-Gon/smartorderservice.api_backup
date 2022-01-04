@@ -25,8 +25,6 @@ namespace SmartOrderService.Services
         private UoWCRM UoWCRM { get; set; }
         public UoWEmBeAlgoritmo UoWEmBeAlgoritmo { get; set; }
 
-        private Guid MEXICO = new Guid("7DCCD172-9F73-E011-8C48-005056977FBC");
-
         public ConsumerService()
         {
             UoWConsumer = new UoWConsumer();
@@ -263,7 +261,6 @@ namespace SmartOrderService.Services
                 return ResponseBase<InsertConsumerResponse>
                     .Create(new List<string>() { e.Message });
             }
-
         }
 
         public ResponseBase<UpdateConsumerResponse> UpdateConsumer(UpdateConsumerRequest request)
@@ -305,17 +302,49 @@ namespace SmartOrderService.Services
 
                 var updateCustomerAdditionalData = updateCustomer.CustomerAdditionalData
                     .FirstOrDefault();
+                var customerAdditionalDateAux = updateCustomerAdditionalData;
 
-                updateCustomerAdditionalData.Email_2 = request.Email_2 ?? updateCustomerAdditionalData.Email_2;
-                updateCustomerAdditionalData.Phone = request.Phone ?? updateCustomerAdditionalData.Phone;
-                updateCustomerAdditionalData.Phone_2 = request.Phone_2 ?? updateCustomerAdditionalData.Phone_2;
-                updateCustomerAdditionalData.CodePlaceId = request.CodePlace ?? updateCustomerAdditionalData.CodePlaceId;
-                updateCustomerAdditionalData.ReferenceCode = request.ReferenceCode ?? updateCustomerAdditionalData.ReferenceCode;
-                updateCustomerAdditionalData.InteriorNumber = request.InteriorNumber ?? updateCustomerAdditionalData.InteriorNumber;
-                updateCustomerAdditionalData.NeighborhoodId = request.Neighborhood ?? updateCustomerAdditionalData.NeighborhoodId;
+                if (updateCustomerAdditionalData == null)
+                {
+                    var newCustomerAdditionalData = new so_customer_additional_data
+                    {
+                        Customer = updateCustomer,
+                        Phone = request.Phone,
+                        Phone_2 = request.Phone_2,
+                        Email_2 = request.Email_2,
+                        Status = (int)Consumer.STATUS.CONSUMER,
+                        AcceptedTermsAndConditions = false,
+                        IsMailingActive = false,
+                        IsSMSActive = false,
+                        CodePlaceId = request.CodePlace,
+                        CounterVisitsWithoutSales = 0,
+                        InteriorNumber = request.InteriorNumber,
+                        NeighborhoodId = request.Neighborhood,
+                        ReferenceCode = request.ReferenceCode,
+                        Code = null
+                    };
 
-                if (!request.IsActive)
-                    updateCustomerAdditionalData.Status = (int)Consumer.STATUS.DEACTIVATED;
+                    if (!request.IsActive)
+                        newCustomerAdditionalData.Status = (int)Consumer.STATUS.DEACTIVATED;
+
+                    customerAdditionalDateAux = newCustomerAdditionalData;
+                }
+                else
+                {
+                    updateCustomerAdditionalData.Email_2 = request.Email_2 ?? updateCustomerAdditionalData.Email_2;
+                    updateCustomerAdditionalData.Phone = request.Phone ?? updateCustomerAdditionalData.Phone;
+                    updateCustomerAdditionalData.Phone_2 = request.Phone_2 ?? updateCustomerAdditionalData.Phone_2;
+                    updateCustomerAdditionalData.CodePlaceId = request.CodePlace ?? updateCustomerAdditionalData.CodePlaceId;
+                    updateCustomerAdditionalData.ReferenceCode = request.ReferenceCode ?? updateCustomerAdditionalData.ReferenceCode;
+                    updateCustomerAdditionalData.InteriorNumber = request.InteriorNumber ?? updateCustomerAdditionalData.InteriorNumber;
+                    updateCustomerAdditionalData.NeighborhoodId = request.Neighborhood ?? updateCustomerAdditionalData.NeighborhoodId;
+
+                    if (!request.IsActive)
+                        updateCustomerAdditionalData.Status = (int)Consumer.STATUS.DEACTIVATED;
+
+                    UoWConsumer.CustomerAdditionalDataRepository.Update(updateCustomerAdditionalData);
+                }
+                
 
                 var updateCustomerData = updateCustomer.so_customer_data
                     .Where(x => x.status)
@@ -363,7 +392,6 @@ namespace SmartOrderService.Services
                 UoWConsumer.RouteCustomerRepository.DeleteByRange(deleteDaysInRoute);
                 UoWConsumer.CustomerRepository.Update(updateCustomer);
                 UoWConsumer.CustomerDataRepository.Update(updateCustomerData);
-                UoWConsumer.CustomerAdditionalDataRepository.Update(updateCustomerAdditionalData);
 
                 UoWConsumer.Save();
 
@@ -373,13 +401,13 @@ namespace SmartOrderService.Services
                 {
                     Name = updateCustomer.name,
                     Email = updateCustomer.email,
-                    Phone = updateCustomerAdditionalData.Phone,
+                    Phone = customerAdditionalDateAux.Phone,
                     CFECode = updateCustomer.code,
                     CountryId = request.CountryId,
                     StateId = request.StateId,
                     MunicipalityId = request.MunicipalityId,
-                    Neighborhood = updateCustomerAdditionalData.NeighborhoodId,
-                    InteriorNumber = updateCustomerAdditionalData.InteriorNumber,
+                    Neighborhood = customerAdditionalDateAux.NeighborhoodId,
+                    InteriorNumber = customerAdditionalDateAux.InteriorNumber,
                     ExternalNumber = updateCustomerData.address_number,
                     Crossroads = updateCustomerData.address_number_cross1,
                     Crossroads_2 = updateCustomerData.address_number_cross2,
@@ -388,10 +416,11 @@ namespace SmartOrderService.Services
                     Longitude = updateCustomer.longitude,
                     Address = address,
                     Days = request.Days,
-                    EntityId = updateCustomerAdditionalData.Code
+                    EntityId = customerAdditionalDateAux.Code
                 };
 
-                CRMService.ConsumerToCRM(crmRequest, CRMService.TypeUpdate, Method.POST);
+                if(customerAdditionalDateAux.Code != null)
+                    CRMService.ConsumerToCRM(crmRequest, CRMService.TypeUpdate, Method.POST);
 
                 return ResponseBase<UpdateConsumerResponse>.Create(new UpdateConsumerResponse()
                 {
@@ -627,7 +656,7 @@ namespace SmartOrderService.Services
                             .Get(x => x.Ope_coloniaId == customerAdditionalData.NeighborhoodId)
                             .Select(x => new
                             {
-                                CountryId = x.ope_EstadoId,
+                                CountryId = x.ope_PaisId,
                                 StateId = x.ope_EstadoId,
                                 TownId = x.Ope_MunicipioId
                             }).FirstOrDefault();
@@ -765,11 +794,11 @@ namespace SmartOrderService.Services
                     };
                     UoWConsumer.PortalLinksLogRepository.Insert(termsEmail);
                     UoWConsumer.Save();
-                    emailInfo.TermsAndConditionLink = ConfigurationManager.AppSettings["ApiV2Url"] + "Portal/Consumer/TermsAndConditions/" + termsId;
+                    emailInfo.TermsAndConditionLink = ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/TermsAndConditions/" + termsId;
 
                 }
                 else
-                    emailInfo.TermsAndConditionLink = ConfigurationManager.AppSettings["ApiV2Url"] + "Portal/Consumer/TermsAndConditions/" + termsObject.Id;
+                    emailInfo.TermsAndConditionLink = ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/TermsAndConditions/" + termsObject.Id;
 
                 var emailService = new EmailService();
                 var response = emailService.SendReactivationTicketDigital(emailInfo);
@@ -797,6 +826,7 @@ namespace SmartOrderService.Services
             {
                 var countries = UoWCRM.PaisesRepository
                     .Get(x => x.statecode == 0)
+                    .OrderBy(x => x.Ope_name)
                     .Select(x => new GetCountriesResponse
                     {
                         Id = x.Ope_paisId,
@@ -816,58 +846,22 @@ namespace SmartOrderService.Services
 
         public ResponseBase<List<GetStatesResponse>> GetStates(GetStatesRequest request)
         {
-            //if (request == null)
-            //    return ResponseBase<List<GetStatesResponse>>.Create(new List<string>()
-            //        {
-            //            "Es necesario proporcionar el Id del pais"
-            //        });
+            if (request == null)
+                return ResponseBase<List<GetStatesResponse>>.Create(new List<string>()
+                    {
+                        "Es necesario proporcionar el Id del pais"
+                    });
 
-            //var states = UoWCRM.EstadosRepository
-            //.Get(x => x.statecode == 0 && x.Ope_PaisId == request.CountryId)
-            //.Select(x => new GetStatesResponse
-            //{
-            //    Id = x.Ope_estadoId,
-            //    Name = x.Ope_name
-            //}).ToList();
+            var states = UoWCRM.EstadosRepository
+            .Get(x => x.statecode == 0 && x.Ope_PaisId == request.CountryId)
+            .OrderBy(x => x.Ope_name)
+            .Select(x => new GetStatesResponse
+            {
+                Id = x.Ope_estadoId,
+                Name = x.Ope_name
+            }).ToList();
 
-            var response = new List<GetStatesResponse>();
-            response.Add(new GetStatesResponse
-            {
-                Id = new Guid("e8bf3631-a173-e011-8c48-005056977fbc"),
-                Name = "Yucatán"
-            });
-            response.Add(new GetStatesResponse
-            {
-                Id = new Guid("cdbf3631-a173-e011-8c48-005056977fbc"),
-                Name = "Campeche"
-            });
-            response.Add(new GetStatesResponse
-            {
-                Id = new Guid("e0bf3631-a173-e011-8c48-005056977fbc"),
-                Name = "Quintana Roo"
-            });
-            response.Add(new GetStatesResponse
-            {
-                Id = new Guid("e4bf3631-a173-e011-8c48-005056977fbc"),
-                Name = "Tabasco"
-            });
-            response.Add(new GetStatesResponse
-            {
-                Id = new Guid("ddbf3631-a173-e011-8c48-005056977fbc"),
-                Name = "Oaxaca"
-            });
-            response.Add(new GetStatesResponse
-            {
-                Id = new Guid("d0bf3631-a173-e011-8c48-005056977fbc"),
-                Name = "Chiapas"
-            });
-            response.Add(new GetStatesResponse
-            {
-                Id = new Guid("e7bf3631-a173-e011-8c48-005056977fbc"),
-                Name = "Veracruz"
-            });
-            
-            return ResponseBase<List<GetStatesResponse>>.Create(response.OrderBy(x => x.Name).ToList());
+            return ResponseBase<List<GetStatesResponse>>.Create(states);
         }
 
         public ResponseBase<List<GetMunicipalitiesResponse>> GetMunicipalities(GetMunicipalitiesRequest request)
@@ -878,9 +872,6 @@ namespace SmartOrderService.Services
                     "Este servicio require parametros"
                 });
 
-            if (request.CountryId == null)
-                request.CountryId = MEXICO;
-
             if (request.StateId == null)
                 return ResponseBase<List<GetMunicipalitiesResponse>>.Create(new List<string>()
                 {
@@ -889,6 +880,7 @@ namespace SmartOrderService.Services
 
             var towns = UoWCRM.MunicipiosRepository
                 .Get(x => x.statecode == 0 && x.ope_PaisId == request.CountryId && x.Ope_EstadoId == request.StateId)
+                .OrderBy(x => x.Ope_name)
                 .Select(x => new GetMunicipalitiesResponse
                 {
                     Id = x.Ope_municipioId,
@@ -906,9 +898,6 @@ namespace SmartOrderService.Services
                     "Este servicio require parametros"
                 });
 
-            if (request.CountryId == null)
-                request.CountryId = MEXICO;
-
             if (request.StateId == null)
                 return ResponseBase<List<GetNeighborhoodsResponse>>.Create(new List<string>()
                 {
@@ -923,6 +912,7 @@ namespace SmartOrderService.Services
 
             var colonias = UoWCRM.ColoniasRepository
                 .Get(x => x.statecode == 0 && x.ope_PaisId == request.CountryId && x.ope_EstadoId == request.StateId && x.Ope_MunicipioId == request.MunicipalityId)
+                .OrderBy(x => x.Ope_name)
                 .Select(x => new GetNeighborhoodsResponse
                 {
                     Id = x.Ope_coloniaId,

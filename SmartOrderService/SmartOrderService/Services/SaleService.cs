@@ -8,6 +8,7 @@ using SmartOrderService.Models.Enum;
 using SmartOrderService.Models.Requests;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data.Entity;
 using System.Linq;
 
@@ -1088,22 +1089,34 @@ namespace SmartOrderService.Services
                             .Where(x => x.CustomerId == sale.CustomerId)
                             .FirstOrDefault();
 
-                        if (updateCustomerAdditionalData != null)
+                        if (updateCustomerAdditionalData != null || !string.IsNullOrEmpty(sale.Email))
                         {
                             #region Consumidores logica
                             //Actualizar contador
-                            updateCustomerAdditionalData.CounterVisitsWithoutSales = 0;
-                            db.SaveChanges();
+                            if(updateCustomerAdditionalData != null)
+                            {
+                                updateCustomerAdditionalData.CounterVisitsWithoutSales = 0;
+                                db.SaveChanges();
+                            }
 
+                            if (sale.EmailDeliveryTicket == null)
+                                sale.EmailDeliveryTicket = false;
+                            
                             //Envio de Ticket
                             if (sale.EmailDeliveryTicket == true)
                             {
                                 var customer = db.so_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
 
-                                if (customer.CustomerAdditionalData != null)
+                                if (customer.CustomerAdditionalData != null || !string.IsNullOrEmpty(sale.Email))
                                 {
                                     var customerAux = customer.CustomerAdditionalData.FirstOrDefault();
-                                    if (customerAux.IsMailingActive && customerAux.AcceptedTermsAndConditions)
+                                    if (customerAux == null)
+                                        customerAux = new so_customer_additional_data { IsMailingActive = false };
+
+                                    if (!string.IsNullOrEmpty(sale.Email))
+                                        customer.email = sale.Email;
+
+                                    if (customerAux.IsMailingActive || !string.IsNullOrEmpty(sale.Email))
                                     {
                                         //Se prepara la información
                                         var route = db.so_route_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
@@ -1127,6 +1140,7 @@ namespace SmartOrderService.Services
                                             if (product == null)
                                                 continue;
 
+                                            
                                             sales.Add(new SendTicketDigitalEmailSales
                                             {
                                                 Amount = detail.Amount,
@@ -1135,6 +1149,8 @@ namespace SmartOrderService.Services
                                                 UnitPrice = Convert.ToDouble(detail.PriceValue)
                                             });
                                         }
+
+                                        sendTicketDigitalEmail.CancelTicketLink = GetCancelLinkByCustomerId(customer.customerId);
                                         sendTicketDigitalEmail.Sales = sales;
 
                                         //Se envia el ticket
@@ -1161,6 +1177,35 @@ namespace SmartOrderService.Services
                 return saleResult;
             }
 
+        }
+
+        public string GetCancelLinkByCustomerId(int customerId)
+        {
+            var portalLinkLogs = db.so_portal_links_logs
+                .Where(x => x.CustomerId == customerId && x.Status == (int)PortalLinks.STATUS.PENDING && x.Type == (int)PortalLinks.TYPE.EMAIL_DEACTIVATION)
+                .FirstOrDefault();
+
+            if(portalLinkLogs == null)
+            {
+                //Generar el link para cancelar el envio de correo
+                Guid id = Guid.NewGuid();
+                var cancelEmail = new so_portal_links_log
+                {
+                    CustomerId = customerId,
+                    CreatedDate = DateTime.Today,
+                    Id = id,
+                    LimitDays = 0,
+                    Status = (int)PortalLinks.STATUS.PENDING,
+                    Type = (int)PortalLinks.TYPE.EMAIL_DEACTIVATION
+                };
+
+                db.so_portal_links_logs.Add(cancelEmail);
+                db.SaveChanges();
+
+                return ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/CancelTicketDigital/" + id;
+            }
+            
+            return ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/CancelTicketDigital/" + portalLinkLogs.Id;
         }
 
         public void CreatePaymentMethod(SaleTeam sale)

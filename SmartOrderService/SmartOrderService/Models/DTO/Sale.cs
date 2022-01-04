@@ -45,6 +45,9 @@ namespace SmartOrderService.Models
         public bool? SmsDeliveryTicket { get; set; }
         public bool? EmailDeliveryTicket { get; set; }
         public string PaymentMethod { get; set; }
+
+        public string Email { get; set; }
+
         public int UserId;
 
         public double TotalCash;
@@ -54,7 +57,6 @@ namespace SmartOrderService.Models
         public double TotalCredit;
 
         public String CustomerTag;
-
 
         public int InventoryId;
 

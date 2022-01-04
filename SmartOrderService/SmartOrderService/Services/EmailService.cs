@@ -67,6 +67,7 @@ namespace SmartOrderService.Services
                     body = body.Replace("{Date}", request.Date.ToString("dd/MMM/yy hh:mmtt"));
                     body = body.Replace("{RouteAddress}", request.RouteAddress);
                     body = body.Replace("{SellerName}", request.SellerName);
+                    body = body.Replace("{CancelTicketLink}", request.CancelTicketLink);
 
                     if (request.PaymentMethod == null || !string.IsNullOrEmpty(request.PaymentMethod))
                         body = body.Replace("{PaymentMethod}", "");

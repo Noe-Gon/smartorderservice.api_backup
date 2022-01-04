@@ -22,6 +22,7 @@ namespace SmartOrderService.Models.Requests
         public string RouteAddress { get; set; }
         public string SellerName { get; set; }
         public string PaymentMethod { get; set; }
+        public string CancelTicketLink { get; set; }
         public List<SendTicketDigitalEmailSales> Sales { get; set; }
     }
 
