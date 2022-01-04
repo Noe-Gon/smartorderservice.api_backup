@@ -50,15 +50,17 @@ namespace SmartOrderService.Services
                         customerId = x.customerId,
                         name = x.so_customer.name
                     },
-                    PaymentMethod =  x.so_sale_aditional_data.paymentMethod,
+                    TotalCash = x.total_cash,
+                    TotalCredit = x.total_credit,
+                    PaymentMethod =  x.so_sale_aditional_data.FirstOrDefault() == null ? "": x.so_sale_aditional_data.FirstOrDefault().paymentMethod,
                     Details = x.so_sale_detail.Select(d => new GetLiquidationSalesDetail
                     {
                         Amount = d.amount,
-                        ProductPrice = d.price,
+                        ProductPrice = (double)(d.price_without_taxes ?? 0) + (double)(d.vat ?? 0),
                         ProductId = d.productId,
                         BarCode = d.so_product.barcode,
                         ProductName = d.so_product.name,
-                        TotalPrice = d.price * d.amount
+                        TotalPrice = d.import
                     }).ToList()
                 })
                 .ToList();
@@ -77,8 +79,8 @@ namespace SmartOrderService.Services
                         Total = sale.Details.Sum(x => x.TotalPrice)
                     };
                     customer.Sales.Add(newSale);
-                    customer.CardAmount += sale.PaymentMethod.ToUpper() == PaymentMethod.CARD ? newSale.Total : 0;
-                    customer.CashAmount += sale.PaymentMethod.ToUpper() == PaymentMethod.CASH ? newSale.Total : 0;
+                    customer.CardAmount += sale.TotalCredit;
+                    customer.CashAmount += sale.TotalCash;
                     response.TotalCard += customer.CardAmount;
                     response.TotalCash += customer.CashAmount;
                 }
@@ -101,8 +103,9 @@ namespace SmartOrderService.Services
                         Total = sale.Details.Sum(x => x.TotalPrice)
                     };
                     newCustomer.Sales.Add(newSale);
-                    newCustomer.CardAmount = sale.PaymentMethod.ToUpper() == PaymentMethod.CARD ? newSale.Total : 0;
-                    newCustomer.CashAmount = sale.PaymentMethod.ToUpper() == PaymentMethod.CASH ? newSale.Total : 0;
+                    newCustomer.CardAmount = sale.TotalCredit;
+                    newCustomer.CashAmount = sale.TotalCash;
+                    response.Customers.Add(newCustomer);
                     response.TotalCard += newCustomer.CardAmount;
                     response.TotalCash += newCustomer.CashAmount;
                 }
@@ -141,10 +144,12 @@ namespace SmartOrderService.Services
                         customerId = x.customerId,
                         name = x.so_customer.name
                     },
+                    TotalCash = x.total_cash,
+                    TotalCredit = x.total_credit,
                     Promotions = x.so_sale_promotion.Select(p => new GetLiquidationPromotionsPromotion
                     {
                         SaleId = x.saleId,
-                        PaymentMethod = x.so_sale_aditional_data.paymentMethod,
+                        PaymentMethod = x.so_sale_aditional_data.FirstOrDefault() == null ? "" : x.so_sale_aditional_data.FirstOrDefault().paymentMethod,
                         PromotionType = p.so_promotion.type.ToString(),
                         Details = p.so_sale_promotion_detail.Select(d => new GetLiquidationPromotionsDetail
                         {
@@ -168,8 +173,8 @@ namespace SmartOrderService.Services
                 if (customer != null)
                 {
                     customer.Promotions.AddRange(sale.Promotions);
-                    customer.CardAmount += sale.Promotions.Where(x => x.PaymentMethod.ToUpper() == PaymentMethod.CARD).Sum(x => x.Details.Sum(x => x.TotalPrice));
-                    customer.CashAmount += sale.Promotions.Where(x => x.PaymentMethod.ToUpper() == PaymentMethod.CASH).Sum(x => x.Details.Sum(x => x.TotalPrice));
+                    customer.CardAmount += sale.Promotions.Where(x => x.PaymentMethod.ToUpper() == PaymentMethod.CARD).Sum(p => p.Details.Sum(d => d.TotalPrice));
+                    customer.CashAmount += sale.Promotions.Where(x => x.PaymentMethod.ToUpper() == PaymentMethod.CASH).Sum(p => p.Details.Sum(d => d.TotalPrice));
                     response.TotalCard += customer.CardAmount;
                     response.TotalCash += customer.CashAmount;
                 }
@@ -185,8 +190,8 @@ namespace SmartOrderService.Services
                         Promotions = sale.Promotions
                     };
 
-                    newCustomer.CardAmount = sale.Promotions.Where(x => x.PaymentMethod.ToUpper() == PaymentMethod.CARD).Sum(x => x.Details.Sum(x => x.TotalPrice));
-                    newCustomer.CashAmount = sale.Promotions.Where(x => x.PaymentMethod.ToUpper() == PaymentMethod.CASH).Sum(x => x.Details.Sum(x => x.TotalPrice));
+                    newCustomer.CardAmount = sale.Promotions.Where(x => x.PaymentMethod.ToUpper() == PaymentMethod.CARD).Sum(p => p.Details.Sum(d => d.TotalPrice));
+                    newCustomer.CashAmount = sale.Promotions.Where(x => x.PaymentMethod.ToUpper() == PaymentMethod.CASH).Sum(p => p.Details.Sum(d => d.TotalPrice));
                     response.TotalCard += newCustomer.CardAmount;
                     response.TotalCash += newCustomer.CashAmount;
                 }
@@ -196,7 +201,7 @@ namespace SmartOrderService.Services
             return ResponseBase<GetLiquidationPromotionsResponse>.Create(response);
         }
 
-        public ResponseBase<GetLiquidationRepaymentsResponse> GetLiquidationRepayments(GetLiquidationRepaymentsRequest request)
+        public ResponseBase<List<GetLiquidationRepaymentsResponse>> GetLiquidationRepayments(GetLiquidationRepaymentsRequest request)
         {
             if (request.Date == null)
                 request.Date = DateTime.Today;
@@ -206,99 +211,80 @@ namespace SmartOrderService.Services
                 .ToList();
 
             if (team.Where(x => x.userId == request.UserId && x.roleTeamId == (int)ERolTeam.Ayudante).FirstOrDefault() != null)
-                return ResponseBase<GetLiquidationRepaymentsResponse>.Create(new List<string>()
+                return ResponseBase<List<GetLiquidationRepaymentsResponse>>.Create(new List<string>()
                 {
                     "Solo los impulsores pueden realizar esta consulta"
                 });
 
-            var teamIds = team.Select(x => x.userId).ToList();
+            var impulsorId = team.Where(x => x.roleTeamId == (int)ERolTeam.Impulsor).Select(x => x.userId).FirstOrDefault();
 
-            var productsWithReplayments = UoWConsumer.ProductBottleRepository
-                .GetAll().Select(x => new { x.bottleId, x.productId, x.so_product, x.so_product1 })
-                .ToList();
-            var productsWithReplaymentIds = productsWithReplayments.Select(x => x.productId).ToList();
-
-            var sales = UoWConsumer.SaleRepository
-                .Get(x => teamIds.Contains(x.userId) && DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(request.Date))
-                .Select(x => new
-                {
-                    saleId = x.saleId,
-                    customerId = x.customerId,
-                    so_customer = new
-                    {
-                        customerId = x.customerId,
-                        name = x.so_customer.name
-                    },
-                    PaymentMethod = x.so_sale_aditional_data.paymentMethod,
-                    Details = x.so_sale_detail
-                        .Where(x => productsWithReplaymentIds
-                        .Contains(x.productId))
-                        .Select(d => new GetLiquidationRepaymentsDetail
-                    {
-                        Amount = d.amount,
-                        ProductPrice = 0,
-                        ProductId = productsWithReplayments.Where(b => b.productId == d.productId).Select(x => x.bottleId).FirstOrDefault(),
-                        BarCode = productsWithReplayments.Where(b => b.productId == d.productId).Select(x => x.so_product.barcode).FirstOrDefault(),
-                        ProductName = productsWithReplayments.Where(b => b.productId == d.productId).Select(x => x.so_product.name).FirstOrDefault(),
-                        TotalPrice = 0
-                    }).ToList()
-                })
+            //Obtener los inventarios
+            var inventoriesIds = UoWConsumer.InventoryRepository
+                .Get(x => x.userId == impulsorId && DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(request.Date))
+                .Select(x => x.inventoryId)
                 .ToList();
 
-            var response = new GetLiquidationRepaymentsResponse();
-            foreach (var sale in sales)
+            var response = new List<GetLiquidationRepaymentsResponse>();
+
+            foreach (var inventoryId in inventoriesIds)
             {
-                var customer = response.Customers.Where(x => x.CustomerId == sale.customerId).FirstOrDefault();
-                //Si el cliente existe
-                if (customer != null)
+                var products = GetUnsoldProducts(inventoryId).Select(x => new GetLiquidationRepaymentsResponse
                 {
-                    var newSale = new GetLiquidationRepaymentsRepayment
-                    {
-                        PaymentMethod = sale.PaymentMethod,
-                        Details = sale.Details,
-                        SaleId = sale.saleId,
-                        Total = sale.Details.Sum(x => x.TotalPrice)
-                    };
-                    customer.Sales.Add(newSale);
-                    customer.CardAmount += sale.PaymentMethod.ToUpper() == PaymentMethod.CARD ? newSale.Total : 0;
-                    customer.CashAmount += sale.PaymentMethod.ToUpper() == PaymentMethod.CASH ? newSale.Total : 0;
-                    response.TotalCard += customer.CardAmount;
-                    response.TotalCash += customer.CashAmount;
-                }
-                //Si el cliente no existe
-                else
+                    Amount = x.Available_Amount,
+                    ProductId = x.productId
+                }).ToList();
+
+                foreach (var product in products)
                 {
-                    var newCustomer = new GetLiquidationRepaymentsCustomer()
+                    var productExist = response.Where(x => x.ProductId == product.ProductId).FirstOrDefault();
+
+                    if(productExist == null)
                     {
-                        CustomerId = sale.customerId,
-                        Name = sale.so_customer.name,
-                        CardAmount = 0,
-                        CashAmount = 0,
-                        Sales = new List<GetLiquidationRepaymentsRepayment>()
-                    };
-                    var newSale = new GetLiquidationRepaymentsRepayment
+                        var productAux = UoWConsumer.ProductRepository
+                            .Get(x => x.productId == product.ProductId)
+                            .FirstOrDefault();
+
+                        var newProduct = new GetLiquidationRepaymentsResponse
+                        {
+                            Amount = product.Amount,
+                            Code = productAux.code,
+                            Name = productAux.name,
+                            ProductId = product.ProductId
+                        };
+
+                        response.Add(newProduct);
+                    }
+                    else
                     {
-                        PaymentMethod = sale.PaymentMethod,
-                        Details = sale.Details,
-                        SaleId = sale.saleId,
-                        Total = sale.Details.Sum(x => x.TotalPrice)
-                    };
-                    newCustomer.Sales.Add(newSale);
-                    newCustomer.CardAmount = sale.PaymentMethod.ToUpper() == PaymentMethod.CARD ? newSale.Total : 0;
-                    newCustomer.CashAmount = sale.PaymentMethod.ToUpper() == PaymentMethod.CASH ? newSale.Total : 0;
-                    response.TotalCard += newCustomer.CardAmount;
-                    response.TotalCash += newCustomer.CashAmount;
+                        productExist.Amount += product.Amount;
+                    }
                 }
+            }
+
+            return ResponseBase<List<GetLiquidationRepaymentsResponse>>.Create(response);
+        }
+
+        private List<so_route_team_inventory_available> GetUnsoldProducts(int inventoryId)
+        {
+            var inventoryAvailable = UoWConsumer.RouteTeamInventoryAvailableRepository.Get(s => s.inventoryId.Equals(inventoryId)).ToList();
+            var inventoryCloneObject = new List<so_route_team_inventory_available>();
+            foreach (var routeProduct in inventoryAvailable)
+            {
+                inventoryCloneObject.Add((so_route_team_inventory_available)routeProduct.Clone());
 
             }
-            response.Total = response.TotalCard + response.TotalCash;
-
-            return ResponseBase<GetLiquidationRepaymentsResponse>.Create(response);
+            
+            return inventoryCloneObject.Where(s => s.Available_Amount > 0).ToList();
         }
+
         public void Dispose()
         {
             this.UoWConsumer.Dispose();
             this.UoWConsumer = null;
         }
+
+        #region Models Helpers
+  
+        #endregion
     }
 }

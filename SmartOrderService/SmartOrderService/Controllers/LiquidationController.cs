@@ -46,5 +46,36 @@ namespace SmartOrderService.Controllers
             }
             
         }
+
+        [HttpGet]
+        [Route("~/api/liquidation/repayments")]
+        public IHttpActionResult GetLiquidationRepayments([FromUri] int UserId, [FromUri] int RouteId, [FromUri] DateTime? Date)
+        {
+            try
+            {
+                using (var service = GetService())
+                {
+                    var response = service.GetLiquidationRepayments(new GetLiquidationRepaymentsRequest
+                    {
+                        UserId = UserId,
+                        RouteId = RouteId,
+                        Date = Date == null ? DateTime.Today : Date.Value.Date
+                    });
+
+                    if (response.Status)
+                        return Ok(response);
+
+                    return Content(System.Net.HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (Exception e)
+            {
+                return Content(System.Net.HttpStatusCode.InternalServerError, ResponseBase<GetLiquidationSalesResponse>.Create(new List<string>()
+                {
+                    "Error interno del servidor", e.InnerException.Message
+                }));
+            }
+
+        }
     }
 }

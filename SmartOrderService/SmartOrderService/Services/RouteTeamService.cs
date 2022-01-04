@@ -1,6 +1,7 @@
 ﻿using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
 using SmartOrderService.Models.Enum;
+using SmartOrderService.Models.Responses;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -101,6 +102,7 @@ namespace SmartOrderService.Services
 
             throw new InventoryNotClosedException();
         }
+
         public void CallLoadInventoryProcess(int userId)
         {
             var inventoryService = new InventoryService();
@@ -312,5 +314,22 @@ namespace SmartOrderService.Services
             return routeTeam;
         }
 
+        public ResponseBase<List<GetRouteTeamResponse>> GetRouteTeam(int routeId)
+        {
+            var routeTeams = db.so_route_team
+                .Where(x => x.routeId == routeId)
+                .Select(x => new GetRouteTeamResponse
+                {
+                    RoleId = x.roleTeamId,
+                    UserId = x.userId,
+                    RoleName = x.roleTeamId == (int)ERolTeam.Impulsor ? "Impulsor" : "Ayudante",
+                    UserName = db.so_user.Where(u => u.userId == x.userId).Select(u => u.name).FirstOrDefault()
+                }).ToList();
+
+            if (routeTeams.Count == 0)
+                throw new EntityNotFoundException("No se encontró equipo para esa ruta");
+
+            return ResponseBase<List<GetRouteTeamResponse>>.Create(routeTeams);
+        }
     }
 }

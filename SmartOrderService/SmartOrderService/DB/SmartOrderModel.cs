@@ -1826,6 +1826,13 @@ namespace SmartOrderService.DB
             routeCustomerVario.HasRequired(x => x.Route)
                 .WithMany(x => x.RouteCustomerVario)
                 .HasForeignKey(x => x.RouteId);
+
+            var saleAdditionalData = modelBuilder.Entity<so_sale_aditional_data>();
+            saleAdditionalData.HasKey(x => x.saleAdicionalDataId);
+            saleAdditionalData.Property(x => x.saleAdicionalDataId).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            saleAdditionalData.HasRequired(x => x.so_sale)
+                .WithMany(x => x.so_sale_aditional_data)
+                .HasForeignKey(x => x.saleId);
         }
     }
 }

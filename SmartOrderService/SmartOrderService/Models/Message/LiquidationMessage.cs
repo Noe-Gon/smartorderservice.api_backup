@@ -121,46 +121,12 @@ namespace SmartOrderService.Models.Message
 
     public class GetLiquidationRepaymentsResponse
     {
-        public GetLiquidationRepaymentsResponse()
-        {
-            Total = 0;
-            TotalCard = 0;
-            TotalCash = 0;
-            Customers = new List<GetLiquidationRepaymentsCustomer>();
-        }
-
-        public double Total { get; set; }
-        public double TotalCash { get; set; }
-        public double TotalCard { get; set; }
-
-        public List<GetLiquidationRepaymentsCustomer> Customers { get; set; }
-    }
-
-    public class GetLiquidationRepaymentsCustomer
-    {
-        public string Name { get; set; }
-        public int CustomerId { get; set; }
-        public double CashAmount { get; set; }
-        public double CardAmount { get; set; }
-        public List<GetLiquidationRepaymentsRepayment> Sales { get; set; }
-    }
-
-    public class GetLiquidationRepaymentsRepayment
-    {
-        public int SaleId { get; set; }
-        public double Total { get; set; }
-        public string PaymentMethod { get; set; }
-        public List<GetLiquidationRepaymentsDetail> Details { get; set; }
-    }
-
-    public class GetLiquidationRepaymentsDetail
-    {
         public int ProductId { get; set; }
-        public string ProductName { get; set; }
-        public string BarCode { get; set; }
+        public string Code { get; set; }
+        public string Name { get; set; }
         public int Amount { get; set; }
-        public double ProductPrice { get; set; }
-        public double TotalPrice { get; set; }
     }
+
+   
     #endregion
 }

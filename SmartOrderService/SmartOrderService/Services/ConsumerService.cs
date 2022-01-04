@@ -1007,7 +1007,7 @@ namespace SmartOrderService.Services
                     Longitude = x.longitude ?? 0,
                     Name = x.name,
                     Status = x.status,
-                    Tags = x.so_tag.Select(x => x.tag).ToList(),
+                    Tags = x.so_tag.Select(t => t.tag).ToList(),
                     
                 })
                 .FirstOrDefault();
