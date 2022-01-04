@@ -425,7 +425,6 @@ namespace SmartOrderService.Services
                 saleResult.CustomerId = sale.CustomerId;
                 saleResult.DeliveryId = sale.DeliveryId;
                 saleResult.SaleDetails = new List<SaleDetail>();
-                saleResult.PaymentMethod = sale.PaymentMethod;
             for (int i = 0; i < sale.SaleDetails.Count(); i++)
                 {
                     int amountSaled = 0;
