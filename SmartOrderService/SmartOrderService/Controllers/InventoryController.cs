@@ -1,6 +1,7 @@
 ﻿using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.DTO;
 using SmartOrderService.Models.Requests;
+using SmartOrderService.Models.Responses;
 using SmartOrderService.Services;
 using SmartOrderService.Utils;
 using System;
@@ -197,5 +198,41 @@ namespace SmartOrderService.Controllers
             return response;
         }
         
+        [HttpPost]
+        [Route("api/inventory/loaddeliveries")]
+        public IHttpActionResult LoadInventoryDeliveries([FromBody]LoadInventoryDeliveriesRequest request)
+        {
+            
+            try
+            {
+                var inventoryService = new InventoryService();
+                inventoryService.LoadDeliveries(request.InventoryId);
+
+                var response = ResponseBase<LoadInventoryDeliveriesResponse>.Create(new LoadInventoryDeliveriesResponse
+                {
+                    Msg = "Ha finalizado con Exito"
+                });
+                return Content(HttpStatusCode.OK, response);
+            }
+            catch (EntityNotFoundException e)
+            {
+                var response = ResponseBase<LoadInventoryDeliveriesResponse>.Create(new List<string>()
+                {
+                    e.Message
+                });
+
+                return Content(HttpStatusCode.NotFound, response);
+            }
+            catch (Exception e)
+            {
+                var response = ResponseBase<LoadInventoryDeliveriesResponse>.Create(new List<string>()
+                {
+                    "Error no especificado", e.Message
+                });
+
+                return Content(HttpStatusCode.InternalServerError, response);
+            }
+        }
+
     }
 }
