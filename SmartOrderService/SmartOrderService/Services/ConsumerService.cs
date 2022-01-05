@@ -277,6 +277,13 @@ namespace SmartOrderService.Services
                         "No se encontró al cliente"
                     });
 
+                var route = UoWConsumer.RouteRepository
+                    .GetByID(request.RouteId);
+
+                if (route == null)
+                    return ResponseBase<UpdateConsumerResponse>
+                    .Create(new List<string>() { "No se encontró la ruta" });
+
                 if (request.CodePlace == 0)
                     request.CodePlace = null;
 
@@ -328,6 +335,8 @@ namespace SmartOrderService.Services
                         newCustomerAdditionalData.Status = (int)Consumer.STATUS.DEACTIVATED;
 
                     customerAdditionalDateAux = newCustomerAdditionalData;
+
+                    UoWConsumer.CustomerAdditionalDataRepository.Insert(newCustomerAdditionalData);
                 }
                 else
                 {
@@ -350,10 +359,32 @@ namespace SmartOrderService.Services
                     .Where(x => x.status)
                     .FirstOrDefault();
 
-                updateCustomerData.address_number = request.ExternalNumber ?? updateCustomerData.address_number;
-                updateCustomerData.address_number_cross1 = request.Crossroads ?? updateCustomerData.address_number_cross1;
-                updateCustomerData.address_number_cross2 = request.Crossroads_2 ?? updateCustomerData.address_number_cross2;
-                updateCustomerData.address_street = request.Street ?? updateCustomerData.address_street;
+                if(updateCustomerData == null)
+                {
+                    var newCustomerDate = new so_customer_data
+                    {
+                        so_customer = updateCustomer,
+                        route_code = Convert.ToInt32(route.code),
+                        branch_code = Convert.ToInt32(route.so_branch.code),
+                        address_number = request.ExternalNumber,
+                        address_number_cross1 = request.Crossroads,
+                        address_number_cross2 = request.Crossroads_2,
+                        address_street = request.Street,
+                        status = true
+                    };
+                    updateCustomerData = newCustomerDate;
+                    UoWConsumer.CustomerDataRepository.Insert(newCustomerDate);
+                }
+                else
+                {
+                    updateCustomerData.address_number = request.ExternalNumber ?? updateCustomerData.address_number;
+                    updateCustomerData.address_number_cross1 = request.Crossroads ?? updateCustomerData.address_number_cross1;
+                    updateCustomerData.address_number_cross2 = request.Crossroads_2 ?? updateCustomerData.address_number_cross2;
+                    updateCustomerData.address_street = request.Street ?? updateCustomerData.address_street;
+
+                    UoWConsumer.CustomerDataRepository.Update(updateCustomerData);
+                }
+                
 
                 string address = "";
                 address += string.IsNullOrEmpty(request.Street) ? updateCustomerData.address_street : "C." + request.Street;
@@ -391,7 +422,6 @@ namespace SmartOrderService.Services
                 UoWConsumer.RouteCustomerRepository.InsertByRange(newDaysInRoute);
                 UoWConsumer.RouteCustomerRepository.DeleteByRange(deleteDaysInRoute);
                 UoWConsumer.CustomerRepository.Update(updateCustomer);
-                UoWConsumer.CustomerDataRepository.Update(updateCustomerData);
 
                 UoWConsumer.Save();
 
