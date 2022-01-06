@@ -335,8 +335,19 @@ namespace SmartOrderService.Services
                             deliveryCount += deliveryExist.so_delivery_detail.Sum(x => x.amount);
                             continue;
                         }
-                            
-                        //Si no registrar
+
+                        //Obtener al cliente existente
+                        var existCustomer = db.so_customer
+                            .Where(x => x.customerId == delivery.customerId)
+                            .FirstOrDefault();
+
+                        //Si el cliente no existe crear uno nuevo
+                        if(existCustomer == null)
+                        {
+                            //To do: Falta la definición de como será el cliente temporar
+                        }
+
+                        //Si no, registrar
                         var newDelivery = new so_delivery
                         {
                             code = delivery.code,

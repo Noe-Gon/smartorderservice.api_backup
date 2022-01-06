@@ -84,7 +84,7 @@ namespace SmartOrderService.Controllers
         }
 
         // GET: api/Sales
-        public HttpResponseMessage Getso_sale([FromUri ]SaleRequest request)
+        public HttpResponseMessage Getso_sale([FromUri]SaleRequest request)
         {
             HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.NoContent);
          

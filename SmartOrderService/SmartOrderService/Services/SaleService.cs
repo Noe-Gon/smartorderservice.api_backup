@@ -112,23 +112,19 @@ namespace SmartOrderService.Services
         public List<so_sale> getSalesByPeriod(int UserId,DateTime Begin, DateTime End) {
 
             var sales = db.so_sale.Where(
-                s => s.userId.Equals(UserId)
-                && s.createdon.Value.CompareTo(Begin) >= 0
-                && s.createdon.Value.CompareTo(End) <= 0
-                && s.status 
-
+                    s => s.userId.Equals(UserId)
+                    && s.createdon.Value.CompareTo(Begin) >= 0
+                    && s.createdon.Value.CompareTo(End) <= 0
+                    && s.status 
                 ).ToList();
 
             return sales;
-
         }
 
 
         public List<so_sale> getByInventory(int inventoryId)
         {
-
             var salesdb = db.so_sale_inventory.Where(si => si.inventoryId == inventoryId).Select(x=> x.so_sale).ToList();
-
             return salesdb;
         }
 
@@ -159,12 +155,9 @@ namespace SmartOrderService.Services
 
             }
 
-
-
             var SaleDto =  new SaleMapper().toModel(sale);
             
             return SaleDto;
-
         }
 
         public Sale Cancel(int saleId, string PaymentMethod)
@@ -244,12 +237,9 @@ namespace SmartOrderService.Services
 
             }
 
-
-
             var SaleDto = new SaleMapper().toModel(sale);
 
             return SaleDto;
-
         }
 
         public Sale create(Sale sale) {
@@ -337,7 +327,6 @@ namespace SmartOrderService.Services
                      && s.customerId.Equals(customerId)
                      && s.status
                      ).FirstOrDefault();
-
 
             if (registeredSale == null)
             {
