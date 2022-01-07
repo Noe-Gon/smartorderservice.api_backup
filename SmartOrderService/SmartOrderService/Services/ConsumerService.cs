@@ -228,6 +228,10 @@ namespace SmartOrderService.Services
                 UoWConsumer.PortalLinksLogRepository.Insert(cancelEmail);
                 UoWConsumer.Save();
 
+                newCustomerAdditionalData.ReferenceCode = "" + newCustomer.customerId;
+                UoWConsumer.CustomerAdditionalDataRepository.Update(newCustomerAdditionalData);
+                UoWConsumer.Save();
+
                 var response = new InsertConsumerResponse
                 {
                     CustomerId = newCustomer.customerId,
@@ -248,7 +252,7 @@ namespace SmartOrderService.Services
                     Neighborhood = request.Neighborhood,
                     Phone = request.Phone,
                     Phone_2 = request.Phone_2,
-                    ReferenceCode = request.ReferenceCode,
+                    ReferenceCode = "" + newCustomer.customerId,
                     RouteId = request.RouteId,
                     StateId = request.StateId,
                     Status = request.Status,
