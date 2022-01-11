@@ -77,5 +77,20 @@ namespace SmartOrderService.Controllers
             }
 
         }
+
+        [HttpGet]
+        [Route("~/api/liquidation/emptybottles")]
+        public IHttpActionResult GetEmptyBottles([FromUri]int userId, [FromUri]int? inventoryId, [FromUri]DateTime? date)
+        {
+            try
+            {
+
+            }
+            catch (Exception e)
+            {
+
+                throw;
+            }
+        }
     }
 }

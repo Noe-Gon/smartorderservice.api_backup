@@ -41,6 +41,7 @@ namespace SmartOrderService.UnitOfWork
             RouteCustomerVarioRepository = new GenericRepository<so_route_customer_vario>(Context);
             ProductBottleRepository = new GenericRepository<so_product_bottle>(Context);
             ProductRepository = new GenericRepository<so_product>(Context);
+            SaleDetailRepository = new GenericRepository<so_sale_detail>(Context);
         }
 
         private SmartOrderModel Context { get; set; }
@@ -71,6 +72,7 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_product> ProductRepository { get; set; }
         public GenericRepository<so_inventory> InventoryRepository { get; set; }
         public GenericRepository<so_route_team_inventory_available> RouteTeamInventoryAvailableRepository { get; set; }
+        public GenericRepository<so_sale_detail> SaleDetailRepository { get; set; }
 
         public void Save()
         {

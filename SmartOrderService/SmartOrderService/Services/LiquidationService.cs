@@ -264,6 +264,62 @@ namespace SmartOrderService.Services
             return ResponseBase<List<GetLiquidationRepaymentsResponse>>.Create(response);
         }
 
+        public ResponseBase<List<GetEmptyBottleResponse>> GetEmptyBottle(GetEmptyBottleRequest request)
+        {
+            if (!request.Date.HasValue)
+                request.Date = DateTime.Now;
+
+            List<int> inventoriesId;
+
+            if (!request.InventoryId.HasValue)
+                inventoriesId = new List<int>() { request.InventoryId.Value };
+            else
+                inventoriesId = UoWConsumer.InventoryRepository
+                    .Get(x => x.userId == request.UserId && DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(request.Date))
+                    .Select(x => x.inventoryId)
+                    .ToList();
+
+            var userTeam = UoWConsumer.RouteTeamRepository
+               .Get(x => x.userId == request.UserId)
+               .FirstOrDefault();
+
+            if (userTeam.roleTeamId == (int)ERolTeam.Ayudante)
+                return ResponseBase<List<GetEmptyBottleResponse>>.Create(new List<string>()
+                   {
+                       "Solo los impulsores pueden realizar esta consulta"
+                   });
+
+            //Obtener los inventarios
+            var inventoriesIds = UoWConsumer.InventoryRepository
+                .Get(x => x.userId == request.UserId && DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(request.Date))
+                .Select(x => x.inventoryId)
+                .ToList();
+
+            var bottlesIds = UoWConsumer.ProductBottleRepository
+               .GetAll()
+               .Select(x => x.productId)
+               .ToList();
+
+            var teamIds = UoWConsumer.RouteTeamRepository
+                .Get(x => x.routeId == userTeam.routeId)
+                .Select(x => x.userId)
+                .ToList();
+
+            var bottleProducts = UoWConsumer.SaleDetailRepository
+                .Get(x => teamIds.Contains(x.so_sale.userId) && DbFunctions.TruncateTime(x.so_sale.date) == DbFunctions.TruncateTime(request.Date) && bottlesIds.Contains(x.productId))
+                .Select(x => new GetEmptyBottleResponse
+                {
+                    Code = x.so_product.code,
+                    Id = x.productId,
+                    Name = x.so_product.name,
+                    Quantity = x.amount,
+                    BarCode = x.so_product.barcode
+                })
+                .ToList();
+
+            return ResponseBase<List<GetEmptyBottleResponse>>.Create(bottleProducts);
+        }
+
         private List<so_route_team_inventory_available> GetUnsoldProducts(int inventoryId)
         {
             var inventoryAvailable = UoWConsumer.RouteTeamInventoryAvailableRepository.Get(s => s.inventoryId.Equals(inventoryId)).ToList();

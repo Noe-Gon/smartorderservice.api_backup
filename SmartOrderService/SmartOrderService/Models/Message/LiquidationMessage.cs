@@ -127,6 +127,24 @@ namespace SmartOrderService.Models.Message
         public int Amount { get; set; }
     }
 
-   
+
+    #endregion
+
+    #region Get Empty Bottle
+    public class GetEmptyBottleRequest
+    {
+        public int UserId { get; set; }
+        public int? InventoryId { get; set; }
+        public DateTime? Date { get; set; }
+    }
+
+    public class GetEmptyBottleResponse
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Code { get; set; }
+        public int Quantity { get; set; }
+        public string BarCode { get; set; }
+    }
     #endregion
 }
