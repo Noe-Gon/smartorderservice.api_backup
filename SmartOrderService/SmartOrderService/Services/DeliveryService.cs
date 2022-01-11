@@ -1,8 +1,11 @@
-﻿using SmartOrderService.CustomExceptions;
+﻿using RestSharp;
+using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
 using SmartOrderService.Models.DTO;
+using SmartOrderService.Models.Requests;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Web;
 
@@ -21,18 +24,18 @@ namespace SmartOrderService.Services
             var so_user = db.so_inventory.Where(i => i.inventoryId == InventoryId && i.status).FirstOrDefault().so_user;
 
 
-            if ((!InventoryDeliveries.Any() || InventoryDeliveries.Count() == 0)&& so_user.type != so_user.CCEH_TYPE && so_user.type != so_user.POAC_TYPE)
+            if ((!InventoryDeliveries.Any() || InventoryDeliveries.Count() == 0) && so_user.type != so_user.CCEH_TYPE && so_user.type != so_user.POAC_TYPE)
 
                 throw new InventoryEmptyException();
-            
-           foreach (var delivery in InventoryDeliveries){
 
-                    Deliveries.Add(MapDelivery(delivery));
+            foreach (var delivery in InventoryDeliveries) {
 
-           }
+                Deliveries.Add(MapDelivery(delivery));
+
+            }
 
             return Deliveries;
-           
+
         }
 
         public List<so_customer> getCustomersToDeliver(int InventoryId, int UserId)
@@ -40,12 +43,12 @@ namespace SmartOrderService.Services
             var Deliveries = db.so_delivery.Where(d => d.inventoryId == InventoryId && d.status);
 
             var so_user = db.so_user.Where(u => u.userId == UserId && u.status).FirstOrDefault();
-            if(so_user != null && so_user.type != so_user.POAC_TYPE && so_user.type != so_user.CCEH_TYPE)
+            if (so_user != null && so_user.type != so_user.POAC_TYPE && so_user.type != so_user.CCEH_TYPE)
                 if (!Deliveries.Any())
 
                     throw new InventoryEmptyException();
 
-            var Customers = Deliveries.Select(d => d.so_customer).ToList() ;
+            var Customers = Deliveries.Select(d => d.so_customer).ToList();
 
             return Customers;
 
@@ -93,7 +96,7 @@ namespace SmartOrderService.Services
 
             var replacments = delivery.so_delivery_replacement.Where(r => r.status);
 
-            foreach(var replacment in replacments)
+            foreach (var replacment in replacments)
             {
                 dto.DeliveryReplacements.Add(new DeliveryReplacementDto() {
                     ReplacementId = replacment.replacementId,
@@ -105,7 +108,7 @@ namespace SmartOrderService.Services
 
             var deliveryPromotions = delivery.so_delivery_promotion.Where(p => p.status);
 
-            foreach(var promotion in deliveryPromotions)
+            foreach (var promotion in deliveryPromotions)
             {
                 DeliveryPromotionDto DeliveryPromotion = new DeliveryPromotionDto()
                 {
@@ -118,7 +121,7 @@ namespace SmartOrderService.Services
 
                 var promotiondetails = promotion.so_delivery_promotion_detail;
 
-                foreach(var promotiondetail in promotiondetails)
+                foreach (var promotiondetail in promotiondetails)
                 {
                     DeliveryPromotion.DeliveryPromotionDetailProduct.Add(
                         new DeliveryPromotionDetailDto() {
@@ -161,7 +164,7 @@ namespace SmartOrderService.Services
                 }*/
 
                 dto.DeliveryPromotions.Add(DeliveryPromotion);
-                
+
             }
 
             return dto;
@@ -169,7 +172,7 @@ namespace SmartOrderService.Services
 
         public so_delivery_devolution CreateDevolution(int? DeliveryId, int ReasonId, int? UserId)
         {
-            if(DeliveryId == null)
+            if (DeliveryId == null)
                 throw new DeliveryNotFoundException();
 
             var delivery = db.so_delivery.Where(d => d.deliveryId == DeliveryId).FirstOrDefault();
@@ -185,7 +188,7 @@ namespace SmartOrderService.Services
             so_delivery_devolution newDevolution = new so_delivery_devolution()
             {
 
-                deliveryId = (int) DeliveryId,
+                deliveryId = (int)DeliveryId,
                 reasonId = ReasonId,
                 createdby = UserId == null ? delivery.so_inventory.userId : UserId,
                 modifiedby = UserId == null ? delivery.so_inventory.userId : UserId,
@@ -225,7 +228,7 @@ namespace SmartOrderService.Services
 
         }
 
-        public so_delivery_devolution CreateDevolution(int DeliveryId,int ReasonId)
+        public so_delivery_devolution CreateDevolution(int DeliveryId, int ReasonId)
         {
 
             var delivery = db.so_delivery.Where(d => d.deliveryId == DeliveryId).FirstOrDefault();
@@ -234,7 +237,7 @@ namespace SmartOrderService.Services
             if (delivery == null) throw new DeliveryNotFoundException();
 
             var devolution = db.so_delivery_devolution.Where(d => d.deliveryId == DeliveryId).FirstOrDefault();
-            
+
 
             if (devolution != null) return devolution;
 
@@ -254,7 +257,7 @@ namespace SmartOrderService.Services
             {
                 try
                 {
-                 
+
 
                     db.so_delivery_devolution.Add(newDevolution);
 
@@ -279,6 +282,20 @@ namespace SmartOrderService.Services
 
             return newDevolution;
 
+        }
+
+        public bool SendDeliveryToPreventaAPI(SendDeliveryToPreventaAPIRequest request)
+        {
+            var clientPreventaApi = new RestClient();
+            clientPreventaApi.BaseUrl = new Uri(ConfigurationManager.AppSettings["PreventaAPI"]);
+            var requestPreventaApiConfig = new RestRequest("/api/v1/preOrder/register", Method.POST);
+            requestPreventaApiConfig.AddHeader("x-api-key", ConfigurationManager.AppSettings["x-api-key"]);
+            requestPreventaApiConfig.RequestFormat = DataFormat.Json;
+            var GetDeliveriesResponse = clientPreventaApi.Execute(requestPreventaApiConfig);
+
+            if (GetDeliveriesResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                return true;
+            return false;
         }
 
         public List<so_delivery_devolution> getDevolutionsByPeriod(int UserId,DateTime Begin,DateTime End)

@@ -293,107 +293,114 @@ namespace SmartOrderService.Services
 
         public void LoadDeliveries(int inventoryId)
         {
-            //Obtener info
-            var route = db.so_inventory
-                .Where(i => i.inventoryId == inventoryId)
-                    .Select(i => db.so_route_team
-                    .Where(x => x.userId == i.userId)
-                        .Select(x => db.so_route
-                        .Where(r => r.routeId == x.routeId)
-                        .FirstOrDefault())
-                    .FirstOrDefault())
-                .FirstOrDefault();
-
-            int routeId = route.routeId; 
-            int branchId = route.branchId;
-
-            #region Obtención de deliveries
-
-            var clientPreventaApi = new RestClient();
-            clientPreventaApi.BaseUrl = new Uri(ConfigurationManager.AppSettings["PreventaAPI"]);
-            var requestPreventaApiConfig = new RestRequest("api/v1/delivery/deliveries?branchId=" + branchId + "&routeId=" + routeId + "&inventoryId=" + inventoryId, Method.POST);
-            requestPreventaApiConfig.AddHeader("x-api-key", ConfigurationManager.AppSettings["x-api-key"]);
-            requestPreventaApiConfig.RequestFormat = DataFormat.Json;
-            var GetDeliveriesResponse = clientPreventaApi.Execute(requestPreventaApiConfig);
-            int deliveryCount = 0;
-            if (GetDeliveriesResponse.StatusCode == System.Net.HttpStatusCode.OK)
+            try
             {
-                var responsePreventaAPI = JsonConvert.DeserializeObject<PreventaAPIResponseBase<DeliveriesPreventaAPIResponse>>(GetDeliveriesResponse.Content);
+                //Obtener info
+                var route = db.so_inventory
+                    .Where(i => i.inventoryId == inventoryId)
+                        .Select(i => db.so_route_team
+                        .Where(x => x.userId == i.userId)
+                            .Select(x => db.so_route
+                            .Where(r => r.routeId == x.routeId)
+                            .FirstOrDefault())
+                        .FirstOrDefault())
+                    .FirstOrDefault();
 
-                if (responsePreventaAPI.data.Count == 0)
-                    throw new EntityNotFoundException(responsePreventaAPI.message);
+                int routeId = route.routeId;
+                int branchId = route.branchId;
 
-                if (responsePreventaAPI.success)
+                #region Obtención de deliveries
+
+                var clientPreventaApi = new RestClient();
+                clientPreventaApi.BaseUrl = new Uri(ConfigurationManager.AppSettings["PreventaAPI"]);
+                var requestPreventaApiConfig = new RestRequest("api/v1/delivery/deliveries?branchId=" + branchId + "&routeId=" + routeId + "&inventoryId=" + inventoryId, Method.POST);
+                requestPreventaApiConfig.AddHeader("x-api-key", ConfigurationManager.AppSettings["x-api-key"]);
+                requestPreventaApiConfig.RequestFormat = DataFormat.Json;
+                var GetDeliveriesResponse = clientPreventaApi.Execute(requestPreventaApiConfig);
+                int deliveryCount = 0;
+                if (GetDeliveriesResponse.StatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    foreach (var delivery in responsePreventaAPI.data)
+                    var responsePreventaAPI = JsonConvert.DeserializeObject<PreventaAPIResponseBase<DeliveriesPreventaAPIResponse>>(GetDeliveriesResponse.Content);
+
+                    if (responsePreventaAPI.data.Count == 0)
+                        throw new EntityNotFoundException(responsePreventaAPI.message);
+
+                    if (responsePreventaAPI.success)
                     {
-                        //Buscar si existe esa preventa con CODE
-                        var deliveryExist = db.so_delivery.Where(x => x.code == delivery.code && x.inventoryId == inventoryId).FirstOrDefault();
-                        //Si esta registrada ignorar y pasar al siguiente
-                        if (deliveryExist != null)
+                        foreach (var delivery in responsePreventaAPI.data)
                         {
-                            deliveryCount += deliveryExist.so_delivery_detail.Sum(x => x.amount);
-                            continue;
-                        }
-
-                        //Obtener al cliente existente
-                        var existCustomer = db.so_customer
-                            .Where(x => x.customerId == delivery.customerId)
-                            .FirstOrDefault();
-
-                        //Si el cliente no existe crear uno nuevo
-                        if(existCustomer == null)
-                        {
-                            //To do: Falta la definición de como será el cliente temporar
-                        }
-
-                        //Si no, registrar
-                        var newDelivery = new so_delivery
-                        {
-                            code = delivery.code,
-                            createdby = 2777,
-                            createdon = DateTime.Now,
-                            customerId = delivery.customerId,
-                            inventoryId = delivery.inventoryId,
-                            modifiedby = 2777,
-                            modifiedon = DateTime.Now,
-                            status = true,
-                            visit_order = 0
-                        };
-                        var newDeliveryDetails = new List<so_delivery_detail>();
-                        foreach (var detail in delivery.products)
-                        {
-                            newDeliveryDetails.Add(new so_delivery_detail()
+                            //Buscar si existe esa preventa con CODE
+                            var deliveryExist = db.so_delivery.Where(x => x.code == delivery.code && x.inventoryId == inventoryId).FirstOrDefault();
+                            //Si esta registrada ignorar y pasar al siguiente
+                            if (deliveryExist != null)
                             {
-                                amount = detail.quantity,
+                                deliveryCount += deliveryExist.so_delivery_detail.Sum(x => x.amount);
+                                continue;
+                            }
+
+                            //Obtener al cliente existente
+                            var existCustomer = db.so_customer
+                                .Where(x => x.customerId == delivery.customerId)
+                                .FirstOrDefault();
+
+                            //Si el cliente no existe crear uno nuevo
+                            if (existCustomer == null)
+                            {
+                                //To do: Falta la definición de como será el cliente temporar
+                            }
+
+                            //Si no, registrar
+                            var newDelivery = new so_delivery
+                            {
+                                code = delivery.code,
                                 createdby = 2777,
                                 createdon = DateTime.Now,
+                                customerId = delivery.customerId,
+                                inventoryId = delivery.inventoryId,
                                 modifiedby = 2777,
                                 modifiedon = DateTime.Now,
-                                productId = detail.productId,
                                 status = true,
-                                so_delivery = newDelivery,
-                                price = Convert.ToInt32(detail.price)
-                            });
-                            deliveryCount += detail.quantity;
+                                visit_order = 0
+                            };
+                            var newDeliveryDetails = new List<so_delivery_detail>();
+                            foreach (var detail in delivery.products)
+                            {
+                                newDeliveryDetails.Add(new so_delivery_detail()
+                                {
+                                    amount = detail.quantity,
+                                    createdby = 2777,
+                                    createdon = DateTime.Now,
+                                    modifiedby = 2777,
+                                    modifiedon = DateTime.Now,
+                                    productId = detail.productId,
+                                    status = true,
+                                    so_delivery = newDelivery,
+                                    price = Convert.ToInt32(detail.price)
+                                });
+                                deliveryCount += detail.quantity;
+                            }
+
+                            db.so_delivery.Add(newDelivery);
+                            db.so_delivery_detail.AddRange(newDeliveryDetails);
+
+
+
                         }
+                        // Actualizar summary
+                        var summary = db.so_inventory_summary.Where(x => x.inventoryId == inventoryId && x.status).FirstOrDefault();
+                        summary.modifiedon = DateTime.Now;
+                        summary.deliveries_amount = deliveryCount;
 
-                        db.so_delivery.Add(newDelivery);
-                        db.so_delivery_detail.AddRange(newDeliveryDetails);
-                        
-                        
-                        
+                        db.SaveChanges();
                     }
-                    // Actualizar summary
-                    var summary = db.so_inventory_summary.Where(x => x.inventoryId == inventoryId && x.status).FirstOrDefault();
-                    summary.modifiedon = DateTime.Now;
-                    summary.deliveries_amount = deliveryCount;
-
-                    db.SaveChanges();
                 }
-            }
 
-            #endregion
+                #endregion
+            }
+            catch (Exception)
+            {
+            }
+            
         }
 
         public int getInventoryState(int userId,DateTime date)
