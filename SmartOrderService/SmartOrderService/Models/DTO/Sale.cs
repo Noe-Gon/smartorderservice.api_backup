@@ -87,6 +87,14 @@ namespace SmartOrderService.Models
 
         public List<SaleDetailsArticles> SaleDetailsArticles;
 
+        public SaleTeam()
+        {
+            PromotionCatalog = new List<PromotionCatalog>();
+            PromotionProductDto = new List<PromotionProductDto>();
+            PromotionGiftProductDto = new List<PromotionGiftProductDto>();
+            PromotionGiftArticleDto = new List<PromotionGiftArticleDto>();
+            SaleDetailsArticles = new List<SaleDetailsArticles>();
+            PromocionData = new PromocionData();
+        }
     }
-
 }
