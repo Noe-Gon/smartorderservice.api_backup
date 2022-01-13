@@ -47,4 +47,14 @@ namespace SmartOrderService.Models.Message
         public string RoleName { get; set; }
     }
     #endregion
+
+    #region Helpers
+    public class NotifyWorkdayRequest
+    {
+        public int routeId { get; set; }
+        public int impulsorId { get; set; }
+        public int posId { get; set; }
+        public int auxiliarid { get; set; }
+    }
+    #endregion
 }
