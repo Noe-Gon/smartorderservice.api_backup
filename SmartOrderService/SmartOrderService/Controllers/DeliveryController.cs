@@ -1,6 +1,7 @@
 ﻿using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.DTO;
 using SmartOrderService.Models.Requests;
+using SmartOrderService.Models.Responses;
 using SmartOrderService.Services;
 using System;
 using System.Collections.Generic;
@@ -39,25 +40,58 @@ namespace SmartOrderService.Controllers
            
         }
 
-        // GET: api/Delivery/5
-        public string Get(int id)
+        [HttpPost]
+        [Route("~/api/registerorder")]
+        public IHttpActionResult RegisterOrder(SendOrderRequest request)
         {
-            return "value";
+            try
+            {
+                var service = new DeliveryService();
+                var response = service.SendOrder(request);
+
+                if (response.Status)
+                    return Content(HttpStatusCode.OK, response);
+
+                return Content(HttpStatusCode.BadRequest, response);
+            }
+            catch (ApiPreventaNoAuthorizationException e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<SendOrderResponse>.Create(new List<string>()
+                {
+                    "Petición no autorizada, se requiere enviar el token de autorización o no cuenta con permisos.", e.Message
+                }));
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<SendOrderResponse>.Create(new List<string>()
+                {
+                    "Ocurrio un error al momento de procesar la información.", e.Message
+                }));
+            }
         }
 
-        // POST: api/Delivery
-        public void Post([FromBody]string value)
+        [HttpPost]
+        [Route("~/api/registeredeliveries")]
+        public IHttpActionResult GetDeliveriesStatus(GetDeliveriesRequest request)
         {
-        }
+            try
+            {
+                var service = new DeliveryService();
 
-        // PUT: api/Delivery/5
-        public void Put(int id, [FromBody]string value)
-        {
-        }
+                var response = service.GetDeliveriesStatus(request);
 
-        // DELETE: api/Delivery/5
-        public void Delete(int id)
-        {
+                if (response.Status)
+                    return Content(HttpStatusCode.OK, response);
+
+                return Content(HttpStatusCode.BadRequest, response);
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<GetDeliveriesRequest>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
         }
     }
 }

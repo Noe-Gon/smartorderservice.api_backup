@@ -285,6 +285,7 @@
     <Compile Include="Controllers\SalesController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
     <Compile Include="Controllers\WorkdayController.cs" />
+    <Compile Include="CustomExceptions\ApiPreventaException.cs" />
     <Compile Include="CustomExceptions\BadPropiertiesException.cs" />
     <Compile Include="CustomExceptions\BadRequestException.cs" />
     <Compile Include="CustomExceptions\BillingDataException.cs" />

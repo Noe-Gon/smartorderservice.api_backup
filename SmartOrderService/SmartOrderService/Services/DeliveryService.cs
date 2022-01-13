@@ -2,10 +2,13 @@
 using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
 using SmartOrderService.Models.DTO;
+using SmartOrderService.Models.Enum;
 using SmartOrderService.Models.Requests;
+using SmartOrderService.Models.Responses;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data.Entity;
 using System.Linq;
 using System.Web;
 
@@ -284,6 +287,44 @@ namespace SmartOrderService.Services
 
         }
 
+        public ResponseBase<SendOrderResponse> SendOrder(SendOrderRequest request)
+        {
+            var route = db.so_route.Where(x => x.routeId == request.RouteId && x.status)
+                .FirstOrDefault();
+
+            if (route == null)
+                return ResponseBase<SendOrderResponse>.Create(new List<string>()
+                {
+                    "No se encontró la ruta o ha sido eliminada"
+                });
+
+            var apiRequest = new SendDeliveryToPreventaAPIRequest()
+            {
+                branchId = route.branchId.ToString(),
+                customerId = request.CustomerId,
+                deliveryDate = request.DeliveryDate,
+                products = request.Products.Select(x => new SendDeliveryToPreventaAPIProduct
+                {
+                    price = x.Price,
+                    productId = x.ProductId,
+                    quantity = x.Quantity
+                }).ToList()
+            };
+
+            var response = SendDeliveryToPreventaAPI(apiRequest);
+
+            if (response)
+                return ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
+                {
+                    Msg = "Orden realizada con exitó"
+                });
+
+            return ResponseBase<SendOrderResponse>.Create(new List<string>()
+            {
+                "Ha ocurridó un error"
+            });
+        }
+
         public bool SendDeliveryToPreventaAPI(SendDeliveryToPreventaAPIRequest request)
         {
             var clientPreventaApi = new RestClient();
@@ -295,7 +336,11 @@ namespace SmartOrderService.Services
 
             if (GetDeliveriesResponse.StatusCode == System.Net.HttpStatusCode.OK)
                 return true;
-            return false;
+
+            if (GetDeliveriesResponse.StatusCode == System.Net.HttpStatusCode.Forbidden && GetDeliveriesResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                throw new ApiPreventaNoAuthorizationException(GetDeliveriesResponse.Content);
+
+            throw new ApiPreventaException(GetDeliveriesResponse.Content);
         }
 
         public List<so_delivery_devolution> getDevolutionsByPeriod(int UserId,DateTime Begin,DateTime End)
@@ -308,6 +353,78 @@ namespace SmartOrderService.Services
                 ).ToList();
 
             return devolutions;
+        }
+
+        public ResponseBase<List<GetDeliveriesResponse>> GetDeliveriesStatus(GetDeliveriesRequest request)
+        {
+            #region Validaciones
+            var user = db.so_user
+                .Where(x => x.userId == request.UserId && x.status)
+                .FirstOrDefault();
+
+            if (user == null)
+                return ResponseBase<List<GetDeliveriesResponse>>.Create(new List<string>()
+                {
+                    "El usuario no existe o ha sido eliminado"
+                });
+
+            var driver = db.so_route_team.Where(r => r.roleTeamId == (int)ERolTeam.Impulsor && r.routeId == db.so_route_team
+                .Where(x => x.userId == request.UserId)
+                .Select(x => x.routeId).FirstOrDefault())
+                .FirstOrDefault();
+
+            if (driver == null)
+                return ResponseBase<List<GetDeliveriesResponse>>.Create(new List<string>()
+                {
+                    "No se encontró al impulsor"
+                });
+
+            #endregion
+
+            List<int> inventoryIds;
+
+            if (request.InventoryId.HasValue)
+            {
+                var inventory = db.so_inventory
+                    .Where(x => x.inventoryId == request.InventoryId && x.userId == driver.userId)
+                    .FirstOrDefault();
+
+                inventoryIds = new List<int>() { request.InventoryId.Value };
+            }
+            else
+            {
+                if (!request.Date.HasValue)
+                    request.Date = DateTime.Today;
+
+                inventoryIds = db.so_inventory
+                    .Where(x => DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(request.Date) && x.status && x.userId == request.UserId)
+                    .Select(x => x.inventoryId)
+                    .ToList();
+            }
+
+            var response = db.so_sale
+                .Where(x => inventoryIds.Contains(x.inventoryId.Value) && x.deliveryId.HasValue)
+                .Select(x => new GetDeliveriesResponse
+                {
+                    SaleId = x.saleId,
+                    Address = x.so_customer.address,
+                    CustomerCode = x.so_customer.code,
+                    CustomerId = x.customerId,
+                    CustomerName = x.so_customer.name,
+                    DeliveryId = x.deliveryId.Value,
+                    State = x.state,
+                    UserId = x.userId,
+                    Products = x.so_sale_detail.Select(s => new GetDeliveriesProduct
+                    {
+                        Id = s.productId,
+                        Name = s.so_product.name,
+                        Price = s.base_price_no_tax.Value + s.vat.Value,
+                        Quantity = s.amount,
+                        TotalPrice = s.import
+                    }).ToList()
+                }).ToList();
+
+            return ResponseBase<List<GetDeliveriesResponse>>.Create(response);
         }
     }
 }
