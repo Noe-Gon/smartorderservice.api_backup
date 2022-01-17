@@ -1187,6 +1187,18 @@ namespace SmartOrderService.Services
 
         }
 
+ public DataTable GetPromotionsTicketDigital(DbContext db, int SaleId)
+        {
+            var command = db.Database.Connection.CreateCommand();
+            command.CommandText = "sp_getPromotionsTicketDigital";
+            command.CommandType = CommandType.StoredProcedure;
+
+            SqlParameter pSaleId = new SqlParameter("@SaleId", SaleId);
+            command.Parameters.Add(pSaleId);
+
+            command.ExecuteNonQuery();
+        }
+
         public string GetCancelLinkByCustomerId(int customerId)
         {
             var portalLinkLogs = db.so_portal_links_logs
@@ -1214,9 +1226,7 @@ namespace SmartOrderService.Services
             }
             
             return ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/CancelTicketDigital/" + portalLinkLogs.Id;
-        }
-
-        public void CreatePaymentMethod(SaleTeam sale)
+        }        public void CreatePaymentMethod(SaleTeam sale)
         {
             var findResult = db.so_sale_aditional_data.Where(a => a.saleId == sale.SaleId && a.paymentMethod.Trim() == sale.PaymentMethod).FirstOrDefault();
             if (findResult == null)
