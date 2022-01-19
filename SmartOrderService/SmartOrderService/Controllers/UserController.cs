@@ -71,7 +71,7 @@ namespace SmartOrderService.Controllers
 
         [HttpGet]
         [Route("~/api/Authenticate/EmployeeCode")]
-        public IHttpActionResult AuthenticateEmployeeCode(string Code, int branchId)
+        public IHttpActionResult AuthenticateEmployeeCode(string code, int routeId, int userId)
         {
             try
             {
@@ -79,8 +79,9 @@ namespace SmartOrderService.Controllers
                 {
                     var response = service.AuthenticateEmployeeCode(new AuthenticateEmployeeCodeRequest
                     {
-                        EmployeeCode = Code,
-                        BranchId = branchId
+                        EmployeeCode = code,
+                        RouteId = routeId,
+                        UserId = userId
                     });
 
                     if (response.Status)
@@ -138,6 +139,13 @@ namespace SmartOrderService.Controllers
             catch (LeaderCodeExpiredException e)
             {
                 return Content(HttpStatusCode.BadRequest, ResponseBase<AuthenticateLeaderCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (EntityNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
                 {
                     e.Message
                 }));

@@ -30,49 +30,50 @@ namespace SmartOrderService.Services
 
         public ResponseBase<AuthenticateEmployeeCodeResponse> AuthenticateEmployeeCode(AuthenticateEmployeeCodeRequest request)
         {
-            var userList = UoWConsumer.UserRepository
-                .Get(x => x.code == request.EmployeeCode && x.branchId == request.BranchId && x.type == 6);
-            var user = userList.FirstOrDefault();
-
-            if (user == null)
-                throw new EntityNotFoundException("No se encuentró al usuario");
-
-            string idcia = userList.Select(x => x.so_branch.so_company.code).FirstOrDefault();
-
-            var routeTeam = UoWConsumer.RouteTeamRepository
-                .Get(x => x.userId == user.userId)
+            var user = UoWConsumer.UserRepository
+                .Get(x => x.userId == request.UserId)
                 .FirstOrDefault();
 
-            if (routeTeam == null)
-                throw new EntityNotFoundException("No se encuentró al usuario en un equipo");
+            if(user == null)
+                throw new EntityNotFoundException("No se encuentró al usuario en WByC");
 
-            var route = UoWConsumer.RouteRepository
-                .Get(x => x.routeId == routeTeam.routeId)
-                .Select(x => new { RouteName = x.name, RouteId = x.routeId, RouteCode = x.code, BranchCode = x.so_branch.code })
+            var routeBranch = UoWConsumer.RouteRepository
+                .Get(x => x.routeId == request.RouteId)
+                .Select(x => new { Route = x, Code = x.so_branch.so_company.code, Branch = x.so_branch })
                 .FirstOrDefault();
 
-            var employee = SingleEmployee(idcia, user.code);
+            if (routeBranch == null)
+                throw new EntityNotFoundException("No se encuentró el branch o la ruta");
+
+            var employee = SingleEmployee(routeBranch.Code, request.EmployeeCode);
 
             if (employee == null)
                 throw new EntityNotFoundException("No se encontró al usuarió en WsEmpleados");
 
-            //Notificar a a API
+            var routeTeam = UoWConsumer.RouteTeamRepository
+                    .Get(x => x.userId == request.UserId)
+                    .FirstOrDefault();
+
+            if (routeTeam == null)
+                throw new EntityNotFoundException("El usuario no esta asignado a un equipo");
+
+            //Notificar a la API
             try
             {
                 var requestNotify = new NotifyWorkdayRequest();
                 //Si es impulsor
                 if (routeTeam.roleTeamId == (int)ERolTeam.Impulsor)
                 {
-                    requestNotify.auxiliarid = 0;
+                    requestNotify.auxiliarid = null;
                     requestNotify.impulsorId = Convert.ToInt32(user.code);
-                    requestNotify.routeId = Convert.ToInt32(route.RouteCode);
-                    requestNotify.posId = Convert.ToInt32(route.BranchCode);
+                    requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
+                    requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
                 }
                 //Si es ayudante
                 else
                 {
                     var impulsorId = UoWConsumer.RouteTeamRepository
-                    .Get(x => x.routeId == route.RouteId && x.roleTeamId == (int)ERolTeam.Impulsor)
+                    .Get(x => x.routeId == routeBranch.Route.routeId && x.roleTeamId == (int)ERolTeam.Impulsor)
                     .Select(x => x.userId)
                     .FirstOrDefault();
 
@@ -81,9 +82,9 @@ namespace SmartOrderService.Services
                         .FirstOrDefault();
 
                     requestNotify.auxiliarid = Convert.ToInt32(user.code);
-                    requestNotify.impulsorId = Convert.ToInt32(impulsorCode);
-                    requestNotify.routeId = Convert.ToInt32(route.RouteCode);
-                    requestNotify.posId = Convert.ToInt32(route.BranchCode);
+                    requestNotify.impulsorId = null;
+                    requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
+                    requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
                 }
 
                 NotifyWorkday(requestNotify);
@@ -94,80 +95,49 @@ namespace SmartOrderService.Services
             {
                 UserId = user.userId,
                 UserName = employee.name + " " + employee.lastname,
-                BranchId = user.branchId,
-                BranchName = user.so_branch.name,
+                BranchId = routeBranch.Route.branchId,
+                BranchName = routeBranch.Branch.name,
                 Date = DateTime.Now,
                 RoleId = routeTeam.roleTeamId,
                 RoleName = routeTeam.roleTeamId == (int)ERolTeam.Ayudante ? "Ayudante" : "Impulsor",
-                RouteId = routeTeam.routeId,
-                RouteName = route.RouteName
+                RouteId = routeBranch.Route.routeId,
+                RouteName = routeBranch.Route.name
             });
         }
 
         public ResponseBase<AuthenticateLeaderCodeResponse> AuthenticateLeaderCode(AuthenticateLeaderCodeRequest request)
         {
-            try
-            {
-                var response = AuthenticateEmployeeCode(new AuthenticateEmployeeCodeRequest
-                {
-                    BranchId = request.BranchId,
-                    EmployeeCode = request.EmployeeCode
-                }).Data;
-
-                return ResponseBase<AuthenticateLeaderCodeResponse>.Create(new AuthenticateLeaderCodeResponse
-                {
-                    BranchId = response.BranchId,
-                    BranchName = response.BranchName,
-                    Date = response.Date,
-                    RoleId = response.RoleId,
-                    RoleName = response.RoleName,
-                    RouteId = response.RouteId,
-                    RouteName = response.RouteName,
-                    UserId = response.UserId,
-                    UserName = response.UserName
-                });
-            }
-            catch (Exception)
-            {
-                var leaderCode = UoWConsumer.LeaderAuthorizationCodeRepository
-                    .Get(x => x.Code == request.LeaderCode && x.Status)
-                    .OrderByDescending(x => x.CreatedDate)
-                    .FirstOrDefault();
-
-                if (leaderCode == null)
-                    throw new LeaderCodeNotFoundException("Código del líder no encontrado");
-
-                if (!leaderCode.Status)
-                    throw new LeaderCodeExpiredException("El código del lider ha expirado");
-
-                var user = UoWConsumer.UserRepository
-                .Get(x => x.code == request.EmployeeCode && x.branchId == request.BranchId && x.type == 6)
+            var leaderCode = UoWConsumer.LeaderAuthorizationCodeRepository
+                .Get(x => x.Code == request.LeaderCode && x.Status)
+                .OrderByDescending(x => x.CreatedDate)
                 .FirstOrDefault();
 
-                if (user != null)
+            if (leaderCode == null)
+                throw new LeaderCodeNotFoundException("Código del líder no encontrado");
+
+            if (!leaderCode.Status)
+                throw new LeaderCodeExpiredException("El código del lider ha expirado");
+
+            var user = UoWConsumer.UserRepository
+            .Get(x => x.userId == request.UserId)
+            .FirstOrDefault();
+
+            if (user != null)
+            {
+                var newAuthenticationLog = new so_authentication_log
                 {
-                    var routeId = UoWConsumer.RouteTeamRepository
-                        .Get(x => x.userId == user.userId)
-                        .Select(x => x.routeId)
-                        .FirstOrDefault();
+                    LeaderAuthenticationCodeId = leaderCode.Id,
+                    Status = true,
+                    WasLeaderCodeAuthorization = true,
+                    CreatedDate = DateTime.Now,
+                    UserCode = leaderCode.Code,
+                    UserId = user.userId,
+                    RouteId = request.RouteId,
+                    LeaderCode = request.EmployeeCode
+                };
 
-                    if (routeId != 0)
-                    {
-                        var newAuthenticationLog = new so_authentication_log
-                        {
-                            LeaderAuthenticationCodeId = leaderCode.Id,
-                            Status = true,
-                            WasLeaderCodeAuthorization = true,
-                            CreatedDate = DateTime.Now,
-                            UserCode = leaderCode.Code,
-                            UserId = user.userId,
-                            RouteId = routeId
-                        };
-
-                        UoWConsumer.AuthentificationLogRepository.Insert(newAuthenticationLog);
-                        UoWConsumer.Save();
-                    }
-                }
+                UoWConsumer.AuthentificationLogRepository.Insert(newAuthenticationLog);
+                UoWConsumer.Save();
 
                 return new ResponseBase<AuthenticateLeaderCodeResponse>()
                 {
@@ -176,7 +146,11 @@ namespace SmartOrderService.Services
                     Status = true
                 };
             }
-
+            else
+            {
+                throw new EntityNotFoundException("No se encuentró al usuario en WByC");
+            }
+            
         }
 
         private string GetTokenAWSEmployee()
