@@ -1190,7 +1190,7 @@ namespace SmartOrderService.Services
 
         }
 
- public DataTable GetPromotionsTicketDigital(DbContext db, int SaleId)
+        public DataTable GetPromotionsTicketDigital(DbContext db, int SaleId)
         {
             DataTable dt = new DataTable();
             DbDataAdapter adapter;
@@ -1210,7 +1210,6 @@ namespace SmartOrderService.Services
 
             return dataset.Tables[0]; 
         }
-
         public string GetCancelLinkByCustomerId(int customerId)
         {
             var portalLinkLogs = db.so_portal_links_logs
