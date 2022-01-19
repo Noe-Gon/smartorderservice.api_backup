@@ -13,6 +13,7 @@ using System.Configuration;
 using SmartOrderService.Models.Responses;
 using System.Net.Mime;
 using RestSharp;
+using System.Data;
 
 namespace SmartOrderService.Services
 {
@@ -58,7 +59,15 @@ namespace SmartOrderService.Services
         {
             try
             {
-                using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath("~/Content/Template/TicketDigitalEmail.html")))
+                bool lTienePromociones = false;
+                string sRutaPlantilla = "~/Content/Template/TicketDigitalEmail.html";
+
+                if(request.dtTicket.Columns.Count > 0 && request.dtTicket.Rows.Count > 0)
+                {
+                    lTienePromociones = true;
+                }
+
+                    using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath(sRutaPlantilla)))
                 {
                     string body = reader.ReadToEnd();
 
@@ -75,6 +84,8 @@ namespace SmartOrderService.Services
                         body = body.Replace("{PaymentMethod}", "Forma de pago: " + request.PaymentMethod);
 
                     string tdBody = "";
+                    string tdBodyPromociones = "";
+
                     int totalProductsSold = 0;
                     int totalBoxesSold = 0;
                     double total = 0.0;
@@ -84,10 +95,28 @@ namespace SmartOrderService.Services
                         totalProductsSold++;
                         tdBody += "<tr><td>" + totalProductsSold + ") " + row.ProductName + "</td>";
                         tdBody += "<td>" + row.Amount + "</td>";
-                        tdBody += "<td>" + String.Format("{0:0.00}", row.UnitPrice) + "</td>";
-                        tdBody += "<td>" + String.Format("{0:0.00}", row.TotalPrice) + "</td></tr>";
+                        tdBody += "<td>" + "$" + String.Format("{0:0.00}", row.UnitPrice) + "</td>";
+                        tdBody += "<td>" + "$" + String.Format("{0:0.00}", row.TotalPrice) + "</td></tr>";
                         totalBoxesSold += row.Amount;
                         total += row.TotalPrice;
+                    }
+
+                    if (lTienePromociones)
+                    {
+                        int totalPromos = 0;
+                        body = body.Replace("id='promociones' style='display:none'", "id='promociones' style='display:'");
+                        body = body.Replace("id='lblpromociones' style='display:none'", "id='lblpromociones' style='display:'");
+                        foreach (DataRow row in request.dtTicket.Rows)
+                        {
+                            tdBodyPromociones += "<tr><td style='width:400px'>" + row["id"] + ") " + row["name_product"].ToString() + "</td>";
+                            tdBodyPromociones += "<td style='width:100px'>" + row["amount"].ToString() + "</td>";
+                            tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", 0) + "</td>";
+                            tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", 0) + "</td></tr>";
+                            totalPromos += (int)row["amount"];
+                        }
+
+                        body = body.Replace("{TdBodyPromociones}", tdBodyPromociones);
+                        body = body.Replace("{TotalPromos}", totalPromos.ToString());
                     }
 
                     body = body.Replace("{TdBody}", tdBody);

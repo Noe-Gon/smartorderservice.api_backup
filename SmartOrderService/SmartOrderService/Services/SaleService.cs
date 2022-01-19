@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.Data.Common;
 using System.Data.Entity;
 using System.Data.SqlClient;
 using System.Linq;
@@ -1088,7 +1089,7 @@ namespace SmartOrderService.Services
                             saleResult.SaleId = sale.SaleId;
                             UpdateRouteTeamInventory(sale);
                             CreatePaymentMethod(sale);
-                            sRespuesta = CreatePromotion(sale, db, transaction);
+                            sRespuesta = CreatePromotion(sale, db);
                             if (sRespuesta != string.Empty)
                                 throw new Exception(sRespuesta);
                         }
@@ -1129,6 +1130,7 @@ namespace SmartOrderService.Services
                                         //Se prepara la información
                                         var route = db.so_route_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
                                         var user = db.so_user.Where(x => x.userId == sale.UserId).FirstOrDefault();
+                                        DataTable dtTicket = GetPromotionsTicketDigital(db, sale.SaleId);
 
                                         var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
                                         {
@@ -1138,7 +1140,8 @@ namespace SmartOrderService.Services
                                             CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
                                             Date = DateTime.Now,
                                             PaymentMethod = sale.PaymentMethod,
-                                            SellerName = user.code + " - " + user.name
+                                            SellerName = user.code + " - " + user.name,
+                                            dtTicket = dtTicket
                                         };
 
                                         var sales = new List<SendTicketDigitalEmailSales>();
@@ -1189,14 +1192,23 @@ namespace SmartOrderService.Services
 
  public DataTable GetPromotionsTicketDigital(DbContext db, int SaleId)
         {
-            var command = db.Database.Connection.CreateCommand();
+            DataTable dt = new DataTable();
+            DbDataAdapter adapter;
+            DataSet dataset = new DataSet();
+
+            DbCommand command = db.Database.Connection.CreateCommand();
+            command.Transaction = db.Database.CurrentTransaction.UnderlyingTransaction;
             command.CommandText = "sp_getPromotionsTicketDigital";
             command.CommandType = CommandType.StoredProcedure;
 
             SqlParameter pSaleId = new SqlParameter("@SaleId", SaleId);
             command.Parameters.Add(pSaleId);
+    
+            adapter = new System.Data.SqlClient.SqlDataAdapter();
+            adapter.SelectCommand = command;
+            adapter.Fill(dataset);
 
-            command.ExecuteNonQuery();
+            return dataset.Tables[0]; 
         }
 
         public string GetCancelLinkByCustomerId(int customerId)
@@ -1239,7 +1251,7 @@ namespace SmartOrderService.Services
             }
         }
 
-        public string CreatePromotion(SaleTeam sale, DbContext db, DbContextTransaction transaction)
+        public string CreatePromotion(SaleTeam sale, DbContext db)
         {
             List<DataTable> dataTables = createDataTableParameters(sale);
             DataTable dtPromotionCatalog = dataTables[0];
