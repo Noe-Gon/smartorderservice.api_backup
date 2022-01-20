@@ -179,6 +179,11 @@ namespace SmartOrderService.Services
             if (sale == null)
                 throw new EntityNotFoundException();
 
+            if(sale.state == 2 && !sale.status)
+            {
+                throw new Exception("La venta ya se encuentra cancelada");
+            }
+
             using (var dbContextTransaction = db.Database.BeginTransaction())
             {
                 try
@@ -841,7 +846,7 @@ namespace SmartOrderService.Services
                 var inventarioProduct = db.so_route_team_inventory_available
                     .Where(e => e.inventoryId.Equals(inventoryId) && e.productId.Equals(product.productId)).FirstOrDefault();
 
-                if (inventarioProduct == null)
+                if (inventarioProduct != null)
                 {
                     inventarioProduct.Available_Amount += product.amount;
                 }
@@ -859,11 +864,14 @@ namespace SmartOrderService.Services
                 if(inventarioArt != null)
                 {
                     inventarioArt.amount += article.amount;
+                    inventarioArt.modifiedon = DateTime.Now;
                 }
                 else
                 {
                     throw new Exception("No se encontró el Articulo con ID: " + article.article_promotionalId + " por lo tanto no se pudo incrementar el inventario");
                 }
+
+                db.SaveChanges();
             }
         }
 
