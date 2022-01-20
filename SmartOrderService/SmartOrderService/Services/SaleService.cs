@@ -173,7 +173,7 @@ namespace SmartOrderService.Services
 
         public Sale Cancel(int saleId, string PaymentMethod)
         {
-
+            bool lInventarioAfectado = false;
             var sale = db.so_sale.Where(s => s.saleId.Equals(saleId)).FirstOrDefault();
 
             if (sale == null)
@@ -181,7 +181,7 @@ namespace SmartOrderService.Services
 
             if(sale.state == 2 && !sale.status)
             {
-                throw new Exception("La venta ya se encuentra cancelada");
+                lInventarioAfectado = true;
             }
 
             using (var dbContextTransaction = db.Database.BeginTransaction())
@@ -246,7 +246,10 @@ namespace SmartOrderService.Services
                     {
                     }
 
-                    RestoreInventoryAvailability(saleId);
+                    if (!lInventarioAfectado)
+                    {
+                        RestoreInventoryAvailability(saleId);
+                    }
 
                     dbContextTransaction.Commit();
                 }
