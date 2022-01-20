@@ -1304,7 +1304,9 @@ namespace SmartOrderService.Services
             }
             
             return ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/CancelTicketDigital/" + portalLinkLogs.Id;
-        }        public void CreatePaymentMethod(SaleTeam sale)
+        }        
+        
+        public void CreatePaymentMethod(SaleTeam sale)
         {
             var findResult = db.so_sale_aditional_data.Where(a => a.saleId == sale.SaleId && a.paymentMethod.Trim() == sale.PaymentMethod).FirstOrDefault();
             if (findResult == null)
@@ -1335,12 +1337,6 @@ namespace SmartOrderService.Services
 
             SqlParameter pSaleId = new SqlParameter("@SaleId", sale.SaleId);
             command.Parameters.Add(pSaleId);
-
-            SqlParameter pRouteId = new SqlParameter("@RouteId", sale.RouteId);
-            command.Parameters.Add(pRouteId);
-
-            SqlParameter pBranchId = new SqlParameter("@BranchId", sale.BranchId);
-            command.Parameters.Add(pBranchId);
 
             SqlParameter pPromotionCatalog = new SqlParameter("@PromotionCatalog", SqlDbType.Structured);
             pPromotionCatalog.TypeName = "dbo.PromotionCatalog";

@@ -73,10 +73,6 @@ namespace SmartOrderService.Models
 
         public PromocionData PromocionData;
 
-        public int RouteId;
-
-        public int BranchId;
-
         public List<PromotionCatalog> PromotionCatalog;
 
         public List<PromotionProductDto> PromotionProductDto;
