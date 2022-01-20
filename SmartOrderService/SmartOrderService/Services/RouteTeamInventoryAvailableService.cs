@@ -13,6 +13,16 @@ namespace SmartOrderService.Services
     {
         private SmartOrderModel db = new SmartOrderModel();
 
+        public RouteTeamInventoryAvailableService()
+        {
+
+        }
+
+        public RouteTeamInventoryAvailableService (SmartOrderModel dbAux)
+        {
+            this.db = dbAux;
+        }
+
         public List<RouteTeamInventoryDto> GetRouteTeamInventories(int inventoryId)
         {
             var teamInventoryList = GetInventoryTeamByInventoryId(inventoryId);

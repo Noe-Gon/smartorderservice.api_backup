@@ -744,7 +744,7 @@ namespace SmartOrderService.Services
             routeTeamInventoryAvailable.UpdateRouteTeamInventory(sale);
         }
 
-        public void UpdateRouteTeamInventory(SaleTeam sale)
+        public void UpdateRouteTeamInventory(SaleTeam sale, SmartOrderModel dbAux)
         {
             RoleTeamService roleTeamService = new RoleTeamService();
             ERolTeam userRole = roleTeamService.GetUserRole(sale.UserId);
@@ -752,7 +752,7 @@ namespace SmartOrderService.Services
             {
                 return;
             }
-            RouteTeamInventoryAvailableService routeTeamInventoryAvailable = new RouteTeamInventoryAvailableService();
+            RouteTeamInventoryAvailableService routeTeamInventoryAvailable = new RouteTeamInventoryAvailableService(dbAux);
             routeTeamInventoryAvailable.UpdateRouteTeamInventory(sale);
         }
 
@@ -1154,7 +1154,7 @@ namespace SmartOrderService.Services
                                 throw new BadRequestException();
                             }
                             saleResult.SaleId = sale.SaleId;
-                            UpdateRouteTeamInventory(sale);
+                            UpdateRouteTeamInventory(sale, db);
                             CreatePaymentMethod(sale);
                             sRespuesta = CreatePromotion(sale, db);
                             if (sRespuesta != string.Empty)
