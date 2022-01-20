@@ -38,6 +38,7 @@ namespace SmartOrderService.Models.Requests
         public string SellerName { get; set; }
         public string PaymentMethod { get; set; }
         public List<SendTicketDigitalEmailSales> Sales { get; set; }
+        public DataTable dtTicket { get; set; }
     }
 
 
