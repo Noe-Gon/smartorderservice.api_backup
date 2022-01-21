@@ -65,7 +65,7 @@ namespace SmartOrderService.Services
                 if (routeTeam.roleTeamId == (int)ERolTeam.Impulsor)
                 {
                     requestNotify.auxiliarid = null;
-                    requestNotify.impulsorId = Convert.ToInt32(user.code);
+                    requestNotify.impulsorId = Convert.ToInt32(request.EmployeeCode);
                     requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
                     requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
                 }
@@ -81,7 +81,7 @@ namespace SmartOrderService.Services
                         .Select(x => x.code)
                         .FirstOrDefault();
 
-                    requestNotify.auxiliarid = Convert.ToInt32(user.code);
+                    requestNotify.auxiliarid = Convert.ToInt32(request.EmployeeCode);
                     requestNotify.impulsorId = null;
                     requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
                     requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
