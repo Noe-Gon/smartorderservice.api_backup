@@ -3,10 +3,8 @@ using SmartOrderService.UnitOfWork.Repositories;
 using SmartOrderService.DB;
 using SmartOrderService.Models.Enum;
 using System;
-using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
-using System.Web;
 
 namespace SmartOrderService.UnitOfWork
 {
@@ -42,6 +40,8 @@ namespace SmartOrderService.UnitOfWork
             ProductBottleRepository = new GenericRepository<so_product_bottle>(Context);
             ProductRepository = new GenericRepository<so_product>(Context);
             SaleDetailRepository = new GenericRepository<so_sale_detail>(Context);
+            LiquidationLogRepository = new GenericRepository<so_liquidation_log>(Context);
+            LiquidationLogStatusRepository = new GenericRepository<so_liquidation_log_status>(Context);
         }
 
         private SmartOrderModel Context { get; set; }
@@ -73,6 +73,8 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_inventory> InventoryRepository { get; set; }
         public GenericRepository<so_route_team_inventory_available> RouteTeamInventoryAvailableRepository { get; set; }
         public GenericRepository<so_sale_detail> SaleDetailRepository { get; set; }
+        public GenericRepository<so_liquidation_log> LiquidationLogRepository { get; set; }
+        public GenericRepository<so_liquidation_log_status> LiquidationLogStatusRepository { get; set; }
 
         public void Save()
         {

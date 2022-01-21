@@ -147,4 +147,31 @@ namespace SmartOrderService.Models.Message
         public string BarCode { get; set; }
     }
     #endregion
+
+    #region Send Liquidation
+    public class SendLiquidationRequest
+    {
+        public int UserId { get; set; }
+        public int RouteId { get; set; }
+        public DateTime? Date { get; set; }
+    }
+
+    public class SendLiquidationResponse
+    {
+        public string Msg { get; set; }
+    }
+    #endregion
+
+    #region Get Liquidation
+    public class GetLiquidationStatusRequest
+    {
+        public int UserId { get; set; }
+        public DateTime? Date { get; set; }
+    }
+
+    public class GetLiquidationStatusResponse
+    {
+        public string Code { get; set; }
+    }
+    #endregion
 }

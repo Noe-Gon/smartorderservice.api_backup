@@ -1,4 +1,5 @@
-﻿using SmartOrderService.DB;
+﻿using SmartOrderService.CustomExceptions;
+using SmartOrderService.DB;
 using SmartOrderService.Models.Enum;
 using SmartOrderService.Models.Message;
 using SmartOrderService.Models.Responses;
@@ -8,6 +9,7 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using System.Web;
+using System.Web.Helpers;
 
 namespace SmartOrderService.Services
 {
@@ -320,6 +322,339 @@ namespace SmartOrderService.Services
             return ResponseBase<List<GetEmptyBottleResponse>>.Create(bottleProducts);
         }
 
+        public ResponseBase<SendLiquidationResponse> SendLiquidation(SendLiquidationRequest request)
+        {
+
+            if (request.Date == null)
+                request.Date = DateTime.Now;
+
+            so_work_day workDay;
+            try
+            {
+                workDay = UoWConsumer.GetWorkdayByUserAndDate(request.UserId, request.Date.Value);
+            }
+            catch (WorkdayNotFoundException e)
+            {
+                var logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.WORK_DAY_NOT_FOUND);
+
+                var newLog = new so_liquidation_log()
+                {
+                    ExecutionIdAws = null,
+                    BranchId = null,
+                    JsonInput = null,
+                    CreatedBy = request.UserId,
+                    LiquidationStatusId = logStatusId,
+                    RouteId = request.RouteId,
+                    WorkDayId = null,
+                    OutPut = e.Message
+                };
+
+                UoWConsumer.LiquidationLogRepository.Insert(newLog);
+                UoWConsumer.Save();
+
+                return ResponseBase<SendLiquidationResponse>.Create(new List<string>()
+                {
+                    newLog.OutPut
+                });
+            }
+
+            var apiInfoRequest = UoWConsumer.RouteRepository
+                .Get(x => x.routeId == request.RouteId)
+                .Select(x => new 
+                {
+                    BranchId = x.branchId,
+                    BranchCode = x.so_branch.code,
+                    Date = request.Date.Value,
+                    RouteCode = x.code
+                })
+                .FirstOrDefault();
+
+            if (apiInfoRequest == null)
+            {
+                var logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.ROUTE_NOT_FOUND);
+
+                var newLog = new so_liquidation_log()
+                {
+                    ExecutionIdAws = null,
+                    BranchId = null,
+                    JsonInput = null,
+                    CreatedBy = request.UserId,
+                    LiquidationStatusId = logStatusId,
+                    RouteId = request.RouteId,
+                    WorkDayId = workDay.work_dayId,
+                    OutPut = "No se encontró la ruta con el Id: " + request.RouteId + " en WByC"
+                };
+
+                UoWConsumer.LiquidationLogRepository.Insert(newLog);
+                UoWConsumer.Save();
+
+                return ResponseBase<SendLiquidationResponse>.Create(new List<string>()
+                {
+                    newLog.OutPut
+                });
+            }
+
+            try
+            {
+                var digitalizationService = new ApiDigitalizacionService();
+
+                var response = digitalizationService.SaleSyncApi(new SaleSyncsRequest
+                {
+                    BranchCode = apiInfoRequest.BranchCode,
+                    Date = apiInfoRequest.Date,
+                    RouteCode = apiInfoRequest.RouteCode
+                });
+
+                if (response.Status)
+                {
+                    var logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.RUNNING);
+
+                    var newLog = new so_liquidation_log()
+                    {
+                        ExecutionIdAws = response.Data.executionId,
+                        BranchId = apiInfoRequest.BranchId,
+                        JsonInput = Newtonsoft.Json.JsonConvert.SerializeObject(new SaleSyncsRequest
+                        {
+                            BranchCode = apiInfoRequest.BranchCode,
+                            Date = apiInfoRequest.Date,
+                            RouteCode = apiInfoRequest.RouteCode
+                        }),
+                        CreatedBy = request.UserId,
+                        LiquidationStatusId = logStatusId,
+                        RouteId = request.RouteId,
+                        WorkDayId = workDay.work_dayId,
+                        OutPut = "El proceso ha iniciado correctamente"
+                    };
+
+                    UoWConsumer.LiquidationLogRepository.Insert(newLog);
+                    UoWConsumer.Save();
+
+                    return ResponseBase<SendLiquidationResponse>.Create(new SendLiquidationResponse
+                    {
+                        Msg = newLog.OutPut
+                    });
+                }
+                else
+                {
+                    var logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.UNDEFINED);
+
+                    var newLog = new so_liquidation_log()
+                    {
+                        ExecutionIdAws = response.Data.executionId,
+                        BranchId = apiInfoRequest.BranchId,
+                        JsonInput = Newtonsoft.Json.JsonConvert.SerializeObject(new SaleSyncsRequest
+                        {
+                            BranchCode = apiInfoRequest.BranchCode,
+                            Date = apiInfoRequest.Date,
+                            RouteCode = apiInfoRequest.RouteCode
+                        }),
+                        CreatedBy = request.UserId,
+                        LiquidationStatusId = logStatusId,
+                        RouteId = request.RouteId,
+                        WorkDayId = workDay.work_dayId,
+                        OutPut = "Error no definido, en api Digitalización"
+                    };
+
+                    UoWConsumer.LiquidationLogRepository.Insert(newLog);
+                    UoWConsumer.Save();
+
+                    return ResponseBase<SendLiquidationResponse>.Create(new List<string>()
+                    {
+                        newLog.OutPut
+                    });
+                }
+            }
+            catch (UnauthorisedException e)
+            {
+                var logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.UNAUTHORISED);
+
+                var newLog = new so_liquidation_log()
+                {
+                    ExecutionIdAws = null,
+                    BranchId = apiInfoRequest.BranchId,
+                    JsonInput = Newtonsoft.Json.JsonConvert.SerializeObject(new SaleSyncsRequest
+                    {
+                        BranchCode = apiInfoRequest.BranchCode,
+                        Date = apiInfoRequest.Date,
+                        RouteCode = apiInfoRequest.RouteCode
+                    }),
+                    CreatedBy = request.UserId,
+                    LiquidationStatusId = logStatusId,
+                    RouteId = request.RouteId,
+                    WorkDayId = workDay.work_dayId,
+                    OutPut = e.Message
+                };
+
+                UoWConsumer.LiquidationLogRepository.Insert(newLog);
+                UoWConsumer.Save();
+
+                return ResponseBase<SendLiquidationResponse>.Create(new List<string>()
+                    {
+                        newLog.OutPut
+                    });
+            }
+            catch (ConfigurationValueNotFoundException e)
+            {
+                var logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.CONFIGURATION_VALUE_NOT_FOUND);
+
+                var newLog = new so_liquidation_log()
+                {
+                    ExecutionIdAws = null,
+                    BranchId = apiInfoRequest.BranchId,
+                    JsonInput = Newtonsoft.Json.JsonConvert.SerializeObject(new SaleSyncsRequest
+                    {
+                        BranchCode = apiInfoRequest.BranchCode,
+                        Date = apiInfoRequest.Date,
+                        RouteCode = apiInfoRequest.RouteCode
+                    }),
+                    CreatedBy = request.UserId,
+                    LiquidationStatusId = logStatusId,
+                    RouteId = request.RouteId,
+                    WorkDayId = workDay.work_dayId,
+                    OutPut = e.Message
+                };
+
+                UoWConsumer.LiquidationLogRepository.Insert(newLog);
+                UoWConsumer.Save();
+
+                return ResponseBase<SendLiquidationResponse>.Create(new List<string>()
+                    {
+                        newLog.OutPut
+                    });
+            }
+            catch (InternalServerException e)
+            {
+                var logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.INTERNAL_SERVER_ERROR);
+
+                var newLog = new so_liquidation_log()
+                {
+                    ExecutionIdAws = null,
+                    BranchId = apiInfoRequest.BranchId,
+                    JsonInput = Newtonsoft.Json.JsonConvert.SerializeObject(new SaleSyncsRequest
+                    {
+                        BranchCode = apiInfoRequest.BranchCode,
+                        Date = apiInfoRequest.Date,
+                        RouteCode = apiInfoRequest.RouteCode
+                    }),
+                    CreatedBy = request.UserId,
+                    LiquidationStatusId = logStatusId,
+                    RouteId = request.RouteId,
+                    WorkDayId = workDay.work_dayId,
+                    OutPut = e.Message
+                };
+
+                UoWConsumer.LiquidationLogRepository.Insert(newLog);
+                UoWConsumer.Save();
+
+                return ResponseBase<SendLiquidationResponse>.Create(new List<string>()
+                    {
+                        newLog.OutPut
+                    });
+            }
+            catch (Exception e)
+            {
+                var logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.UNDEFINED);
+
+                var newLog = new so_liquidation_log()
+                {
+                    ExecutionIdAws = null,
+                    BranchId = apiInfoRequest.BranchId,
+                    JsonInput = Newtonsoft.Json.JsonConvert.SerializeObject(new SaleSyncsRequest
+                    {
+                        BranchCode = apiInfoRequest.BranchCode,
+                        Date = apiInfoRequest.Date,
+                        RouteCode = apiInfoRequest.RouteCode
+                    }),
+                    CreatedBy = request.UserId,
+                    LiquidationStatusId = logStatusId,
+                    RouteId = request.RouteId,
+                    WorkDayId = workDay.work_dayId,
+                    OutPut = e.Message
+                };
+
+                UoWConsumer.LiquidationLogRepository.Insert(newLog);
+                UoWConsumer.Save();
+
+                return ResponseBase<SendLiquidationResponse>.Create(new List<string>()
+                    {
+                        newLog.OutPut
+                    });
+            }
+        }
+
+        public ResponseBase<GetLiquidationStatusResponse> GetLiquidationStatus(GetLiquidationStatusRequest request)
+        {
+
+            if (request.Date == null)
+                request.Date = DateTime.Now;
+
+            so_work_day workDay;
+            try
+            {
+                workDay = UoWConsumer.GetWorkdayByUserAndDate(request.UserId, request.Date.Value);
+            }
+            catch (WorkdayNotFoundException e)
+            {
+                return ResponseBase<GetLiquidationStatusResponse>.Create(new List<string>()
+                {
+                    e.Message
+                });
+            }
+
+            try
+            {
+                var log = UoWConsumer.LiquidationLogRepository
+                    .Get(x => x.WorkDayId == workDay.work_dayId && x.ExecutionIdAws != null)
+                    .OrderByDescending(x => x.CreatedOn)
+                    .Select(x => new { Log = x, Code = x.LiquidationStatus.Code })
+                    .FirstOrDefault();
+
+                if (log == null)
+                    throw new EntityNotFoundException("No se encontró una ejecución para la Jornada");
+
+                if (log.Code == HelperLiquidationLogStatus.SUCCEEDED)
+                    return ResponseBase<GetLiquidationStatusResponse>.Create(new GetLiquidationStatusResponse
+                    {
+                        Code = log.Code
+                    });
+
+                var apiDigitalizationService = new ApiDigitalizacionService();
+                var response = apiDigitalizationService.GetSaleSyncStatus(new GetSaleSyncStatusRequest { executionIdAws = log.Log.ExecutionIdAws });
+
+                if (response.Status)
+                {
+                    var logStatus = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, response.Data.status);
+                    var updateLog = log.Log;
+                    updateLog.LiquidationStatusId = logStatus;
+                    updateLog.ModifiedBy = request.UserId;
+                    updateLog.ModifiedOn = DateTime.Now;
+                    updateLog.OutPut = response.Data.output;
+
+                    UoWConsumer.LiquidationLogRepository.Update(updateLog);
+                    UoWConsumer.Save();
+
+                    return ResponseBase<GetLiquidationStatusResponse>.Create(new GetLiquidationStatusResponse
+                    {
+                        Code = response.Data.status
+                    });
+                }
+
+                return ResponseBase<GetLiquidationStatusResponse>.Create(new List<string>()
+                {
+                    "Error con la api digitalización"
+                });
+            }
+            catch (Exception e)
+            {
+                return ResponseBase<GetLiquidationStatusResponse>.Create(new List<string>()
+                {
+                    e.Message
+                });
+            }
+            
+        }
+
+
         private List<so_route_team_inventory_available> GetUnsoldProducts(int inventoryId)
         {
             var inventoryAvailable = UoWConsumer.RouteTeamInventoryAvailableRepository.Get(s => s.inventoryId.Equals(inventoryId)).ToList();
@@ -332,6 +667,8 @@ namespace SmartOrderService.Services
             
             return inventoryCloneObject.Where(s => s.Available_Amount > 0).ToList();
         }
+
+
 
         public void Dispose()
         {

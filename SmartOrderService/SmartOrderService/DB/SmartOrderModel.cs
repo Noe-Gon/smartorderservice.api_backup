@@ -4,6 +4,7 @@ namespace SmartOrderService.DB
     using System.Data.Entity;
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Linq;
+    using SmartOrderService.Controllers;
 
     public partial class SmartOrderModel : DbContext
     {
@@ -159,6 +160,9 @@ namespace SmartOrderService.DB
         //public virtual DbSet<so_leader_authorization_code> so_leader_authorization_codes { get; set; }
         //public virtual DbSet<so_authentication_log> so_authentication_logs { get; set; }
         public virtual DbSet<so_route_customer_vario> so_route_customer_vario { get; set; }
+        public virtual DbSet<so_liquidation_log> so_liquidation_logs { get; set; }
+        public virtual DbSet<so_liquidation_log_status> so_liquidation_status { get; set; }
+        public virtual DbSet<so_delivery_status> so_delivery_status { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -1833,6 +1837,27 @@ namespace SmartOrderService.DB
             saleAdditionalData.HasRequired(x => x.so_sale)
                 .WithMany(x => x.so_sale_aditional_data)
                 .HasForeignKey(x => x.saleId);
+
+            var deliveryStatus = modelBuilder.Entity<so_delivery_status>();
+            deliveryStatus.HasKey(x => x.Id);
+            deliveryStatus.Property(x => x.Id).IsRequired().HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+
+            var delivery = modelBuilder.Entity<so_delivery>();
+            delivery.HasOptional(x => x.DeliveryStatus)
+                .WithMany(x => x.Deliveries)
+                .HasForeignKey(x => x.deliveryStatusId);
+
+            var liquidationLogStatus = modelBuilder.Entity<so_liquidation_log_status>();
+            liquidationLogStatus.HasKey(x => x.Id);
+            liquidationLogStatus.Property(x => x.Id).IsRequired().HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+
+            var liquidationLog = modelBuilder.Entity<so_liquidation_log>();
+            liquidationLog.HasKey(x => x.Id);
+            liquidationLog.Property(x => x.Id).IsRequired().HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            liquidationLog.HasRequired(x => x.LiquidationStatus)
+                .WithMany(x => x.LiquidationLogs)
+                .HasForeignKey(x => x.LiquidationStatusId);
+            
         }
     }
 }
