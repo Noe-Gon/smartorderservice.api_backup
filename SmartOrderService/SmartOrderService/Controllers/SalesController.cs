@@ -224,6 +224,13 @@ namespace SmartOrderService.Controllers
             {
                 lock (objectService)
                 {
+                    if(sale.PaymentMethod == null)
+                    {
+                        responseMessage = Request.CreateResponse(HttpStatusCode.BadRequest, "El método de pago es requerido");
+                        responseActionResult = ResponseMessage(responseMessage);
+                        return responseActionResult;
+                    }
+
                     saleResult = objectService.SaleTeamTransaction(sale);
                 }
             }
@@ -259,7 +266,6 @@ namespace SmartOrderService.Controllers
             {
                 var service = new SaleService();
                 var sale = service.Delete(id);
-                service.RestoreInventoryAvailability(id);
                 response = Request.CreateResponse(HttpStatusCode.OK, sale);
             }
             catch (DeviceNotFoundException e)
@@ -287,7 +293,6 @@ namespace SmartOrderService.Controllers
             {
                 var service = new SaleService();
                 var sale = service.Cancel(id, PaymentMethod);
-                service.RestoreInventoryAvailability(id);
                 response = Request.CreateResponse(HttpStatusCode.OK, sale);
             }
             catch (DeviceNotFoundException e)
@@ -306,7 +311,6 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
-       
         [HttpGet, Route("api/sales/PartnerSale/{UserId}/User/{InventoryId}/Inventory/{CustomerId}/Customer")]
         public HttpResponseMessage PartnerSale(int UserId, int InventoryId, int CustomerId)
 
@@ -366,7 +370,6 @@ namespace SmartOrderService.Controllers
             try
             {
                 saleResult.DeletedSale = service.Delete(deleteSaleId);
-                service.RestoreInventoryAvailability(deleteSaleId);
                 lock (objectService)
                 {
                     saleResult.NewSale = objectService.SaleTeamTransaction(newSale);

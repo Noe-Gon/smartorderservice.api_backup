@@ -336,6 +336,7 @@
     <Compile Include="DB\so_api_version.cs" />
     <Compile Include="DB\so_application.cs" />
     <Compile Include="DB\so_article.cs" />
+    <Compile Include="DB\so_authentication_log.cs" />
     <Compile Include="DB\so_autoventa_View.cs" />
     <Compile Include="DB\so_billing_data.cs" />
     <Compile Include="DB\so_binnacle_reason_failed.cs" />
@@ -401,6 +402,7 @@
     <Compile Include="DB\so_invoice_opefactura.cs" />
     <Compile Include="DB\so_liquidation_log.cs" />
     <Compile Include="DB\so_liquidation_log_status.cs" />
+    <Compile Include="DB\so_leader_authorization_code.cs" />
     <Compile Include="DB\so_loan_order.cs" />
     <Compile Include="DB\so_loan_sale.cs" />
     <Compile Include="DB\so_log_errors.cs" />
@@ -505,6 +507,8 @@
     <Compile Include="Models\DTO\Invoice\InvoiceOpeFacturaDto.cs" />
     <Compile Include="Models\DTO\Invoice\SimpleInvoiceLineOpeFactura.cs" />
     <Compile Include="Models\DTO\Product.cs" />
+    <Compile Include="Models\DTO\PromocionData.cs" />
+    <Compile Include="Models\DTO\PromotionCatalog.cs" />
     <Compile Include="Models\DTO\PromotionCatalogDto.cs" />
     <Compile Include="Models\DTO\PromotionGiftArticleCatalogDto.cs" />
     <Compile Include="Models\DTO\PromotionGiftArticleDto.cs" />
@@ -521,6 +525,7 @@
     <Compile Include="Models\DTO\RouteTeamInventoryDto.cs" />
     <Compile Include="Models\DTO\SaleDetailResponse.cs" />
     <Compile Include="Models\DTO\SaleDetailResult.cs" />
+    <Compile Include="Models\DTO\SaleDetailsArticles.cs" />
     <Compile Include="Models\DTO\SaleDto.cs" />
     <Compile Include="Models\DTO\SalePromotionDetailProductResponse.cs" />
     <Compile Include="Models\DTO\SalePromotionResponse.cs" />
@@ -564,6 +569,7 @@
     <Compile Include="Models\DTO\UserNoticeRechargeDto.cs" />
     <Compile Include="Models\DTO\UserReasonDevolutionDto.cs" />
     <Compile Include="Models\DTO\VisitDto.cs" />
+    <Compile Include="Models\DTO\WorkCloseDayArticle.cs" />
     <Compile Include="Models\DTO\Workday.cs" />
     <Compile Include="Models\Email\EmailAPIRequests.cs" />
     <Compile Include="Models\Enum\Consumer.cs" />
@@ -689,6 +695,9 @@
     <Compile Include="Services\SaleService.cs" />
     <Compile Include="Services\WorkdayService.cs" />
     <Compile Include="Startup.cs" />
+    <Compile Include="DB\so_article_promotional_route.cs" />
+    <Compile Include="DB\so_promotion_article_movement.cs" />
+    <Compile Include="DB\so_sale_detail_article.cs" />
     <Compile Include="Templates\InsertCliente.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

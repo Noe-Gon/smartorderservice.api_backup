@@ -34,14 +34,15 @@ namespace SmartOrderService.UnitOfWork
             PortalLinksLogRepository = new GenericRepository<so_portal_links_log>(Context);
             RouteTeamTravelsCustomerBlocked = new GenericRepository<so_route_team_travels_customer_blocked>(Context);
             WorkDayRepository = new GenericRepository<so_work_day>(Context);
-            //LeaderAuthorizationCodeRepository = new GenericRepository<so_leader_authorization_code>(Context);
-            //AuthentificationLogRepository = new GenericRepository<so_authentication_log>(Context);
             RouteCustomerVarioRepository = new GenericRepository<so_route_customer_vario>(Context);
             ProductBottleRepository = new GenericRepository<so_product_bottle>(Context);
             ProductRepository = new GenericRepository<so_product>(Context);
             SaleDetailRepository = new GenericRepository<so_sale_detail>(Context);
             LiquidationLogRepository = new GenericRepository<so_liquidation_log>(Context);
             LiquidationLogStatusRepository = new GenericRepository<so_liquidation_log_status>(Context);
+            LeaderAuthorizationCodeRepository = new GenericRepository<so_leader_authorization_code>(Context);
+            AuthentificationLogRepository = new GenericRepository<so_authentication_log>(Context);
+
         }
 
         private SmartOrderModel Context { get; set; }
@@ -64,8 +65,8 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_portal_links_log> PortalLinksLogRepository { get; set; }
         public GenericRepository<so_route_team_travels_customer_blocked> RouteTeamTravelsCustomerBlocked { get; set; }
         public GenericRepository<so_work_day> WorkDayRepository { get; set; }
-        //public GenericRepository<so_leader_authorization_code> LeaderAuthorizationCodeRepository { get; set; }
-        //public GenericRepository<so_authentication_log> AuthentificationLogRepository { get; set; }
+        public GenericRepository<so_leader_authorization_code> LeaderAuthorizationCodeRepository { get; set; }
+        public GenericRepository<so_authentication_log> AuthentificationLogRepository { get; set; }
         public GenericRepository<so_route_customer_vario> RouteCustomerVarioRepository { get; set; }
         public GenericRepository<so_sale_promotion> SalePromotionRepository { get; set; }
         public GenericRepository<so_product_bottle> ProductBottleRepository { get; set; }
