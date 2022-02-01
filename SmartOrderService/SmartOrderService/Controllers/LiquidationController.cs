@@ -74,7 +74,7 @@ namespace SmartOrderService.Controllers
             {
                 return Content(System.Net.HttpStatusCode.InternalServerError, ResponseBase<GetLiquidationSalesResponse>.Create(new List<string>()
                 {
-                    "Error interno del servidor", e.InnerException.Message
+                    "Error interno del servidor", e.Message
                 }));
             }
 
