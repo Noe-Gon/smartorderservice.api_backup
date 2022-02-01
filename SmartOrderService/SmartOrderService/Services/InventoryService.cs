@@ -306,14 +306,14 @@ namespace SmartOrderService.Services
                         .FirstOrDefault())
                     .FirstOrDefault();
 
-                int routeId = route.routeId;
-                int branchId = route.branchId;
+                string routeCode = route.code;
+                string branchCode = route.so_branch.code;
 
                 #region Obtención de deliveries
 
                 var clientPreventaApi = new RestClient();
                 clientPreventaApi.BaseUrl = new Uri(ConfigurationManager.AppSettings["PreventaAPI"]);
-                var requestPreventaApiConfig = new RestRequest("api/v1/delivery/deliveries?branchId=" + branchId + "&routeId=" + routeId + "&inventoryId=" + inventoryId, Method.POST);
+                var requestPreventaApiConfig = new RestRequest("api/v1/delivery/deliveries?branchId=" + branchCode + "&routeId=" + routeCode + "&inventoryId=" + inventoryId, Method.POST);
                 requestPreventaApiConfig.AddHeader("x-api-key", ConfigurationManager.AppSettings["x-api-key"]);
                 requestPreventaApiConfig.RequestFormat = DataFormat.Json;
                 var GetDeliveriesResponse = clientPreventaApi.Execute(requestPreventaApiConfig);
@@ -339,14 +339,76 @@ namespace SmartOrderService.Services
                             }
 
                             //Obtener al cliente existente
-                            var existCustomer = db.so_customer
-                                .Where(x => x.customerId == delivery.customerId)
-                                .FirstOrDefault();
+                            so_customer existCustomer;
 
                             //Si el cliente no existe crear uno nuevo
-                            if (existCustomer == null)
+                            if (delivery.customerId == 0) //Si delivery.customerId == 0 No existe en WBC
                             {
-                                //To do: Falta la definición de como será el cliente temporar
+                                //Buscar por CFE (so_customer.code)
+                                existCustomer = db.so_customer.Where(x => x.code == delivery.code).FirstOrDefault();
+                                var day = ((int)DateTime.Now.DayOfWeek) + 1;
+                                if (existCustomer == null)
+                                {
+                                    var infoList = delivery.code.Split('-');
+                                    so_customer newCustomer = new so_customer
+                                    {
+                                        name = delivery.code,
+                                        code = delivery.code,
+                                        createdby = 2777,
+                                        createdon = DateTime.Now,
+                                        modifiedby = 2777,
+                                        modifiedon = DateTime.Now,
+                                    };
+                                    
+                                    so_route_customer newRouteCustomer = new so_route_customer
+                                    {
+                                        so_route = route,
+                                        so_customer = newCustomer,
+                                        order = 0,
+                                        day = day,
+                                        status = true,
+                                        createdby = 2777,
+                                        createdon = DateTime.Now,
+                                        modifiedby = 2777,
+                                        modifiedon = DateTime.Now,
+                                    };
+
+                                    db.so_customer.Add(newCustomer);
+                                    db.so_route_customer.Add(newRouteCustomer);
+                                    db.SaveChanges();
+                                }
+                                else
+                                {
+                                    //Verificar si existe un ese día
+                                    var existRouteCustomer = db.so_route_customer
+                                        .Where(x => x.routeId == route.routeId && existCustomer.customerId == x.customerId && x.day == day)
+                                        .FirstOrDefault();
+
+                                    if(existRouteCustomer == null)
+                                    {
+                                        so_route_customer newRouteCustomer = new so_route_customer
+                                        {
+                                            so_route = route,
+                                            so_customer = existCustomer,
+                                            order = 0,
+                                            day = day,
+                                            status = true,
+                                            createdby = 2777,
+                                            createdon = DateTime.Now,
+                                            modifiedby = 2777,
+                                            modifiedon = DateTime.Now,
+                                        };
+
+                                        db.so_route_customer.Add(newRouteCustomer);
+                                        db.SaveChanges();
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                existCustomer = db.so_customer
+                                .Where(x => x.customerId == delivery.customerId)
+                                .FirstOrDefault();
                             }
 
                             //Si no, registrar
@@ -355,7 +417,7 @@ namespace SmartOrderService.Services
                                 code = delivery.code,
                                 createdby = 2777,
                                 createdon = DateTime.Now,
-                                customerId = delivery.customerId,
+                                customerId = existCustomer.customerId,
                                 inventoryId = delivery.inventoryId,
                                 modifiedby = 2777,
                                 modifiedon = DateTime.Now,
@@ -382,8 +444,6 @@ namespace SmartOrderService.Services
 
                             db.so_delivery.Add(newDelivery);
                             db.so_delivery_detail.AddRange(newDeliveryDetails);
-
-
 
                         }
                         // Actualizar summary

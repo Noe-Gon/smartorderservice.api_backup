@@ -270,9 +270,42 @@ namespace SmartOrderService.Services
         {
             try
             {
-                var updateCustomer = UoWConsumer.CustomerRepository
-                    .Get(x => x.customerId == request.CustomerId && x.status)
-                    .FirstOrDefault();
+                so_customer updateCustomer;
+
+                if (request.OriginalCustomerId == null || request.OriginalCustomerId == 0)
+                    updateCustomer = UoWConsumer.CustomerRepository
+                        .Get(x => x.customerId == request.CustomerId && x.status)
+                        .FirstOrDefault();
+                else
+                {
+                    updateCustomer = UoWConsumer.CustomerRepository
+                        .Get(x => x.customerId == request.OriginalCustomerId && x.status)
+                        .FirstOrDefault();
+
+                    if (updateCustomer == null)
+                        return ResponseBase<UpdateConsumerResponse>
+                        .Create(new List<string>() { "No se encontró al cliente: " + request.OriginalCustomerId });
+
+                    so_customer deleteCustomer = UoWConsumer.CustomerRepository
+                        .Get(x => x.customerId == x.customerId)
+                        .FirstOrDefault();
+
+                    if (deleteCustomer == null)
+                        return ResponseBase<UpdateConsumerResponse>
+                        .Create(new List<string>() { "No se encontró al cliente: " + request.CustomerId });
+
+                    //Se actualiza los deliveries
+                    var deliveries = UoWConsumer.DeliveryRepository
+                        .Get(x => x.customerId == deleteCustomer.customerId);
+
+                    foreach (var delivery in deliveries)
+                    {
+                        delivery.customerId = updateCustomer.customerId;
+                    }
+
+                    UoWConsumer.DeliveryRepository.UpdateByRange(deliveries);
+                    UoWConsumer.CustomerRepository.Delete(deleteCustomer);
+                }
 
                 if (updateCustomer == null)
                     return ResponseBase<UpdateConsumerResponse>.Create(new List<string>()

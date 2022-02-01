@@ -234,7 +234,6 @@ namespace SmartOrderService.Services
                     dbContextTransaction.Rollback();
                     throw new Exception();
                 }
-
             }
 
             var SaleDto = new SaleMapper().toModel(sale);
