@@ -13,6 +13,8 @@ namespace SmartOrderService.Models.DTO
         public string Date { get; set; }
         public int CustomerId { get; set; }
         public int DeliveryId { get; set; }
+        public int State { get; set; }
+        public bool Status { get; set; }
         public string PaymentMethod { get; set; }
         public string CreateDate { get; set; }
         public List<SaleDetailResponse> SaleDetails { get; set; }
