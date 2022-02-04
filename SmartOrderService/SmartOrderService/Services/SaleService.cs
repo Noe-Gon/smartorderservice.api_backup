@@ -1644,11 +1644,15 @@ namespace SmartOrderService.Services
                                             select new { inventoryId = g.Key })
                               select item.inventoryId;
 
-            var filtroSale = db.so_sale.Where(a => a.status == true);
+            IQueryable<so_sale> filtroSale;
 
             if (CustomerId != 0)
             {
-                filtroSale = db.so_sale.Where(a => a.customerId == CustomerId && a.status == true);
+                filtroSale = db.so_sale.Where(a => a.customerId == CustomerId);
+            }
+            else
+            {
+                filtroSale = db.so_sale.Where(x => x.status == true || x.status == false);
             }
 
             var qsaleDto = (from venta in filtroSale
@@ -1674,7 +1678,9 @@ namespace SmartOrderService.Services
                                 venta.so_sale_replacement,
                                 venta.so_sale_promotion,
                                 result.paymentMethod,
-                                venta.createdon
+                                venta.createdon,
+                                venta.state,
+                                venta.status
                             }).ToList();
 
             var saleDto = (from item in qsaleDto
@@ -1692,6 +1698,8 @@ namespace SmartOrderService.Services
                                          DeliveryId = item.deliveryId ?? 0,
                                          PaymentMethod = item.paymentMethod,
                                          CreateDate = item.createdon.HasValue ? item.createdon.Value.ToString("dd/MM/yyyy HH:m") : "",
+                                         State = item.state,
+                                         Status = item.status,
                                          SaleDetails = (from g in item.so_sale_detail
                                                         orderby g.createdon descending
                                                         select new SaleDetailResponse 
