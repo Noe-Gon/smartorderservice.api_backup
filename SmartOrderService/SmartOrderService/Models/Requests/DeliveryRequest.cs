@@ -16,6 +16,7 @@ namespace SmartOrderService.Models.Requests
         public string DeliveryDate { get; set; }
         public int RouteId { get; set; }
         public int CustomerId { get; set; }
+        public bool PrePaid { get; set; }
         public List<SendOrderProduct> Products { get; set; }
     }
 
@@ -39,6 +40,7 @@ namespace SmartOrderService.Models.Requests
         {
             createdOn = DateTime.Now;
             products = new List<SendDeliveryToPreventaAPIProduct>();
+            originSystem = "wbcprev";
         }
 
         public DateTime createdOn { get; set; }
@@ -48,7 +50,22 @@ namespace SmartOrderService.Models.Requests
         public string branchId { get; set; }
         public int customerId { get; set; }
         public string originSystem { get; set; }
+        public SendDeliveryToPreventaAPICustomer customer { get; set; }
         public List<SendDeliveryToPreventaAPIProduct> products { get; set; }
+    }
+
+    public class SendDeliveryToPreventaAPICustomer
+    {
+        public string contact { get; set; }
+        public string name { get; set; }
+        public string address { get; set; }
+        public string email { get; set; }
+        public int customerId { get; set; }
+        public bool prePaid { get; set; }
+        public int originSistemId { get; set; }
+        public string originSistem { get; set; }
+        public int branchId { get; set; }
+        public int routeId { get; set; }
     }
 
     public class SendDeliveryToPreventaAPIProduct

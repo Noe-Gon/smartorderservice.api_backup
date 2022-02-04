@@ -289,7 +289,9 @@ namespace SmartOrderService.Services
 
         public ResponseBase<SendOrderResponse> SendOrder(SendOrderRequest request)
         {
-            var route = db.so_route.Where(x => x.routeId == request.RouteId && x.status)
+            var route = db.so_route
+                .Where(x => x.routeId == request.RouteId && x.status)
+                .Select(x => new { RouteCode = x.code, BranchCode = x.so_branch.code, RouteId = x.branchId, BranchId = x.branchId })
                 .FirstOrDefault();
 
             if (route == null)
@@ -298,11 +300,37 @@ namespace SmartOrderService.Services
                     "No se encontró la ruta o ha sido eliminada"
                 });
 
+            var customer = db.so_customer
+                .Where(x => x.customerId == request.CustomerId && x.status)
+                .FirstOrDefault();
+
+            if(customer == null)
+                return ResponseBase<SendOrderResponse>.Create(new List<string>()
+                {
+                    "No se encontró al cliente con id: " + request.CustomerId + " o ha dado de baja"
+                });
+
             var apiRequest = new SendDeliveryToPreventaAPIRequest()
             {
-                branchId = route.branchId.ToString(),
+                branchId = route.BranchCode,
+                routeId = route.RouteCode,
                 customerId = request.CustomerId,
                 deliveryDate = request.DeliveryDate,
+                createdOn = DateTime.Now,
+                originSystem = "wbcprev",
+                customer = new SendDeliveryToPreventaAPICustomer()
+                {
+                    address = customer.address,
+                    branchId = route.RouteId,
+                    contact = customer.contact,
+                    customerId = customer.customerId,
+                    email = customer.email,
+                    name = customer.name,
+                    originSistem = "wbcprev",
+                    originSistemId = customer.customerId,
+                    prePaid = request.PrePaid,
+                    routeId = route.RouteId
+                },
                 products = request.Products.Select(x => new SendDeliveryToPreventaAPIProduct
                 {
                     price = x.Price,
