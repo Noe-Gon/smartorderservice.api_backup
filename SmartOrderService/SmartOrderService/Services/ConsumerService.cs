@@ -603,15 +603,15 @@ namespace SmartOrderService.Services
                 .Join(UoWConsumer.RouteCustomerRepository.GetAll(),
                     userRoute => userRoute.routeId,
                     customerRoute => customerRoute.routeId,
-                    (userRoute, customerRoute) => new { userRoute.userId, customerRoute.customerId, customerRoute.day, customerRoute.order, customerRoute.status, userRouteStatus = userRoute.status, routeId = userRoute.routeId, HasAdditionalData = customerRoute.so_customer.CustomerAdditionalData.Count() != 0 }
+                    (userRoute, customerRoute) => new { userRoute.userId, customerRoute.customerId, customerRoute.so_customer, customerRoute.day, customerRoute.order, customerRoute.status, userRouteStatus = userRoute.status, routeId = userRoute.routeId, HasAdditionalData = customerRoute.so_customer.CustomerAdditionalData.Count() != 0 }
                 )
                 .Where(
                     v => v.userId.Equals(request.userId)
                     && v.userRouteStatus
                     && v.status
                     && day.Equals(v.day)
-                    && v.HasAdditionalData
-                ).Select(c => new { c.customerId, c.order, c.routeId });
+                    //&& v.HasAdditionalData
+                ).Select(c => new { c.customerId, c.order, c.routeId, c.so_customer });
 
                 foreach (var data in routeVisits)
                 {
@@ -622,12 +622,8 @@ namespace SmartOrderService.Services
                         .Select(x => x.CustomerAdditionalData)
                         .FirstOrDefault();
 
-                    if (customerAdditionalDataAux == null || customerAdditionalDataAux.Count() == 0)
-                    {
-                        continue;
-                    }
                     var customerAdditionalData = customerAdditionalDataAux.FirstOrDefault();
-                    var customer = customerAdditionalData.Customer;
+                    var customer = data.so_customer;
                     var customerData = customer.so_customer_data.FirstOrDefault();
 
                     if (inventory != null && inventory.status)
@@ -655,32 +651,32 @@ namespace SmartOrderService.Services
                             .FirstOrDefault() != null,
                         Name = customer.name,
                         CFECode = customer.code,
-                        CodePlace = customerAdditionalData.CodePlaceId,
-                        Contact = customerAdditionalData.Customer.contact,
+                        CodePlace = customerAdditionalData == null ? null : customerAdditionalData.CodePlaceId,
+                        Contact = customerAdditionalData == null ? string.Empty : customerAdditionalData.Customer.contact,
                         Crossroads = customerData != null ? customerData.address_number_cross1 : string.Empty,
                         Crossroads_2 = customerData != null ? customerData.address_number_cross2 : string.Empty,
                         Email = customer.email,
-                        Email_2 = customerAdditionalData.Email_2,
+                        Email_2 = customerAdditionalData == null ? string.Empty : customerAdditionalData.Email_2,
                         ExternalNumber = customerData != null ? customerData.address_number : string.Empty,
-                        InteriorNumber = customerAdditionalData.InteriorNumber,
+                        InteriorNumber = customerAdditionalData == null ? string.Empty : customerAdditionalData.InteriorNumber,
                         Latitude = customer.latitude,
                         Longitude = customer.longitude,
-                        Neighborhood = customerAdditionalData.NeighborhoodId,
-                        Phone = customerAdditionalData.Phone,
-                        Phone_2 = customerAdditionalData.Phone_2,
-                        ReferenceCode = customerAdditionalData.ReferenceCode,
+                        Neighborhood = customerAdditionalData == null ? null : customerAdditionalData.NeighborhoodId,
+                        Phone = customerAdditionalData == null ? string.Empty : customerAdditionalData.Phone,
+                        Phone_2 = customerAdditionalData == null ? string.Empty : customerAdditionalData.Phone_2,
+                        ReferenceCode = customerAdditionalData == null ? string.Empty : customerAdditionalData.ReferenceCode,
                         RouteId = data.routeId,
                         Street = customerData != null ? customerData.address_street : string.Empty,
                         Days = daysInRoute,
-                        CounterVisitsWithoutSales = customerAdditionalData.CounterVisitsWithoutSales,
-                        IsActive = customerAdditionalData.Status == (int)Consumer.STATUS.CONSUMER,
-                        IsMailingActive = customerAdditionalData.IsMailingActive,
-                        IsSMSActive = customerAdditionalData.IsSMSActive,
-                        IsTermsAndConditionsAccepted = customerAdditionalData.AcceptedTermsAndConditions,
-                        CanBeRemoved = customerAdditionalData.CounterVisitsWithoutSales >= daysWithoutSalesToDisable
+                        CounterVisitsWithoutSales = customerAdditionalData == null ? 0 : customerAdditionalData.CounterVisitsWithoutSales,
+                        IsActive = customerAdditionalData == null ? false : customerAdditionalData.Status == (int)Consumer.STATUS.CONSUMER,
+                        IsMailingActive = customerAdditionalData == null ? false : customerAdditionalData.IsMailingActive,
+                        IsSMSActive = customerAdditionalData == null ? false : customerAdditionalData.IsSMSActive,
+                        IsTermsAndConditionsAccepted = customerAdditionalData == null ? false : customerAdditionalData.AcceptedTermsAndConditions,
+                        CanBeRemoved = customerAdditionalData == null ? false : customerAdditionalData.CounterVisitsWithoutSales >= daysWithoutSalesToDisable
                     };
 
-                    if (customerAdditionalData.NeighborhoodId != null)
+                    if (customerAdditionalData == null ? false : customerAdditionalData.NeighborhoodId != null)
                     {
                         var ubication = UoWCRM.ColoniasRepository
                             .Get(x => x.Ope_coloniaId == customerAdditionalData.NeighborhoodId)
