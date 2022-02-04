@@ -2,6 +2,7 @@
 using SmartOrderService.DB;
 using SmartOrderService.Models.Enum;
 using SmartOrderService.Models.Message;
+using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;
 using SmartOrderService.UnitOfWork;
 using System;
@@ -222,7 +223,7 @@ namespace SmartOrderService.Services
 
             //Obtener los inventarios
             var inventoriesIds = UoWConsumer.InventoryRepository
-                .Get(x => x.userId == impulsorId && DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(request.Date))
+                .Get(x => x.userId == impulsorId && DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(request.Date.Value))
                 .Select(x => x.inventoryId)
                 .ToList();
 
@@ -273,7 +274,7 @@ namespace SmartOrderService.Services
 
             List<int> inventoriesId;
 
-            if (!request.InventoryId.HasValue)
+            if (request.InventoryId.HasValue)
                 inventoriesId = new List<int>() { request.InventoryId.Value };
             else
                 inventoriesId = UoWConsumer.InventoryRepository
@@ -291,11 +292,60 @@ namespace SmartOrderService.Services
                        "Solo los impulsores pueden realizar esta consulta"
                    });
 
-            //Obtener los inventarios
-            var inventoriesIds = UoWConsumer.InventoryRepository
-                .Get(x => x.userId == request.UserId && DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(request.Date))
-                .Select(x => x.inventoryId)
+            var teamIds = UoWConsumer.RouteTeamRepository
+                .Get(x => x.routeId == userTeam.routeId)
+                .Select(x => x.userId)
                 .ToList();
+
+            var response = UoWConsumer.SaleDetailRepository
+                .Get(x => teamIds.Contains(x.so_sale.userId) && inventoriesId.Contains(x.so_sale.inventoryId.Value) && x.status)
+                .Join(UoWConsumer.ProductBottleRepository.GetAll(), sd => sd.productId, pb => pb.productId,
+                (sd, pb) => new
+                {
+                    Code = pb.so_product.code,
+                    Id = pb.bottleId,
+                    Name = pb.so_product.name,
+                    Quantity = sd.amount,
+                    BarCode = pb.so_product.barcode
+                })
+                .GroupBy(x => x.Id)
+                .Select(x => new GetEmptyBottleResponse
+                {
+                    Id = x.Key,
+                    BarCode = x.FirstOrDefault().BarCode,
+                    Code = x.FirstOrDefault().Code,
+                    Name = x.FirstOrDefault().Name,
+                    Quantity = x.Sum(b => b.Quantity)
+                })
+                .ToList();
+
+            return ResponseBase<List<GetEmptyBottleResponse>>.Create(response);
+        }
+
+        public ResponseBase<List<GetEmptyBottleResponse>> GetEmptyBottleInventory(GetEmptyBottleRequest request)
+        {
+            if (!request.Date.HasValue)
+                request.Date = DateTime.Now;
+
+            List<int> inventoriesId;
+
+            if (!request.InventoryId.HasValue)
+                inventoriesId = new List<int>() { request.InventoryId.Value };
+            else
+                inventoriesId = UoWConsumer.InventoryRepository
+                    .Get(x => x.userId == request.UserId && DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(request.Date))
+                    .Select(x => x.inventoryId)
+                    .ToList();
+
+            var userTeam = UoWConsumer.RouteTeamRepository
+               .Get(x => x.userId == request.UserId)
+               .FirstOrDefault();
+
+            if (userTeam.roleTeamId == (int)ERolTeam.Ayudante)
+                return ResponseBase<List<GetEmptyBottleResponse>>.Create(new List<string>()
+                   {
+                       "Solo los impulsores pueden realizar esta consulta"
+                   });
 
             var bottlesIds = UoWConsumer.ProductBottleRepository
                .GetAll()
@@ -328,6 +378,8 @@ namespace SmartOrderService.Services
             if (request.Date == null)
                 request.Date = DateTime.Now;
 
+            int logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.UNDEFINED);
+
             so_work_day workDay;
             try
             {
@@ -335,7 +387,7 @@ namespace SmartOrderService.Services
             }
             catch (WorkdayNotFoundException e)
             {
-                var logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.WORK_DAY_NOT_FOUND);
+                logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.WORK_DAY_NOT_FOUND);
 
                 var newLog = new so_liquidation_log()
                 {
@@ -358,6 +410,55 @@ namespace SmartOrderService.Services
                 });
             }
 
+            // Verificar si existe algun viaje abierto
+            var inventoriesOpen = UoWConsumer.InventoryRepository
+                .Get(x => x.state == 1 && x.status && x.userId == request.UserId && DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(request.Date))
+                .ToList();
+
+            if (inventoriesOpen.Count() > 0) //Hay inventarios abiertos
+            {
+                if (request.CloseInvetories)
+                {
+                    foreach (var inventoryOpen in inventoriesOpen)
+                    {
+                        //Verificar si tiene una venta activa
+                        var customerBlockedService = new CustomerBlockedService(UoWConsumer);
+                        var response = customerBlockedService.GetCustomersBlockedByWorkday(workDay.work_dayId, inventoryOpen.inventoryId)
+                            .Data.GroupBy(x => x.UserId)
+                            .Select(x => x.Key)
+                            .ToList();
+
+                        if (response.Count() > 0 && !request.CloseSales)
+                            throw new CustomerException("Clientes en proceso de venta");
+
+                        foreach (var userId in response)
+                        {
+                            customerBlockedService.ClearBlockedCustomer(new ClearBlockedCustomerRequest { UserId = userId });
+                        }
+
+                        var routeTeamsTravlesEmployees = UoWConsumer.RouteTeamTravlesEmployeesRepository
+                            .Get(x => x.inventoryId == inventoryOpen.inventoryId && x.work_dayId == workDay.work_dayId && x.active)
+                            .ToList();
+
+                        foreach (var rTE in routeTeamsTravlesEmployees)
+                        {
+                            rTE.active = false;
+                        }
+                        inventoryOpen.state = 2;
+                        UoWConsumer.RouteTeamTravlesEmployeesRepository.UpdateByRange(routeTeamsTravlesEmployees);
+                    }
+                    UoWConsumer.Save();
+                }
+                else
+                {
+                    throw new InventoryNotClosedException("No se ha finalizado el viaje");
+                }
+
+                UoWConsumer.InventoryRepository.UpdateByRange(inventoriesOpen);
+            }
+
+            logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.WORK_DAY_NOT_FOUND);
+
             var apiInfoRequest = UoWConsumer.RouteRepository
                 .Get(x => x.routeId == request.RouteId)
                 .Select(x => new 
@@ -371,7 +472,7 @@ namespace SmartOrderService.Services
 
             if (apiInfoRequest == null)
             {
-                var logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.ROUTE_NOT_FOUND);
+                logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.ROUTE_NOT_FOUND);
 
                 var newLog = new so_liquidation_log()
                 {
@@ -407,7 +508,7 @@ namespace SmartOrderService.Services
 
                 if (response.Status)
                 {
-                    var logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.RUNNING);
+                    logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.RUNNING);
 
                     var newLog = new so_liquidation_log()
                     {
@@ -436,7 +537,7 @@ namespace SmartOrderService.Services
                 }
                 else
                 {
-                    var logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.UNDEFINED);
+                    logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.UNDEFINED);
 
                     var newLog = new so_liquidation_log()
                     {
@@ -466,7 +567,7 @@ namespace SmartOrderService.Services
             }
             catch (UnauthorisedException e)
             {
-                var logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.UNAUTHORISED);
+                logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.UNAUTHORISED);
 
                 var newLog = new so_liquidation_log()
                 {
@@ -495,7 +596,7 @@ namespace SmartOrderService.Services
             }
             catch (ConfigurationValueNotFoundException e)
             {
-                var logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.CONFIGURATION_VALUE_NOT_FOUND);
+                logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.CONFIGURATION_VALUE_NOT_FOUND);
 
                 var newLog = new so_liquidation_log()
                 {
@@ -524,7 +625,7 @@ namespace SmartOrderService.Services
             }
             catch (InternalServerException e)
             {
-                var logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.INTERNAL_SERVER_ERROR);
+                logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.INTERNAL_SERVER_ERROR);
 
                 var newLog = new so_liquidation_log()
                 {
@@ -553,7 +654,7 @@ namespace SmartOrderService.Services
             }
             catch (Exception e)
             {
-                var logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.UNDEFINED);
+                logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.UNDEFINED);
 
                 var newLog = new so_liquidation_log()
                 {
@@ -677,7 +778,11 @@ namespace SmartOrderService.Services
         }
 
         #region Models Helpers
-  
+        private class ProductInfo
+        {
+            public int ProductId { get; set; }
+            public int Quantity { get; set; }
+        }
         #endregion
     }
 }

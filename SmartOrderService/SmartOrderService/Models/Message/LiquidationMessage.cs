@@ -154,6 +154,7 @@ namespace SmartOrderService.Models.Message
         public int UserId { get; set; }
         public int RouteId { get; set; }
         public bool CloseInvetories { get; set; }
+        public bool CloseSales { get; set; }
         public DateTime? Date { get; set; }
     }
 
@@ -163,7 +164,7 @@ namespace SmartOrderService.Models.Message
     }
     #endregion
 
-    #region Get Liquidation
+    #region Get Liquidation Status
     public class GetLiquidationStatusRequest
     {
         public int UserId { get; set; }

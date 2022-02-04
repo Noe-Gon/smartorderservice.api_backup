@@ -42,7 +42,9 @@ namespace SmartOrderService.UnitOfWork
             LiquidationLogStatusRepository = new GenericRepository<so_liquidation_log_status>(Context);
             LeaderAuthorizationCodeRepository = new GenericRepository<so_leader_authorization_code>(Context);
             AuthentificationLogRepository = new GenericRepository<so_authentication_log>(Context);
-
+            InventoryRepository = new GenericRepository<so_inventory>(Context);
+            RouteTeamInventoryAvailableRepository = new GenericRepository<so_route_team_inventory_available>(Context);
+            RouteTeamTravlesEmployeesRepository = new GenericRepository<so_route_team_travels_employees>(Context);
         }
 
         private SmartOrderModel Context { get; set; }
@@ -76,6 +78,7 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_sale_detail> SaleDetailRepository { get; set; }
         public GenericRepository<so_liquidation_log> LiquidationLogRepository { get; set; }
         public GenericRepository<so_liquidation_log_status> LiquidationLogStatusRepository { get; set; }
+        public GenericRepository<so_route_team_travels_employees> RouteTeamTravlesEmployeesRepository { get; set; }
 
         public void Save()
         {

@@ -126,6 +126,20 @@ namespace SmartOrderService.Controllers
                     return Content(System.Net.HttpStatusCode.BadRequest, response);
                 }
             }
+            catch (InventoryNotClosedException e)
+            {
+                return Content((System.Net.HttpStatusCode)421, ResponseBase<SendLiquidationResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (CustomerException e)
+            {
+                return Content((System.Net.HttpStatusCode)420, ResponseBase<SendLiquidationResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
             catch (Exception e)
             {
                 return Content(System.Net.HttpStatusCode.InternalServerError, ResponseBase<SendLiquidationResponse>.Create(new List<string>()

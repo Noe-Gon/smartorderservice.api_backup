@@ -82,6 +82,7 @@ namespace SmartOrderService.Models
         public List<PromotionGiftArticleDto> PromotionGiftArticleDto;
 
         public List<SaleDetailsArticles> SaleDetailsArticles;
+        public List<SaleTeamEmptyBottles> EmptyBottles;
 
         public SaleTeam()
         {
@@ -91,6 +92,13 @@ namespace SmartOrderService.Models
             PromotionGiftArticleDto = new List<PromotionGiftArticleDto>();
             SaleDetailsArticles = new List<SaleDetailsArticles>();
             PromocionData = new PromocionData();
+            EmptyBottles = new List<SaleTeamEmptyBottles>();
         }
+    }
+
+    public class SaleTeamEmptyBottles
+    {
+        public int BottleId { get; set; }
+        public int Amount { get; set; }
     }
 }

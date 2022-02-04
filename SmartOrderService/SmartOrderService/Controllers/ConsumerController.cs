@@ -256,9 +256,9 @@ namespace SmartOrderService.Controllers
                     });
 
                     if (response.Status)
-                        return Content(HttpStatusCode.BadRequest, response.Data);
+                        return Content(HttpStatusCode.OK, response.Data);
 
-                    return Content(HttpStatusCode.OK, response.Data);
+                    return Content(HttpStatusCode.BadRequest, response.Data);
                 }
             }
             catch (Exception e)
