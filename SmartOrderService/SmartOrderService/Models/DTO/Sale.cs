@@ -44,6 +44,9 @@ namespace SmartOrderService.Models
         public bool? SmsDeliveryTicket { get; set; }
         public bool? EmailDeliveryTicket { get; set; }
         public string PaymentMethod { get; set; }
+
+        public string Email { get; set; }
+
         public int UserId;
 
         public double TotalCash;
@@ -70,10 +73,6 @@ namespace SmartOrderService.Models
 
         public PromocionData PromocionData;
 
-        public int RouteId;
-
-        public int BranchId;
-
         public List<PromotionCatalog> PromotionCatalog;
 
         public List<PromotionProductDto> PromotionProductDto;
@@ -84,6 +83,14 @@ namespace SmartOrderService.Models
 
         public List<SaleDetailsArticles> SaleDetailsArticles;
 
+        public SaleTeam()
+        {
+            PromotionCatalog = new List<PromotionCatalog>();
+            PromotionProductDto = new List<PromotionProductDto>();
+            PromotionGiftProductDto = new List<PromotionGiftProductDto>();
+            PromotionGiftArticleDto = new List<PromotionGiftArticleDto>();
+            SaleDetailsArticles = new List<SaleDetailsArticles>();
+            PromocionData = new PromocionData();
+        }
     }
-
 }
