@@ -274,7 +274,7 @@ namespace SmartOrderService.Services
 
             List<int> inventoriesId;
 
-            if (request.InventoryId.HasValue)
+            if (request.InventoryId.HasValue && request.InventoryId > 0)
                 inventoriesId = new List<int>() { request.InventoryId.Value };
             else
                 inventoriesId = UoWConsumer.InventoryRepository
@@ -298,7 +298,8 @@ namespace SmartOrderService.Services
                 .ToList();
 
             var response = UoWConsumer.SaleDetailRepository
-                .Get(x => teamIds.Contains(x.so_sale.userId) && inventoriesId.Contains(x.so_sale.inventoryId.Value) && x.status)
+                .Get(x => teamIds.Contains(x.so_sale.userId) && inventoriesId.Contains(x.so_sale.inventoryId.Value) 
+                        && x.status && DbFunctions.TruncateTime(x.so_sale.date) == DbFunctions.TruncateTime(request.Date.Value))
                 .Join(UoWConsumer.ProductBottleRepository.GetAll(), sd => sd.productId, pb => pb.productId,
                 (sd, pb) => new
                 {
