@@ -107,4 +107,24 @@ namespace SmartOrderService.Models.Requests
     }
     #endregion
 
+    #region Delivery delivered
+    public class DeliveredRequest
+    {
+        public string code { get; set; }
+    }
+
+    public class DeliveredResponse
+    {
+        public string Msg { get; set; }
+    }
+    #endregion
+
+    #region Update Delivery API PREVENTA
+    public class UpdateDeliveryAPIPreventaRequest
+    {
+        public string groupCode { get; set; }
+        public string statusCode { get; set; }
+    }
+
+    #endregion
 }

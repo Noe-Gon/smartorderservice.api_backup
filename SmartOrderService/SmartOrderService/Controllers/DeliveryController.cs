@@ -85,9 +85,33 @@ namespace SmartOrderService.Controllers
 
                 return Content(HttpStatusCode.BadRequest, response);
             }
+            catch (EntityNotFoundException e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<GetDeliveriesRequest>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
             catch (Exception e)
             {
                 return Content(HttpStatusCode.InternalServerError, ResponseBase<GetDeliveriesRequest>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+        }
+
+        [HttpPost]
+        [Route("~/api/delivery/delivered")]
+        public IHttpActionResult Delivered(DeliveredRequest request)
+        {
+            try
+            {
+
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<DeliveredResponse>.Create(new List<string>()
                 {
                     e.Message
                 }));

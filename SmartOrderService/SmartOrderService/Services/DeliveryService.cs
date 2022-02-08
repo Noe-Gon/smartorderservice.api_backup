@@ -454,5 +454,34 @@ namespace SmartOrderService.Services
 
             return ResponseBase<List<GetDeliveriesResponse>>.Create(response);
         }
+
+        public ResponseBase<DeliveredResponse> Delivered(DeliveredRequest request)
+        {
+            var delivery = db.so_delivery
+                .Where(x => x.code == request.code)
+                .FirstOrDefault();
+
+            if (delivery == null)
+                throw new EntityNotFoundException("No se encontró el delivery con CODE: " + request.code);
+
+            var clientPreventaApi = new RestClient();
+            clientPreventaApi.BaseUrl = new Uri(ConfigurationManager.AppSettings["PreventaAPI"]);
+            var requestPreventaApiConfig = new RestRequest("api/v1/preOrder", Method.PATCH);
+            requestPreventaApiConfig.AddHeader("x-api-key", ConfigurationManager.AppSettings["x-api-key"]);
+            requestPreventaApiConfig.RequestFormat = DataFormat.Json;
+            requestPreventaApiConfig.AddBody(new UpdateDeliveryAPIPreventaRequest
+            {
+                groupCode = request.code,
+                statusCode = ""
+            });
+
+            var apiResponse = clientPreventaApi.Execute(requestPreventaApiConfig);
+
+            if (apiResponse.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+
+            }
+        }
+
     }
 }
