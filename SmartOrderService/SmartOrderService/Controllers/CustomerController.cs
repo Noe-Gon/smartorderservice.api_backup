@@ -14,14 +14,41 @@ namespace SmartOrderService.Controllers
 {
     public class CustomerController : ApiController
     {
+        
+        //public HttpResponseMessage Get([FromUri] CustomerRequest request)
+        //{
+        //    HttpResponseMessage response;
+        //    try
+        //    {
+
+        //        var Customers = new CustomerService().FindCustomers(request);
+        //        response = Request.CreateResponse(HttpStatusCode.OK, Customers);
+        //    }
+        //    catch (CustomerNotFoundException e)
+        //    {
+        //        response = Request.CreateResponse(HttpStatusCode.NotFound, "Error: " + e.Message);
+        //    }
+        //    catch (InventoryEmptyException e)
+        //    {
+        //        response = Request.CreateResponse(HttpStatusCode.Conflict, "Error: no se han cargado los clientes a visitar en el recorrido, no hay inventario del día");
+        //    }
+
+        //    catch (Exception e)
+        //    {
+        //        response = Request.CreateResponse(HttpStatusCode.InternalServerError, "Error: " + e.Message);
+        //    }
+
+
+        //    return response;
+        //}
+
         // GET: api/Customer
         public HttpResponseMessage Get([FromUri] CustomerRequest request)
         {
             HttpResponseMessage response;
             try
             {
-
-                var Customers = new CustomerService().FindCustomers(request);
+                var Customers = new CustomerService().FindCustomersv2(request);
                 response = Request.CreateResponse(HttpStatusCode.OK, Customers);
             }
             catch (CustomerNotFoundException e)

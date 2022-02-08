@@ -491,6 +491,7 @@
     <Compile Include="Models\DTO\CellarNoticeDto.cs" />
     <Compile Include="Models\DTO\CollectBottleDetailDto.cs" />
     <Compile Include="Models\DTO\CollectBottleDto.cs" />
+    <Compile Include="Models\DTO\CustomerDtoV2.cs" />
     <Compile Include="Models\DTO\Invoice\InvoiceDataDto.cs" />
     <Compile Include="Models\DTO\Invoice\InvoiceHeaderOpeFacturaDto.cs" />
     <Compile Include="Models\DTO\Invoice\InvoiceLineOpeFacturaDto.cs" />
@@ -611,6 +612,7 @@
     <Compile Include="Models\Responses\CustomerResponse.cs" />
     <Compile Include="Models\Responses\EmailResponse.cs" />
     <Compile Include="Models\Responses\InvoiceOpeFacturaResponse.cs" />
+    <Compile Include="Models\Responses\LoyaltyUuidResponse.cs" />
     <Compile Include="Models\Responses\MsgResponseBase.cs" />
     <Compile Include="Models\Responses\PriceResponse.cs" />
     <Compile Include="Models\Responses\ProductResponse.cs" />

@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using Newtonsoft.Json;
+using RestSharp;
 using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
 using SmartOrderService.DB.OpeCdBi;
@@ -6,6 +8,7 @@ using SmartOrderService.Models;
 using SmartOrderService.Models.DTO;
 using SmartOrderService.Models.Enum;
 using SmartOrderService.Models.Requests;
+using SmartOrderService.Models.Responses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -73,6 +76,77 @@ namespace SmartOrderService.Services
             return customers;
         }
 
+        public List<CustomerDtoV2> getAllV2(DateTime updated, int UserId)
+        {
+
+            List<CustomerDtoV2> customers = new List<CustomerDtoV2>();
+            InventoryService inventoryService = new InventoryService();
+
+            var UserRoute = db.so_user_route.Where(u => u.userId.Equals(UserId) && u.status).FirstOrDefault();
+            var datas = db.so_route_customer.Where(
+                c => c.routeId.Equals(UserRoute.routeId)
+                && c.status
+                && c.visit_type > 0)
+                .Select(c => c.so_customer)
+                .Distinct()
+                .ToList();
+
+            try
+            {
+                UserId = inventoryService.SearchDrivingId(UserId);
+            }
+            catch (RelatedDriverNotFoundException e)
+            {
+            }
+
+            var Inventory = inventoryService.GetCurrentInventory(UserId, null);
+
+            var CustomerToDeliver = new DeliveryService().getCustomersToDeliver(Inventory.inventoryId, UserId);
+
+            var customerIds = datas.Select(c => c.customerId).ToList();
+
+            CustomerToDeliver.RemoveAll(c => customerIds.Contains(c.customerId));
+
+            datas.AddRange(CustomerToDeliver);
+
+            if (datas.Any())
+            {
+                var customerList = datas.Select(c => c.customerId).ToList();
+
+                var tags = db.so_tag.Where(t => customerList.Contains(t.customerId) && t.status);
+
+                customers = Mapper.Map<List<CustomerDtoV2>>(datas);
+                //var autorizacion = "a9c332d2-ba38-405f-9cf7-57bcd787eba1";
+
+                foreach (var customer in customers)
+                {
+                    var customerTags = tags.Where(t => t.customerId == customer.CustomerId).Select(t => t.tag).ToList();
+
+                    customer.Tags.AddRange(customerTags);
+                    customer.IsFacturable = true;// facturables.Contains(customer.CustomerId);
+                    //Consumiendo el endpoint de ensitech de obtencion de uuid
+
+                    //var url = "https://is68s2j0b1.execute-api.us-east-1.amazonaws.com/dev/beneficiary/customer?customerCode=" + customer.Code;
+                    //LoyaltyUuidResponse loyaltyUser = null;
+                    //try
+                    //{
+                    //    var client = new RestClient(url);
+                    //    var request = new RestRequest(Method.GET);
+                    //    request.AddHeader("content-type", "application/json");
+                    //    request.AddHeader("x-api-key", autorizacion);
+                    //    IRestResponse response = client.Execute(request);
+                    //    loyaltyUser = JsonConvert.DeserializeObject<LoyaltyUuidResponse>(response.Content);
+                    //}
+                    //catch (Exception ex)
+                    //{
+                    //    Console.WriteLine(ex.Message);
+                    //}
+                    //customer.uuid = loyaltyUser.uuid;
+                }
+            }
+            return customers;
+        }
+
         public List<CustomerDto> FindCustomers(CustomerRequest request)
         {
 
@@ -87,6 +161,25 @@ namespace SmartOrderService.Services
             {
                 var date = Utils.DateUtils.getDateTime(request.LastUpdate);
                 customers.AddRange(getAll(date, request.UserId));
+            }
+
+            return customers;
+        }
+
+        public List<CustomerDtoV2> FindCustomersv2(CustomerRequest request)
+        {
+
+            var customers = new List<CustomerDtoV2>();
+
+            if (request.Code != null && request.Code.Length > 0)
+            {
+                var customer = FindCustomerByCodeV2(request.Code);
+                customers.Add(customer);
+            }
+            else
+            {
+                var date = Utils.DateUtils.getDateTime(request.LastUpdate);
+                customers.AddRange(getAllV2(date, request.UserId));
             }
 
             return customers;
@@ -283,6 +376,18 @@ namespace SmartOrderService.Services
                 throw new CustomerNotFoundException(CustomerCode);
 
             var CustomerDto = Mapper.Map<CustomerDto>(customer);
+
+            return CustomerDto;
+        }
+
+        public CustomerDtoV2 FindCustomerByCodeV2(string CustomerCode)
+        {
+            var customer = db.so_customer.Where(c => c.code.Equals(CustomerCode)).FirstOrDefault();
+
+            if (customer == null)
+                throw new CustomerNotFoundException(CustomerCode);
+
+            var CustomerDto = Mapper.Map<CustomerDtoV2>(customer);
 
             return CustomerDto;
         }
