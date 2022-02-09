@@ -97,4 +97,11 @@ namespace SmartOrderService.Models
         public decimal? liters { get; set; }
         #endregion New price fields
     }
+
+    public class SaleDetailLoyalty 
+    {
+        public string code { get; set; }
+        public string name { get; set; }
+        public string points { get; set; }
+    }
 }

@@ -41,6 +41,16 @@ namespace SmartOrderService.Models
 
     public class SaleTeam
     {
+        public SaleTeam()
+        {
+            this.PromotionCatalog = new List<PromotionCatalog>();
+            this.PromotionProductDto = new List<PromotionProductDto>();
+            this.PromotionGiftProductDto = new List<PromotionGiftProductDto>();
+            this.PromotionGiftArticleDto = new List<PromotionGiftArticleDto>();
+            this.SaleDetailsArticles = new List<SaleDetailsArticles>();
+            this.PromocionData = new PromocionData();
+        }
+
         public bool? SmsDeliveryTicket { get; set; }
         public bool? EmailDeliveryTicket { get; set; }
         public string PaymentMethod { get; set; }
@@ -86,4 +96,8 @@ namespace SmartOrderService.Models
 
     }
 
+    public class SaleTeamWithPoints : SaleTeam
+    {
+        public List<SaleDetailLoyalty> SaleDetailsLoyalty;
+    }
 }

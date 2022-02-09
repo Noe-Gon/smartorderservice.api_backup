@@ -1314,16 +1314,19 @@ namespace SmartOrderService.Services
             column = new DataColumn();
             column.DataType = System.Type.GetType("System.String");
             column.ColumnName = "firma";
+            column.AllowDBNull = true;
             dtPromotionData.Columns.Add(column);
 
             column = new DataColumn();
             column.DataType = System.Type.GetType("System.String");
             column.ColumnName = "motivoNoFirma";
+            column.AllowDBNull = true;
             dtPromotionData.Columns.Add(column);
 
             column = new DataColumn();
             column.DataType = System.Type.GetType("System.String");
             column.ColumnName = "Location";
+            column.AllowDBNull = true;
             dtPromotionData.Columns.Add(column);
 
             column = new DataColumn();
