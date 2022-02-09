@@ -32,10 +32,11 @@ namespace SmartOrderService.Services
                 entity.attributes.Add(AttributeCrm.Create("ope_cfe", consumer.CFECode));
 
                 //Address
-                entity.attributes.Add(AttributeCrm.Create("ope_paisid", consumer.CountryId.ToString()));
-                entity.attributes.Add(AttributeCrm.Create("ope_estadoid", consumer.StateId.ToString()));
-                entity.attributes.Add(AttributeCrm.Create("ope_municipioid", consumer.MunicipalityId.ToString()));
-                entity.attributes.Add(AttributeCrm.Create("ope_coloniaid", consumer.Neighborhood.ToString()));
+                entity.attributes.Add(AttributeCrm.CreateEntityReference("ope_pais", "ope_paisid", consumer.CountryId.ToString()));
+                entity.attributes.Add(AttributeCrm.CreateEntityReference("ope_estado", "ope_estadoid", consumer.StateId.ToString()));
+                entity.attributes.Add(AttributeCrm.CreateEntityReference("ope_municipio", "ope_municipioid", consumer.MunicipalityId.ToString()));
+                entity.attributes.Add(AttributeCrm.CreateEntityReference("ope_colonia", "ope_coloniaid", consumer.Neighborhood.ToString()));
+
                 entity.attributes.Add(AttributeCrm.Create("ope_numero_interior", consumer.InteriorNumber));
                 entity.attributes.Add(AttributeCrm.Create("ope_numeroexterior", consumer.ExternalNumber));
                 entity.attributes.Add(AttributeCrm.Create("ope_cruzamiento1", consumer.Crossroads));

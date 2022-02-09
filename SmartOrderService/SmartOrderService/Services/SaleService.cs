@@ -8,7 +8,9 @@ using SmartOrderService.Models.Enum;
 using SmartOrderService.Models.Requests;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
+using System.Data.Common;
 using System.Data.Entity;
 using System.Data.SqlClient;
 using System.Linq;
@@ -148,6 +150,8 @@ namespace SmartOrderService.Services
                     sale.state = 2;
                     sale.modifiedon = DateTime.Now;
 
+                    RestoreInventoryAvailability(saleId);
+
                     db.SaveChanges();
                     dbContextTransaction.Commit();
                 }
@@ -169,11 +173,16 @@ namespace SmartOrderService.Services
 
         public Sale Cancel(int saleId, string PaymentMethod)
         {
-
+            bool lInventarioAfectado = false;
             var sale = db.so_sale.Where(s => s.saleId.Equals(saleId)).FirstOrDefault();
 
             if (sale == null)
                 throw new EntityNotFoundException();
+
+            if(sale.state == 2 && !sale.status)
+            {
+                lInventarioAfectado = true;
+            }
 
             using (var dbContextTransaction = db.Database.BeginTransaction())
             {
@@ -196,6 +205,7 @@ namespace SmartOrderService.Services
                                 //Se prepara la información
                                 var route = db.so_route_customer.Where(x => x.customerId == sale.customerId).FirstOrDefault();
                                 var user = db.so_user.Where(x => x.userId == sale.userId).FirstOrDefault();
+                                DataTable dtTicket = GetPromotionsTicketDigital(db, sale.saleId);
 
                                 var sendTicketDigitalEmail = new SendCancelTicketDigitalEmailRequest
                                 {
@@ -205,7 +215,8 @@ namespace SmartOrderService.Services
                                     CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
                                     Date = DateTime.Now,
                                     PaymentMethod = PaymentMethod,
-                                    SellerName = user.code + " - " + user.name
+                                    SellerName = user.code + " - " + user.name,
+                                    dtTicket = dtTicket
                                 };
 
                                 var sales = new List<SendTicketDigitalEmailSales>();
@@ -234,6 +245,12 @@ namespace SmartOrderService.Services
                     catch (Exception)
                     {
                     }
+
+                    if (!lInventarioAfectado)
+                    {
+                        RestoreInventoryAvailability(saleId);
+                    }
+
                     dbContextTransaction.Commit();
                 }
                 catch (Exception e)
@@ -249,7 +266,6 @@ namespace SmartOrderService.Services
             var SaleDto = new SaleMapper().toModel(sale);
 
             return SaleDto;
-
         }
 
         public Sale create(Sale sale) {
@@ -426,7 +442,7 @@ namespace SmartOrderService.Services
                 saleResult.CustomerId = sale.CustomerId;
                 saleResult.DeliveryId = sale.DeliveryId;
                 saleResult.SaleDetails = new List<SaleDetail>();
-                for (int i = 0; i < sale.SaleDetails.Count(); i++)
+            for (int i = 0; i < sale.SaleDetails.Count(); i++)
                 {
                     int amountSaled = 0;
                     SaleDetailResult saleDetailResult = new SaleDetailResult(sale.SaleDetails[i]);
@@ -473,6 +489,7 @@ namespace SmartOrderService.Services
             saleResult.CustomerId = sale.CustomerId;
             saleResult.DeliveryId = sale.DeliveryId;
             saleResult.SaleDetails = new List<SaleDetail>();
+            saleResult.PaymentMethod = sale.PaymentMethod;
             for (int i = 0; i < sale.SaleDetails.Count(); i++)
             {
                 int amountSaled = 0;
@@ -727,7 +744,7 @@ namespace SmartOrderService.Services
             routeTeamInventoryAvailable.UpdateRouteTeamInventory(sale);
         }
 
-        public void UpdateRouteTeamInventory(SaleTeam sale)
+        public void UpdateRouteTeamInventory(SaleTeam sale, SmartOrderModel dbAux)
         {
             RoleTeamService roleTeamService = new RoleTeamService();
             ERolTeam userRole = roleTeamService.GetUserRole(sale.UserId);
@@ -735,76 +752,129 @@ namespace SmartOrderService.Services
             {
                 return;
             }
-            RouteTeamInventoryAvailableService routeTeamInventoryAvailable = new RouteTeamInventoryAvailableService();
+            RouteTeamInventoryAvailableService routeTeamInventoryAvailable = new RouteTeamInventoryAvailableService(dbAux);
             routeTeamInventoryAvailable.UpdateRouteTeamInventory(sale);
         }
 
         public void RestoreInventoryAvailability(int saleId)
         {
-            int inventoryId = db.so_sale.Where(s => s.saleId.Equals(saleId)).FirstOrDefault().inventoryId.Value;
-            var saleDetail = db.so_sale_detail.Where(s => s.saleId.Equals(saleId))
-                .Select(a => new
-                {
-                    a.amount,
-                    a.productId
-                }).ToList();
+            int inventoryId = 0;
+            int routeId = 0;
+            int branchId = 0;
 
-            var promotion = db.so_sale_promotion.Where(s => s.saleId.Equals(saleId)).FirstOrDefault();
+            var sale = db.so_sale.Where(s => s.saleId.Equals(saleId)).FirstOrDefault();
 
-            if (promotion == null)
+            if(sale != null  && sale.inventoryId.HasValue)
             {
-                foreach (var sale in saleDetail)
-                {
-                    int amountSold = sale.amount;
-                    int saleInventory = inventoryId;
-                    int saleProductId = sale.productId;
-                    db.so_route_team_inventory_available
-                        .Where(e => e.inventoryId.Equals(saleInventory) && e.productId.Equals(saleProductId)).FirstOrDefault()
-                        .Available_Amount += amountSold;
-                }
-                db.SaveChanges();
-                return;
+                inventoryId = sale.inventoryId.Value;
+            } 
+            else
+            {
+                throw new Exception("No se encontró un inventario");
             }
 
-            int promotionId = promotion.sale_promotionId;
+            var viaje = db.so_route_team_travels_employees.Where(a => a.inventoryId == inventoryId).ToList();
 
-            var promotionDetail = db.so_sale_promotion_detail.Where(s => s.sale_promotionId.Equals(promotionId))
-                .Select(a => new
-                {
-                    a.amount,
-                    a.productId
-                }).ToList();
-            var sales = saleDetail
-                .Concat(promotionDetail)
-                .GroupBy(a => a.productId)
-                .Select(
-                    g => new
-                    {
-                        productId = g.Key,
-                        amount = g.Sum(s => s.amount)
-                    });
-
-            using (var dbContextTransaction = db.Database.BeginTransaction())
+            if (viaje.Count == 1)
             {
-                try
+                routeId = viaje.FirstOrDefault().routeId;
+            } else
+            {
+                throw new Exception("Debe existir un viaje para el inventario de la venta");
+            }
+
+            var ruta = db.so_route.Where(a => a.routeId == routeId).ToList();
+
+            if (ruta.Count == 1)
+            {
+                branchId = ruta.FirstOrDefault().branchId;
+            }
+            else
+            {
+                throw new Exception("Debe existir un branch configurado para la ruta del viaje donde se realizó venta");
+            }
+
+
+            var amountProduct = (from it in (from promo in db.so_sale_promotion
+                                             join detpromo in db.so_sale_promotion_detail
+                                              on promo.sale_promotionId equals detpromo.sale_promotionId
+                                             where promo.saleId == saleId
+                                             select new
+                                             {
+                                                 detpromo.productId,
+                                                 amount = detpromo.amount * promo.amount
+                                             }).ToList()
+                             .Union((from detsale in db.so_sale_detail
+                                     where detsale.saleId == saleId
+                                     select new
+                                     {
+                                         detsale.productId,
+                                         detsale.amount
+                                     }).ToList()
+                              ).ToList()
+                                 group it by it.productId
+                              into g
+                                 select new
+                                 {
+                                     productId = g.Key,
+                                     amount = g.Sum(a => a.amount)
+                                 }).ToList();
+
+            var amountArticle = (from it in (from promo in db.so_sale_promotion
+                                             join art in db.so_sale_promotion_detail_article
+                                             on promo.sale_promotionId equals art.sale_promotionId
+                                             where promo.saleId == saleId
+                                             select new
+                                             {
+                                                 art.article_promotionalId,
+                                                 amount = art.amount * promo.amount
+                                             }).ToList().Union((from art in db.so_sale_detail_article
+                                                                where art.saleId == saleId
+                                                                select new
+                                                                {
+                                                                    art.article_promotionalId,
+                                                                    art.amount
+                                                                }
+                                                   ).ToList())
+                                 group it by it.article_promotionalId
+                                 into g
+                                 select new
+                                 {
+                                     article_promotionalId = g.Key,
+                                     amount = g.Sum(a => a.amount)
+                                 }).ToList();
+
+            foreach (var product in amountProduct)
+            {
+                var inventarioProduct = db.so_route_team_inventory_available
+                    .Where(e => e.inventoryId.Equals(inventoryId) && e.productId.Equals(product.productId)).FirstOrDefault();
+
+                if (inventarioProduct != null)
                 {
-                    foreach (var sale in sales)
-                    {
-                        int amountSold = sale.amount;
-                        int saleInventory = inventoryId;
-                        int saleProductId = sale.productId;
-                        db.so_route_team_inventory_available
-                            .Where(e => e.inventoryId.Equals(saleInventory) && e.productId.Equals(saleProductId)).FirstOrDefault()
-                            .Available_Amount += amountSold;
-                    }
-                    db.SaveChanges();
-                    dbContextTransaction.Commit();
+                    inventarioProduct.Available_Amount += product.amount;
                 }
-                catch (Exception e)
+                else
                 {
-                    dbContextTransaction.Rollback();
-                    throw new Exception();
+                    throw new Exception("No se encontró el Producto con ID" + product.productId + " por lo tanto no se pudo incrementar el inventario");
                 }
+            }
+
+            foreach (var article in amountArticle)
+            {
+                var inventarioArt = db.so_article_promotional_route
+                    .Where(e => e.branchId.Equals(branchId) && e.routeId.Equals(routeId) && e.article_promotionalId.Equals(article.article_promotionalId) && e.status == true).FirstOrDefault();
+
+                if(inventarioArt != null)
+                {
+                    inventarioArt.amount += article.amount;
+                    inventarioArt.modifiedon = DateTime.Now;
+                }
+                else
+                {
+                    throw new Exception("No se encontró el Articulo con ID: " + article.article_promotionalId + " por lo tanto no se pudo incrementar el inventario");
+                }
+
+                db.SaveChanges();
             }
         }
 
@@ -1084,9 +1154,9 @@ namespace SmartOrderService.Services
                                 throw new BadRequestException();
                             }
                             saleResult.SaleId = sale.SaleId;
-                            UpdateRouteTeamInventory(sale);
+                            UpdateRouteTeamInventory(sale, db);
                             CreatePaymentMethod(sale);
-                            sRespuesta = CreatePromotion(sale, db, transaction);
+                            sRespuesta = CreatePromotion(sale, db);
                             if (sRespuesta != string.Empty)
                                 throw new Exception(sRespuesta);
                         }
@@ -1095,26 +1165,39 @@ namespace SmartOrderService.Services
                             .Where(x => x.CustomerId == sale.CustomerId)
                             .FirstOrDefault();
 
-                        if (updateCustomerAdditionalData != null)
+                        if (updateCustomerAdditionalData != null || !string.IsNullOrEmpty(sale.Email))
                         {
                             #region Consumidores logica
                             //Actualizar contador
-                            updateCustomerAdditionalData.CounterVisitsWithoutSales = 0;
-                            db.SaveChanges();
+                            if(updateCustomerAdditionalData != null)
+                            {
+                                updateCustomerAdditionalData.CounterVisitsWithoutSales = 0;
+                                db.SaveChanges();
+                            }
 
+                            if (sale.EmailDeliveryTicket == null)
+                                sale.EmailDeliveryTicket = false;
+                            
                             //Envio de Ticket
                             if (sale.EmailDeliveryTicket == true)
                             {
                                 var customer = db.so_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
 
-                                if (customer.CustomerAdditionalData != null)
+                                if (customer.CustomerAdditionalData != null || !string.IsNullOrEmpty(sale.Email))
                                 {
                                     var customerAux = customer.CustomerAdditionalData.FirstOrDefault();
-                                    if (customerAux.IsMailingActive && customerAux.AcceptedTermsAndConditions)
+                                    if (customerAux == null)
+                                        customerAux = new so_customer_additional_data { IsMailingActive = false };
+
+                                    if (!string.IsNullOrEmpty(sale.Email))
+                                        customer.email = sale.Email;
+
+                                    if (customerAux.IsMailingActive || !string.IsNullOrEmpty(sale.Email))
                                     {
                                         //Se prepara la información
                                         var route = db.so_route_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
                                         var user = db.so_user.Where(x => x.userId == sale.UserId).FirstOrDefault();
+                                        DataTable dtTicket = GetPromotionsTicketDigital(db, sale.SaleId);
 
                                         var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
                                         {
@@ -1124,7 +1207,8 @@ namespace SmartOrderService.Services
                                             CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
                                             Date = DateTime.Now,
                                             PaymentMethod = sale.PaymentMethod,
-                                            SellerName = user.code + " - " + user.name
+                                            SellerName = user.code + " - " + user.name,
+                                            dtTicket = dtTicket
                                         };
 
                                         var sales = new List<SendTicketDigitalEmailSales>();
@@ -1134,6 +1218,7 @@ namespace SmartOrderService.Services
                                             if (product == null)
                                                 continue;
 
+                                            
                                             sales.Add(new SendTicketDigitalEmailSales
                                             {
                                                 Amount = detail.Amount,
@@ -1142,6 +1227,8 @@ namespace SmartOrderService.Services
                                                 UnitPrice = Convert.ToDouble(detail.PriceValue)
                                             });
                                         }
+
+                                        sendTicketDigitalEmail.CancelTicketLink = GetCancelLinkByCustomerId(customer.customerId);
                                         sendTicketDigitalEmail.Sales = sales;
 
                                         //Se envia el ticket
@@ -1170,6 +1257,55 @@ namespace SmartOrderService.Services
 
         }
 
+        public DataTable GetPromotionsTicketDigital(DbContext db, int SaleId)
+        {
+            DataTable dt = new DataTable();
+            DbDataAdapter adapter;
+            DataSet dataset = new DataSet();
+
+            DbCommand command = db.Database.Connection.CreateCommand();
+            command.Transaction = db.Database.CurrentTransaction.UnderlyingTransaction;
+            command.CommandText = "sp_getPromotionsTicketDigital";
+            command.CommandType = CommandType.StoredProcedure;
+
+            SqlParameter pSaleId = new SqlParameter("@SaleId", SaleId);
+            command.Parameters.Add(pSaleId);
+    
+            adapter = new System.Data.SqlClient.SqlDataAdapter();
+            adapter.SelectCommand = command;
+            adapter.Fill(dataset);
+
+            return dataset.Tables[0]; 
+        }
+        public string GetCancelLinkByCustomerId(int customerId)
+        {
+            var portalLinkLogs = db.so_portal_links_logs
+                .Where(x => x.CustomerId == customerId && x.Status == (int)PortalLinks.STATUS.PENDING && x.Type == (int)PortalLinks.TYPE.EMAIL_DEACTIVATION)
+                .FirstOrDefault();
+
+            if(portalLinkLogs == null)
+            {
+                //Generar el link para cancelar el envio de correo
+                Guid id = Guid.NewGuid();
+                var cancelEmail = new so_portal_links_log
+                {
+                    CustomerId = customerId,
+                    CreatedDate = DateTime.Today,
+                    Id = id,
+                    LimitDays = 0,
+                    Status = (int)PortalLinks.STATUS.PENDING,
+                    Type = (int)PortalLinks.TYPE.EMAIL_DEACTIVATION
+                };
+
+                db.so_portal_links_logs.Add(cancelEmail);
+                db.SaveChanges();
+
+                return ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/CancelTicketDigital/" + id;
+            }
+            
+            return ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/CancelTicketDigital/" + portalLinkLogs.Id;
+        }        
+        
         public void CreatePaymentMethod(SaleTeam sale)
         {
             var findResult = db.so_sale_aditional_data.Where(a => a.saleId == sale.SaleId && a.paymentMethod.Trim() == sale.PaymentMethod).FirstOrDefault();
@@ -1183,7 +1319,7 @@ namespace SmartOrderService.Services
             }
         }
 
-        public string CreatePromotion(SaleTeam sale, DbContext db, DbContextTransaction transaction)
+        public string CreatePromotion(SaleTeam sale, DbContext db)
         {
             List<DataTable> dataTables = createDataTableParameters(sale);
             DataTable dtPromotionCatalog = dataTables[0];
@@ -1201,12 +1337,6 @@ namespace SmartOrderService.Services
 
             SqlParameter pSaleId = new SqlParameter("@SaleId", sale.SaleId);
             command.Parameters.Add(pSaleId);
-
-            SqlParameter pRouteId = new SqlParameter("@RouteId", sale.RouteId);
-            command.Parameters.Add(pRouteId);
-
-            SqlParameter pBranchId = new SqlParameter("@BranchId", sale.BranchId);
-            command.Parameters.Add(pBranchId);
 
             SqlParameter pPromotionCatalog = new SqlParameter("@PromotionCatalog", SqlDbType.Structured);
             pPromotionCatalog.TypeName = "dbo.PromotionCatalog";

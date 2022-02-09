@@ -25,9 +25,9 @@ namespace SmartOrderService.Services
 
         public Workday createWorkday(int userId)
         {
-            ERolTeam userTeamRole = roleTeamService.GetUserRole(userId);
+            ERolTeam userRol = roleTeamService.GetUserRole(userId);
 
-            if (userTeamRole != ERolTeam.SinAsignar)
+            if (userRol != ERolTeam.SinAsignar)
             {
                 //Start Load Inventory Process OPCD
                 int impulsorId = inventoryService.SearchDrivingId(userId);
@@ -49,8 +49,6 @@ namespace SmartOrderService.Services
                 workday.IsOpen = true;
                 return workday;
             }
-
-            ERolTeam userRol = roleTeamService.GetUserRole(userId);
 
             if (userRol != ERolTeam.SinAsignar)
             {
@@ -97,12 +95,41 @@ namespace SmartOrderService.Services
 
                 return workday;
             }
-            so_work_day driverWorkDay = GetDriverWorkDayByAssistantId(userId);
+            else
+            {
+                var id = Guid.NewGuid();
 
-            workday.UserId = userId;
-            workday.WorkdayId = driverWorkDay.work_dayId;
-            workday.IsOpen = true;
-            return workday;
+                var time = DateTime.Now;
+
+                var device = db.so_device.Where(d => d.userId == userId && d.status);
+
+                //validamos que este registrado
+                if (!device.Any())
+                    throw new NoUserFoundException();
+
+                int deviceId = device.FirstOrDefault().deviceId;
+
+                var newWorkday = new so_work_day()
+                {
+                    work_dayId = id,
+                    userId = userId,
+                    date_start = time,
+                    createdon = time,
+                    deviceId = deviceId,
+                    openby_device = userId,
+                    modifiedon = time,
+                    status = true
+                };
+
+                db.so_work_day.Add(newWorkday);
+                db.SaveChanges();
+
+                workday.UserId = userId;
+                workday.WorkdayId = newWorkday.work_dayId;
+                workday.IsOpen = true;
+
+                return workday;
+            }
         }
 
         public List<Jornada> RetrieveWorkDay(string BranchCode,string UserCode,DateTime Date)
