@@ -46,7 +46,7 @@ namespace SmartOrderService.Models.Requests
     {
         public int productId { get; set; }
         public int quantity { get; set; }
-        public double price { get; set; }
+        public Single price { get; set; }
     }
     #endregion
 }

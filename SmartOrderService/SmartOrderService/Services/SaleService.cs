@@ -185,6 +185,9 @@ namespace SmartOrderService.Services
                     sale.state = 2;
                     sale.modifiedon = DateTime.Now;
 
+                    if (sale.deliveryId != null && sale.deliveryId != 0)
+                        CancelDeliveryStatus(sale.deliveryId.Value);
+
                     db.SaveChanges();
                     //Enviar Ticket
                     try
@@ -1145,6 +1148,9 @@ namespace SmartOrderService.Services
                             saleResult.SaleId = sale.SaleId;
                             UpdateRouteTeamInventory(sale, db);
                             CreatePaymentMethod(sale);
+                            if (sale.DeliveryId != 0)
+                                UpdateDeliveryStatus(sale);
+
                             sRespuesta = CreatePromotion(sale, db);
                             if (sRespuesta != string.Empty)
                                 throw new Exception(sRespuesta);
@@ -1244,6 +1250,70 @@ namespace SmartOrderService.Services
                 return saleResult;
             }
 
+        }
+
+        public void CancelDeliveryStatus(int deliveryId)
+        {
+            var statusDelivery = db.so_delivery_status
+                    .Where(x => x.Code == DeliveryStatus.CANCELED)
+                    .FirstOrDefault();
+
+            var delivery = db.so_delivery
+                .Where(x => x.deliveryId == deliveryId)
+                .FirstOrDefault();
+
+            delivery.deliveryStatusId = statusDelivery.Id;
+            db.so_delivery.Attach(delivery);
+            db.Entry(delivery).State = EntityState.Modified;
+            db.SaveChanges();
+        }
+
+        public void UpdateDeliveryStatus(SaleTeam sale)
+        {
+            var deliveriesProducts = db.so_delivery_detail
+                .Where(x => x.deliveryId == sale.DeliveryId)
+                .ToList();
+
+            string status = DeliveryStatus.DELIVERED;
+            bool isPartial = false;
+            foreach (var product in deliveriesProducts)
+            {
+                var aux = sale.SaleDetails
+                    .Where(x => x.ProductId == product.productId)
+                    .FirstOrDefault();
+
+                if (aux.Amount == product.amount)
+                {
+                    isPartial = true;
+                    continue;
+                }
+
+                if (isPartial)
+                {
+                    status = DeliveryStatus.PARTIALLY_DELIVERED;
+                    break;
+                }
+                status = DeliveryStatus.UNDELIVERED;
+            }
+
+            try
+            {
+                var statusDelivery = db.so_delivery_status
+                    .Where(x => x.Code == status)
+                    .FirstOrDefault();
+
+                var delivery = db.so_delivery
+                    .Where(x => x.deliveryId == sale.DeliveryId)
+                    .FirstOrDefault();
+
+                delivery.deliveryStatusId = statusDelivery.Id;
+                db.so_delivery.Attach(delivery);
+                db.Entry(delivery).State = EntityState.Modified;
+                db.SaveChanges();
+            }
+            catch (Exception)
+            {
+            }
         }
 
         public DataTable GetPromotionsTicketDigital(DbContext db, int SaleId)

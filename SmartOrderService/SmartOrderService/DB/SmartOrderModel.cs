@@ -164,6 +164,7 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_promotion_article_movement> so_promotion_article_movement { get; set; }
 
         public virtual DbSet<so_article_promotional_route> so_article_promotional_route { get; set; }
+        public virtual DbSet<so_delivery_status> so_delivery_status { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -1826,6 +1827,15 @@ namespace SmartOrderService.DB
             authenticationLog.HasOptional(x => x.LeaderAuthorizationCode)
                 .WithMany(x => x.AuthenticationLogs)
                 .HasForeignKey(x => x.LeaderAuthenticationCodeId);
+
+            modelBuilder.Entity<so_delivery_status>()
+                .HasKey(x => x.Id)
+                .Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+
+            modelBuilder.Entity<so_delivery>()
+                .HasOptional(x => x.DeliveryStatus)
+                .WithMany(x => x.Deliveries)
+                .HasForeignKey(x => x.deliveryStatusId);
 
         }
     }

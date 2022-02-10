@@ -24,7 +24,7 @@ namespace SmartOrderService.Models.Requests
     {
         public int ProductId { get; set; }
         public int Quantity { get; set; }
-        public int Price { get; set; }
+        public Single Price { get; set; }
     }
 
     public class SendOrderResponse
@@ -72,7 +72,7 @@ namespace SmartOrderService.Models.Requests
     {
         public int productId { get; set; }
         public int quantity { get; set; }
-        public int price { get; set; }
+        public Single price { get; set; }
     }
     #endregion
 
@@ -110,10 +110,22 @@ namespace SmartOrderService.Models.Requests
     #region Delivery delivered
     public class DeliveredRequest
     {
-        public string code { get; set; }
+        public int deliveryId { get; set; }
     }
 
     public class DeliveredResponse
+    {
+        public string Msg { get; set; }
+    }
+    #endregion
+
+    #region cancel Delivery
+    public class CancelDeliveryRequest
+    {
+        public int deliveryId { get; set; }
+    }
+
+    public class CancelDeliveryResponse
     {
         public string Msg { get; set; }
     }

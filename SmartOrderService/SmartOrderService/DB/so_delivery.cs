@@ -41,6 +41,10 @@ namespace SmartOrderService.DB
 
         private int _sale_note = 0;
 
+        public int? deliveryStatusId { get; set; }
+
+        public so_delivery_status DeliveryStatus { get; set; }
+
         public int? sale_note {
             set
             {

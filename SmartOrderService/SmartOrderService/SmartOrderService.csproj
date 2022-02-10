@@ -382,6 +382,7 @@
     <Compile Include="DB\so_delivery_references.cs" />
     <Compile Include="DB\so_delivery_replacement.cs" />
     <Compile Include="DB\so_delivery_sale.cs" />
+    <Compile Include="DB\so_delivery_status.cs" />
     <Compile Include="DB\so_device.cs" />
     <Compile Include="DB\so_equivalence_article.cs" />
     <Compile Include="DB\so_equivalence_product.cs" />
@@ -567,6 +568,7 @@
     <Compile Include="Models\Email\EmailAPIRequests.cs" />
     <Compile Include="Models\Enum\Consumer.cs" />
     <Compile Include="Models\Enum\ConsumerRemovalRequest.cs" />
+    <Compile Include="Models\Enum\DeliveryStatus.cs" />
     <Compile Include="Models\Enum\EInventoryTeamStatus.cs" />
     <Compile Include="Models\Enum\ERolTeam.cs" />
     <Compile Include="Models\Enum\PortalLinksStatus.cs" />

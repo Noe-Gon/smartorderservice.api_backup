@@ -339,8 +339,10 @@ namespace SmartOrderService.Services
                 }).ToList()
             };
 
+            var aux = Newtonsoft.Json.JsonConvert.SerializeObject(apiRequest);
+            Console.Write(aux);
             var response = SendDeliveryToPreventaAPI(apiRequest);
-
+           
             if (response)
                 return ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
                 {
@@ -455,14 +457,17 @@ namespace SmartOrderService.Services
             return ResponseBase<List<GetDeliveriesResponse>>.Create(response);
         }
 
-        public ResponseBase<DeliveredResponse> Delivered(DeliveredRequest request)
+        public ResponseBase<DeliveredResponse> UpdateDeliveryApiPreventa(DeliveredRequest request)
         {
             var delivery = db.so_delivery
-                .Where(x => x.code == request.code)
+                .Where(x => x.deliveryId == request.deliveryId)
                 .FirstOrDefault();
 
             if (delivery == null)
-                throw new EntityNotFoundException("No se encontró el delivery con CODE: " + request.code);
+                throw new EntityNotFoundException("No se encontró el delivery");
+
+            if(delivery.deliveryStatusId == null || delivery.deliveryStatusId == 0)
+                throw new ArgumentNullException("No cuenta con el status del delivery");
 
             var clientPreventaApi = new RestClient();
             clientPreventaApi.BaseUrl = new Uri(ConfigurationManager.AppSettings["PreventaAPI"]);
@@ -471,17 +476,136 @@ namespace SmartOrderService.Services
             requestPreventaApiConfig.RequestFormat = DataFormat.Json;
             requestPreventaApiConfig.AddBody(new UpdateDeliveryAPIPreventaRequest
             {
-                groupCode = request.code,
-                statusCode = ""
+                groupCode = delivery.code,
+                statusCode = delivery.DeliveryStatus.Code
             });
 
             var apiResponse = clientPreventaApi.Execute(requestPreventaApiConfig);
 
             if (apiResponse.StatusCode == System.Net.HttpStatusCode.OK)
             {
-
+                return ResponseBase<DeliveredResponse>.Create(new DeliveredResponse()
+                {
+                    Msg = "Actualizado con exito"
+                });
             }
+            if (apiResponse.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                return ResponseBase<DeliveredResponse>.Create(new List<string>()
+                {
+                    "El objeto a insertar está incompleto, revisar información. API Preventa"
+                });
+            }
+            if (apiResponse.StatusCode == (System.Net.HttpStatusCode)401)
+            {
+                return ResponseBase<DeliveredResponse>.Create(new List<string>()
+                {
+                    "Petición no autorizada, se requiere enviar el token de autorización o no cuenta con permisos. API Preventa"
+                });
+            }
+            if (apiResponse.StatusCode == (System.Net.HttpStatusCode)403)
+            {
+                return ResponseBase<DeliveredResponse>.Create(new List<string>()
+                {
+                    "No se encuentra el header Authorization del usuario. API Preventa"
+                });
+            }
+            if (apiResponse.StatusCode == (System.Net.HttpStatusCode)404)
+            {
+                return ResponseBase<DeliveredResponse>.Create(new List<string>()
+                {
+                    "Recurso no encontrado. API Preventa"
+                });
+            }
+            if (apiResponse.StatusCode == (System.Net.HttpStatusCode)409)
+            {
+                return ResponseBase<DeliveredResponse>.Create(new List<string>()
+                {
+                    "El objeto ya existe en la BD de Intermedia. API Preventa"
+                });
+            }
+
+            throw new Exception("Ocurrio un error al momento de procesar la información. API Preventa");
         }
 
+        public ResponseBase<CancelDeliveryResponse> CancelDeliveryApiPreventa(CancelDeliveryRequest request)
+        {
+            var delivery = db.so_delivery
+                .Where(x => x.deliveryId == request.deliveryId)
+                .FirstOrDefault();
+
+            if (delivery == null)
+                throw new EntityNotFoundException("No se encontró el delivery");
+
+            var statusDelivery = db.so_delivery_status
+                    .Where(x => x.Code == DeliveryStatus.CANCELED)
+                    .FirstOrDefault();
+
+            delivery.deliveryStatusId = statusDelivery.Id;
+            db.so_delivery.Attach(delivery);
+            db.Entry(delivery).State = EntityState.Modified;
+            db.SaveChanges();
+
+            if (delivery.deliveryStatusId == null || delivery.deliveryStatusId == 0)
+                throw new ArgumentNullException("No cuenta con el status del delivery");
+
+            var clientPreventaApi = new RestClient();
+            clientPreventaApi.BaseUrl = new Uri(ConfigurationManager.AppSettings["PreventaAPI"]);
+            var requestPreventaApiConfig = new RestRequest("api/v1/preOrder", Method.PATCH);
+            requestPreventaApiConfig.AddHeader("x-api-key", ConfigurationManager.AppSettings["x-api-key"]);
+            requestPreventaApiConfig.RequestFormat = DataFormat.Json;
+            requestPreventaApiConfig.AddBody(new UpdateDeliveryAPIPreventaRequest
+            {
+                groupCode = delivery.code,
+                statusCode = delivery.DeliveryStatus.Code
+            });
+
+            var apiResponse = clientPreventaApi.Execute(requestPreventaApiConfig);
+
+            if (apiResponse.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                return ResponseBase<CancelDeliveryResponse>.Create(new CancelDeliveryResponse()
+                {
+                    Msg = "Cancelado con exito"
+                });
+            }
+            if (apiResponse.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                return ResponseBase<CancelDeliveryResponse>.Create(new List<string>()
+                {
+                    "El objeto a insertar está incompleto, revisar información. API Preventa"
+                });
+            }
+            if (apiResponse.StatusCode == (System.Net.HttpStatusCode)401)
+            {
+                return ResponseBase<CancelDeliveryResponse>.Create(new List<string>()
+                {
+                    "Petición no autorizada, se requiere enviar el token de autorización o no cuenta con permisos. API Preventa"
+                });
+            }
+            if (apiResponse.StatusCode == (System.Net.HttpStatusCode)403)
+            {
+                return ResponseBase<CancelDeliveryResponse>.Create(new List<string>()
+                {
+                    "No se encuentra el header Authorization del usuario. API Preventa"
+                });
+            }
+            if (apiResponse.StatusCode == (System.Net.HttpStatusCode)404)
+            {
+                return ResponseBase<CancelDeliveryResponse>.Create(new List<string>()
+                {
+                    "Recurso no encontrado. API Preventa"
+                });
+            }
+            if (apiResponse.StatusCode == (System.Net.HttpStatusCode)409)
+            {
+                return ResponseBase<CancelDeliveryResponse>.Create(new List<string>()
+                {
+                    "El objeto ya existe en la BD de Intermedia. API Preventa"
+                });
+            }
+
+            throw new Exception("Ocurrio un error al momento de procesar la información. API Preventa");
+        }
     }
 }

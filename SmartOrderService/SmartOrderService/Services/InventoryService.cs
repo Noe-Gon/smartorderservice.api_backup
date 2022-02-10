@@ -411,6 +411,10 @@ namespace SmartOrderService.Services
                                 .FirstOrDefault();
                             }
 
+                            var deliveriStatus = db.so_delivery_status
+                                .Where(x => x.Code == DeliveryStatus.UNDELIVERED)
+                                .FirstOrDefault();
+
                             //Si no, registrar
                             var newDelivery = new so_delivery
                             {
@@ -422,7 +426,8 @@ namespace SmartOrderService.Services
                                 modifiedby = 2777,
                                 modifiedon = DateTime.Now,
                                 status = true,
-                                visit_order = 0
+                                visit_order = 0,
+                                deliveryStatusId = deliveriStatus == null ? null : deliveriStatus.Id
                             };
                             var newDeliveryDetails = new List<so_delivery_detail>();
                             foreach (var detail in delivery.products)
@@ -437,7 +442,7 @@ namespace SmartOrderService.Services
                                     productId = detail.productId,
                                     status = true,
                                     so_delivery = newDelivery,
-                                    price = Convert.ToInt32(detail.price)
+                                    price = detail.price
                                 });
                                 deliveryCount += detail.quantity;
                             }

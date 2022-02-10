@@ -102,12 +102,73 @@ namespace SmartOrderService.Controllers
         }
 
         [HttpPost]
-        [Route("~/api/delivery/delivered")]
+        [Route("~/api/delivery/preventa_update")]
         public IHttpActionResult Delivered(DeliveredRequest request)
         {
             try
             {
+                var service = new DeliveryService();
 
+                var response = service.UpdateDeliveryApiPreventa(request);
+
+                if (response.Status)
+                    return Content(HttpStatusCode.OK, response);
+
+                return Content(HttpStatusCode.BadRequest, response);
+
+            }
+            catch (ArgumentNullException e)
+            {
+                return Content(HttpStatusCode.Conflict, ResponseBase<DeliveredResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (EntityNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<DeliveredResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<DeliveredResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+        }
+
+        [HttpPost]
+        [Route("~/api/delivery/cancel")]
+        public IHttpActionResult CancelDelivery(CancelDeliveryRequest request)
+        {
+            try
+            {
+                var service = new DeliveryService();
+
+                var response = service.CancelDeliveryApiPreventa(request);
+
+                if (response.Status)
+                    return Content(HttpStatusCode.OK, response);
+
+                return Content(HttpStatusCode.BadRequest, response);
+
+            }
+            catch (ArgumentNullException e)
+            {
+                return Content(HttpStatusCode.Conflict, ResponseBase<DeliveredResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (EntityNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<DeliveredResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
             }
             catch (Exception e)
             {
