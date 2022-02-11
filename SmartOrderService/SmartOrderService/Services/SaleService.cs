@@ -1156,9 +1156,9 @@ namespace SmartOrderService.Services
                             saleResult.SaleId = sale.SaleId;
                             UpdateRouteTeamInventory(sale, db);
                             CreatePaymentMethod(sale);
-                            sRespuesta = CreatePromotion(sale, db);
-                            if (sRespuesta != string.Empty)
-                                throw new Exception(sRespuesta);
+                            //sRespuesta = CreatePromotion(sale, db);
+                            //if (sRespuesta != string.Empty)
+                            //    throw new Exception(sRespuesta);
                         }
 
                         var updateCustomerAdditionalData = db.so_customerr_additional_data

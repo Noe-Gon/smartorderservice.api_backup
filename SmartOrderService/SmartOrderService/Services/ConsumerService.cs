@@ -1,6 +1,7 @@
 ﻿using Algoritmos.Data.Enums;
 using Algoritmos.Data.UnitofWork;
 using CRM.Data.UnitOfWork;
+using Newtonsoft.Json;
 using RestSharp;
 using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
@@ -715,6 +716,45 @@ namespace SmartOrderService.Services
             }
         }
 
+        public ResponseBase<LoyaltyUuidResponse> GetConsumerUuid(string request)
+        {
+            var url = "https://is68s2j0b1.execute-api.us-east-1.amazonaws.com/dev/beneficiary/customer?customerCode=" + request;
+            var autorizacion = "a9c332d2-ba38-405f-9cf7-57bcd787eba1";
+            try
+            {
+                var client = new RestClient(url);
+                var restRequest = new RestRequest(Method.GET);
+                restRequest.AddHeader("content-type", "application/json");
+                restRequest.AddHeader("x-api-key", autorizacion);
+                IRestResponse response = client.Execute(restRequest);
+                return ResponseBase<LoyaltyUuidResponse>.Create(JsonConvert.DeserializeObject<LoyaltyUuidResponse>(response.Content));
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public ResponseBase<LoyaltyGetPointsResponse> GetConsumerPoints(string uuid)
+        {
+            var url = "https://is68s2j0b1.execute-api.us-east-1.amazonaws.com/dev/beneficiary/" + uuid + "/points";
+            var autorizacion = "a9c332d2-ba38-405f-9cf7-57bcd787eba1";
+            try
+            {
+                var client = new RestClient(url);
+                var restRequest = new RestRequest(Method.GET);
+                restRequest.AddHeader("content-type", "application/json");
+                restRequest.AddHeader("x-api-key", autorizacion);
+                IRestResponse response = client.Execute(restRequest);
+                return ResponseBase<LoyaltyGetPointsResponse>.Create(JsonConvert.DeserializeObject<LoyaltyGetPointsResponse>(response.Content));
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+
         public ResponseBase<ResendTicketDigitalResponse> ResendTicketDigital(ResendTicketDigitalRequest request)
         {
             try
@@ -833,6 +873,80 @@ namespace SmartOrderService.Services
                 }
                 else
                     emailInfo.TermsAndConditionLink = ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/TermsAndConditions/" + termsObject.Id;
+
+                var emailService = new EmailService();
+                var response = emailService.SendReactivationTicketDigital(emailInfo);
+
+                if (response.Status)
+                    return ResponseBase<ReactivationTicketDigitalResponse>.Create(new ReactivationTicketDigitalResponse
+                    {
+                        Msg = response.Data.Msg
+                    });
+
+                return ResponseBase<ReactivationTicketDigitalResponse>.Create(response.Errors);
+            }
+            catch (Exception e)
+            {
+                return ResponseBase<ReactivationTicketDigitalResponse>.Create(new List<string>()
+                {
+                    e.Message
+                });
+            }
+        }
+        public ResponseBase<ReactivationTicketDigitalResponse> LoyaltyTermsAndConditions(ReactivationTicketDigitalRequest request)
+        {
+            try
+            {
+                var customer = UoWConsumer.CustomerRepository
+                    .GetByID(request.CustomerId);
+
+                if (customer == null)
+                    return ResponseBase<ReactivationTicketDigitalResponse>.Create(new List<string>()
+                    {
+                        "No se encontró al cliente"
+                    });
+
+                if (string.IsNullOrEmpty(request.CustomerEmail))
+                    request.CustomerEmail = customer.email;
+
+                if (string.IsNullOrEmpty(request.CustomerEmail))
+                    return ResponseBase<ReactivationTicketDigitalResponse>.Create(new List<string>()
+                    {
+                        "No se encontró ningun email para el envio"
+                    });
+
+                //TermsAndConditios
+                //Verificar si el cliente cuenta con uno activo
+                var termsObject = UoWConsumer.PortalLinksLogRepository
+                    .Get(x => x.CustomerId == request.CustomerId && x.Type == (int)PortalLinks.TYPE.TERMSANDCONDITIONS_ACCEPT && x.Status == (int)PortalLinks.STATUS.PENDING)
+                    .FirstOrDefault();
+
+                var emailInfo = new SendReactivationTicketDigitalRequest()
+                {
+                    CustomerEmail = request.CustomerEmail,
+                    CustomerName = customer.name
+                };
+
+                if (termsObject == null)
+                {
+                    //Generar Link de Aceptación de terminos y consiciones
+                    Guid termsId = Guid.NewGuid();
+                    var termsEmail = new so_portal_links_log
+                    {
+                        CustomerId = customer.customerId,
+                        CreatedDate = DateTime.Today,
+                        Id = termsId,
+                        LimitDays = 0,
+                        Status = (int)PortalLinks.STATUS.PENDING,
+                        Type = (int)PortalLinks.TYPE.TERMSANDCONDITIONS_ACCEPT
+                    };
+                    UoWConsumer.PortalLinksLogRepository.Insert(termsEmail);
+                    UoWConsumer.Save();
+                    emailInfo.TermsAndConditionLink = ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/TermsAndConditionsLoyalty/" + termsId;
+
+                }
+                else
+                    emailInfo.TermsAndConditionLink = ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/TermsAndConditionsLoyalty/" + termsObject.Id;
 
                 var emailService = new EmailService();
                 var response = emailService.SendReactivationTicketDigital(emailInfo);

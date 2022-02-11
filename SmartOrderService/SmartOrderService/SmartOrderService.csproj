@@ -614,6 +614,7 @@
     <Compile Include="Models\Responses\CustomerResponse.cs" />
     <Compile Include="Models\Responses\EmailResponse.cs" />
     <Compile Include="Models\Responses\InvoiceOpeFacturaResponse.cs" />
+    <Compile Include="Models\Responses\LoyaltyGetPointsResponse.cs" />
     <Compile Include="Models\Responses\LoyaltyUuidResponse.cs" />
     <Compile Include="Models\Responses\MsgResponseBase.cs" />
     <Compile Include="Models\Responses\PriceResponse.cs" />

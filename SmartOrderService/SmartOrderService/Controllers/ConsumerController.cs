@@ -93,6 +93,50 @@ namespace SmartOrderService.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("~/api/consumer/GetUuid")]
+        public IHttpActionResult GetConsumerUuid([FromUri] string customerCode)
+        {
+            using (var service = GetService())
+            {
+                try
+                {
+                    var response = service.GetConsumerUuid(customerCode);
+
+                    if (response.Status)
+                        return Ok(response);
+                    else
+                        return Content(HttpStatusCode.BadRequest, response);
+                }
+                catch (Exception e)
+                {
+                    return InternalServerError(e);
+                }
+            }
+        }
+
+        [HttpGet]
+        [Route("~/api/consumer/GetPoints")]
+        public IHttpActionResult GetConsumerPoints([FromUri] string uuid)
+        {
+            using (var service = GetService())
+            {
+                try
+                {
+                    var response = service.GetConsumerPoints(uuid);
+
+                    if (response.Status)
+                        return Ok(response);
+                    else
+                        return Content(HttpStatusCode.BadRequest, response);
+                }
+                catch (Exception e)
+                {
+                    return InternalServerError(e);
+                }
+            }
+        }
+
         [HttpPost]
         [Route("~/api/ResendEmail/TicketDigital")]
         public IHttpActionResult ResendTicketDigital(ResendTicketDigitalRequest request)
@@ -124,6 +168,28 @@ namespace SmartOrderService.Controllers
                 using (var service = GetService())
                 {
                     var response = service.ReactivationTicketDigital(request);
+
+                    if (response.Status)
+                        return Ok(response);
+                    else
+                        return Content(HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (Exception e)
+            {
+                return InternalServerError(e);
+            }
+        }
+
+        [HttpPost]
+        [Route("~/api/LoyaltyTermsAndConditions")]
+        public IHttpActionResult LoyaltyTermsAndConditions(ReactivationTicketDigitalRequest request)
+        {
+            try
+            {
+                using (var service = GetService())
+                {
+                    var response = service.LoyaltyTermsAndConditions(request);
 
                     if (response.Status)
                         return Ok(response);
