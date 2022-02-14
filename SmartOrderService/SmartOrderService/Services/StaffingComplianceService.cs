@@ -9,6 +9,7 @@ using SmartOrderService.UnitOfWork;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data.Entity;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -64,7 +65,20 @@ namespace SmartOrderService.Services
                 //Si es impulsor
                 if (routeTeam.roleTeamId == (int)ERolTeam.Impulsor)
                 {
-                    requestNotify.auxiliarid = null;
+                    //Buscar si hay algun ayudante
+                    int ayudanteId = UoWConsumer.RouteTeamRepository
+                        .Get(x => x.roleTeamId == (int)ERolTeam.Impulsor && x.routeId == request.RouteId)
+                        .Select(x => x.userId)
+                        .FirstOrDefault();
+
+                    var ayudante = UoWConsumer.AuthentificationLogRepository
+                        .Get(x => !x.WasLeaderCodeAuthorization && DbFunctions.TruncateTime(x.CreatedDate) == DbFunctions.TruncateTime(DateTime.Now)
+                                    && x.UserId == ayudanteId && x.RouteId == request.RouteId)
+                        .FirstOrDefault();
+
+                    string ayudanteCode = ayudante != null ? ayudante.UserCode : UoWConsumer.UserRepository.Get(x => x.userId == ayudanteId).Select(x => x.code).FirstOrDefault();
+
+                    requestNotify.auxiliarid = Convert.ToInt32(ayudanteCode);
                     requestNotify.impulsorId = Convert.ToInt32(request.EmployeeCode);
                     requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
                     requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
@@ -72,17 +86,21 @@ namespace SmartOrderService.Services
                 //Si es ayudante
                 else
                 {
-                    var impulsorId = UoWConsumer.RouteTeamRepository
-                    .Get(x => x.routeId == routeBranch.Route.routeId && x.roleTeamId == (int)ERolTeam.Impulsor)
-                    .Select(x => x.userId)
-                    .FirstOrDefault();
-
-                    var impulsorCode = UoWConsumer.UserRepository.Get(x => x.userId == impulsorId)
-                        .Select(x => x.code)
+                    //Buscar si ya inicio un Impulsor
+                    int impulsorId = UoWConsumer.RouteTeamRepository
+                        .Get(x => x.roleTeamId == (int)ERolTeam.Impulsor && x.routeId == request.RouteId)
+                        .Select(x => x.userId)
                         .FirstOrDefault();
 
+                    var impulsor = UoWConsumer.AuthentificationLogRepository
+                        .Get(x => !x.WasLeaderCodeAuthorization && DbFunctions.TruncateTime(x.CreatedDate) == DbFunctions.TruncateTime(DateTime.Now) 
+                                    && x.UserId == impulsorId && x.RouteId == request.RouteId)
+                        .FirstOrDefault();
+
+                    string impulsorCode = impulsor != null ? impulsor.UserCode : UoWConsumer.UserRepository.Get(x => x.userId == impulsorId).Select(x => x.code).FirstOrDefault();
+
                     requestNotify.auxiliarid = Convert.ToInt32(request.EmployeeCode);
-                    requestNotify.impulsorId = null;
+                    requestNotify.impulsorId = Convert.ToInt32(impulsorCode);
                     requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
                     requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
                 }
@@ -93,22 +111,36 @@ namespace SmartOrderService.Services
                 throw new ExternalAPIException("Error al notificar a WSWmpleados");
             }
 
-            var newLogging = new so_authentication_log()
+            //Buscar si ya existe un registro para este usuario
+            var existLog = UoWConsumer.AuthentificationLogRepository
+                .Get(x => x.RouteId == request.RouteId && x.UserId == request.UserId && !x.WasLeaderCodeAuthorization
+                            && DbFunctions.TruncateTime(x.CreatedDate) == DbFunctions.TruncateTime(DateTime.Now))
+                .FirstOrDefault();
+
+            if(existLog == null)
             {
-                LeaderAuthenticationCodeId = null,
-                WasLeaderCodeAuthorization = false,
-                CreatedDate = DateTime.Now,
-                LeaderCode = null,
-                ModifiedDate = null,
-                Status = true,
-                RouteId = routeBranch.Route.routeId,
-                UserCode = request.EmployeeCode,
-                UserId = user.userId
-            };
+                var newLogging = new so_authentication_log()
+                {
+                    LeaderAuthenticationCodeId = null,
+                    WasLeaderCodeAuthorization = false,
+                    CreatedDate = DateTime.Now,
+                    LeaderCode = null,
+                    ModifiedDate = null,
+                    Status = true,
+                    RouteId = routeBranch.Route.routeId,
+                    UserCode = request.EmployeeCode,
+                    UserId = user.userId
+                };
 
-            UoWConsumer.AuthentificationLogRepository.Insert(newLogging);
-            UoWConsumer.Save();
-
+                UoWConsumer.AuthentificationLogRepository.Insert(newLogging);
+                UoWConsumer.Save();
+            }
+            else
+            {
+                if (existLog.UserCode != request.EmployeeCode)
+                    throw new UnauthorizedAccessException("Otro Empleado ya inicio sesión con este usuario");
+            }
+            
             return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
             {
                 UserId = user.userId,
@@ -142,20 +174,28 @@ namespace SmartOrderService.Services
 
             if (user != null)
             {
-                var newAuthenticationLog = new so_authentication_log
-                {
-                    LeaderAuthenticationCodeId = leaderCode.Id,
-                    Status = true,
-                    WasLeaderCodeAuthorization = true,
-                    CreatedDate = DateTime.Now,
-                    UserCode = leaderCode.Code,
-                    UserId = user.userId,
-                    RouteId = request.RouteId,
-                    LeaderCode = request.EmployeeCode
-                };
+                var existLog = UoWConsumer.AuthentificationLogRepository
+                .Get(x => x.RouteId == request.RouteId && x.UserId == request.UserId && !x.WasLeaderCodeAuthorization
+                            && DbFunctions.TruncateTime(x.CreatedDate) == DbFunctions.TruncateTime(DateTime.Now))
+                .FirstOrDefault();
 
-                UoWConsumer.AuthentificationLogRepository.Insert(newAuthenticationLog);
-                UoWConsumer.Save();
+                if (existLog == null)
+                {
+                    var newAuthenticationLog = new so_authentication_log
+                    {
+                        LeaderAuthenticationCodeId = leaderCode.Id,
+                        Status = true,
+                        WasLeaderCodeAuthorization = true,
+                        CreatedDate = DateTime.Now,
+                        UserCode = leaderCode.Code,
+                        UserId = user.userId,
+                        RouteId = request.RouteId,
+                        LeaderCode = request.EmployeeCode
+                    };
+
+                    UoWConsumer.AuthentificationLogRepository.Insert(newAuthenticationLog);
+                    UoWConsumer.Save();
+                }
 
                 return new ResponseBase<AuthenticateLeaderCodeResponse>()
                 {
