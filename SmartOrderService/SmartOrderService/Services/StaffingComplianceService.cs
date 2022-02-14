@@ -89,7 +89,25 @@ namespace SmartOrderService.Services
 
                 NotifyWorkday(requestNotify);
             }
-            catch (Exception) { }
+            catch (Exception) {
+                throw new ExternalAPIException("Error al notificar a WSWmpleados");
+            }
+
+            var newLogging = new so_authentication_log()
+            {
+                LeaderAuthenticationCodeId = null,
+                WasLeaderCodeAuthorization = false,
+                CreatedDate = DateTime.Now,
+                LeaderCode = null,
+                ModifiedDate = null,
+                Status = true,
+                RouteId = routeBranch.Route.routeId,
+                UserCode = request.EmployeeCode,
+                UserId = user.userId
+            };
+
+            UoWConsumer.AuthentificationLogRepository.Insert(newLogging);
+            UoWConsumer.Save();
 
             return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
             {
