@@ -11,6 +11,7 @@ using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
 
@@ -76,7 +77,7 @@ namespace SmartOrderService.Services
             return customers;
         }
 
-        public List<CustomerDtoV2> getAllV2(DateTime updated, int UserId)
+        public List<CustomerDtoV2> getAllV2(DateTime updated, int UserId, int branchId)
         {
 
             List<CustomerDtoV2> customers = new List<CustomerDtoV2>();
@@ -98,6 +99,8 @@ namespace SmartOrderService.Services
             catch (RelatedDriverNotFoundException e)
             {
             }
+            var routeCode = db.so_route.Where(t => t.routeId == UserRoute.routeId).FirstOrDefault();
+            var branchCode = db.so_branch.Where(t => t.branchId.Equals(branchId)).FirstOrDefault();
 
             var Inventory = inventoryService.GetCurrentInventory(UserId, null);
 
@@ -116,7 +119,39 @@ namespace SmartOrderService.Services
                 var tags = db.so_tag.Where(t => customerList.Contains(t.customerId) && t.status);
 
                 customers = Mapper.Map<List<CustomerDtoV2>>(datas);
-                //var autorizacion = "a9c332d2-ba38-405f-9cf7-57bcd787eba1";
+
+                var url = "https://is68s2j0b1.execute-api.us-east-1.amazonaws.com/dev/beneficiary/branch/" + branchCode.code + "/route/" + routeCode.code;
+                var autorizacion = "a9c332d2-ba38-405f-9cf7-57bcd787eba1";
+                var json = "";
+                try
+                {
+                    var client = new RestClient(url);
+                    var request = new RestRequest(Method.GET);
+                    request.AddHeader("content-type", "application/json");
+                    request.AddParameter("application/json", json, ParameterType.RequestBody);
+
+                    if (autorizacion != null)
+                    {
+                        request.AddHeader("x-api-key", autorizacion);
+                    }
+
+                    IRestResponse response = client.Execute(request);
+                    var responseUuid = JsonConvert.DeserializeObject<List<LoyaltyGetCustomerList>>(response.Content);
+                    foreach (var p in responseUuid)
+                    {
+                        int indexResult = customers.FindIndex(q => q.Code == p.customerCode);
+                        if (indexResult > -1)
+                        {
+                            customers[indexResult].uuid = p.uuid;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+
+                //var responseUuid = JsonConvert.DeserializeObject<List<LoyaltyGetCustomerList>>(jsonText);
 
                 foreach (var customer in customers)
                 {
@@ -124,24 +159,6 @@ namespace SmartOrderService.Services
 
                     customer.Tags.AddRange(customerTags);
                     customer.IsFacturable = true;// facturables.Contains(customer.CustomerId);
-                    //Consumiendo el endpoint de ensitech de obtencion de uuid
-
-                    //var url = "https://is68s2j0b1.execute-api.us-east-1.amazonaws.com/dev/beneficiary/customer?customerCode=" + customer.Code;
-                    //LoyaltyUuidResponse loyaltyUser = null;
-                    //try
-                    //{
-                    //    var client = new RestClient(url);
-                    //    var request = new RestRequest(Method.GET);
-                    //    request.AddHeader("content-type", "application/json");
-                    //    request.AddHeader("x-api-key", autorizacion);
-                    //    IRestResponse response = client.Execute(request);
-                    //    loyaltyUser = JsonConvert.DeserializeObject<LoyaltyUuidResponse>(response.Content);
-                    //}
-                    //catch (Exception ex)
-                    //{
-                    //    Console.WriteLine(ex.Message);
-                    //}
-                    //customer.uuid = loyaltyUser.uuid;
                 }
             }
             return customers;
@@ -179,7 +196,7 @@ namespace SmartOrderService.Services
             else
             {
                 var date = Utils.DateUtils.getDateTime(request.LastUpdate);
-                customers.AddRange(getAllV2(date, request.UserId));
+                customers.AddRange(getAllV2(date, request.UserId, request.BranchId));
             }
 
             return customers;

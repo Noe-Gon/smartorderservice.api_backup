@@ -614,6 +614,7 @@
     <Compile Include="Models\Responses\CustomerResponse.cs" />
     <Compile Include="Models\Responses\EmailResponse.cs" />
     <Compile Include="Models\Responses\InvoiceOpeFacturaResponse.cs" />
+    <Compile Include="Models\Responses\LoyaltyGetCustomerList.cs" />
     <Compile Include="Models\Responses\LoyaltyGetPointsResponse.cs" />
     <Compile Include="Models\Responses\LoyaltyUuidResponse.cs" />
     <Compile Include="Models\Responses\MsgResponseBase.cs" />
@@ -724,6 +725,7 @@
     <Content Include="Content\Template\RemovalRequestEmail.html" />
     <Content Include="Content\Template\TicketDigitalEmail.html" />
     <Content Include="Content\Template\WellcomeEmail.html" />
+    <Content Include="Controllers\GetCustomers.txt" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Scripts\bootstrap.js" />
@@ -765,15 +767,6 @@
       <Generator>TextTemplatingFilePreprocessor</Generator>
       <LastGenOutput>InsertCliente.cs</LastGenOutput>
     </Content>
-    <Content Include="Web.config">
-      <SubType>Designer</SubType>
-    </Content>
-    <Content Include="Web.Debug.config">
-      <DependentUpon>Web.config</DependentUpon>
-    </Content>
-    <Content Include="Web.Release.config">
-      <DependentUpon>Web.config</DependentUpon>
-    </Content>
     <Content Include="Areas\HelpPage\Views\_ViewStart.cshtml" />
     <Content Include="Content\Site.css" />
     <Content Include="Scripts\_references.js" />
@@ -782,6 +775,7 @@
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
+    <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
