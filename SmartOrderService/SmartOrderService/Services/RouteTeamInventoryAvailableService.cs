@@ -82,6 +82,25 @@ namespace SmartOrderService.Services
             }*/
         }
 
+        public void UpdateRouteTeamInventoryLoyalty(SaleTeamWithPoints sale)
+        {
+            List<SaleDetail> salesDetail = sale.SaleDetails;
+            foreach (var productInventory in salesDetail)
+            {
+                var product = db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productInventory.ProductId)).FirstOrDefault();
+                product.Available_Amount -= productInventory.Amount;
+                db.SaveChanges();
+            }
+            foreach (var loyaltyProductInventory in sale.SaleDetailsLoyalty)
+            {
+                var loyaltyProductId = db.so_product.Where(p => p.code.Equals(loyaltyProductInventory.code)).Select(p => p.productId).FirstOrDefault();
+                var product = db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(loyaltyProductId)).FirstOrDefault();
+                product.Available_Amount -= loyaltyProductInventory.Amount;
+                db.SaveChanges();
+            }
+
+        }
+
         public List<so_route_team_inventory_available> GetInventoryTeamByInventoryId(int inventoryId)
         {
             return db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(inventoryId)).ToList();

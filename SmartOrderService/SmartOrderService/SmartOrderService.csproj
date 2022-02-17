@@ -712,6 +712,8 @@
     <Compile Include="Utils\DB\so_product_tax.cs" />
     <Compile Include="Utils\DB\so_sale.cs" />
     <Compile Include="Utils\DB\so_sale_detail.cs" />
+    <Compile Include="Utils\DB\so_sale_with_points.cs" />
+    <Compile Include="Utils\DB\so_sale_with_points_details.cs" />
     <Compile Include="Utils\DB\so_site.cs" />
     <Compile Include="Utils\DB\so_user.cs" />
     <Compile Include="Utils\Enums\TeamTravelStatus.cs" />

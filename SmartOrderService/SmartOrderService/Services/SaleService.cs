@@ -808,6 +808,18 @@ namespace SmartOrderService.Services
             routeTeamInventoryAvailable.UpdateRouteTeamInventory(sale);
         }
 
+        public void UpdateRouteTeamInventoryLoyalty(SaleTeamWithPoints sale, SmartOrderModel dbAux)
+        {
+            RoleTeamService roleTeamService = new RoleTeamService();
+            ERolTeam userRole = roleTeamService.GetUserRole(sale.UserId);
+            if (userRole == ERolTeam.SinAsignar)
+            {
+                return;
+            }
+            RouteTeamInventoryAvailableService routeTeamInventoryAvailable = new RouteTeamInventoryAvailableService(dbAux);
+            routeTeamInventoryAvailable.UpdateRouteTeamInventoryLoyalty(sale);
+        }
+
         public void RestoreInventoryAvailability(int saleId)
         {
             int inventoryId = 0;
@@ -1208,9 +1220,9 @@ namespace SmartOrderService.Services
                             saleResult.SaleId = sale.SaleId;
                             UpdateRouteTeamInventory(sale, db);
                             CreatePaymentMethod(sale);
-                            //sRespuesta = CreatePromotion(sale, db);
-                            //if (sRespuesta != string.Empty)
-                            //    throw new Exception(sRespuesta);
+                            sRespuesta = CreatePromotion(sale, db);
+                            if (sRespuesta != string.Empty)
+                                throw new Exception(sRespuesta);
                         }
 
                         var updateCustomerAdditionalData = db.so_customerr_additional_data
@@ -1327,7 +1339,7 @@ namespace SmartOrderService.Services
                                 throw new BadRequestException();
                             }
                             saleResult.SaleId = sale.SaleId;
-                            UpdateRouteTeamInventory(sale, db);
+                            UpdateRouteTeamInventoryLoyalty(sale, db);
                             CreatePaymentMethod(sale);
                             sRespuesta = CreatePromotion(sale, db);
                             if (sRespuesta != string.Empty)
