@@ -1,15 +1,15 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Data.Entity.Spatial;
+
 namespace SmartOrderService.DB
 {
-    using System;
-    using System.Collections.Generic;
-    using System.ComponentModel.DataAnnotations;
-    using System.ComponentModel.DataAnnotations.Schema;
-    using System.Data.Entity.Spatial;
-
-    public partial class so_sale
+    public partial class so_salev2
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public so_sale()
+        public so_salev2()
         {
             facturas_so_sale = new HashSet<facturas_so_sale>();
             so_delivery_sale = new HashSet<so_delivery_sale>();
@@ -18,8 +18,8 @@ namespace SmartOrderService.DB
             so_sale_replacement = new HashSet<so_sale_replacement>();
             so_sale_detail = new HashSet<so_sale_detail>();
             so_sale_promotion = new HashSet<so_sale_promotion>();
-            //so_sale_with_points = new HashSet<so_sale_with_points>();
-            //so_sale_with_points_details = new HashSet<so_sale_with_points_details>();
+            so_sale_with_points = new HashSet<so_sale_with_points>();
+            so_sale_with_points_details = new HashSet<so_sale_with_points_details>();
         }
 
         [Key]
@@ -76,10 +76,10 @@ namespace SmartOrderService.DB
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<so_sale_promotion> so_sale_promotion { get; set; }
-        //[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        //public virtual ICollection<so_sale_with_points> so_sale_with_points { get; set; }
-        //[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        //public virtual ICollection<so_sale_with_points_details> so_sale_with_points_details { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<so_sale_with_points> so_sale_with_points { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<so_sale_with_points_details> so_sale_with_points_details { get; set; }
 
         public virtual so_user so_user { get; set; }
 

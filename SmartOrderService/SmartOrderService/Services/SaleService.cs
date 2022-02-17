@@ -24,6 +24,7 @@ namespace SmartOrderService.Services
     {
         private IMapper<Sale, so_sale> mapper;
         private IMapper<SaleTeam, so_sale> mapperSaleTeam;
+        private IMapper<SaleTeamWithPoints, so_sale> mapperSaleTeamWithPoints;
         private IMapper<SaleDetail, so_sale_detail> mapperDetails;
         private ListMapper<Sale, so_sale> listMapper;
         private ListMapper<SaleDetail, so_sale_detail> listDetailsMapper;
@@ -374,6 +375,37 @@ namespace SmartOrderService.Services
 
             return sale;
         }
+        public SaleTeamWithPoints UnlockCreatev2(SaleTeamWithPoints sale)
+        {
+            int userId = sale.UserId;
+            DateTime date = DateTime.Parse(sale.Date);
+            int customerId = sale.CustomerId;
+            int deliveryId = sale.DeliveryId;
+            var registeredSale = db.so_sale.
+                     Where(
+                    s => (DateTime.Compare(s.date, date) == 0 || deliveryId.Equals(s.deliveryId.Value))
+                     && s.userId.Equals(userId)
+                     && s.customerId.Equals(customerId)
+                     && s.status
+                     ).FirstOrDefault();
+
+
+            if (registeredSale == null)
+            {
+                so_sale entitySale = createSalev2(sale);
+                entitySale.so_sale_detail = createDetails(sale.SaleDetails, userId);
+                entitySale.so_sale_replacement = createReplacements(sale.SaleReplacements, userId);
+                //entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
+                SetTaxesv2(entitySale);
+                sale.SaleId = UntransactionalSaveSalev2(entitySale);
+            }
+            else
+            {
+                sale.SaleId = registeredSale.saleId;
+            }
+
+            return sale;
+        }
 
         public bool checkIfSaleExist(Sale sale)
         {
@@ -590,6 +622,27 @@ namespace SmartOrderService.Services
             foreach (so_sale_promotion p in entitySale.so_sale_promotion)
                 foreach (so_sale_promotion_detail pd in p.so_sale_promotion_detail)
                     SetPromotionTax(pd, branch_tax, master_price_list, price_list);*/
+        }
+
+        private void SetTaxesv2(so_sale entitySale)
+        {
+            so_user user = db.so_user.FirstOrDefault(x => x.userId == entitySale.userId);
+            so_branch branch = user != null ? user.so_branch : null;
+            int branchId = branch != null ? branch.branchId : 0;
+
+            so_branch_tax branch_tax = db.so_branch_tax.FirstOrDefault(x => x.branchId == branchId && x.status);
+            so_products_price_list master_price_list = db.so_products_price_list.FirstOrDefault(x => x.is_master && x.branchId == branchId && x.status);
+            so_products_price_list price_list = db.so_products_price_list.
+                                                Join(db.so_customer_products_price_list,
+                                                    PL => PL.products_price_listId,
+                                                    CPL => CPL.products_price_listId,
+                                                    (PL, CPL) => new { PL, CPL }).
+                                                Where(r => r.PL.branchId == branchId && r.PL.status && r.CPL.customerId == entitySale.customerId && r.CPL.status
+                                                && DbFunctions.TruncateTime(r.PL.validity_start) <= DbFunctions.TruncateTime(DateTime.Today)
+                                                && DbFunctions.TruncateTime(r.PL.validity_end) >= DbFunctions.TruncateTime(DateTime.Today)).
+                                                Select(x => x.PL).FirstOrDefault();
+            foreach (so_sale_detail sd in entitySale.so_sale_detail)
+                SetSaleTax(sd, branch_tax, master_price_list, price_list);
         }
 
         private ICollection<so_sale_promotion> createPromotions(List<SalePromotion> salePromotions, int userId)
@@ -979,6 +1032,37 @@ namespace SmartOrderService.Services
             return replacements;
         }
 
+        private List<so_sale_with_points> createSaleWithPoints(SaleTeamWithPoints sale)
+        {
+            List<so_sale_with_points> saleWithPoints = new List<so_sale_with_points>();
+            saleWithPoints.Add(new so_sale_with_points
+            {
+                saleId = sale.SaleId,
+                date = DateTime.Parse(sale.Date),
+                userId = sale.UserId,
+                customerId = sale.CustomerId
+            });
+            return saleWithPoints;
+        }
+
+        private List<so_sale_with_points_details> createSaleWithPointsDetails(SaleTeamWithPoints sale, int saleWithPointsId)
+        {
+            List<so_sale_with_points_details> saleWithPoints = new List<so_sale_with_points_details>();
+            foreach (var item in sale.SaleDetailsLoyalty)
+            {
+                var productId = db.so_product.Where(p => p.code.Equals(item.code)).Select(p => p.productId).FirstOrDefault();
+                saleWithPoints.Add(new so_sale_with_points_details
+                {
+                    saleWithPointsId = saleWithPointsId,
+                    productId = productId,
+                    Amount = item.Amount, 
+                    pointsPerUnit = item.points,
+                    totalPoints = item.points * item.Amount
+                });
+            }
+            return saleWithPoints;
+        }
+
         private so_sale_inventory createInventorySale(int inventoryId,int userId)
         {
             so_sale_inventory saleInventory = new so_sale_inventory();
@@ -1039,6 +1123,15 @@ namespace SmartOrderService.Services
             return saleId;
         }
 
+        private int UntransactionalSaveSalev2(so_sale sale)
+        {
+            int saleId = 0;
+            db.so_sale.Add(sale);
+            db.SaveChanges();
+            saleId = sale.saleId;
+            return saleId;
+        }
+
 
         private so_control_download createControlDownload(int saleId,int userId) {
             return   new so_control_download() {
@@ -1069,6 +1162,21 @@ namespace SmartOrderService.Services
 
             mapperSaleTeam = new SaleTeamMapper();
             so_sale entitySale = mapperSaleTeam.toEntity(sale);
+
+            entitySale.modifiedby = sale.UserId;
+            entitySale.createdby = sale.UserId;
+            entitySale.modifiedon = DateTime.Now;
+            entitySale.createdon = DateTime.Now;
+            entitySale.status = true;
+
+            return entitySale;
+        }
+
+        private so_sale createSalev2(SaleTeamWithPoints sale)
+        {
+
+            mapperSaleTeamWithPoints = new SaleTeamWithPointsMapper();
+            so_sale entitySale = mapperSaleTeamWithPoints.toEntity(sale);
 
             entitySale.modifiedby = sale.UserId;
             entitySale.createdby = sale.UserId;
@@ -1333,7 +1441,7 @@ namespace SmartOrderService.Services
                     {
                         if (!checkIfSaleExist(sale))
                         {
-                            UnlockCreate(sale);
+                            UnlockCreatev2(sale);
                             if (sale.SaleId == 0)
                             {
                                 throw new BadRequestException();

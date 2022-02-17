@@ -91,6 +91,30 @@ namespace SmartOrderService.Services
                 product.Available_Amount -= productInventory.Amount;
                 db.SaveChanges();
             }
+            so_sale_with_points saleWithPoint = new so_sale_with_points
+            {
+                saleId = sale.SaleId,
+                date = DateTime.Parse(sale.Date),
+                userId = sale.UserId,
+                customerId = sale.CustomerId,
+            };
+            db.so_sale_with_points.Add(saleWithPoint);
+            db.SaveChanges();
+            foreach (var loyaltyProductInventory in sale.SaleDetailsLoyalty)
+            {
+                var loyaltyProductId = db.so_product.Where(p => p.code.Equals(loyaltyProductInventory.code)).Select(p => p.productId).FirstOrDefault();
+                so_sale_with_points_details saleWithPointsDetails = new so_sale_with_points_details
+                {
+                    saleWithPointsId = saleWithPoint.saleWithPointsId,
+                    productId = loyaltyProductId,
+                    Amount = loyaltyProductInventory.Amount,
+                    pointsPerUnit = loyaltyProductInventory.points,
+                    totalPoints = loyaltyProductInventory.points * loyaltyProductInventory.Amount
+                };
+                db.so_sale_with_points_details.Add(saleWithPointsDetails);
+                db.SaveChanges();
+            }
+
             foreach (var loyaltyProductInventory in sale.SaleDetailsLoyalty)
             {
                 var loyaltyProductId = db.so_product.Where(p => p.code.Equals(loyaltyProductInventory.code)).Select(p => p.productId).FirstOrDefault();

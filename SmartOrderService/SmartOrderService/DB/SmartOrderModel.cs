@@ -109,6 +109,8 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_route_customer> so_route_customer { get; set; }
         public virtual DbSet<so_inventory_revisions> so_inventory_revisions { get; set; }
         public virtual DbSet<so_sale> so_sale { get; set; }
+        public virtual DbSet<so_sale_with_points> so_sale_with_points { get; set; }
+        public virtual DbSet<so_sale_with_points_details> so_sale_with_points_details { get; set; }
         public virtual DbSet<so_sale_aditional_data> so_sale_aditional_data { get; set; }
         public virtual DbSet<so_sale_detail> so_sale_detail { get; set; }
         public virtual DbSet<so_sale_inventory> so_sale_inventory { get; set; }
