@@ -616,6 +616,8 @@
     <Compile Include="Models\Responses\InvoiceOpeFacturaResponse.cs" />
     <Compile Include="Models\Responses\LoyaltyGetCustomerList.cs" />
     <Compile Include="Models\Responses\LoyaltyGetPointsResponse.cs" />
+    <Compile Include="Models\Requests\LoyaltyPointsRequest.cs" />
+    <Compile Include="Models\Responses\LoyaltyRedemptionRefundResponse.cs" />
     <Compile Include="Models\Responses\LoyaltyUuidResponse.cs" />
     <Compile Include="Models\Responses\MsgResponseBase.cs" />
     <Compile Include="Models\Responses\PriceResponse.cs" />
@@ -644,6 +646,7 @@
     <Compile Include="Services\CRMService.cs" />
     <Compile Include="Services\CustomerBlockedService.cs" />
     <Compile Include="Services\EmailService.cs" />
+    <Compile Include="Services\LoyaltyEnsitechService.cs" />
     <Compile Include="Services\RoleTeamService.cs" />
     <Compile Include="Services\RouteTeamInventoryAvailableService.cs" />
     <Compile Include="Services\RouteTeamService.cs" />
@@ -725,7 +728,6 @@
     <Content Include="Content\Template\RemovalRequestEmail.html" />
     <Content Include="Content\Template\TicketDigitalEmail.html" />
     <Content Include="Content\Template\WellcomeEmail.html" />
-    <Content Include="Controllers\GetCustomers.txt" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Scripts\bootstrap.js" />

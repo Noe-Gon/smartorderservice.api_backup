@@ -716,45 +716,6 @@ namespace SmartOrderService.Services
             }
         }
 
-        public ResponseBase<LoyaltyUuidResponse> GetConsumerUuid(string request)
-        {
-            var url = "https://is68s2j0b1.execute-api.us-east-1.amazonaws.com/dev/beneficiary/customer?customerCode=" + request;
-            var autorizacion = "a9c332d2-ba38-405f-9cf7-57bcd787eba1";
-            try
-            {
-                var client = new RestClient(url);
-                var restRequest = new RestRequest(Method.GET);
-                restRequest.AddHeader("content-type", "application/json");
-                restRequest.AddHeader("x-api-key", autorizacion);
-                IRestResponse response = client.Execute(restRequest);
-                return ResponseBase<LoyaltyUuidResponse>.Create(JsonConvert.DeserializeObject<LoyaltyUuidResponse>(response.Content));
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        public ResponseBase<LoyaltyGetPointsResponse> GetConsumerPoints(string uuid)
-        {
-            var url = "https://is68s2j0b1.execute-api.us-east-1.amazonaws.com/dev/beneficiary/" + uuid + "/points";
-            var autorizacion = "a9c332d2-ba38-405f-9cf7-57bcd787eba1";
-            try
-            {
-                var client = new RestClient(url);
-                var restRequest = new RestRequest(Method.GET);
-                restRequest.AddHeader("content-type", "application/json");
-                restRequest.AddHeader("x-api-key", autorizacion);
-                IRestResponse response = client.Execute(restRequest);
-                return ResponseBase<LoyaltyGetPointsResponse>.Create(JsonConvert.DeserializeObject<LoyaltyGetPointsResponse>(response.Content));
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-
         public ResponseBase<ResendTicketDigitalResponse> ResendTicketDigital(ResendTicketDigitalRequest request)
         {
             try

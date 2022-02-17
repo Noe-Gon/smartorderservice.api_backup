@@ -102,6 +102,7 @@ namespace SmartOrderService.Models
     {
         public string code { get; set; }
         public string name { get; set; }
-        public string points { get; set; }
+        public int Amount { get; set; }
+        public int points { get; set; }
     }
 }

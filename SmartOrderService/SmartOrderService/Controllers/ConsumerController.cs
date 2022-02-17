@@ -101,7 +101,7 @@ namespace SmartOrderService.Controllers
             {
                 try
                 {
-                    var response = service.GetConsumerUuid(customerCode);
+                    var response = new LoyaltyEnsitechService().GetConsumerUuidByCustomerCode(customerCode);
 
                     if (response.Status)
                         return Ok(response);
@@ -123,7 +123,7 @@ namespace SmartOrderService.Controllers
             {
                 try
                 {
-                    var response = service.GetConsumerPoints(uuid);
+                    var response = new LoyaltyEnsitechService().GetConsumerPoints(uuid);
 
                     if (response.Status)
                         return Ok(response);

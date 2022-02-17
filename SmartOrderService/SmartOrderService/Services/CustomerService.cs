@@ -120,38 +120,17 @@ namespace SmartOrderService.Services
 
                 customers = Mapper.Map<List<CustomerDtoV2>>(datas);
 
-                var url = "https://is68s2j0b1.execute-api.us-east-1.amazonaws.com/dev/beneficiary/branch/" + branchCode.code + "/route/" + routeCode.code;
-                var autorizacion = "a9c332d2-ba38-405f-9cf7-57bcd787eba1";
-                var json = "";
-                try
+                LoyaltyEnsitechService loyaltyService = new LoyaltyEnsitechService();
+                var responseUuid = loyaltyService.GetCustomerUuid(branchCode.code, routeCode.code);
+
+                foreach (var p in responseUuid)
                 {
-                    var client = new RestClient(url);
-                    var request = new RestRequest(Method.GET);
-                    request.AddHeader("content-type", "application/json");
-                    request.AddParameter("application/json", json, ParameterType.RequestBody);
-
-                    if (autorizacion != null)
+                    int indexResult = customers.FindIndex(q => q.Code == p.customerCode);
+                    if (indexResult > -1)
                     {
-                        request.AddHeader("x-api-key", autorizacion);
-                    }
-
-                    IRestResponse response = client.Execute(request);
-                    var responseUuid = JsonConvert.DeserializeObject<List<LoyaltyGetCustomerList>>(response.Content);
-                    foreach (var p in responseUuid)
-                    {
-                        int indexResult = customers.FindIndex(q => q.Code == p.customerCode);
-                        if (indexResult > -1)
-                        {
-                            customers[indexResult].uuid = p.uuid;
-                        }
+                        customers[indexResult].uuid = p.uuid;
                     }
                 }
-                catch (Exception ex)
-                {
-                    throw ex;
-                }
-
-                //var responseUuid = JsonConvert.DeserializeObject<List<LoyaltyGetCustomerList>>(jsonText);
 
                 foreach (var customer in customers)
                 {

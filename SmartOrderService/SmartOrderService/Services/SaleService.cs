@@ -1,4 +1,6 @@
-﻿using OpeCDLib.Models;
+﻿using Newtonsoft.Json;
+using OpeCDLib.Models;
+using RestSharp;
 using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
 using SmartOrderService.Mappers;
@@ -508,6 +510,56 @@ namespace SmartOrderService.Services
                 saleDetailResult.AmountSold = amountSaled;
                 saleResult.SaleDetails.Add(saleDetailResult);
             }
+            saleResult.TotalCash = Math.Round(sale.TotalCash, 3);
+            saleResult.SaleReplacements = sale.SaleReplacements;
+            //saleResult.SalePromotions = sale.SalePromotions;
+            return saleResult;
+        }
+
+        public SaleTeamWithPoints CreateSaleResultFromSaleWithPoints(SaleTeamWithPoints sale)
+        {
+            RoleTeamService roleTeamService = new RoleTeamService();
+            ERolTeam userRole = roleTeamService.GetUserRole(sale.UserId);
+            if (userRole == ERolTeam.SinAsignar)
+            {
+                return sale;
+            }
+            SaleDetailResultService saleDetailResultService = new SaleDetailResultService();
+            InventoryService inventoryService = new InventoryService();
+            SaleTeamWithPoints saleResult = new SaleTeamWithPoints();
+            saleResult.EmailDeliveryTicket = sale.EmailDeliveryTicket;
+            saleResult.SmsDeliveryTicket = sale.SmsDeliveryTicket;
+            saleResult.UserId = sale.UserId;
+            saleResult.TotalCash = sale.TotalCash;
+            saleResult.SaleId = sale.SaleId;
+            saleResult.TotalCredit = sale.TotalCredit;
+            saleResult.CustomerTag = sale.CustomerTag;
+            saleResult.InventoryId = sale.InventoryId;
+            saleResult.Date = sale.Date;
+            saleResult.CustomerId = sale.CustomerId;
+            saleResult.DeliveryId = sale.DeliveryId;
+            saleResult.SaleDetails = new List<SaleDetail>();
+            saleResult.PaymentMethod = sale.PaymentMethod;
+            saleResult.SaleDetailsLoyalty = sale.SaleDetailsLoyalty;
+            for (int i = 0; i < sale.SaleDetails.Count(); i++)
+            {
+                int amountSaled = 0;
+                SaleDetailResult saleDetailResult = new SaleDetailResult(sale.SaleDetails[i]);
+
+                if (inventoryService.CheckInventoryAvailability(sale.InventoryId, sale.SaleDetails[i].ProductId, sale.SaleDetails[i].Amount))
+                {
+                    amountSaled = sale.SaleDetails[i].Amount;
+                }
+                else
+                {
+                    sale.TotalCash -= Decimal.ToDouble(sale.SaleDetails[i].Import);
+                    sale.SaleDetails.RemoveAt(i);
+                    i--;
+                }
+                saleDetailResult.AmountSold = amountSaled;
+                saleResult.SaleDetails.Add(saleDetailResult);
+            }
+
             saleResult.TotalCash = Math.Round(sale.TotalCash, 3);
             saleResult.SaleReplacements = sale.SaleReplacements;
             //saleResult.SalePromotions = sale.SalePromotions;
@@ -1257,6 +1309,44 @@ namespace SmartOrderService.Services
 
         }
 
+        public SaleTeamWithPoints SaleTeamTransactionWithPoints(SaleTeamWithPoints sale)
+        {
+            using (var transaction = db.Database.BeginTransaction())
+            {
+                SaleTeamWithPoints saleResult = CreateSaleResultFromSaleWithPoints(sale);
+                string sRespuesta = "";
+                try
+                {
+                    if (sale.SaleDetails.Count() > 0 || sale.SaleDetailsLoyalty.Count() > 0)
+                    {
+                        if (!checkIfSaleExist(sale))
+                        {
+                            UnlockCreate(sale);
+                            if (sale.SaleId == 0)
+                            {
+                                throw new BadRequestException();
+                            }
+                            saleResult.SaleId = sale.SaleId;
+                            UpdateRouteTeamInventory(sale, db);
+                            CreatePaymentMethod(sale);
+                            sRespuesta = CreatePromotion(sale, db);
+                            if (sRespuesta != string.Empty)
+                                throw new Exception(sRespuesta);
+                        }
+                        SendSaleEmailWithPoints(sale, saleResult);
+                        transaction.Commit();
+                    }
+                }
+                catch (Exception exception)
+                {
+                    transaction.Rollback();
+                    throw exception;
+                }
+                RedemptionPoints(saleResult);
+                return saleResult;
+            }
+        }
+
         public DataTable GetPromotionsTicketDigital(DbContext db, int SaleId)
         {
             DataTable dt = new DataTable();
@@ -1304,7 +1394,113 @@ namespace SmartOrderService.Services
             }
             
             return ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/CancelTicketDigital/" + portalLinkLogs.Id;
-        }        
+        }     
+        
+        public void SendSaleEmailWithPoints(SaleTeamWithPoints sale, SaleTeamWithPoints saleResult)
+        {
+            var updateCustomerAdditionalData = db.so_customerr_additional_data
+                            .Where(x => x.CustomerId == sale.CustomerId)
+                            .FirstOrDefault();
+
+            if (updateCustomerAdditionalData != null || !string.IsNullOrEmpty(sale.Email))
+            {
+                #region Consumidores logica
+                //Actualizar contador
+                if (updateCustomerAdditionalData != null)
+                {
+                    updateCustomerAdditionalData.CounterVisitsWithoutSales = 0;
+                    db.SaveChanges();
+                }
+
+                if (sale.EmailDeliveryTicket == null)
+                    sale.EmailDeliveryTicket = false;
+
+                //Envio de Ticket
+                if (sale.EmailDeliveryTicket == true)
+                {
+                    var customer = db.so_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
+
+                    if (customer.CustomerAdditionalData != null || !string.IsNullOrEmpty(sale.Email))
+                    {
+                        var customerAux = customer.CustomerAdditionalData.FirstOrDefault();
+                        if (customerAux == null)
+                            customerAux = new so_customer_additional_data { IsMailingActive = false };
+
+                        if (!string.IsNullOrEmpty(sale.Email))
+                            customer.email = sale.Email;
+
+                        if (customerAux.IsMailingActive || !string.IsNullOrEmpty(sale.Email))
+                        {
+                            //Se prepara la información
+                            var route = db.so_route_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
+                            var user = db.so_user.Where(x => x.userId == sale.UserId).FirstOrDefault();
+                            DataTable dtTicket = GetPromotionsTicketDigital(db, sale.SaleId);
+
+                            var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
+                            {
+                                CustomerName = customer.name,
+                                RouteAddress = Convert.ToString(route.routeId),
+                                CustomerEmail = customer.email,
+                                CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
+                                Date = DateTime.Now,
+                                PaymentMethod = sale.PaymentMethod,
+                                SellerName = user.code + " - " + user.name,
+                                dtTicket = dtTicket
+                            };
+
+                            var sales = new List<SendTicketDigitalEmailSales>();
+                            foreach (var detail in saleResult.SaleDetails)
+                            {
+                                var product = db.so_product.Where(x => x.productId == detail.ProductId).FirstOrDefault();
+                                if (product == null)
+                                    continue;
+
+
+                                sales.Add(new SendTicketDigitalEmailSales
+                                {
+                                    Amount = detail.Amount,
+                                    ProductName = detail.ProductId + " - " + product.name,
+                                    TotalPrice = Convert.ToDouble(detail.Amount) * Convert.ToDouble(detail.PriceValue),
+                                    UnitPrice = Convert.ToDouble(detail.PriceValue)
+                                });
+                            }
+
+                            sendTicketDigitalEmail.CancelTicketLink = GetCancelLinkByCustomerId(customer.customerId);
+                            sendTicketDigitalEmail.Sales = sales;
+
+                            //Se envia el ticket
+                            if (sales != null)
+                            {
+                                var emailService = new EmailService();
+                                var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);
+                            }
+                        }
+                    }
+                }
+
+                #endregion
+            }
+        }
+
+        public void RedemptionPoints(SaleTeamWithPoints sale)
+        {
+            int pointsUsed = 0;
+            foreach (var loyaltyProduct in sale.SaleDetailsLoyalty)
+            {
+                pointsUsed += loyaltyProduct.points * loyaltyProduct.Amount;
+            }
+            LoyaltyEnsitechService loyaltyService = new LoyaltyEnsitechService();
+            var customerLoyalty = db.so_customer.Where(p => p.customerId.Equals(sale.CustomerId)).FirstOrDefault();
+            var customerCode = customerLoyalty.code;
+            var responseGetUuid = loyaltyService.GetConsumerUuidByCustomerCode(customerCode);
+
+            LoyaltyPointsRequest requestBody = new LoyaltyPointsRequest
+            {
+                uuid = responseGetUuid.Data.uuid,
+                points = pointsUsed
+            };
+            loyaltyService.RedemptionPoints(requestBody);
+        }
         
         public void CreatePaymentMethod(SaleTeam sale)
         {

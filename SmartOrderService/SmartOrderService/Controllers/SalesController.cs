@@ -263,12 +263,12 @@ namespace SmartOrderService.Controllers
         {
             IHttpActionResult responseActionResult;
             HttpResponseMessage responseMessage;
-            SaleTeam saleResult = new SaleTeam();
+            SaleTeamWithPoints saleResult = new SaleTeamWithPoints();
             try
             {
                 lock (objectService)
                 {
-                    saleResult = objectService.SaleTeamTransaction(sale);
+                    saleResult = objectService.SaleTeamTransactionWithPoints(sale);
                 }
             }
             catch (ProductNotFoundBillingException e)
