@@ -152,11 +152,11 @@ namespace SmartOrderService.Services
 
                         body = body.Replace("{TotalLealtad}", totalProductLoyalty.ToString());
                         body = body.Replace("{PuntosUtilizadosLealtad}", totalPuntos.ToString());
-                        body = body.Replace("{PuntosGanadosLealtad}", "X");
+                        body = body.Replace("{PuntosGanadosLealtad}", "120");
                         body = body.Replace("{PuntosAcumuladosLealtad}", "X");
                         body = body.Replace("{PuntosVigencia}", "29/07/2021 al 31/12/2021");
                     }
-
+                    body = body.Replace("{cutomerReferenceCode}", request.CustomerReferenceCode);
                     body = body.Replace("{TdBody}", tdBody);
                     body = body.Replace("{TotalProductsSold}", totalProductsSold.ToString());
                     body = body.Replace("{TotalBoxesSold}", totalBoxesSold.ToString());
