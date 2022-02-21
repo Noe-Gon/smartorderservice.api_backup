@@ -1585,8 +1585,36 @@ namespace SmartOrderService.Services
                                 });
                             }
 
+                            var salesLoyalty = new List<SendTicketDigitalEmailSalesWithPoints>();
+                            foreach (var detailLoyalty in saleResult.SaleDetailsLoyalty)
+                            {
+                                var product = db.so_product.Where(x => x.code == detailLoyalty.code).FirstOrDefault();
+                                if (product == null)
+                                {
+                                    continue;
+                                }
+
+                                salesLoyalty.Add(new SendTicketDigitalEmailSalesWithPoints
+                                {
+                                    ProductName = product.productId + " - " + detailLoyalty.name,
+                                    Amount = detailLoyalty.Amount,
+                                    UnitPrice = detailLoyalty.points,
+                                    TotalPrice = detailLoyalty.points * detailLoyalty.Amount
+                                });
+                            }
+
                             sendTicketDigitalEmail.CancelTicketLink = GetCancelLinkByCustomerId(customer.customerId);
                             sendTicketDigitalEmail.Sales = sales;
+                            sendTicketDigitalEmail.SalesWithPoints = salesLoyalty;
+                            var customerObject = db.so_customerr_additional_data.Where(x => x.CustomerId.Equals(sale.CustomerId)).FirstOrDefault();
+                            if (customerObject != null && customerObject.ReferenceCode != null)
+                            {
+                                sendTicketDigitalEmail.CustomerReferenceCode = customerObject.ReferenceCode;
+                            }
+                            else
+                            {
+                                sendTicketDigitalEmail.CustomerReferenceCode = "Sin código referido";
+                            }
 
                             //Se envia el ticket
                             if (sales != null)

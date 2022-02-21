@@ -60,14 +60,20 @@ namespace SmartOrderService.Services
             try
             {
                 bool lTienePromociones = false;
+                bool lTieneLealtad = false;
                 string sRutaPlantilla = "~/Content/Template/TicketDigitalEmail.html";
 
-                if(request.dtTicket.Columns.Count > 0 && request.dtTicket.Rows.Count > 0)
+                if (request.dtTicket.Columns.Count > 0 && request.dtTicket.Rows.Count > 0)
                 {
                     lTienePromociones = true;
                 }
 
-                    using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath(sRutaPlantilla)))
+                if (request.SalesWithPoints != null && request.SalesWithPoints.Count > 0)
+                {
+                    lTieneLealtad = true;
+                }
+
+                using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath(sRutaPlantilla)))
                 {
                     string body = reader.ReadToEnd();
 
@@ -85,6 +91,7 @@ namespace SmartOrderService.Services
 
                     string tdBody = "";
                     string tdBodyPromociones = "";
+                    string tdBodyLealtad = "";
 
                     int totalProductsSold = 0;
                     int totalBoxesSold = 0;
@@ -117,6 +124,37 @@ namespace SmartOrderService.Services
 
                         body = body.Replace("{TdBodyPromociones}", tdBodyPromociones);
                         body = body.Replace("{TotalPromos}", totalPromos.ToString());
+                    }
+
+                    if (lTieneLealtad)
+                    {
+                        int totalPuntos = 0;
+                        int totalProductLoyalty = 0;
+                        body = body.Replace("id='lealtad' style='display:none'", "id='lealtad' style='display:'");
+
+                        body = body.Replace("id='lbllealtad' style='display:none'", "id='lbllealtad' style='display:'");
+                        body = body.Replace("id='lbllealtadPuntosUtilizados' style='display:none'", "id='lbllealtadPuntosUtilizados' style='display:'");
+                        body = body.Replace("id='lbllealtadPuntosGanados' style='display:none'", "id='lbllealtadPuntosGanados' style='display:'");
+                        body = body.Replace("id='lbllealtadPuntosAcumulados' style='display:none'", "id='lbllealtadPuntosAcumulados' style='display:'");
+                        body = body.Replace("id='lbllealtadPuntosVigencia' style='display:none'", "id='lbllealtadPuntosVigencia' style='display:'");
+
+                        foreach (var productLoyalty in request.SalesWithPoints)
+                        {
+                            totalProductLoyalty++;
+                            tdBodyLealtad += "<tr><td>" + totalProductLoyalty + ") " + productLoyalty.ProductName + "</td>";
+                            tdBodyLealtad += "<td>" + productLoyalty.Amount + "</td>";
+                            tdBodyLealtad += "<td>" + productLoyalty.UnitPrice + "</td>";
+                            tdBodyLealtad += "<td>" + productLoyalty.TotalPrice + "</td></tr>";
+                            totalPuntos += productLoyalty.TotalPrice;
+                        }
+
+                        body = body.Replace("{TdBodyLealtad}", tdBodyLealtad);
+
+                        body = body.Replace("{TotalLealtad}", totalProductLoyalty.ToString());
+                        body = body.Replace("{PuntosUtilizadosLealtad}", totalPuntos.ToString());
+                        body = body.Replace("{PuntosGanadosLealtad}", "X");
+                        body = body.Replace("{PuntosAcumuladosLealtad}", "X");
+                        body = body.Replace("{PuntosVigencia}", "29/07/2021 al 31/12/2021");
                     }
 
                     body = body.Replace("{TdBody}", tdBody);
