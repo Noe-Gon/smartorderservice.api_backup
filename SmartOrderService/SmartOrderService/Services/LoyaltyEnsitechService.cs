@@ -121,6 +121,25 @@ namespace SmartOrderService.Services
             }
         }
 
+        public LoyaltyGetProductsResponse GetConsumerProducts(string uuid)
+        {
+            var endpoint = url + "beneficiary/" + uuid + "/products";
+            try
+            {
+                var client = new RestClient(endpoint);
+                var restRequest = new RestRequest(Method.GET);
+                restRequest.AddHeader("content-type", "application/json");
+                restRequest.AddHeader("x-api-key", autorizacion);
+                IRestResponse response = client.Execute(restRequest);
+                var jsonFormat = "{\"ProductConfig\": " + response.Content + "}";
+                var responseRefined = JsonConvert.DeserializeObject<LoyaltyGetProductsResponse>(jsonFormat);
+                return responseRefined;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
 
     }
 }

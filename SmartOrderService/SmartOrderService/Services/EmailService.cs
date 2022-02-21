@@ -132,6 +132,8 @@ namespace SmartOrderService.Services
                         int totalProductLoyalty = 0;
                         body = body.Replace("id='lealtad' style='display:none'", "id='lealtad' style='display:'");
 
+                        body = body.Replace("id='tableHeaderLoyalty' style='display:none'", "id='tableHeaderLoyalty' style='display:'");
+
                         body = body.Replace("id='lbllealtad' style='display:none'", "id='lbllealtad' style='display:'");
                         body = body.Replace("id='lbllealtadPuntosUtilizados' style='display:none'", "id='lbllealtadPuntosUtilizados' style='display:'");
                         body = body.Replace("id='lbllealtadPuntosGanados' style='display:none'", "id='lbllealtadPuntosGanados' style='display:'");

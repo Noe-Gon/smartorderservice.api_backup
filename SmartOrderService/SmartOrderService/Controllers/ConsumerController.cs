@@ -159,17 +159,32 @@ namespace SmartOrderService.Controllers
                 try
                 {
                     var response = new LoyaltyEnsitechService().GetConsumerPoints(uuid);
-
-                    if (response.Status)
                         return Ok(response);
-                    else
-                        return Content(HttpStatusCode.BadRequest, response);
                 }
                 catch (Exception e)
                 {
                     return InternalServerError(e);
                 }
             }
+        }
+
+        [HttpGet]
+        [Route("~/api/consumer/GetProducts")]
+        public HttpResponseMessage GetConsumerProducts([FromUri] string uuid)
+        {
+            HttpResponseMessage response;
+            try
+            {
+
+                var products = new LoyaltyEnsitechService().GetConsumerProducts(uuid);
+                response = Request.CreateResponse(HttpStatusCode.OK, products);
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, "Error: " + e.Message);
+            }
+
+            return response;
         }
 
         [HttpPost]
