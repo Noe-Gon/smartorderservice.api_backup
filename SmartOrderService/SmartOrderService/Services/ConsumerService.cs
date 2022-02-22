@@ -896,7 +896,7 @@ namespace SmartOrderService.Services
 
                 //TermsAndConditios
                 //Verificar si el cliente cuenta con uno activo
-                var termsObject = UoWConsumer.PortalLinksLogRepository
+                var termsObject = UoWConsumer.LoyaltyLinksLogRepository
                     .Get(x => x.CustomerId == request.CustomerId && x.Type == (int)PortalLinks.TYPE.TERMSANDCONDITIONS_ACCEPT && x.Status == (int)PortalLinks.STATUS.PENDING)
                     .FirstOrDefault();
 
@@ -910,7 +910,7 @@ namespace SmartOrderService.Services
                 {
                     //Generar Link de Aceptación de terminos y consiciones
                     Guid termsId = Guid.NewGuid();
-                    var termsEmail = new so_portal_links_log
+                    var termsEmail = new so_loyalty_links_log
                     {
                         CustomerId = customer.customerId,
                         CreatedDate = DateTime.Today,
@@ -919,7 +919,7 @@ namespace SmartOrderService.Services
                         Status = (int)PortalLinks.STATUS.PENDING,
                         Type = (int)PortalLinks.TYPE.TERMSANDCONDITIONS_ACCEPT
                     };
-                    UoWConsumer.PortalLinksLogRepository.Insert(termsEmail);
+                    UoWConsumer.LoyaltyLinksLogRepository.Insert(termsEmail);
                     UoWConsumer.Save();
                     emailInfo.TermsAndConditionLink = ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/TermsAndConditionsLoyalty/" + termsId;
 

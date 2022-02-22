@@ -315,6 +315,40 @@ namespace SmartOrderService.Services
             }
         }
 
+        public ResponseBase<SendReactivationTicketDigitalResponse> SendTermsAndConditionsLoyalty(SendReactivationTicketDigitalRequest request)
+        {
+            try
+            {
+                using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath("~/Content/Template/LoyaltyEmail.html")))
+                {
+                    string body = reader.ReadToEnd();
+                    body = body.Replace("{CustomerName}", request.CustomerName);
+                    body = body.Replace("{TermsAndConditionLink}", request.TermsAndConditionLink);
+
+                    var mailInfo = new SendAPIEmailrequest()
+                    {
+                        To = request.CustomerEmail,
+                        Subject = "Solicitud envío de ticket de compra",
+                        Body = body
+                    };
+
+                    DummySendEmailLoyalty(mailInfo);
+                }
+
+                return ResponseBase<SendReactivationTicketDigitalResponse>.Create(new SendReactivationTicketDigitalResponse()
+                {
+                    Msg = "Se envió correctamente"
+                });
+            }
+            catch (Exception e)
+            {
+                return ResponseBase<SendReactivationTicketDigitalResponse>.Create(new List<string>()
+                {
+                    e.Message
+                });
+            }
+        }
+
         public ResponseBase<SendRemovalRequestEmailResponse> SendRemovalRequestEmail(SendRemovalRequestEmailRequest request)
         {
             try
@@ -402,6 +436,50 @@ namespace SmartOrderService.Services
                 throw;
             }
         }
+
+        public void DummySendEmailLoyalty(SendAPIEmailrequest request)
+        {
+            MailMessage mmsg = new MailMessage();
+
+            mmsg.To.Add(request.To);
+            mmsg.Subject = request.Subject;
+            mmsg.SubjectEncoding = System.Text.Encoding.UTF8;
+
+            //Add image
+            Attachment att = new Attachment(HttpContext.Current.Server.MapPath("~/Src/loyaltyImage.png"));
+            att.ContentDisposition.Inline = true;
+            att.ContentDisposition.DispositionType = DispositionTypeNames.Inline;
+            att.ContentId = "Bepensa";
+            att.ContentType.MediaType = "image/png";
+            att.ContentType.Name = Path.GetFileName(HttpContext.Current.Server.MapPath("~/Src/loyaltyImage.png"));
+            request.Body = request.Body.Replace("{image}", "<img class=\"image\" src=\"cid:Bepensa\" />");
+
+            mmsg.Body = request.Body;
+            mmsg.BodyEncoding = System.Text.Encoding.UTF8;
+            mmsg.IsBodyHtml = true;
+            mmsg.Attachments.Add(att);
+
+            mmsg.From = new MailAddress("bepensafullpotentialaws@walook.com.mx");
+
+            SmtpClient client = new SmtpClient();
+
+            client.Credentials = new NetworkCredential("AKIA4VWPJ4MQA5N5FLVM", "BE7TsEtOBV/9SIIFTZ6r9hDvg8HWTWbvyu/dRgXRvenz");
+
+            client.Port = 587;
+            client.EnableSsl = true;
+
+            client.Host = "email-smtp.us-east-2.amazonaws.com";
+
+            try
+            {
+                client.Send(mmsg);
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
+        }
+
 
         public void APIEmailSendEmail(APIEmailSendEmailRequest request)
         {

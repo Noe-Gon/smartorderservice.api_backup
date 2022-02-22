@@ -34,6 +34,7 @@ namespace SmartOrderService.UnitOfWork
             CustomerProductPriceList = new GenericRepository<so_customer_products_price_list>(Context);
             ProductPriceList = new GenericRepository<so_products_price_list>(Context);
             PortalLinksLogRepository = new GenericRepository<so_portal_links_log>(Context);
+            LoyaltyLinksLogRepository = new GenericRepository<so_loyalty_links_log>(Context);
             RouteTeamTravelsCustomerBlocked = new GenericRepository<so_route_team_travels_customer_blocked>(Context);
             WorkDayRepository = new GenericRepository<so_work_day>(Context);
             LeaderAuthorizationCodeRepository = new GenericRepository<so_leader_authorization_code>(Context);
@@ -59,6 +60,7 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_customer_products_price_list> CustomerProductPriceList { get; set; }
         public GenericRepository<so_products_price_list> ProductPriceList { get; set; }
         public GenericRepository<so_portal_links_log> PortalLinksLogRepository { get; set; }
+        public GenericRepository<so_loyalty_links_log> LoyaltyLinksLogRepository { get; set; }
         public GenericRepository<so_route_team_travels_customer_blocked> RouteTeamTravelsCustomerBlocked { get; set; }
         public GenericRepository<so_work_day> WorkDayRepository { get; set; }
         public GenericRepository<so_leader_authorization_code> LeaderAuthorizationCodeRepository { get; set; }
