@@ -155,6 +155,7 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_customer_additional_data> so_customerr_additional_data { get; set; }
         public virtual DbSet<so_customer_removal_request> so_customer_romoval_requests { get; set; }
         public virtual DbSet<so_portal_links_log> so_portal_links_logs { get; set; }
+        public virtual DbSet<so_loyalty_links_log> so_loyalty_links_logs { get; set; }
         public virtual DbSet<so_code_place> so_code_places { get; set; }
         public virtual DbSet<so_route_team_travels_employees> so_route_team_travels_employees { get; set; }
         public virtual DbSet<so_route_team_travels_customer_blocked> so_route_team_travel_customer_blockeds { get; set; }
@@ -1780,6 +1781,12 @@ namespace SmartOrderService.DB
                 .HasKey(x => x.Id)
                 .HasRequired(x => x.Customer)
                 .WithMany(x => x.PortalLinksLog)
+                .HasForeignKey(x => x.CustomerId);
+
+            modelBuilder.Entity<so_loyalty_links_log>()
+                .HasKey(x => x.Id)
+                .HasRequired(x => x.Customer)
+                .WithMany(x => x.LoyaltyLinksLog)
                 .HasForeignKey(x => x.CustomerId);
 
             var codePlace = modelBuilder.Entity<so_code_place>();

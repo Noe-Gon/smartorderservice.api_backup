@@ -592,6 +592,7 @@
     <Compile Include="Models\Requests\CustomerInvoiceDataRequest.cs" />
     <Compile Include="Models\Requests\EmailRequest.cs" />
     <Compile Include="Models\Requests\InvoiceOpeFacturaRequest.cs" />
+    <Compile Include="Models\Requests\LoyaltyPostBenficiaryRequest.cs" />
     <Compile Include="Models\Requests\ReplacementRequest.cs" />
     <Compile Include="Models\Requests\SurveyCustomerRequest.cs" />
     <Compile Include="Models\Requests\TrackingRequest.cs" />
@@ -622,6 +623,7 @@
     <Compile Include="Models\Responses\LoyaltyGetPointsResponse.cs" />
     <Compile Include="Models\Requests\LoyaltyPointsRequest.cs" />
     <Compile Include="Models\Responses\LoyaltyGetProductsResponse.cs" />
+    <Compile Include="Models\Responses\LoyaltyPostBeneficiaryResponse.cs" />
     <Compile Include="Models\Responses\LoyaltyRedemptionRefundResponse.cs" />
     <Compile Include="Models\Responses\LoyaltyUuidResponse.cs" />
     <Compile Include="Models\Responses\MsgResponseBase.cs" />

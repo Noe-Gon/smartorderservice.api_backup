@@ -908,7 +908,7 @@ namespace SmartOrderService.Services
 
                 if (termsObject == null)
                 {
-                    //Generar Link de Aceptación de terminos y consiciones
+                    //Generar Link de Aceptación de terminos y condiciones
                     Guid termsId = Guid.NewGuid();
                     var termsEmail = new so_loyalty_links_log
                     {
@@ -928,7 +928,7 @@ namespace SmartOrderService.Services
                     emailInfo.TermsAndConditionLink = ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/TermsAndConditionsLoyalty/" + termsObject.Id;
 
                 var emailService = new EmailService();
-                var response = emailService.SendReactivationTicketDigital(emailInfo);
+                var response = emailService.SendTermsAndConditionsLoyalty(emailInfo);
 
                 if (response.Status)
                     return ResponseBase<ReactivationTicketDigitalResponse>.Create(new ReactivationTicketDigitalResponse

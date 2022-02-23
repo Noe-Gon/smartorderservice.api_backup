@@ -524,6 +524,11 @@ namespace SmartOrderService.Services
             saleResult.DeliveryId = sale.DeliveryId;
             saleResult.SaleDetails = new List<SaleDetail>();
             saleResult.PaymentMethod = sale.PaymentMethod;
+            saleResult.PromocionData = sale.PromocionData;
+            saleResult.PromotionCatalog = sale.PromotionCatalog;
+            saleResult.PromotionGiftArticleDto = sale.PromotionGiftArticleDto;
+            saleResult.PromotionGiftProductDto = sale.PromotionGiftProductDto;
+            saleResult.PromotionProductDto = sale.PromotionProductDto;
             for (int i = 0; i < sale.SaleDetails.Count(); i++)
             {
                 int amountSaled = 0;

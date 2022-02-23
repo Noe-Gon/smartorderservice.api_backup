@@ -452,7 +452,7 @@ namespace SmartOrderService.Services
             att.ContentId = "Bepensa";
             att.ContentType.MediaType = "image/png";
             att.ContentType.Name = Path.GetFileName(HttpContext.Current.Server.MapPath("~/Src/loyaltyImage.png"));
-            request.Body = request.Body.Replace("{image}", "<img class=\"image\" src=\"cid:Bepensa\" />");
+            request.Body = request.Body.Replace("{imageLoyalty}", "<img class=\"image\" src=\"cid:Bepensa\" />");
 
             mmsg.Body = request.Body;
             mmsg.BodyEncoding = System.Text.Encoding.UTF8;

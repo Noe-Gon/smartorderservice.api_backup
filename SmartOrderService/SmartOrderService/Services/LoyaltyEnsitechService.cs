@@ -15,7 +15,6 @@ namespace SmartOrderService.Services
         private SmartOrderModel db = new SmartOrderModel();
         private string url = "https://is68s2j0b1.execute-api.us-east-1.amazonaws.com/dev/";
         private string autorizacion = "a9c332d2-ba38-405f-9cf7-57bcd787eba1";
-        private string json = "";
 
         public List<LoyaltyGetCustomerList> GetCustomerUuid(string branchCode, string routeCode)
         {
@@ -25,7 +24,6 @@ namespace SmartOrderService.Services
                 var client = new RestClient(endpoint);
                 var request = new RestRequest(Method.GET);
                 request.AddHeader("content-type", "application/json");
-                request.AddParameter("application/json", json, ParameterType.RequestBody);
 
                 if (autorizacion != null)
                 {
@@ -82,7 +80,7 @@ namespace SmartOrderService.Services
         public LoyaltyRedemptionRefundResponse RedemptionPoints(LoyaltyPointsRequest request)
         {
             var endpoint = url + "beneficiary/points/redemption";
-            json = JsonConvert.SerializeObject(request);
+            var json = JsonConvert.SerializeObject(request);
             try
             {
                 var client = new RestClient(endpoint);
@@ -103,7 +101,7 @@ namespace SmartOrderService.Services
         public LoyaltyRedemptionRefundResponse RefundPoints(LoyaltyPointsRequest request)
         {
             var endpoint = url + "beneficiary/points/refund";
-            json = JsonConvert.SerializeObject(request);
+            var json = JsonConvert.SerializeObject(request);
             try
             {
                 var client = new RestClient(endpoint);
@@ -134,6 +132,27 @@ namespace SmartOrderService.Services
                 var jsonFormat = "{\"ProductConfig\": " + response.Content + "}";
                 var responseRefined = JsonConvert.DeserializeObject<LoyaltyGetProductsResponse>(jsonFormat);
                 return responseRefined;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public LoyaltyPostBeneficiaryResponse PostBeneficiary(LoyaltyPostBenficiaryRequest request)
+        {
+            var endpoint = url + "beneficiary";
+            try
+            {
+                var client = new RestClient(endpoint);
+                var restRequest = new RestRequest(Method.GET);
+                restRequest.AddHeader("content-type", "application/json");
+                restRequest.AddHeader("x-api-key", autorizacion);
+                var json = JsonConvert.SerializeObject(request);
+                restRequest.AddParameter("application/json", json, ParameterType.RequestBody);
+                IRestResponse response = client.Execute(restRequest);
+                var responseObject = JsonConvert.DeserializeObject<LoyaltyPostBeneficiaryResponse>(response.Content);
+                return responseObject;
             }
             catch (Exception ex)
             {
