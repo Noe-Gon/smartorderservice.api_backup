@@ -145,11 +145,11 @@ namespace SmartOrderService.Services
             try
             {
                 var client = new RestClient(endpoint);
-                var restRequest = new RestRequest(Method.GET);
+                var restRequest = new RestRequest(Method.POST);
                 restRequest.AddHeader("content-type", "application/json");
                 restRequest.AddHeader("x-api-key", autorizacion);
-                var json = JsonConvert.SerializeObject(request);
-                restRequest.AddParameter("application/json", json, ParameterType.RequestBody);
+                restRequest.RequestFormat = DataFormat.Json;
+                restRequest.AddJsonBody(request);
                 IRestResponse response = client.Execute(restRequest);
                 var responseObject = JsonConvert.DeserializeObject<LoyaltyPostBeneficiaryResponse>(response.Content);
                 return responseObject;
