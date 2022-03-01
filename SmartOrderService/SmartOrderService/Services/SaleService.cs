@@ -360,7 +360,7 @@ namespace SmartOrderService.Services
                 so_sale entitySale = createSale(sale);
                 entitySale.so_sale_detail = createDetails(sale.SaleDetails, userId);
                 entitySale.so_sale_replacement = createReplacements(sale.SaleReplacements, userId);
-                //entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
+                entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
                 SetTaxes(entitySale);
                 sale.SaleId = UntransactionalSaveSale(entitySale);
 
@@ -510,7 +510,7 @@ namespace SmartOrderService.Services
             }
             saleResult.TotalCash = Math.Round(sale.TotalCash, 3);
             saleResult.SaleReplacements = sale.SaleReplacements;
-            //saleResult.SalePromotions = sale.SalePromotions;
+            saleResult.SalePromotions = sale.SalePromotions;
             return saleResult;
         }
 
@@ -534,10 +534,10 @@ namespace SmartOrderService.Services
             foreach (so_sale_detail sd in entitySale.so_sale_detail)
                 SetSaleTax(sd, branch_tax, master_price_list, price_list);
             
-            /*
+            
             foreach (so_sale_promotion p in entitySale.so_sale_promotion)
                 foreach (so_sale_promotion_detail pd in p.so_sale_promotion_detail)
-                    SetPromotionTax(pd, branch_tax, master_price_list, price_list);*/
+                    SetPromotionTax(pd, branch_tax, master_price_list, price_list);
         }
 
         private ICollection<so_sale_promotion> createPromotions(List<SalePromotion> salePromotions, int userId)
@@ -1644,11 +1644,15 @@ namespace SmartOrderService.Services
                                             select new { inventoryId = g.Key })
                               select item.inventoryId;
 
-            var filtroSale = db.so_sale.Where(a => a.status == true);
+            IQueryable<so_sale> filtroSale;
 
             if (CustomerId != 0)
             {
-                filtroSale = db.so_sale.Where(a => a.customerId == CustomerId && a.status == true);
+                filtroSale = db.so_sale.Where(a => a.customerId == CustomerId);
+            }
+            else
+            {
+                filtroSale = db.so_sale.Where(x => x.status == true || x.status == false);
             }
 
             var qsaleDto = (from venta in filtroSale
@@ -1674,7 +1678,9 @@ namespace SmartOrderService.Services
                                 venta.so_sale_replacement,
                                 venta.so_sale_promotion,
                                 result.paymentMethod,
-                                venta.createdon
+                                venta.createdon,
+                                venta.state,
+                                venta.status
                             }).ToList();
 
             var saleDto = (from item in qsaleDto
@@ -1692,6 +1698,8 @@ namespace SmartOrderService.Services
                                          DeliveryId = item.deliveryId ?? 0,
                                          PaymentMethod = item.paymentMethod,
                                          CreateDate = item.createdon.HasValue ? item.createdon.Value.ToString("dd/MM/yyyy HH:m") : "",
+                                         State = item.state,
+                                         Status = item.status,
                                          SaleDetails = (from g in item.so_sale_detail
                                                         orderby g.createdon descending
                                                         select new SaleDetailResponse 
