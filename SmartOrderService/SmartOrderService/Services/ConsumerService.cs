@@ -58,6 +58,13 @@ namespace SmartOrderService.Services
                         .Create(new List<string>() { "No se encontró la ubicación del código" });
                 }
 
+                var existCustomer = UoWConsumer.CustomerRepository
+                    .Get(x => x.code == request.CFECode && x.status)
+                    .FirstOrDefault();
+
+                if (existCustomer != null)
+                    throw new DuplicateEntityException("Ya existe un consumidor con ese CFE");
+
                 var newCustomer = new so_customer
                 {
                     name = request.Name,
@@ -256,6 +263,10 @@ namespace SmartOrderService.Services
 
                 return ResponseBase<InsertConsumerResponse>.Create(response);
             }
+            catch (DuplicateEntityException e)
+            {
+                throw new DuplicateEntityException(e.Message);
+            }
             catch (Exception e)
             {
                 return ResponseBase<InsertConsumerResponse>
@@ -309,6 +320,13 @@ namespace SmartOrderService.Services
                     {
                         "No se encontró al cliente"
                     });
+
+                var existCustomer = UoWConsumer.CustomerRepository
+                   .Get(x => x.code == request.CFECode && x.status)
+                   .FirstOrDefault();
+
+                if (existCustomer != null)
+                    throw new DuplicateEntityException("Ya existe un consumidor con ese CFE");
 
                 var route = UoWConsumer.RouteRepository
                     .GetByID(request.RouteId);
@@ -489,6 +507,10 @@ namespace SmartOrderService.Services
                 {
                     Msg = "Se ha actualizado con exito"
                 });
+            }
+            catch (DuplicateEntityException e)
+            {
+                throw new DuplicateEntityException(e.Message);
             }
             catch (Exception e)
             {
