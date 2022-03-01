@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNet.Identity;
+using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;
 using SmartOrderService.Services;
@@ -23,14 +24,31 @@ namespace SmartOrderService.Controllers
         [Route("~/api/consumer")]
         public IHttpActionResult InserConsumer(InsertConsumerRequest request)
         {
-            using (var service = GetService())
+            try
             {
-                var response = service.InsertConsumer(request);
+                using (var service = GetService())
+                {
+                    var response = service.InsertConsumer(request);
 
-                if (response.Status)
-                    return Ok(response);
-                else
-                    return Content(HttpStatusCode.BadRequest, response);
+                    if (response.Status)
+                        return Ok(response);
+                    else
+                        return Content(HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (DuplicateEntityException e)
+            {
+                return Content(HttpStatusCode.Forbidden, ResponseBase<InsertConsumerResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<InsertConsumerResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
             }
         }
 
@@ -38,14 +56,31 @@ namespace SmartOrderService.Controllers
         [Route("~/api/consumer")]
         public IHttpActionResult UpdateConsumer(UpdateConsumerRequest request)
         {
-            using (var service = GetService())
+            try
             {
-                var response = service.UpdateConsumer(request);
+                using (var service = GetService())
+                {
+                    var response = service.UpdateConsumer(request);
 
-                if (response.Status)
-                    return Ok(response);
-                else
-                    return Content(HttpStatusCode.BadRequest, response);
+                    if (response.Status)
+                        return Ok(response);
+                    else
+                        return Content(HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (DuplicateEntityException e)
+            {
+                return Content(HttpStatusCode.Forbidden, ResponseBase<UpdateConsumerResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<UpdateConsumerResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
             }
         }
 

@@ -360,7 +360,7 @@ namespace SmartOrderService.Services
                 so_sale entitySale = createSale(sale);
                 entitySale.so_sale_detail = createDetails(sale.SaleDetails, userId);
                 entitySale.so_sale_replacement = createReplacements(sale.SaleReplacements, userId);
-                //entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
+                entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
                 SetTaxes(entitySale);
                 sale.SaleId = UntransactionalSaveSale(entitySale);
 
@@ -530,7 +530,7 @@ namespace SmartOrderService.Services
             }
             saleResult.TotalCash = Math.Round(sale.TotalCash, 3);
             saleResult.SaleReplacements = sale.SaleReplacements;
-            //saleResult.SalePromotions = sale.SalePromotions;
+            saleResult.SalePromotions = sale.SalePromotions;
             return saleResult;
         }
 
@@ -554,10 +554,10 @@ namespace SmartOrderService.Services
             foreach (so_sale_detail sd in entitySale.so_sale_detail)
                 SetSaleTax(sd, branch_tax, master_price_list, price_list);
             
-            /*
+            
             foreach (so_sale_promotion p in entitySale.so_sale_promotion)
                 foreach (so_sale_promotion_detail pd in p.so_sale_promotion_detail)
-                    SetPromotionTax(pd, branch_tax, master_price_list, price_list);*/
+                    SetPromotionTax(pd, branch_tax, master_price_list, price_list);
         }
 
         private ICollection<so_sale_promotion> createPromotions(List<SalePromotion> salePromotions, int userId)

@@ -69,7 +69,7 @@ namespace SmartOrderService.Models
 
         public List<SaleReplacement> SaleReplacements;
 
-        //public List<SalePromotion> SalePromotions;
+        public List<SalePromotion> SalePromotions;
 
         public PromocionData PromocionData;
 
