@@ -76,7 +76,7 @@ namespace SmartOrderService.Services
                                     && x.UserId == ayudanteId && x.RouteId == request.RouteId)
                         .FirstOrDefault();
 
-                    string ayudanteCode = ayudante != null ? ayudante.UserCode : UoWConsumer.UserRepository.Get(x => x.userId == ayudanteId).Select(x => x.code).FirstOrDefault();
+                    string ayudanteCode = ayudante != null ? ayudante.UserCode : null;
 
                     requestNotify.auxiliarid = Convert.ToInt32(ayudanteCode);
                     requestNotify.impulsorId = Convert.ToInt32(request.EmployeeCode);
@@ -97,7 +97,7 @@ namespace SmartOrderService.Services
                                     && x.UserId == impulsorId && x.RouteId == request.RouteId)
                         .FirstOrDefault();
 
-                    string impulsorCode = impulsor != null ? impulsor.UserCode : UoWConsumer.UserRepository.Get(x => x.userId == impulsorId).Select(x => x.code).FirstOrDefault();
+                    string impulsorCode = impulsor != null ? impulsor.UserCode : null;
 
                     requestNotify.auxiliarid = Convert.ToInt32(request.EmployeeCode);
                     requestNotify.impulsorId = Convert.ToInt32(impulsorCode);
