@@ -60,7 +60,7 @@ namespace SmartOrderService.Models.Requests
 
         public static void CreateEntityReferenceValidation(List<AttributeCrm> list, string entityReferenceName, string name, string value)
         {
-            if (value != null)
+            if (value != null && value != "")
             {
                 list.Add(CreateEntityReference(entityReferenceName, name, value));
             }
