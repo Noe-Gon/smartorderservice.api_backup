@@ -427,7 +427,7 @@ namespace SmartOrderService.Services
                                 modifiedon = DateTime.Now,
                                 status = true,
                                 visit_order = 0,
-                                deliveryStatusId = deliveriStatus == null ? null : deliveriStatus.Id
+                                deliveryStatusId = deliveriStatus == null ? null : (int?)deliveriStatus.Id
                             };
                             var newDeliveryDetails = new List<so_delivery_detail>();
                             foreach (var detail in delivery.products)
