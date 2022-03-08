@@ -109,6 +109,7 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_route_customer> so_route_customer { get; set; }
         public virtual DbSet<so_inventory_revisions> so_inventory_revisions { get; set; }
         public virtual DbSet<so_sale> so_sale { get; set; }
+        public virtual DbSet<so_sale_aditional_data> so_sale_aditional_data { get; set; }
         public virtual DbSet<so_sale_detail> so_sale_detail { get; set; }
         public virtual DbSet<so_sale_inventory> so_sale_inventory { get; set; }
         public virtual DbSet<so_sale_promotion> so_sale_promotion { get; set; }
@@ -153,6 +154,16 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_customer_removal_request> so_customer_romoval_requests { get; set; }
         public virtual DbSet<so_portal_links_log> so_portal_links_logs { get; set; }
         public virtual DbSet<so_code_place> so_code_places { get; set; }
+        public virtual DbSet<so_route_team_travels_employees> so_route_team_travels_employees { get; set; }
+        public virtual DbSet<so_route_team_travels_customer_blocked> so_route_team_travel_customer_blockeds { get; set; }
+        public virtual DbSet<so_leader_authorization_code> so_leader_authorization_codes { get; set; }
+        public virtual DbSet<so_authentication_log> so_authentication_logs { get; set; }
+
+        public virtual DbSet<so_sale_detail_article> so_sale_detail_article { get; set; }
+
+        public virtual DbSet<so_promotion_article_movement> so_promotion_article_movement { get; set; }
+
+        public virtual DbSet<so_article_promotional_route> so_article_promotional_route { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -341,9 +352,14 @@ namespace SmartOrderService.DB
                 .WithRequired(e => e.so_article)
                 .WillCascadeOnDelete(false);
 
-            modelBuilder.Entity<so_article>()
+            /*modelBuilder.Entity<so_article>()
                 .HasMany(e => e.so_sale_promotion_detail_article)
                 .WithRequired(e => e.so_article)
+                .WillCascadeOnDelete(false);*/
+
+            modelBuilder.Entity<so_article_promotional_route>()
+                .HasMany(e => e.so_promotion_article_movement)
+                .WithRequired(e => e.so_article_promotional_route)
                 .WillCascadeOnDelete(false);
 
             modelBuilder.Entity<so_billing_data>()
@@ -1729,11 +1745,6 @@ namespace SmartOrderService.DB
                 .HasKey(x => new { x.binnacleId, x.routeId, x.inventoryId, x.workDayId });
 
             modelBuilder.Entity<so_route_team_travels_visit>()
-                .HasRequired(x => x.so_route_team_travels)
-                .WithMany(x => x.so_route_team_travels_visits)
-                .HasForeignKey(x => new { x.routeId, x.inventoryId, x.workDayId });
-
-            modelBuilder.Entity<so_route_team_travels_visit>()
                 .HasRequired(x => x.So_Binnacle_Visit)
                 .WithMany(x => x.so_route_team_travels_visits)
                 .HasForeignKey(x => x.binnacleId);
@@ -1772,6 +1783,49 @@ namespace SmartOrderService.DB
             var codePlace = modelBuilder.Entity<so_code_place>();
             codePlace.HasKey(x => x.Id);
             codePlace.Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+
+            modelBuilder.Entity<so_route_team_travels_employees>()
+                .HasKey(x => new { x.routeId, x.inventoryId, x.work_dayId, x.userId });
+
+            modelBuilder.Entity<so_route_team_travels_customer_blocked>()
+                .HasKey(x => new { x.CustomerId, x.InventoryId, x.WorkDayId, x.UserId });
+
+            modelBuilder.Entity<so_route_team_travels_customer_blocked>()
+                .HasRequired(x => x.User)
+                .WithMany(x => x.RouteTeamTravelsCustomerBlockeds)
+                .HasForeignKey(x => x.UserId);
+
+            modelBuilder.Entity<so_route_team_travels_customer_blocked>()
+                .HasRequired(x => x.WorkDay)
+                .WithMany(x => x.RouteTeamTravelsCustomerBlockeds)
+                .HasForeignKey(x => x.WorkDayId);
+
+            modelBuilder.Entity<so_route_team_travels_customer_blocked>()
+                .HasRequired(x => x.Inventory)
+                .WithMany(x => x.RouteTeamTravelsCustomerBlockeds)
+                .HasForeignKey(x => x.InventoryId);
+
+            modelBuilder.Entity<so_route_team_travels_customer_blocked>()
+                .HasRequired(x => x.Customer)
+                .WithMany(x => x.RouteTeamTravelsCustomerBlockeds)
+                .HasForeignKey(x => x.CustomerId);
+
+            modelBuilder.Entity<so_leader_authorization_code>()
+                .HasKey(x => x.Id)
+                .Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+
+            var authenticationLog = modelBuilder.Entity<so_authentication_log>();
+            authenticationLog.HasKey(x => x.Id);
+            authenticationLog.Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            authenticationLog.HasOptional(x => x.User)
+                .WithMany(x => x.AuthenticationLogs)
+                .HasForeignKey(x => x.UserId);
+            authenticationLog.HasOptional(x => x.Route)
+                .WithMany(x => x.AuthenticationLogs)
+                .HasForeignKey(x => x.RouteId);
+            authenticationLog.HasOptional(x => x.LeaderAuthorizationCode)
+                .WithMany(x => x.AuthenticationLogs)
+                .HasForeignKey(x => x.LeaderAuthenticationCodeId);
 
         }
     }

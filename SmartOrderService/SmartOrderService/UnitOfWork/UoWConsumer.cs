@@ -1,7 +1,10 @@
-﻿using SmartOrderService.DB;
+﻿using SmartOrderService.CustomExceptions;
 using SmartOrderService.UnitOfWork.Repositories;
+using SmartOrderService.DB;
+using SmartOrderService.Models.Enum;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Web;
 
@@ -30,6 +33,12 @@ namespace SmartOrderService.UnitOfWork
             SaleRepository = new GenericRepository<so_sale>(Context);
             CustomerProductPriceList = new GenericRepository<so_customer_products_price_list>(Context);
             ProductPriceList = new GenericRepository<so_products_price_list>(Context);
+            PortalLinksLogRepository = new GenericRepository<so_portal_links_log>(Context);
+            RouteTeamTravelsCustomerBlocked = new GenericRepository<so_route_team_travels_customer_blocked>(Context);
+            WorkDayRepository = new GenericRepository<so_work_day>(Context);
+            LeaderAuthorizationCodeRepository = new GenericRepository<so_leader_authorization_code>(Context);
+            AuthentificationLogRepository = new GenericRepository<so_authentication_log>(Context);
+
         }
 
         private SmartOrderModel Context { get; set; }
@@ -49,15 +58,19 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_sale> SaleRepository { get; set; }
         public GenericRepository<so_customer_products_price_list> CustomerProductPriceList { get; set; }
         public GenericRepository<so_products_price_list> ProductPriceList { get; set; }
-
+        public GenericRepository<so_portal_links_log> PortalLinksLogRepository { get; set; }
+        public GenericRepository<so_route_team_travels_customer_blocked> RouteTeamTravelsCustomerBlocked { get; set; }
+        public GenericRepository<so_work_day> WorkDayRepository { get; set; }
+        public GenericRepository<so_leader_authorization_code> LeaderAuthorizationCodeRepository { get; set; }
+        public GenericRepository<so_authentication_log> AuthentificationLogRepository { get; set; }
 
         public void Save()
         {
             Context.SaveChanges();
         }
 
-
         private bool Disposed = false;
+
         protected virtual void Dispose(bool Disposing)
         {
             if (!this.Disposed)
@@ -69,10 +82,38 @@ namespace SmartOrderService.UnitOfWork
             }
             Disposed = true;
         }
+
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        public so_work_day GetWorkdayByUserAndDate(int userId, DateTime date)
+        {
+            var impulsor = SearchDrivingId(userId);
+
+            so_work_day workday = WorkDayRepository.Get(
+                i => i.userId == impulsor
+                && DbFunctions.TruncateTime(i.date_start) == DbFunctions.TruncateTime(date)
+                ).FirstOrDefault();
+
+            if (workday == null)
+            {
+                throw new WorkdayNotFoundException("No se encontro la jornada para el usuario " + impulsor + "y el dia " + date);
+            }
+            return workday;
+        }
+
+        public int SearchDrivingId(int actualUserId)
+        {
+            so_route_team teamRoute = RouteTeamRepository.Get(i => i.userId == actualUserId).FirstOrDefault();
+            if (teamRoute == null)
+            {
+                throw new RelatedDriverNotFoundException(actualUserId);
+            }
+            int DrivingId = RouteTeamRepository.Get(i => i.routeId == teamRoute.routeId && i.roleTeamId == (int)ERolTeam.Impulsor).ToList().FirstOrDefault().userId;
+            return DrivingId;
         }
     }
 }

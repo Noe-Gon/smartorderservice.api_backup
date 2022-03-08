@@ -50,5 +50,38 @@ namespace SmartOrderService.Controllers
                 return InternalServerError(e);
             }
         }
+
+        [HttpPost]
+        [Route("~/api/SendEmail/ReactivationTicket")]
+        public IHttpActionResult SendReactivationTicketDigital(SendReactivationTicketDigitalRequest request)
+        {
+            try
+            {
+                var service = new EmailService();
+                var response = service.SendReactivationTicketDigital(request);
+
+                if (response.Status)
+                    return Ok(response);
+
+                return Content(HttpStatusCode.BadRequest, response);
+            }
+            catch (Exception e)
+            {
+                return InternalServerError(e);
+            }
+        }
+
+        [HttpPost]
+        [Route("~/api/SendRemovalRequest")]
+        public IHttpActionResult SendRemovalRequest(SendRemovalRequestEmailRequest request)
+        {
+            var service = new EmailService();
+            var response = service.SendRemovalRequestEmail(request);
+
+            if (response.Status)
+                return Ok(response);
+
+            return Content(HttpStatusCode.BadRequest, response);
+        }
     }
 }

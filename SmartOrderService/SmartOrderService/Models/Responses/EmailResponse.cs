@@ -14,4 +14,14 @@ namespace SmartOrderService.Models.Responses
     {
         public string Msg { get; set; }
     }
+
+    public class SendReactivationTicketDigitalResponse
+    {
+        public string Msg { get; set; }
+    }
+
+    public class SendRemovalRequestEmailResponse
+    {
+        public string Msg { get; set; }
+    }
 }

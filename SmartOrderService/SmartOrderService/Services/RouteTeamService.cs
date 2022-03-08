@@ -15,37 +15,100 @@ namespace SmartOrderService.Services
         private RoleTeamService roleTeamService = new RoleTeamService();
         private RouteTeamTravelsService routeTeamTravelsService = new RouteTeamTravelsService();
 
-        public bool checkCurrentTravelState(int userId)
+        public bool CheckCurrentTravelState(int userId)
         {
-            ERolTeam userRole = roleTeamService.getUserRole(userId);
-            if (userRole == ERolTeam.SinAsignar)
+            try
             {
-                return true;
+                ERolTeam userRole = roleTeamService.GetUserRole(userId);
+                if (userRole == ERolTeam.SinAsignar)
+                {
+                    return true;
+                }
+                
+
+                int inventoryState = GetInventoryState(userId, DateTime.Today);
+
+                //Start Load Inventory Process OPCD
+                CallLoadInventoryProcess(userId);
+                //End Load Inventory Process
+
+                if ((inventoryState == 0 && userRole == ERolTeam.Impulsor))
+                {
+                    CheckOpenedTravalers(userId);
+                    return true;
+                }
+                if (((inventoryState == 1 || inventoryState == 2) && userRole == ERolTeam.Impulsor))
+                {
+                    throw new InventoryNotClosedByUserException("El viaje anterior no ha sido cerrado por otro usuario");
+                }
+                if (inventoryState == 1)
+                {
+                    CheckIfCurrentTravelsIsNewByUser(userId);
+
+                    return true;
+                }
+                if (inventoryState == 0 && userRole == ERolTeam.Ayudante)
+                    throw new InventoryNotOpenException();
+                return false;
+            }
+            catch (InventoryInProgressException)
+            {
+                //Start Load Inventory Process OPCD
+                CallLoadInventoryProcess(userId);
+                //End Load Inventory Process
+
+                throw new InventoryInProgressException();
+            }
+            catch (InventoryEmptyException)
+            {
+                //Start Load Inventory Process OPCD
+                CallLoadInventoryProcess(userId);
+                //End Load Inventory Process
+
+                throw new InventoryEmptyException();
             }
 
-            //Start Load Inventory Process OPCD
+        }
+
+        public void CheckIfCurrentTravelsIsNewByUser(int userId)
+        {
+            InventoryService inventoryService = new InventoryService();
+
+            var impulsorId = SearchDrivingId(userId);
+            var inventory = inventoryService.GetCurrentInventory(impulsorId, DateTime.Today);
+            var workDay = GetWorkdayByUserAndDate(impulsorId, DateTime.Today);
+
+            //Verificar que en el inventario actual yo no este
+            var travel = db.so_route_team_travels_employees
+                .Where(x => x.inventoryId == inventory.inventoryId && x.work_dayId == workDay.work_dayId
+                    && x.userId == userId)
+                .FirstOrDefault();
+
+            if (travel != null)
+                throw new InventoryNotClosedByUserException("El viaje anterior no ha sido cerrado por otro usuario");
+        }
+
+        public void CheckOpenedTravalers(int impulsorId)
+        {
+            var workDay = GetWorkdayByUserAndDate(impulsorId, DateTime.Today);
+
+            var traval = db.so_route_team_travels_employees
+                .Where(x => x.work_dayId == workDay.work_dayId && x.active)
+                .FirstOrDefault();
+
+            if (traval == null)
+                return;
+
+            throw new InventoryNotClosedException();
+        }
+        public void CallLoadInventoryProcess(int userId)
+        {
             var inventoryService = new InventoryService();
             int impulsorId = SearchDrivingId(userId);
             var routeTeam = db.so_route_team.Where(x => x.userId == impulsorId).First();
             var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
 
             inventoryService.CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
-            //End Load Inventory Process
-
-            int inventoryState = getInventoryState(userId,DateTime.Today);
-            if ((inventoryState == 0 && userRole == ERolTeam.Impulsor))
-            {
-                return true;
-            }
-            if (((inventoryState == 1 || inventoryState == 2) && userRole == ERolTeam.Impulsor))
-            {
-                return false;
-            }
-            if (inventoryState == 1)
-            {
-                return true;
-            }
-            return false;
         }
 
         public List<int> GetTeamIds(int userId)
@@ -58,7 +121,8 @@ namespace SmartOrderService.Services
 
         public bool checkDriverWorkDay(int userId)
         {
-            ERolTeam userRole = roleTeamService.getUserRole(userId);
+            /*
+            ERolTeam userRole = roleTeamService.GetUserRole(userId);
             if (userRole == ERolTeam.Impulsor)
             {
                 try
@@ -84,12 +148,13 @@ namespace SmartOrderService.Services
                 }
                 return true;
             }
+            */
             return true;
         }
 
         public bool CheckTravelClosingStatus(int userId, int inventoryId)
         {
-            ERolTeam userRole = roleTeamService.getUserRole(userId);
+            ERolTeam userRole = roleTeamService.GetUserRole(userId);
             if (userRole == ERolTeam.SinAsignar)
             {
                 return true;
@@ -104,15 +169,25 @@ namespace SmartOrderService.Services
             inventoryService.CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
             //End Load Inventory Process
 
+            //Si es de Viaje no sincronizado devolver true
+            var workDay = GetWorkdayByUserAndDate(impulsorId, DateTime.Today);
+            var isInTravelsemployees = db.so_route_team_travels_employees
+                .Where(x => x.userId == userId && x.inventoryId == inventoryId && x.work_dayId == workDay.work_dayId)
+                .FirstOrDefault() != null;
+
+            if (isInTravelsemployees)
+                return true;
+            //Fin de validación de viaje no sincronizado
+
             if (userRole == ERolTeam.Impulsor)
             {
-                if (getInventoryState(userId,DateTime.Today) == 1 && routeTeamTravelsService.getTravelStatusByInventoryId(inventoryId) == EInventoryTeamStatus.InventarioCerradoPorAsistente)
+                if (GetInventoryState(userId,DateTime.Today) == 1 && routeTeamTravelsService.getTravelStatusByInventoryId(inventoryId) == EInventoryTeamStatus.InventarioCerradoPorAsistente)
                 {
                     return true;
                 }
                 return false;
             }
-            if (getInventoryState(userId, DateTime.Today) == 1 && routeTeamTravelsService.getTravelStatusByInventoryId(inventoryId) == EInventoryTeamStatus.InventarioAbiertoPorAyudante)
+            if (GetInventoryState(userId, DateTime.Today) == 1 && routeTeamTravelsService.getTravelStatusByInventoryId(inventoryId) == EInventoryTeamStatus.InventarioAbiertoPorAyudante)
             {
                 return true;
             }
@@ -139,12 +214,12 @@ namespace SmartOrderService.Services
                 ).FirstOrDefault();
             if (workday == null)
             {
-                throw new WorkdayNotFoundException("No se encontro la jornada para el usuario " + userId + "y el dia " + date);
+                throw new WorkdayNotFoundException("No se encontro la jornada para el usuario " + userId + " y el dia " + date);
             }
             return workday;
         }
 
-        public int getInventoryState(int userId, DateTime date)
+        public int GetInventoryState(int userId, DateTime date)
         {
             InventoryService inventoryService = new InventoryService();
             if (date == null)
@@ -152,18 +227,19 @@ namespace SmartOrderService.Services
                 date = DateTime.Today;
             }
             userId = SearchDrivingId(userId);
-            var inventory = inventoryService.getCurrentInventory(userId,date);
+            var inventory = inventoryService.GetCurrentInventory(userId,date);
             return inventory.state;
         }
 
         public bool CheckWorkDayClosingStatus(int userId)
         {
-            ERolTeam userRole = roleTeamService.getUserRole(userId);
+            
+            ERolTeam userRole = roleTeamService.GetUserRole(userId);
             if (userRole == ERolTeam.SinAsignar)
             {
                 return true;
             }
-            if (userRole == ERolTeam.Impulsor)
+            /*if (userRole == ERolTeam.Impulsor)
             {
                 var userWorkDay = GetWorkdayByUserAndDate(userId, DateTime.Today);
                 if (userWorkDay == null)
@@ -174,6 +250,18 @@ namespace SmartOrderService.Services
                 {
                     return true;
                 }
+                return false;
+            }
+            return true;
+            */
+            int impulsorId = SearchDrivingId(userId);
+            var workDay = GetWorkdayByUserAndDate(impulsorId, DateTime.Today);
+
+            int userTravel = db.so_route_team_travels_employees
+                .Where(x => x.work_dayId == workDay.work_dayId && x.active)
+                .Count();
+            if (userTravel > 0)
+            {
                 return false;
             }
             return true;

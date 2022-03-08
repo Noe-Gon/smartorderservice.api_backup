@@ -13,6 +13,16 @@ namespace SmartOrderService.Services
     {
         private SmartOrderModel db = new SmartOrderModel();
 
+        public RouteTeamInventoryAvailableService()
+        {
+
+        }
+
+        public RouteTeamInventoryAvailableService (SmartOrderModel dbAux)
+        {
+            this.db = dbAux;
+        }
+
         public List<RouteTeamInventoryDto> GetRouteTeamInventories(int inventoryId)
         {
             var teamInventoryList = GetInventoryTeamByInventoryId(inventoryId);
@@ -24,56 +34,43 @@ namespace SmartOrderService.Services
             return routeTeamInventories;
         }
 
-        public void RecordRouteTeamInventory(int inventoryId)
-        {
-            var inventoryDetailList = db.so_inventory_detail.Where(s => s.inventoryId.Equals(inventoryId)).ToList();
-            using(var dbContextTransaction = db.Database.BeginTransaction())
-            {
-                foreach(var inventoryDetail in inventoryDetailList)
-                {
-                    so_route_team_inventory_available routeTeamInventory = new so_route_team_inventory_available();
-                    routeTeamInventory.inventoryId = inventoryDetail.inventoryId;
-                    routeTeamInventory.productId = inventoryDetail.productId;
-                    routeTeamInventory.createOn = DateTime.Today;
-                    routeTeamInventory.Available_Amount = inventoryDetail.amount;
-                    db.so_route_team_inventory_available.Add(routeTeamInventory);
-                    db.SaveChanges();
-                }
-                dbContextTransaction.Commit();
-            }
-        }
-
         public void UpdateRouteTeamInventory(Sale sale)
         {
             List<SaleDetail> salesDetail = sale.SaleDetails;
             List<SalePromotion> salePromotion = sale.SalePromotions;
+
             foreach (var productInventory in salesDetail)
             {
-                var product = db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productInventory.ProductId)).FirstOrDefault();
-                product.Available_Amount -= productInventory.Amount;
-                db.SaveChanges();
+                db.so_route_team_inventory_available
+                    .Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productInventory.ProductId))
+                    .FirstOrDefault().Available_Amount -= productInventory.Amount;
             }
+            db.SaveChanges();
+
             foreach (var Promotion in salePromotion)
             {
                 foreach (var producPromotion in Promotion.DetailProduct)
                 {
-                    var product = db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(producPromotion.ProductId)).FirstOrDefault();
-                    product.Available_Amount -= producPromotion.Amount;
-                    db.SaveChanges();
+                    db.so_route_team_inventory_available
+                        .Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(producPromotion.ProductId))
+                        .FirstOrDefault().Available_Amount -= producPromotion.Amount;
                 }
             }
+            db.SaveChanges();
         }
 
         public void UpdateRouteTeamInventory(SaleTeam sale)
         {
             List<SaleDetail> salesDetail = sale.SaleDetails;
-            List<SalePromotion> salePromotion = sale.SalePromotions;
+            //List<SalePromotion> salePromotion = sale.SalePromotions;
             foreach (var productInventory in salesDetail)
             {
                 var product = db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productInventory.ProductId)).FirstOrDefault();
                 product.Available_Amount -= productInventory.Amount;
                 db.SaveChanges();
             }
+
+            /*
             foreach (var Promotion in salePromotion)
             {
                 foreach (var producPromotion in Promotion.DetailProduct)
@@ -82,7 +79,7 @@ namespace SmartOrderService.Services
                     product.Available_Amount -= producPromotion.Amount;
                     db.SaveChanges();
                 }
-            }
+            }*/
         }
 
         public List<so_route_team_inventory_available> GetInventoryTeamByInventoryId(int inventoryId)

@@ -129,8 +129,11 @@ namespace SmartOrderService.Controllers
             try
             {
                 int inventoryId = request.InventoryId.Value;
-                new InventoryService().OpenInventory(inventoryId,request.UserId);
-                response = Request.CreateResponse(HttpStatusCode.OK);
+                using (var inventoryService = new InventoryService())
+                {
+                    inventoryService.OpenInventory(inventoryId, request.UserId);
+                    response = Request.CreateResponse(HttpStatusCode.OK);
+                }
             }
             catch (InventoryNotOpenException e)
             {
@@ -154,9 +157,12 @@ namespace SmartOrderService.Controllers
             }
             try
             {
-                var result = new InventoryService().CloseInventory(request.InventoryId.Value,request.UserId);
-                HttpStatusCode code = result ? HttpStatusCode.OK : HttpStatusCode.Conflict;
-                response = Request.CreateResponse(code);
+                using (var inventoryService = new InventoryService())
+                {
+                    bool result = inventoryService.CloseInventory(request.InventoryId.Value, request.UserId);
+                    HttpStatusCode code = result ? HttpStatusCode.OK : HttpStatusCode.Conflict;
+                    response = Request.CreateResponse(code);
+                }
             }
             catch (WorkdayNotFoundException e)
             {
@@ -178,20 +184,15 @@ namespace SmartOrderService.Controllers
         public HttpResponseMessage TransferUnsoldInventory([FromBody] InventoryRequest request)
         {
             HttpResponseMessage response;
-            if (!request.InventoryId.HasValue)
-            {
-                response = Request.CreateResponse(HttpStatusCode.BadRequest, "Falta el parametro InventoryId");
-                return response;
-            }
             try
             {
                 var inventoryService = new InventoryService();
-                inventoryService.TransferUnsoldInventory(request.InventoryId.Value,request.UserId);
+                inventoryService.TransferUnsoldInventory(request.UserId);
                 response = Request.CreateResponse(HttpStatusCode.Created);
             }
             catch (Exception e)
             {
-                response = Request.CreateResponse(HttpStatusCode.InternalServerError,"No fue posible completar la transferencia de inventario");
+                response = Request.CreateResponse(HttpStatusCode.Conflict,e);
             }
             return response;
         }
