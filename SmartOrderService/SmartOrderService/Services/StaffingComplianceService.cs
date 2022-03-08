@@ -187,10 +187,10 @@ namespace SmartOrderService.Services
                         Status = true,
                         WasLeaderCodeAuthorization = true,
                         CreatedDate = DateTime.Now,
-                        UserCode = leaderCode.Code,
+                        UserCode = request.EmployeeCode,
                         UserId = user.userId,
                         RouteId = request.RouteId,
-                        LeaderCode = request.EmployeeCode
+                        LeaderCode = leaderCode.Code
                     };
 
                     UoWConsumer.AuthentificationLogRepository.Insert(newAuthenticationLog);
