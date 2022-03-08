@@ -51,6 +51,15 @@
       <HintPath>..\packages\AutoMapper.4.2.1\lib\net45\AutoMapper.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="FluentValidation, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7de548da2fbae0f0, processorArchitecture=MSIL">
+      <HintPath>..\packages\FluentValidation.8.6.1\lib\net45\FluentValidation.dll</HintPath>
+    </Reference>
+    <Reference Include="FluentValidation.ValidatorAttribute, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7de548da2fbae0f0, processorArchitecture=MSIL">
+      <HintPath>..\packages\FluentValidation.ValidatorAttribute.8.6.1\lib\net45\FluentValidation.ValidatorAttribute.dll</HintPath>
+    </Reference>
+    <Reference Include="FluentValidation.WebApi, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7de548da2fbae0f0, processorArchitecture=MSIL">
+      <HintPath>..\packages\FluentValidation.WebApi.8.6.1\lib\net45\FluentValidation.WebApi.dll</HintPath>
+    </Reference>
     <Reference Include="HtmlRenderer">
       <HintPath>..\..\HtmlRenderer.dll</HintPath>
     </Reference>
@@ -242,13 +251,17 @@
     <Compile Include="Controllers\BranchController.cs" />
     <Compile Include="Controllers\CategoryController.cs" />
     <Compile Include="Controllers\CellarNoticeController.cs" />
+    <Compile Include="Controllers\CodePlaceController.cs" />
     <Compile Include="Controllers\CollectBottleController.cs" />
+    <Compile Include="Controllers\ConsumerController.cs" />
     <Compile Include="Controllers\CountConfigurationController.cs" />
+    <Compile Include="Controllers\CustomerBlockedController.cs" />
     <Compile Include="Controllers\CustomerController.cs" />
     <Compile Include="Controllers\CustomerDevolutionController.cs" />
     <Compile Include="Controllers\CustomerVisitController.cs" />
     <Compile Include="Controllers\DeliveryController.cs" />
     <Compile Include="Controllers\DeviceController.cs" />
+    <Compile Include="Controllers\EmailController.cs" />
     <Compile Include="Controllers\InventoryController.cs" />
     <Compile Include="Controllers\InventoryRevisionController.cs" />
     <Compile Include="Controllers\InvoiceController.cs" />
@@ -280,12 +293,15 @@
     <Compile Include="CustomExceptions\CustomerNotFoundException.cs" />
     <Compile Include="CustomExceptions\DeliveryNotFoundException.cs" />
     <Compile Include="CustomExceptions\DeviceNotFoundException.cs" />
+    <Compile Include="CustomExceptions\DuplicateEntityException.cs" />
     <Compile Include="CustomExceptions\EntityNotFoundException.cs" />
+    <Compile Include="CustomExceptions\ExternalAPIException.cs" />
     <Compile Include="CustomExceptions\InventoryEmptyException.cs" />
     <Compile Include="CustomExceptions\InventoryInProgressException.cs" />
     <Compile Include="CustomExceptions\InventoryNotClosedException.cs" />
     <Compile Include="CustomExceptions\InventoryNotFoundException.cs" />
     <Compile Include="CustomExceptions\InvoiceException.cs" />
+    <Compile Include="CustomExceptions\LeaderCodeExceptions.cs" />
     <Compile Include="CustomExceptions\NoCustomerVisitException.cs" />
     <Compile Include="CustomExceptions\NotEnoughProductAmountException.cs" />
     <Compile Include="CustomExceptions\NotFoundUsersConfigException.cs" />
@@ -317,6 +333,7 @@
     <Compile Include="DB\so_api_version.cs" />
     <Compile Include="DB\so_application.cs" />
     <Compile Include="DB\so_article.cs" />
+    <Compile Include="DB\so_authentication_log.cs" />
     <Compile Include="DB\so_autoventa_View.cs" />
     <Compile Include="DB\so_billing_data.cs" />
     <Compile Include="DB\so_binnacle_reason_failed.cs" />
@@ -337,10 +354,13 @@
     <Compile Include="DB\so_category_restriction.cs" />
     <Compile Include="DB\SO_CAT_TYPE_USER_VISIT.cs" />
     <Compile Include="DB\so_cellar_notice.cs" />
+    <Compile Include="DB\so_code_place.cs" />
     <Compile Include="DB\so_collect_bottle.cs" />
     <Compile Include="DB\so_collect_bottle_detail.cs" />
     <Compile Include="DB\so_company.cs" />
     <Compile Include="DB\so_configuration_customer.cs" />
+    <Compile Include="DB\so_customer_aditional_data.cs" />
+    <Compile Include="DB\so_consumer_removal_request.cs" />
     <Compile Include="DB\so_container.cs" />
     <Compile Include="DB\so_container_customer.cs" />
     <Compile Include="DB\so_container_detail.cs" />
@@ -376,9 +396,11 @@
     <Compile Include="DB\so_inventory_replacement_detail.cs" />
     <Compile Include="DB\so_inventory_summary.cs" />
     <Compile Include="DB\so_invoice_opefactura.cs" />
+    <Compile Include="DB\so_leader_authorization_code.cs" />
     <Compile Include="DB\so_loan_order.cs" />
     <Compile Include="DB\so_loan_sale.cs" />
     <Compile Include="DB\so_log_errors.cs" />
+    <Compile Include="DB\so_portal_links_log.cs" />
     <Compile Include="DB\so_preventa_View.cs" />
     <Compile Include="DB\so_price_list_products_detail.cs" />
     <Compile Include="DB\so_process.cs" />
@@ -414,8 +436,11 @@
     <Compile Include="DB\so_route_team.cs" />
     <Compile Include="DB\so_route_team_inventory_available.cs" />
     <Compile Include="DB\so_route_team_travels.cs" />
+    <Compile Include="DB\so_route_team_travels_customer_blocked.cs" />
+    <Compile Include="DB\so_route_team_travels_employees.cs" />
     <Compile Include="DB\so_route_team_travels_visit.cs" />
     <Compile Include="DB\so_sale.cs" />
+    <Compile Include="DB\so_sale_aditional_data.cs" />
     <Compile Include="DB\so_sale_detail.cs" />
     <Compile Include="DB\so_sale_inventory.cs" />
     <Compile Include="DB\so_sale_promotion.cs" />
@@ -455,6 +480,7 @@
     <Compile Include="Mappers\SalePromotionMapper.cs" />
     <Compile Include="Mappers\SalePromotionDetailProductMapper.cs" />
     <Compile Include="Mappers\SaleReplacementMapper.cs" />
+    <Compile Include="Mappers\SaleTeamMapper.cs" />
     <Compile Include="Mappers\TrackingConfigurationMapper.cs" />
     <Compile Include="Models\AccountBindingModels.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -474,10 +500,29 @@
     <Compile Include="Models\DTO\Invoice\InvoiceOpeFacturaDto.cs" />
     <Compile Include="Models\DTO\Invoice\SimpleInvoiceLineOpeFactura.cs" />
     <Compile Include="Models\DTO\Product.cs" />
+    <Compile Include="Models\DTO\PromocionData.cs" />
+    <Compile Include="Models\DTO\PromotionCatalog.cs" />
+    <Compile Include="Models\DTO\PromotionCatalogDto.cs" />
+    <Compile Include="Models\DTO\PromotionGiftArticleCatalogDto.cs" />
+    <Compile Include="Models\DTO\PromotionGiftArticleDto.cs" />
+    <Compile Include="Models\DTO\PromotionGiftProductDto.cs" />
+    <Compile Include="Models\DTO\PromotionProductDto.cs" />
+    <Compile Include="Models\DTO\PromotionResult.cs" />
+    <Compile Include="Models\DTO\PromotionSaleDeliveryResult.cs" />
+    <Compile Include="Models\DTO\PromotionSaleDetailGiftArticle.cs" />
+    <Compile Include="Models\DTO\PromotionSaleDetailGiftProduct.cs" />
+    <Compile Include="Models\DTO\PromotionSaleDetailPromotionProduct.cs" />
     <Compile Include="Models\DTO\RegisterCustomerDataDto.cs" />
     <Compile Include="Models\DTO\RegisterCustomerDto.cs" />
+    <Compile Include="Models\DTO\RelSalePromotion.cs" />
     <Compile Include="Models\DTO\RouteTeamInventoryDto.cs" />
+    <Compile Include="Models\DTO\SaleDetailResponse.cs" />
     <Compile Include="Models\DTO\SaleDetailResult.cs" />
+    <Compile Include="Models\DTO\SaleDetailsArticles.cs" />
+    <Compile Include="Models\DTO\SaleDto.cs" />
+    <Compile Include="Models\DTO\SalePromotionDetailProductResponse.cs" />
+    <Compile Include="Models\DTO\SalePromotionResponse.cs" />
+    <Compile Include="Models\DTO\SaleWithPromotion.cs" />
     <Compile Include="Models\DTO\TrackingConfigurationDto.cs" />
     <Compile Include="Models\DTO\CountConfigurationDto.cs" />
     <Compile Include="Models\DTO\CustomerDataDto.cs" />
@@ -517,20 +562,31 @@
     <Compile Include="Models\DTO\UserNoticeRechargeDto.cs" />
     <Compile Include="Models\DTO\UserReasonDevolutionDto.cs" />
     <Compile Include="Models\DTO\VisitDto.cs" />
+    <Compile Include="Models\DTO\WorkCloseDayArticle.cs" />
     <Compile Include="Models\DTO\Workday.cs" />
+    <Compile Include="Models\Email\EmailAPIRequests.cs" />
+    <Compile Include="Models\Enum\Consumer.cs" />
+    <Compile Include="Models\Enum\ConsumerRemovalRequest.cs" />
     <Compile Include="Models\Enum\EInventoryTeamStatus.cs" />
     <Compile Include="Models\Enum\ERolTeam.cs" />
+    <Compile Include="Models\Enum\PortalLinksStatus.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\DTO\PriceDto.cs" />
     <Compile Include="Models\DTO\PriceList.cs" />
     <Compile Include="Models\DTO\ProductDto.cs" />
     <Compile Include="Models\DTO\ProductArticle.cs" />
     <Compile Include="Models\DTO\Promotion.cs" />
+    <Compile Include="Models\Requests\CRMRequests.cs" />
+    <Compile Include="Models\Message\StaffingComplianceMessage.cs" />
+    <Compile Include="Models\Message\WsEmployeeDataMessage.cs" />
     <Compile Include="Models\Requests\ApiVersionRequest.cs" />
     <Compile Include="Models\Requests\BinnacleVisitRequest.cs" />
     <Compile Include="Models\Requests\CellarNoticeRequest.cs" />
     <Compile Include="Models\Requests\ConfigurationRequest.cs" />
+    <Compile Include="Models\Requests\ConsumerRequests.cs" />
+    <Compile Include="Models\Requests\CustomerBlockedRequests.cs" />
     <Compile Include="Models\Requests\CustomerInvoiceDataRequest.cs" />
+    <Compile Include="Models\Requests\EmailRequest.cs" />
     <Compile Include="Models\Requests\InvoiceOpeFacturaRequest.cs" />
     <Compile Include="Models\Requests\ReplacementRequest.cs" />
     <Compile Include="Models\Requests\SurveyCustomerRequest.cs" />
@@ -551,9 +607,14 @@
     <Compile Include="Models\Requests\UserRequest.cs" />
     <Compile Include="Models\Requests\VisitRequest.cs" />
     <Compile Include="Models\Requests\WorkDayRequest.cs" />
+    <Compile Include="Models\Responses\CodePlaceResponses.cs" />
+    <Compile Include="Models\Responses\ConsumerResponses.cs" />
     <Compile Include="Models\Responses\CountConfigurationResponse.cs" />
+    <Compile Include="Models\Responses\CustomerBlockedResponses.cs" />
     <Compile Include="Models\Responses\CustomerResponse.cs" />
+    <Compile Include="Models\Responses\EmailResponse.cs" />
     <Compile Include="Models\Responses\InvoiceOpeFacturaResponse.cs" />
+    <Compile Include="Models\Responses\MsgResponseBase.cs" />
     <Compile Include="Models\Responses\PriceResponse.cs" />
     <Compile Include="Models\Responses\ProductResponse.cs" />
     <Compile Include="Models\Responses\Response.cs" />
@@ -568,12 +629,18 @@
     <Compile Include="Models\Responses\SurveyCustomerResponse.cs" />
     <Compile Include="Models\Responses\VisitResponse.cs" />
     <Compile Include="Models\SalesData.cs" />
+    <Compile Include="Models\Validation\InventoryRequestValidation.cs" />
     <Compile Include="Models\VersionAPI.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\ApplicationOAuthProvider.cs" />
     <Compile Include="Results\ChallengeResult.cs" />
     <Compile Include="Services\ApiVersionService.cs" />
     <Compile Include="Services\ApplicationService.cs" />
+    <Compile Include="Services\CodePlaceService.cs" />
+    <Compile Include="Services\ConsumerService.cs" />
+    <Compile Include="Services\CRMService.cs" />
+    <Compile Include="Services\CustomerBlockedService.cs" />
+    <Compile Include="Services\EmailService.cs" />
     <Compile Include="Services\RoleTeamService.cs" />
     <Compile Include="Services\RouteTeamInventoryAvailableService.cs" />
     <Compile Include="Services\RouteTeamService.cs" />
@@ -605,6 +672,7 @@
     <Compile Include="Controllers\RouteTeamController.cs" />
     <Compile Include="Services\RouteTeamTravelsService.cs" />
     <Compile Include="Services\SaleDetailResultService.cs" />
+    <Compile Include="Services\StaffingComplianceService.cs" />
     <Compile Include="Services\SurveyCustomerService.cs" />
     <Compile Include="Services\TrackingService.cs" />
     <Compile Include="Services\UserDevolutionService.cs" />
@@ -614,11 +682,15 @@
     <Compile Include="Services\SaleService.cs" />
     <Compile Include="Services\WorkdayService.cs" />
     <Compile Include="Startup.cs" />
+    <Compile Include="DB\so_article_promotional_route.cs" />
+    <Compile Include="DB\so_promotion_article_movement.cs" />
+    <Compile Include="DB\so_sale_detail_article.cs" />
     <Compile Include="Templates\InsertCliente.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>InsertCliente.tt</DependentUpon>
     </Compile>
+    <Compile Include="UnitOfWork\UoWConsumer.cs" />
     <Compile Include="Utils\DateUtils.cs" />
     <Compile Include="Utils\DatosFacturas.cs" />
     <Compile Include="Utils\DB\factdet.cs" />
@@ -645,6 +717,11 @@
     <Content Include="Areas\HelpPage\HelpPage.css" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\Template\CancelTicketDigitalEmail.html" />
+    <Content Include="Content\Template\ReactivationTicketDigitalEmail.html" />
+    <Content Include="Content\Template\RemovalRequestEmail.html" />
+    <Content Include="Content\Template\TicketDigitalEmail.html" />
+    <Content Include="Content\Template\WellcomeEmail.html" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Scripts\bootstrap.js" />
@@ -681,18 +758,10 @@
     <Content Include="Scripts\modernizr-2.6.2.js" />
     <Content Include="Scripts\respond.js" />
     <Content Include="Scripts\respond.min.js" />
+    <Content Include="Src\bepensa.png" />
     <Content Include="Templates\InsertCliente.tt">
       <Generator>TextTemplatingFilePreprocessor</Generator>
       <LastGenOutput>InsertCliente.cs</LastGenOutput>
-    </Content>
-    <Content Include="Web.config">
-      <SubType>Designer</SubType>
-    </Content>
-    <Content Include="Web.Debug.config">
-      <DependentUpon>Web.config</DependentUpon>
-    </Content>
-    <Content Include="Web.Release.config">
-      <DependentUpon>Web.config</DependentUpon>
     </Content>
     <Content Include="Areas\HelpPage\Views\_ViewStart.cshtml" />
     <Content Include="Content\Site.css" />
@@ -702,6 +771,13 @@
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
+    <Content Include="Web.config" />
+    <None Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+    <None Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -718,6 +794,14 @@
     <Content Include="Scripts\jquery-1.10.2.min.map" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Algoritmos.Data\Algoritmos.Data.csproj">
+      <Project>{28C92429-205E-4BA5-A355-EC6AEFF0EE35}</Project>
+      <Name>Algoritmos.Data</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CRM.Data\CRM.Data.csproj">
+      <Project>{34992c17-ae63-4141-a2bc-a2a8d66abcf2}</Project>
+      <Name>CRM.Data</Name>
+    </ProjectReference>
     <ProjectReference Include="..\OpeCDLib\OpeCDLib.csproj">
       <Project>{e1c42c31-7046-4cc1-a3da-4bad727d6639}</Project>
       <Name>OpeCDLib</Name>
