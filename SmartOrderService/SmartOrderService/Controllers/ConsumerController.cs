@@ -276,5 +276,30 @@ namespace SmartOrderService.Controllers
                 return Content(HttpStatusCode.BadRequest, response);
             }
         }
+
+        [HttpGet]
+        [Route("~/api/CustomerVario")]
+        public IHttpActionResult GetCustomer([FromUri]int routeId)
+        {
+            try
+            {
+                using (var service = GetService())
+                {
+                    var response = service.GetCustomerVario(new GetCustomerVarioRequest
+                    {
+                        RouteId = routeId
+                    });
+
+                    if (response.Status)
+                        return Content(HttpStatusCode.OK, response.Data);
+
+                    return Content(HttpStatusCode.BadRequest, response.Data);
+                }
+            }
+            catch (Exception e)
+            {
+                return InternalServerError(e);
+            }
+        }
     }
 }

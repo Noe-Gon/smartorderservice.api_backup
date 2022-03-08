@@ -21,7 +21,7 @@ namespace SmartOrderService.Services
                 var entity = new CRMBase
                 {
                     entityName = "ope_clientes_cancun",
-                    entityId = consumer.EntityId,
+                    entityId = consumer.EntityId == null ? null : consumer.EntityId.ToString(),
                     referenceId = null,
                     attributes = new List<AttributeCrm>()
                 };

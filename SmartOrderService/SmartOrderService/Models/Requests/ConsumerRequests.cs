@@ -131,4 +131,9 @@ namespace SmartOrderService.Models.Requests
     {
         public int CustomerId { get; set; }
     }
+
+    public class GetCustomerVarioRequest
+    {
+        public int RouteId { get; set; }
+    }
 }

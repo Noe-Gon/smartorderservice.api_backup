@@ -28,7 +28,7 @@ namespace SmartOrderService.Controllers
             {
                 response = Request.CreateResponse(HttpStatusCode.NotFound, "Error: " + e.Message);
             }
-            catch (InventoryEmptyException e)
+            catch (InventoryEmptyException)
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict, "Error: no se han cargado los clientes a visitar en el recorrido, no hay inventario del día");
             }

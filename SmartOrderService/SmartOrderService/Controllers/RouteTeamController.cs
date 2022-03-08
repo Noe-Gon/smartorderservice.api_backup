@@ -1,5 +1,6 @@
 ﻿using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.Requests;
+using SmartOrderService.Models.Responses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -126,6 +127,42 @@ namespace SmartOrderService.Services
                 response = Request.CreateResponse(HttpStatusCode.Conflict, false);
             }
             return response;
+        }
+
+        [HttpGet]
+        [Route("api/routeam")]
+        public IHttpActionResult GetRouteTeam([FromUri]int? routeId)
+        {
+            try
+            {
+                if(routeId == null || routeId <= 0)
+                    return Content(HttpStatusCode.NotFound, ResponseBase<List<GetRouteTeamResponse>>.Create(new List<string>()
+                    {
+                        "Es necesario proporcionar una ruta valida"
+                    }));
+
+                RouteTeamService routeTeamService = new RouteTeamService();
+                var response = routeTeamService.GetRouteTeam(routeId.Value);
+
+                if (response.Status)
+                    return Content(HttpStatusCode.OK, response);
+
+                return Content(HttpStatusCode.BadRequest, response);
+            }
+            catch (EntityNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<List<GetRouteTeamResponse>>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (Exception  e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<List<GetRouteTeamResponse>>.Create(new List<string>()
+                {
+                    "Error interno", e.Message
+                }));
+            }
         }
 
         // GET api/<controller>

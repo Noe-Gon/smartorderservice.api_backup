@@ -498,6 +498,26 @@ namespace SmartOrderService.Services
                 if (inventoryService.CheckInventoryAvailability(sale.InventoryId, sale.SaleDetails[i].ProductId, sale.SaleDetails[i].Amount))
                 {
                     amountSaled = sale.SaleDetails[i].Amount;
+
+                    //Buscar si genera botella vacia
+                    var emptyBottle = db.so_product_bottle
+                        .Where(x => x.productId == sale.SaleDetails[i].ProductId)
+                        .Select(x => x.so_product)
+                        .FirstOrDefault();
+
+                    if (emptyBottle != null)
+                    {
+                        var existEmptyBottle = saleResult.EmptyBottles.Where(x => x.BottleId == emptyBottle.productId).FirstOrDefault();
+
+                        if (existEmptyBottle != null)
+                            existEmptyBottle.Amount += sale.SaleDetails[i].Amount;
+                        else
+                            saleResult.EmptyBottles.Add(new SaleTeamEmptyBottles
+                            {
+                                Amount = sale.SaleDetails[i].Amount,
+                                BottleId = emptyBottle.productId
+                            });
+                    }  
                 }
                 else
                 {
@@ -1156,6 +1176,7 @@ namespace SmartOrderService.Services
                             saleResult.SaleId = sale.SaleId;
                             UpdateRouteTeamInventory(sale, db);
                             CreatePaymentMethod(sale);
+                            //AddEmptyBottles(sale.InventoryId, sale.UserId, saleResult.EmptyBottles);
                             sRespuesta = CreatePromotion(sale, db);
                             if (sRespuesta != string.Empty)
                                 throw new Exception(sRespuesta);
@@ -1255,6 +1276,47 @@ namespace SmartOrderService.Services
                 return saleResult;
             }
 
+        }
+
+        public void AddEmptyBottles(int inventoryId, int userId, List<SaleTeamEmptyBottles> emptyBottles)
+        {
+            
+            foreach (var bottle in emptyBottles)
+            {
+                //Buscar si existe la botella en el inventario
+                var emptyBottle = db.so_inventory_detail
+                .Where(x => x.productId == bottle.BottleId)
+                .FirstOrDefault();
+
+                //No existe
+                if(emptyBottle == null)
+                {
+                    //Agregar la botella vacia
+                    var newEmptyBottle = new so_inventory_detail()
+                    {
+                        productId = bottle.BottleId,
+                        inventoryId = inventoryId,
+                        amount = bottle.Amount,
+                        createdon = DateTime.Now,
+                        createdby = userId,
+                        modifiedby = userId,
+                        modifiedon = DateTime.Now,
+                        status = true,
+                        price = 0
+                    };
+
+                    db.so_inventory_detail.Add(newEmptyBottle);
+                }
+                else
+                {
+                    emptyBottle.amount += bottle.Amount;
+                    db.so_inventory_detail.Attach(emptyBottle);
+                    db.Entry(emptyBottle).State = EntityState.Modified;
+                    db.SaveChanges();
+                }
+            }
+
+            db.SaveChanges();
         }
 
         public DataTable GetPromotionsTicketDigital(DbContext db, int SaleId)

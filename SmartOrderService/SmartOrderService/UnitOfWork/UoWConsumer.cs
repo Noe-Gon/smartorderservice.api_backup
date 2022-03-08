@@ -3,10 +3,8 @@ using SmartOrderService.UnitOfWork.Repositories;
 using SmartOrderService.DB;
 using SmartOrderService.Models.Enum;
 using System;
-using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
-using System.Web;
 
 namespace SmartOrderService.UnitOfWork
 {
@@ -36,9 +34,17 @@ namespace SmartOrderService.UnitOfWork
             PortalLinksLogRepository = new GenericRepository<so_portal_links_log>(Context);
             RouteTeamTravelsCustomerBlocked = new GenericRepository<so_route_team_travels_customer_blocked>(Context);
             WorkDayRepository = new GenericRepository<so_work_day>(Context);
+            RouteCustomerVarioRepository = new GenericRepository<so_route_customer_vario>(Context);
+            ProductBottleRepository = new GenericRepository<so_product_bottle>(Context);
+            ProductRepository = new GenericRepository<so_product>(Context);
+            SaleDetailRepository = new GenericRepository<so_sale_detail>(Context);
+            LiquidationLogRepository = new GenericRepository<so_liquidation_log>(Context);
+            LiquidationLogStatusRepository = new GenericRepository<so_liquidation_log_status>(Context);
             LeaderAuthorizationCodeRepository = new GenericRepository<so_leader_authorization_code>(Context);
             AuthentificationLogRepository = new GenericRepository<so_authentication_log>(Context);
-
+            InventoryRepository = new GenericRepository<so_inventory>(Context);
+            RouteTeamInventoryAvailableRepository = new GenericRepository<so_route_team_inventory_available>(Context);
+            RouteTeamTravlesEmployeesRepository = new GenericRepository<so_route_team_travels_employees>(Context);
         }
 
         private SmartOrderModel Context { get; set; }
@@ -63,6 +69,16 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_work_day> WorkDayRepository { get; set; }
         public GenericRepository<so_leader_authorization_code> LeaderAuthorizationCodeRepository { get; set; }
         public GenericRepository<so_authentication_log> AuthentificationLogRepository { get; set; }
+        public GenericRepository<so_route_customer_vario> RouteCustomerVarioRepository { get; set; }
+        public GenericRepository<so_sale_promotion> SalePromotionRepository { get; set; }
+        public GenericRepository<so_product_bottle> ProductBottleRepository { get; set; }
+        public GenericRepository<so_product> ProductRepository { get; set; }
+        public GenericRepository<so_inventory> InventoryRepository { get; set; }
+        public GenericRepository<so_route_team_inventory_available> RouteTeamInventoryAvailableRepository { get; set; }
+        public GenericRepository<so_sale_detail> SaleDetailRepository { get; set; }
+        public GenericRepository<so_liquidation_log> LiquidationLogRepository { get; set; }
+        public GenericRepository<so_liquidation_log_status> LiquidationLogStatusRepository { get; set; }
+        public GenericRepository<so_route_team_travels_employees> RouteTeamTravlesEmployeesRepository { get; set; }
 
         public void Save()
         {

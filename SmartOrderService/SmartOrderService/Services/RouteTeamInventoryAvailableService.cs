@@ -67,6 +67,29 @@ namespace SmartOrderService.Services
             {
                 var product = db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productInventory.ProductId)).FirstOrDefault();
                 product.Available_Amount -= productInventory.Amount;
+                //verificar si el producto generá un envase vacio
+                var bottle = db.so_product_bottle.Where(x => productInventory.ProductId == x.productId).Select(x => x.so_product1).FirstOrDefault();
+                //Si es así verificar si existe en el inventario
+                if(bottle != null)
+                {
+                    var exisbottle = db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(bottle.productId)).FirstOrDefault();
+                    if(exisbottle == null) //Si no existe agregarlo
+                    {
+                        var newbottle = new so_route_team_inventory_available()
+                        {
+                            Available_Amount = productInventory.Amount,
+                            createOn = DateTime.Now,
+                            inventoryId = sale.InventoryId,
+                            productId = bottle.productId
+                        };
+                        db.so_route_team_inventory_available.Add(newbottle);
+                    }
+                    else //Si existe aumentar su cantidad
+                    {
+                        exisbottle.Available_Amount += productInventory.Amount;
+                    }
+                }
+                
                 db.SaveChanges();
             }
 
