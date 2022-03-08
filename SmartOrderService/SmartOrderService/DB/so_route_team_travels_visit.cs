@@ -20,7 +20,5 @@ namespace SmartOrderService.DB
         public Guid workDayId { get; set; }
         #endregion
 
-        public so_route_team_travels so_route_team_travels { get; set; }
-
     }
 }

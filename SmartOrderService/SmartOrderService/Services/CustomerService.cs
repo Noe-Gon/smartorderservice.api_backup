@@ -41,7 +41,7 @@ namespace SmartOrderService.Services
             {
             }
 
-            var Inventory = inventoryService.getCurrentInventory(UserId,null);
+            var Inventory = inventoryService.GetCurrentInventory(UserId,null);
 
             var CustomerToDeliver = new DeliveryService().getCustomersToDeliver(Inventory.inventoryId, UserId);
 
@@ -196,15 +196,21 @@ namespace SmartOrderService.Services
                 var ItemToDownload = new ControlDownloadService().createControlDownload(visit.binnacleId, UserId, ControlDownloadService.MODEL_TYPE_BINNACLE_VISIT);
 
                 db.so_control_download.Add(ItemToDownload);
+                //Aumentar el contador de visitas sin ventas 
+                var updateCustomerAdditionalData = db.so_customerr_additional_data
+                            .Where(x => x.CustomerId == dto.CustomerId)
+                            .FirstOrDefault();
+                if (updateCustomerAdditionalData != null)
+                    updateCustomerAdditionalData.CounterVisitsWithoutSales++;
 
                 db.SaveChanges();
 
                 //Si es de un quipo hacer el guardado de so_reoute_team
-                ERolTeam userRole = roleTeamService.getUserRole(visit.userId);
+                ERolTeam userRole = roleTeamService.GetUserRole(visit.userId);
                 if (userRole == ERolTeam.Ayudante || userRole == ERolTeam.Impulsor)
                 {
                     var impulsorId = routeTeamService.SearchDrivingId(visit.userId);
-                    var inventory = inventoryService.getCurrentInventory(impulsorId, DateTime.Today);
+                    var inventory = inventoryService.GetCurrentInventory(impulsorId, DateTime.Today);
                     var routeId = routeTeamService.searchRouteId(visit.userId);
                     var workDay = routeTeamService.GetWorkdayByUserAndDate(impulsorId, DateTime.Today);
 

@@ -17,4 +17,17 @@ namespace SmartOrderService.CustomExceptions
 
         }
     }
+
+    public class InventoryNotClosedByUserException : Exception
+    {
+        public InventoryNotClosedByUserException() : base()
+        {
+
+        }
+
+        public InventoryNotClosedByUserException(string message) : base(message)
+        {
+
+        }
+    }
 }
