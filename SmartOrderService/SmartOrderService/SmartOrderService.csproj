@@ -293,6 +293,7 @@
     <Compile Include="CustomExceptions\CustomerNotFoundException.cs" />
     <Compile Include="CustomExceptions\DeliveryNotFoundException.cs" />
     <Compile Include="CustomExceptions\DeviceNotFoundException.cs" />
+    <Compile Include="CustomExceptions\DuplicateEntityException.cs" />
     <Compile Include="CustomExceptions\EntityNotFoundException.cs" />
     <Compile Include="CustomExceptions\ExternalAPIException.cs" />
     <Compile Include="CustomExceptions\InventoryEmptyException.cs" />
@@ -332,6 +333,7 @@
     <Compile Include="DB\so_api_version.cs" />
     <Compile Include="DB\so_application.cs" />
     <Compile Include="DB\so_article.cs" />
+    <Compile Include="DB\so_authentication_log.cs" />
     <Compile Include="DB\so_autoventa_View.cs" />
     <Compile Include="DB\so_billing_data.cs" />
     <Compile Include="DB\so_binnacle_reason_failed.cs" />
@@ -394,6 +396,7 @@
     <Compile Include="DB\so_inventory_replacement_detail.cs" />
     <Compile Include="DB\so_inventory_summary.cs" />
     <Compile Include="DB\so_invoice_opefactura.cs" />
+    <Compile Include="DB\so_leader_authorization_code.cs" />
     <Compile Include="DB\so_loan_order.cs" />
     <Compile Include="DB\so_loan_sale.cs" />
     <Compile Include="DB\so_log_errors.cs" />
@@ -497,20 +500,29 @@
     <Compile Include="Models\DTO\Invoice\InvoiceOpeFacturaDto.cs" />
     <Compile Include="Models\DTO\Invoice\SimpleInvoiceLineOpeFactura.cs" />
     <Compile Include="Models\DTO\Product.cs" />
+    <Compile Include="Models\DTO\PromocionData.cs" />
+    <Compile Include="Models\DTO\PromotionCatalog.cs" />
     <Compile Include="Models\DTO\PromotionCatalogDto.cs" />
     <Compile Include="Models\DTO\PromotionGiftArticleCatalogDto.cs" />
     <Compile Include="Models\DTO\PromotionGiftArticleDto.cs" />
     <Compile Include="Models\DTO\PromotionGiftProductDto.cs" />
     <Compile Include="Models\DTO\PromotionProductDto.cs" />
     <Compile Include="Models\DTO\PromotionResult.cs" />
+    <Compile Include="Models\DTO\PromotionSaleDeliveryResult.cs" />
+    <Compile Include="Models\DTO\PromotionSaleDetailGiftArticle.cs" />
+    <Compile Include="Models\DTO\PromotionSaleDetailGiftProduct.cs" />
+    <Compile Include="Models\DTO\PromotionSaleDetailPromotionProduct.cs" />
     <Compile Include="Models\DTO\RegisterCustomerDataDto.cs" />
     <Compile Include="Models\DTO\RegisterCustomerDto.cs" />
+    <Compile Include="Models\DTO\RelSalePromotion.cs" />
     <Compile Include="Models\DTO\RouteTeamInventoryDto.cs" />
     <Compile Include="Models\DTO\SaleDetailResponse.cs" />
     <Compile Include="Models\DTO\SaleDetailResult.cs" />
+    <Compile Include="Models\DTO\SaleDetailsArticles.cs" />
     <Compile Include="Models\DTO\SaleDto.cs" />
     <Compile Include="Models\DTO\SalePromotionDetailProductResponse.cs" />
     <Compile Include="Models\DTO\SalePromotionResponse.cs" />
+    <Compile Include="Models\DTO\SaleWithPromotion.cs" />
     <Compile Include="Models\DTO\TrackingConfigurationDto.cs" />
     <Compile Include="Models\DTO\CountConfigurationDto.cs" />
     <Compile Include="Models\DTO\CustomerDataDto.cs" />
@@ -550,6 +562,7 @@
     <Compile Include="Models\DTO\UserNoticeRechargeDto.cs" />
     <Compile Include="Models\DTO\UserReasonDevolutionDto.cs" />
     <Compile Include="Models\DTO\VisitDto.cs" />
+    <Compile Include="Models\DTO\WorkCloseDayArticle.cs" />
     <Compile Include="Models\DTO\Workday.cs" />
     <Compile Include="Models\Email\EmailAPIRequests.cs" />
     <Compile Include="Models\Enum\Consumer.cs" />
@@ -669,6 +682,9 @@
     <Compile Include="Services\SaleService.cs" />
     <Compile Include="Services\WorkdayService.cs" />
     <Compile Include="Startup.cs" />
+    <Compile Include="DB\so_article_promotional_route.cs" />
+    <Compile Include="DB\so_promotion_article_movement.cs" />
+    <Compile Include="DB\so_sale_detail_article.cs" />
     <Compile Include="Templates\InsertCliente.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -747,15 +763,6 @@
       <Generator>TextTemplatingFilePreprocessor</Generator>
       <LastGenOutput>InsertCliente.cs</LastGenOutput>
     </Content>
-    <Content Include="Web.config">
-      <SubType>Designer</SubType>
-    </Content>
-    <Content Include="Web.Debug.config">
-      <DependentUpon>Web.config</DependentUpon>
-    </Content>
-    <Content Include="Web.Release.config">
-      <DependentUpon>Web.config</DependentUpon>
-    </Content>
     <Content Include="Areas\HelpPage\Views\_ViewStart.cshtml" />
     <Content Include="Content\Site.css" />
     <Content Include="Scripts\_references.js" />
@@ -764,6 +771,13 @@
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
+    <Content Include="Web.config" />
+    <None Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+    <None Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

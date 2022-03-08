@@ -74,16 +74,32 @@
 
             <table style="margin-left: 10px;margin-top: 10px;margin-bottom: 10px; width: 100%;">
                 <tr>
-                    <th><strong>Producto</strong></th>
-                    <th><strong>Cantidad</strong></th>
-                    <th><strong>Precio</strong></th>
-                    <th><strong>Total</strong></th>
-                </tr>
+                    <th style="text-align: left;width:400px"><strong>Producto</strong></th>
+                    <th style="text-align: left;width:100px"><strong>Cantidad</strong></th>
+                    <th style="text-align: left;width:100px"><strong>Precio</strong></th>
+                    <th style="text-align: left;width:100px"><strong>Total</strong></th>
+				</tr>
                 {TdBody}
             </table>
 
         </div>
-        <div style="margin-bottom: 20px; width: 100%; display:inline-flex">
+		<div id='promociones' style='display:none'>
+			<div style="border: double; background-color: lightgray; text-align-last: center;">
+				<strong>Promociones</strong>
+			</div>
+			<div>
+				<table style="margin-left: 10px;margin-top: 10px;margin-bottom: 10px; width: 100%;">
+					<tr style="display:none">
+                    <th style="text-align: left;width:400px"><strong>Producto</strong></th>
+                    <th style="text-align: left;width:100px"><strong>Cantidad</strong></th>
+                    <th style="text-align: left;width:100px"><strong>Precio</strong></th>
+                    <th style="text-align: left;width:100px"><strong>Total</strong></th>
+					</tr>
+					{TdBodyPromociones}
+				</table>
+			</div>
+		</div>
+		<div style="margin-bottom: 20px; width: 100%; display:inline-flex">
             <div style="width: 35%; height: 10px;">
 
             </div>
@@ -97,6 +113,10 @@
                     <td>Total de cajas vendidas:</td>
                     <td class="right">{TotalBoxesSold}</td>
                 </tr>-->
+				<tr id='lblpromociones' style='display:none'>
+                    <td>Total de Promociones:</td>
+                    <td class="right">{TotalPromos}</td>
+                </tr>
                     <tr>
                         <td>Total:</td>
                         <td class="right">{TotalPrice}</td>
@@ -108,6 +128,9 @@
             ¡Gracias por tu preferencia!
         </div>
         <div style="text-align-last: center; margin-bottom: 5px;">
+            <a href="{CancelTicketLink}">Cancelar Ticket Digital</a>
+        </div>
+        <div style="text-align-last: center; margin-bottom: 5px;">
             Visitanos en: <a href="http://www.bepensaentuhogar.com/">http://www.bepensaentuhogar.com/</a>
         </div>
         <!--<div style="text-align-last: center; margin-bottom: 5px;">
@@ -116,9 +139,9 @@
     <div style="text-align-last: center;">
         Quieres felicitar a alguien, tienes alguna queja o comentario,
     </div>-->
-    <div style="text-align-last: center;">
-        ¿Necesitas la factura? Comunícate al 800 xxx xxx
-    </div>
+        <div style="text-align-last: center;">
+            ¿Necesitas la factura? Comunícate al 800 xxx xxx
+        </div>
     </div>
 </body>
 </html>

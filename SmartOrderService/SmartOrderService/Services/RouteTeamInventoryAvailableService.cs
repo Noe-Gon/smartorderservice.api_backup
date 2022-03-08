@@ -13,6 +13,16 @@ namespace SmartOrderService.Services
     {
         private SmartOrderModel db = new SmartOrderModel();
 
+        public RouteTeamInventoryAvailableService()
+        {
+
+        }
+
+        public RouteTeamInventoryAvailableService (SmartOrderModel dbAux)
+        {
+            this.db = dbAux;
+        }
+
         public List<RouteTeamInventoryDto> GetRouteTeamInventories(int inventoryId)
         {
             var teamInventoryList = GetInventoryTeamByInventoryId(inventoryId);
@@ -52,13 +62,15 @@ namespace SmartOrderService.Services
         public void UpdateRouteTeamInventory(SaleTeam sale)
         {
             List<SaleDetail> salesDetail = sale.SaleDetails;
-            List<SalePromotion> salePromotion = sale.SalePromotions;
+            //List<SalePromotion> salePromotion = sale.SalePromotions;
             foreach (var productInventory in salesDetail)
             {
                 var product = db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productInventory.ProductId)).FirstOrDefault();
                 product.Available_Amount -= productInventory.Amount;
                 db.SaveChanges();
             }
+
+            /*
             foreach (var Promotion in salePromotion)
             {
                 foreach (var producPromotion in Promotion.DetailProduct)
@@ -67,7 +79,7 @@ namespace SmartOrderService.Services
                     product.Available_Amount -= producPromotion.Amount;
                     db.SaveChanges();
                 }
-            }
+            }*/
         }
 
         public List<so_route_team_inventory_available> GetInventoryTeamByInventoryId(int inventoryId)
