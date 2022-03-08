@@ -32,7 +32,7 @@ namespace SmartOrderService.Services
                 catch (RelatedDriverNotFoundException e)
                 {}
 
-                so_inventory inventory = inventoryService.getCurrentInventory(userId, null);
+                so_inventory inventory = inventoryService.GetCurrentInventory(userId, null);
 
                 List<VisitDto> visits = new List<VisitDto>();
 
@@ -63,16 +63,6 @@ namespace SmartOrderService.Services
                 {
                     int order = data.order;
 
-                    var customerAdditionalData = db.so_customer
-                        .Where(x => x.customerId == data.customerId)
-                        .Select(x => x.CustomerAdditionalData)
-                        .FirstOrDefault();
-
-                    if (customerAdditionalData != null && customerAdditionalData.Count() != 0)
-                    {
-                        continue;
-                    }
-
                     if (inventory != null && inventory.status)
                     {
                         var delivery = db.so_delivery.Where(d => d.customerId == data.customerId && d.status && d.inventoryId == inventory.inventoryId).FirstOrDefault();
@@ -99,15 +89,6 @@ namespace SmartOrderService.Services
 
                 foreach (var otherVisit in customers)
                 {
-                    var customerAdditionalData = db.so_customer
-                        .Where(x => x.customerId == otherVisit)
-                        .Select(x => x.CustomerAdditionalData)
-                        .FirstOrDefault();
-
-                    if (customerAdditionalData != null && customerAdditionalData.Count() != 0)
-                    {
-                        continue;
-                    }
 
                     if (routeVisits.Select(rv => rv.customerId).Contains(otherVisit))
                     {
@@ -139,7 +120,7 @@ namespace SmartOrderService.Services
             else
             {
 
-                so_inventory inventory = new InventoryService().getCurrentInventory(userId, null);
+                so_inventory inventory = new InventoryService().GetCurrentInventory(userId, null);
 
                 List<VisitDto> visits = new List<VisitDto>();
 
@@ -204,7 +185,7 @@ namespace SmartOrderService.Services
             var impulsor = inventoryService.SearchDrivingId(userId);
 
             if (inventoryId == null || inventoryId == 0)
-                inventoryId = inventoryService.getCurrentInventory(userId, null).inventoryId;
+                inventoryId = inventoryService.GetCurrentInventory(userId, null).inventoryId;
 
             var soUser = db.so_user.Where(u => u.userId == userId).FirstOrDefault();
             var date = DateTime.Today; 
