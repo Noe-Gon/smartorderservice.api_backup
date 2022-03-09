@@ -57,7 +57,7 @@ namespace SmartOrderService.Services
 
             if (routeTeam == null)
                 throw new EntityNotFoundException("El usuario no esta asignado a un equipo");
-
+            bool inTripulacs = false;
             //Notificar a la API
             try
             {
@@ -65,33 +65,62 @@ namespace SmartOrderService.Services
                 //Si es impulsor
                 if (routeTeam.roleTeamId == (int)ERolTeam.Impulsor)
                 {
-                    //Buscar si hay algun ayudante
+                    //Buscar si el ayudante se autenticó antes que el impulsor para registrarlo. 
                     int ayudanteId = UoWConsumer.RouteTeamRepository
-                        .Get(x => x.roleTeamId == (int)ERolTeam.Impulsor && x.routeId == request.RouteId)
+                        .Get(x => x.roleTeamId == (int)ERolTeam.Ayudante && x.routeId == request.RouteId)
                         .Select(x => x.userId)
                         .FirstOrDefault();
 
+                    //var ayudante = UoWConsumer.AuthentificationLogRepository
+                    //    .Get(x => !x.WasLeaderCodeAuthorization && DbFunctions.TruncateTime(x.CreatedDate) == DbFunctions.TruncateTime(DateTime.Now)
+                    //                && x.UserId == ayudanteId && x.RouteId == request.RouteId)
+                    //    .FirstOrDefault();
+
                     var ayudante = UoWConsumer.AuthentificationLogRepository
-                        .Get(x => !x.WasLeaderCodeAuthorization && DbFunctions.TruncateTime(x.CreatedDate) == DbFunctions.TruncateTime(DateTime.Now)
-                                    && x.UserId == ayudanteId && x.RouteId == request.RouteId)
+                        .Get(x => x.UserId == ayudanteId && x.RouteId == request.RouteId && x.CreatedDate == DateTime.Now)
                         .FirstOrDefault();
 
+                    //Asigna null si no se ha autenticado. En caso de haberse autenticado, registra a impulsor y ayudante
                     string ayudanteCode = ayudante != null ? ayudante.UserCode : null;
 
                     requestNotify.auxiliarid = Convert.ToInt32(ayudanteCode);
                     requestNotify.impulsorId = Convert.ToInt32(request.EmployeeCode);
                     requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
                     requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
+
+                    var response = JsonConvert.DeserializeObject(NotifyWorkday(requestNotify));
+                    if (response == null)
+                    {
+                        //Lógica del fallo con el registro en tripulacs
+                        inTripulacs = true;
+                    }
                 }
                 //Si es ayudante
                 else
                 {
-                    //Buscar si ya inicio un Impulsor
-                    int impulsorId = UoWConsumer.RouteTeamRepository
+                    //Obtenemos el id del impulsor
+                    int? impulsorId = UoWConsumer.RouteTeamRepository
                         .Get(x => x.roleTeamId == (int)ERolTeam.Impulsor && x.routeId == request.RouteId)
                         .Select(x => x.userId)
                         .FirstOrDefault();
 
+                    if (impulsorId == null)
+                    {
+                        return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
+                        {
+                        });
+                    }
+
+                    var isWorkDayActive = UoWConsumer.WorkDayRepository
+                        .Get(x => x.userId == impulsorId);
+                    if (isWorkDayActive == null)
+                    {
+                        return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
+                        {
+                        });
+                    }
+
+                    //Buscar si ya inicio un Impulsor
                     var impulsor = UoWConsumer.AuthentificationLogRepository
                         .Get(x => !x.WasLeaderCodeAuthorization && DbFunctions.TruncateTime(x.CreatedDate) == DbFunctions.TruncateTime(DateTime.Now) 
                                     && x.UserId == impulsorId && x.RouteId == request.RouteId)
@@ -99,13 +128,25 @@ namespace SmartOrderService.Services
 
                     string impulsorCode = impulsor != null ? impulsor.UserCode : null;
 
+                    if (impulsorCode == null)
+                    {
+                        return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
+                        {
+                        });
+                    }
+
                     requestNotify.auxiliarid = Convert.ToInt32(request.EmployeeCode);
                     requestNotify.impulsorId = Convert.ToInt32(impulsorCode);
                     requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
                     requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
-                }
 
-                NotifyWorkday(requestNotify);
+                    var response = JsonConvert.DeserializeObject(NotifyWorkday(requestNotify));
+                    if (response == null)
+                    {
+                        //Lógica del fallo con el registro en tripulacs
+                        inTripulacs = true;
+                    }
+                }
             }
             catch (Exception) {
                 throw new ExternalAPIException("Error al notificar a WSWmpleados");
@@ -126,7 +167,7 @@ namespace SmartOrderService.Services
                     CreatedDate = DateTime.Now,
                     LeaderCode = null,
                     ModifiedDate = null,
-                    Status = true,
+                    Status = inTripulacs,
                     RouteId = routeBranch.Route.routeId,
                     UserCode = request.EmployeeCode,
                     UserId = user.userId
@@ -233,7 +274,7 @@ namespace SmartOrderService.Services
             throw new ExternalAPIException("Falló al intentar obtener el token");
         }
 
-        private void NotifyWorkday(NotifyWorkdayRequest request)
+        private string NotifyWorkday(NotifyWorkdayRequest request)
         {
             var client = new RestClient();
             client.BaseUrl = new Uri(ConfigurationManager.AppSettings["APIdeOPECDV1"]);
@@ -243,6 +284,7 @@ namespace SmartOrderService.Services
             requestConfig.AddBody(request);
 
             var RestResponse = client.Execute(requestConfig);
+            return JsonConvert.SerializeObject(RestResponse);
         }
 
         private Employee SingleEmployee(string idcia, string emp)
