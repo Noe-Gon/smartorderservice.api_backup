@@ -88,8 +88,8 @@ namespace SmartOrderService.Services
                     requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
                     requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
 
-                    var response = JsonConvert.DeserializeObject(NotifyWorkday(requestNotify));
-                    if (response == null)
+                    var response = NotifyWorkday(requestNotify);
+                    if (response == "\"{\\\"errors\\\":[]}\"")
                     {
                         //Lógica del fallo con el registro en tripulacs
                         inTripulacs = true;
@@ -140,16 +140,21 @@ namespace SmartOrderService.Services
                     requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
                     requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
 
-                    var response = JsonConvert.DeserializeObject(NotifyWorkday(requestNotify));
-                    if (response == null)
+                    var response = NotifyWorkday(requestNotify);
+                    if (response == "\"{\\\"errors\\\":[]}\"")
                     {
                         //Lógica del fallo con el registro en tripulacs
                         inTripulacs = true;
                     }
+                    if (response == "\"{\\\"errors\\\":[{\\\"error\\\":9001,\\\"message\\\":\\\"No existe la tripulación configurada para la ruta 452.\\\"}]}\"")
+                    {
+                        throw new Exception();
+                    }
                 }
             }
             catch (Exception) {
-                throw new ExternalAPIException("Error al notificar a WSWmpleados");
+                //throw new ExternalAPIException("Error al notificar a WSWmpleados");
+                throw new Exception("No existe la tripulación configurada para la ruta");
             }
 
             //Buscar si ya existe un registro para este usuario
@@ -284,7 +289,7 @@ namespace SmartOrderService.Services
             requestConfig.AddBody(request);
 
             var RestResponse = client.Execute(requestConfig);
-            return JsonConvert.SerializeObject(RestResponse);
+            return JsonConvert.SerializeObject(RestResponse.Content);
         }
 
         private Employee SingleEmployee(string idcia, string emp)
