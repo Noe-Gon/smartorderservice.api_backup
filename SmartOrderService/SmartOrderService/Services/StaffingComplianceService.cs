@@ -58,6 +58,7 @@ namespace SmartOrderService.Services
             if (routeTeam == null)
                 throw new EntityNotFoundException("El usuario no esta asignado a un equipo");
             bool inTripulacs = false;
+            List<string> exceptionMessages = new List<string>();
             //Notificar a la API
             try
             {
@@ -113,7 +114,7 @@ namespace SmartOrderService.Services
                         .Get(x => x.userId == impulsorId);
                     if (isWorkDayActive == null)
                     {
-                        throw new WorkdayNotFoundException("Nose encontró el Work Day del impulsor.");
+                        throw new WorkdayNotFoundException("No se encontró el Work Day del impulsor.");
                     }
 
                     //Buscar si ya inicio un Impulsor
@@ -121,29 +122,38 @@ namespace SmartOrderService.Services
                         .Get(x => !x.WasLeaderCodeAuthorization && DbFunctions.TruncateTime(x.CreatedDate) == DbFunctions.TruncateTime(DateTime.Now) 
                                     && x.UserId == impulsorId && x.RouteId == request.RouteId)
                         .FirstOrDefault();
-
-                    string impulsorCode = impulsor != null ? impulsor.UserCode : null;
-
-                    requestNotify.auxiliarid = Convert.ToInt32(request.EmployeeCode);
-                    requestNotify.impulsorId = Convert.ToInt32(impulsorCode);
-                    requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
-                    requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
-
-                    var response = NotifyWorkday(requestNotify);
-                    if (response == "\"{\\\"errors\\\":[]}\"")
+                    if (impulsor != null)
                     {
-                        //Lógica del fallo con el registro en tripulacs
-                        inTripulacs = true;
+                        var impulsorCode = impulsor.UserCode;
+                        requestNotify.auxiliarid = Convert.ToInt32(request.EmployeeCode);
+                        requestNotify.impulsorId = Convert.ToInt32(impulsorCode);
+                        requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
+                        requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
+
+                        var response = NotifyWorkday(requestNotify);
+                        if (response == "\"{\\\"errors\\\":[]}\"")
+                        {
+                            //Lógica del fallo con el registro en tripulacs
+                            inTripulacs = true;
+                        }
+                        if (response == "\"{\\\"errors\\\":[{\\\"error\\\":9001,\\\"message\\\":\\\"No existe la tripulación configurada para la ruta " + routeBranch.Route.code + ".\\\"}]}\"")
+                        {
+                            exceptionMessages.Add("No se encuentra configurada la ruta en tripulacs");
+                            //throw new NoRouteConfigTripulacsException("No se encuentra configurada la ruta en tripulacs");
+                        }
+                        if (response == "\"{\\\"errors\\\":[{\\\"error\\\":404,\\\"message\\\":\\\"El id del impulsor no es válido\\\"}]}\"")
+                        {
+                            exceptionMessages.Add("El id del impulsor no es válido");
+                        }
                     }
-                    if (response == "\"{\\\"errors\\\":[{\\\"error\\\":9001,\\\"message\\\":\\\"No existe la tripulación configurada para la ruta 452.\\\"}]}\"")
+                    else
                     {
-                        throw new NoRouteConfigTripulacsException("No se encuentra configurada la ruta en tripulacs");
+                        exceptionMessages.Add("El impulsor no se ha autenticado");
                     }
                 }
             }
             catch (Exception) {
-                //throw new ExternalAPIException("Error al notificar a WSWmpleados");
-                throw new Exception("No existe la tripulación configurada para la ruta");
+                throw new ExternalAPIException("Error al notificar a WSWmpleados");
             }
 
             //Buscar si ya existe un registro para este usuario
@@ -175,8 +185,8 @@ namespace SmartOrderService.Services
                 if (existLog.UserCode != request.EmployeeCode)
                     throw new UnauthorizedAccessException("Otro Empleado ya inicio sesión con este usuario");
             }
-            
-            return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
+
+            var responseAuthentication = ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
             {
                 UserId = user.userId,
                 UserName = employee.name + " " + employee.lastname,
@@ -188,6 +198,8 @@ namespace SmartOrderService.Services
                 RouteId = routeBranch.Route.routeId,
                 RouteName = routeBranch.Route.name
             });
+            responseAuthentication.Errors = exceptionMessages;
+            return responseAuthentication;
         }
 
         public ResponseBase<AuthenticateLeaderCodeResponse> AuthenticateLeaderCode(AuthenticateLeaderCodeRequest request)
