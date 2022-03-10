@@ -111,6 +111,27 @@ namespace SmartOrderService.Controllers
                     e.Message
                 }));
             }
+            catch (NoUserFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (WorkdayNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (NoRouteConfigTripulacsException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
             catch (Exception e)
             {
                 return Content(HttpStatusCode.InternalServerError, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()

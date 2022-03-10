@@ -106,18 +106,14 @@ namespace SmartOrderService.Services
 
                     if (impulsorId == null)
                     {
-                        return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
-                        {
-                        });
+                        throw new NoUserFoundException("No se encontró al impulsor en WBC. Revisar que exista el impulsor en la ruta por medio de la tabla so_route_team");
                     }
 
                     var isWorkDayActive = UoWConsumer.WorkDayRepository
                         .Get(x => x.userId == impulsorId);
                     if (isWorkDayActive == null)
                     {
-                        return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
-                        {
-                        });
+                        throw new WorkdayNotFoundException("Nose encontró el Work Day del impulsor.");
                     }
 
                     //Buscar si ya inicio un Impulsor
@@ -127,13 +123,6 @@ namespace SmartOrderService.Services
                         .FirstOrDefault();
 
                     string impulsorCode = impulsor != null ? impulsor.UserCode : null;
-
-                    if (impulsorCode == null)
-                    {
-                        return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
-                        {
-                        });
-                    }
 
                     requestNotify.auxiliarid = Convert.ToInt32(request.EmployeeCode);
                     requestNotify.impulsorId = Convert.ToInt32(impulsorCode);
@@ -148,7 +137,7 @@ namespace SmartOrderService.Services
                     }
                     if (response == "\"{\\\"errors\\\":[{\\\"error\\\":9001,\\\"message\\\":\\\"No existe la tripulación configurada para la ruta 452.\\\"}]}\"")
                     {
-                        throw new Exception();
+                        throw new NoRouteConfigTripulacsException("No se encuentra configurada la ruta en tripulacs");
                     }
                 }
             }

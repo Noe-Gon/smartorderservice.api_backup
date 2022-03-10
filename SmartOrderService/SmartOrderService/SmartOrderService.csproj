@@ -306,6 +306,7 @@
     <Compile Include="CustomExceptions\InvoiceException.cs" />
     <Compile Include="CustomExceptions\LeaderCodeExceptions.cs" />
     <Compile Include="CustomExceptions\NoCustomerVisitException.cs" />
+    <Compile Include="CustomExceptions\NoRouteConfigTripulacsException.cs" />
     <Compile Include="CustomExceptions\NotEnoughProductAmountException.cs" />
     <Compile Include="CustomExceptions\NotFoundUsersConfigException.cs" />
     <Compile Include="CustomExceptions\NoUserFoundException.cs" />
