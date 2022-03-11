@@ -313,7 +313,7 @@ namespace SmartOrderService.Services
 
                 var clientPreventaApi = new RestClient();
                 clientPreventaApi.BaseUrl = new Uri(ConfigurationManager.AppSettings["PreventaAPI"]);
-                var requestPreventaApiConfig = new RestRequest("api/v1/delivery/deliveries?branchId=" + branchId + "&routeId=" + routeId + "&inventoryId=" + inventoryId, Method.POST);
+                var requestPreventaApiConfig = new RestRequest("api/v1/delivery/deliveries?branchId=" + branchId + "&routeId=" + routeId + "&inventoryId=" + inventoryId, Method.GET);
                 requestPreventaApiConfig.AddHeader("x-api-key", ConfigurationManager.AppSettings["x-api-key"]);
                 requestPreventaApiConfig.RequestFormat = DataFormat.Json;
                 var GetDeliveriesResponse = clientPreventaApi.Execute(requestPreventaApiConfig);
