@@ -719,12 +719,14 @@
   <ItemGroup>
     <Content Include="Areas\HelpPage\HelpPage.css" />
     <Content Include="bin\Algoritmos.Data.dll" />
+    <Content Include="bin\Algoritmos.Data.dll.config" />
     <Content Include="bin\Algoritmos.Data.pdb" />
     <Content Include="bin\Antlr3.Runtime.dll" />
     <Content Include="bin\Antlr3.Runtime.pdb" />
     <Content Include="bin\AutoMapper.dll" />
     <Content Include="bin\AutoMapper.xml" />
     <Content Include="bin\CRM.Data.dll" />
+    <Content Include="bin\CRM.Data.dll.config" />
     <Content Include="bin\CRM.Data.pdb" />
     <Content Include="bin\EntityFramework.dll" />
     <Content Include="bin\EntityFramework.SqlServer.dll" />
@@ -780,11 +782,15 @@
     <Content Include="bin\roslyn\Microsoft.CodeAnalysis.CSharp.dll" />
     <Content Include="bin\roslyn\Microsoft.CodeAnalysis.dll" />
     <Content Include="bin\roslyn\Microsoft.CodeAnalysis.VisualBasic.dll" />
+    <Content Include="bin\roslyn\Microsoft.CSharp.Core.targets" />
+    <Content Include="bin\roslyn\Microsoft.VisualBasic.Core.targets" />
     <Content Include="bin\roslyn\System.Collections.Immutable.dll" />
     <Content Include="bin\roslyn\System.Reflection.Metadata.dll" />
     <Content Include="bin\roslyn\vbc.exe" />
     <Content Include="bin\roslyn\VBCSCompiler.exe" />
+    <Content Include="bin\roslyn\VBCSCompiler.exe.config" />
     <Content Include="bin\SmartOrderService.dll" />
+    <Content Include="bin\SmartOrderService.dll.config" />
     <Content Include="bin\SmartOrderService.pdb" />
     <Content Include="bin\System.Net.Http.Formatting.dll" />
     <Content Include="bin\System.Net.Http.Formatting.xml" />
@@ -841,12 +847,6 @@
     <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\CollectionModelDescription.cshtml" />
     <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ApiGroup.cshtml" />
     <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
-    <Content Include="bin\Algoritmos.Data.dll.config" />
-    <Content Include="bin\CRM.Data.dll.config" />
-    <Content Include="bin\roslyn\Microsoft.CSharp.Core.targets" />
-    <Content Include="bin\roslyn\Microsoft.VisualBasic.Core.targets" />
-    <Content Include="bin\roslyn\VBCSCompiler.exe.config" />
-    <Content Include="bin\SmartOrderService.dll.config" />
     <None Include="Properties\PublishProfiles\FolderProfile.pubxml" />
     <None Include="Properties\PublishProfiles\WBCDS.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
