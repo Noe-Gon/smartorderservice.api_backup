@@ -306,14 +306,14 @@ namespace SmartOrderService.Services
                         .FirstOrDefault())
                     .FirstOrDefault();
 
-                string routeCode = route.code;
-                string branchCode = route.so_branch.code;
+                string routeId = route.routeId + "";
+                string branchId = route.branchId + "";
 
                 #region Obtención de deliveries
 
                 var clientPreventaApi = new RestClient();
                 clientPreventaApi.BaseUrl = new Uri(ConfigurationManager.AppSettings["PreventaAPI"]);
-                var requestPreventaApiConfig = new RestRequest("api/v1/delivery/deliveries?branchId=" + branchCode + "&routeId=" + routeCode + "&inventoryId=" + inventoryId, Method.POST);
+                var requestPreventaApiConfig = new RestRequest("api/v1/delivery/deliveries?branchId=" + branchId + "&routeId=" + routeId + "&inventoryId=" + inventoryId, Method.POST);
                 requestPreventaApiConfig.AddHeader("x-api-key", ConfigurationManager.AppSettings["x-api-key"]);
                 requestPreventaApiConfig.RequestFormat = DataFormat.Json;
                 var GetDeliveriesResponse = clientPreventaApi.Execute(requestPreventaApiConfig);
