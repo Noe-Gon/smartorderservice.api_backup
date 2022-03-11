@@ -202,21 +202,20 @@ namespace SmartOrderService.Controllers
         [Route("api/inventory/loaddeliveries")]
         public IHttpActionResult LoadInventoryDeliveries([FromBody]LoadInventoryDeliveriesRequest request)
         {
-            
+
             try
             {
                 var inventoryService = new InventoryService();
-                inventoryService.LoadDeliveries(request.InventoryId);
+                 var response = inventoryService.LoadDeliveries(request.InventoryId);
 
-                var response = ResponseBase<LoadInventoryDeliveriesResponse>.Create(new LoadInventoryDeliveriesResponse
-                {
-                    Msg = "Ha finalizado con Exito"
-                });
-                return Content(HttpStatusCode.OK, response);
+                if(response.Status)
+                    return Content(HttpStatusCode.OK, response);
+
+                return Content(HttpStatusCode.Conflict, response);
             }
             catch (EntityNotFoundException e)
             {
-                var response = ResponseBase<LoadInventoryDeliveriesResponse>.Create(new List<string>()
+                var response = ResponseBase<MsgResponseBase>.Create(new List<string>()
                 {
                     e.Message
                 });
@@ -225,7 +224,7 @@ namespace SmartOrderService.Controllers
             }
             catch (Exception e)
             {
-                var response = ResponseBase<LoadInventoryDeliveriesResponse>.Create(new List<string>()
+                var response = ResponseBase<MsgResponseBase>.Create(new List<string>()
                 {
                     "Error no especificado", e.Message
                 });

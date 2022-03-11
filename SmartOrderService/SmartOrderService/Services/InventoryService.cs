@@ -13,6 +13,7 @@ using SmartOrderService.Models.Enum;
 using RestSharp;
 using System.Configuration;
 using Newtonsoft.Json;
+using SmartOrderService.Models.Responses;
 
 namespace SmartOrderService.Services
 {
@@ -291,7 +292,7 @@ namespace SmartOrderService.Services
 
         }
 
-        public void LoadDeliveries(int inventoryId)
+        public ResponseBase<MsgResponseBase> LoadDeliveries(int inventoryId)
         {
             try
             {
@@ -422,7 +423,7 @@ namespace SmartOrderService.Services
                                 createdby = 2777,
                                 createdon = DateTime.Now,
                                 customerId = existCustomer.customerId,
-                                inventoryId = delivery.inventoryId,
+                                inventoryId = inventoryId,
                                 modifiedby = 2777,
                                 modifiedon = DateTime.Now,
                                 status = true,
@@ -457,13 +458,24 @@ namespace SmartOrderService.Services
                         summary.deliveries_amount = deliveryCount;
 
                         db.SaveChanges();
+
+                        return ResponseBase<MsgResponseBase>.Create(new MsgResponseBase()
+                        {
+                            Msg = "Ha finalizado con Exito"
+                        });
                     }
                 }
 
                 #endregion
+
+                return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    "Error en API preventa"
+                });
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                throw e;
             }
             
         }
