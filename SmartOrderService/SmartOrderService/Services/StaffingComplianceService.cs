@@ -72,14 +72,14 @@ namespace SmartOrderService.Services
                         .Select(x => x.userId)
                         .FirstOrDefault();
 
-                    //var ayudante = UoWConsumer.AuthentificationLogRepository
-                    //    .Get(x => !x.WasLeaderCodeAuthorization && DbFunctions.TruncateTime(x.CreatedDate) == DbFunctions.TruncateTime(DateTime.Now)
-                    //                && x.UserId == ayudanteId && x.RouteId == request.RouteId)
-                    //    .FirstOrDefault();
-
                     var ayudante = UoWConsumer.AuthentificationLogRepository
-                        .Get(x => x.UserId == ayudanteId && x.RouteId == request.RouteId && x.CreatedDate == DateTime.Now)
+                        .Get(x => !x.WasLeaderCodeAuthorization && DbFunctions.TruncateTime(x.CreatedDate) == DbFunctions.TruncateTime(DateTime.Now)
+                                    && x.UserId == ayudanteId && x.RouteId == request.RouteId)
                         .FirstOrDefault();
+
+                    //var ayudante = UoWConsumer.AuthentificationLogRepository
+                    //    .Get(x => x.UserId == ayudanteId && x.RouteId == request.RouteId && x.CreatedDate == DateTime.Now)
+                    //    .FirstOrDefault();
 
                     //Asigna null si no se ha autenticado. En caso de haberse autenticado, registra a impulsor y ayudante
                     string ayudanteCode = ayudante != null ? ayudante.UserCode : null;
@@ -94,6 +94,11 @@ namespace SmartOrderService.Services
                     {
                         //Lógica del fallo con el registro en tripulacs
                         inTripulacs = true;
+                        if (ayudanteCode != null)
+                        {
+                            ayudante.Status = true;
+                            UoWConsumer.AuthentificationLogRepository.Update(ayudante);
+                        }
                     }
                 }
                 //Si es ayudante
@@ -153,7 +158,8 @@ namespace SmartOrderService.Services
                 }
             }
             catch (Exception) {
-                throw new ExternalAPIException("Error al notificar a WSWmpleados");
+                //throw new ExternalAPIException("Error al notificar a WSWmpleados");
+                exceptionMessages.Add("Error al notificar a WSempleados");
             }
 
             //Buscar si ya existe un registro para este usuario
