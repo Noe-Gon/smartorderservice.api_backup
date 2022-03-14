@@ -323,9 +323,6 @@ namespace SmartOrderService.Services
                 {
                     var responsePreventaAPI = JsonConvert.DeserializeObject<PreventaAPIResponseBase<DeliveriesPreventaAPIResponse>>(GetDeliveriesResponse.Content);
 
-                    if (responsePreventaAPI.data.Count == 0)
-                        throw new EntityNotFoundException(responsePreventaAPI.message);
-
                     if (responsePreventaAPI.success)
                     {
                         foreach (var delivery in responsePreventaAPI.data)
@@ -475,7 +472,10 @@ namespace SmartOrderService.Services
             }
             catch (Exception e)
             {
-                throw e;
+                return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    "Error en API preventa"
+                });
             }
             
         }
