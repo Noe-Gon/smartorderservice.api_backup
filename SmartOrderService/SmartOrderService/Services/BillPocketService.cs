@@ -16,7 +16,7 @@ namespace SmartOrderService.Services
         {
             var user = db.Configuracion_WorkByCloud.Where(x => x.userId == userId).FirstOrDefault();
 
-            if (user == null)
+            if (user != null)
             {
                 return ResponseBase<BillPocketTokensResponse>.Create(new BillPocketTokensResponse
                 {
