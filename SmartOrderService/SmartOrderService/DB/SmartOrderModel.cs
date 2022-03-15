@@ -165,6 +165,7 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_promotion_article_movement> so_promotion_article_movement { get; set; }
 
         public virtual DbSet<so_article_promotional_route> so_article_promotional_route { get; set; }
+        public virtual DbSet<Configuracion_WorkByCloud> Configuracion_WorkByCloud { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -1864,7 +1865,9 @@ namespace SmartOrderService.DB
             liquidationLog.HasRequired(x => x.LiquidationStatus)
                 .WithMany(x => x.LiquidationLogs)
                 .HasForeignKey(x => x.LiquidationStatusId);
-            
+
+            modelBuilder.Entity<Configuracion_WorkByCloud>()
+                .HasKey(x => x.wbcConfId);
         }
     }
 }

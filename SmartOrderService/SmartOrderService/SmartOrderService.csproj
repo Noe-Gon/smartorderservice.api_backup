@@ -247,6 +247,7 @@
     <Compile Include="Controllers\ApiVersionController.cs" />
     <Compile Include="Controllers\ApplicationController.cs" />
     <Compile Include="Controllers\BillingDataController.cs" />
+    <Compile Include="Controllers\BillPocketController.cs" />
     <Compile Include="Controllers\BinnacleVisitController.cs" />
     <Compile Include="Controllers\BranchController.cs" />
     <Compile Include="Controllers\CategoryController.cs" />
@@ -321,6 +322,7 @@
     <Compile Include="CustomExceptions\UnauthorisedException.cs" />
     <Compile Include="CustomExceptions\WorkdayNotFoundException.cs" />
     <Compile Include="CustomExceptions\WorkdayStartedException.cs" />
+    <Compile Include="DB\Configuracion_WorkByCloud.cs" />
     <Compile Include="DB\DEVOLUTIONS_VIEW.cs" />
     <Compile Include="DB\factdet.cs" />
     <Compile Include="DB\factura.cs" />
@@ -589,6 +591,7 @@
     <Compile Include="Models\DTO\Promotion.cs" />
     <Compile Include="Models\Message\ApiDigitalizacionMessage.cs" />
     <Compile Include="Models\Message\LiquidationMessage.cs" />
+    <Compile Include="Models\Responses\BillPocketTokensResponse.cs" />
     <Compile Include="Models\Requests\CRMRequests.cs" />
     <Compile Include="Models\Message\StaffingComplianceMessage.cs" />
     <Compile Include="Models\Message\WsEmployeeDataMessage.cs" />
@@ -650,6 +653,7 @@
     <Compile Include="Services\ApiDigitalizacionService.cs" />
     <Compile Include="Services\ApiVersionService.cs" />
     <Compile Include="Services\ApplicationService.cs" />
+    <Compile Include="Services\BillPocketService.cs" />
     <Compile Include="Services\CodePlaceService.cs" />
     <Compile Include="Services\ConsumerService.cs" />
     <Compile Include="Services\CRMService.cs" />
@@ -798,6 +802,7 @@
     <Folder Include="App_Data\" />
     <Folder Include="fonts\" />
     <Folder Include="Views\Assistant\" />
+    <Folder Include="Views\BillPocket\" />
     <Folder Include="Views\RouteTeamInventoryAvailable\" />
     <Folder Include="Views\VersionApi\" />
   </ItemGroup>
