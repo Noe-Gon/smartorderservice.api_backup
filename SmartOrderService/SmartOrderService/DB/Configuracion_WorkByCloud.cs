@@ -11,11 +11,10 @@ namespace SmartOrderService.DB
         [Key]
         public int wbcConfId { get; set; }
         [StringLength(100)]
-        public string BillPocket_TokenDispositivo { get; set; }
-        [StringLength(100)]
         public string BillPocket_TokenUsuario { get; set; }
+        public int branchId { get; set; }
         public DateTime? createdon { get; set; }
-        public int userId { get; set; }
-        public virtual so_user so_user { get; set; }
+        public DateTime? modifiedon { get; set; }
+        public virtual so_branch so_user { get; set; }
     }
 }

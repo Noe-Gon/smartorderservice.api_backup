@@ -16,12 +16,12 @@ namespace SmartOrderService.Controllers
     public class BillPocketController : ApiController
     {
         // GET: api/BillPocket
-        public HttpResponseMessage Get([FromUri] int userId)
+        public HttpResponseMessage Get([FromUri] int routeId)
         {
             HttpResponseMessage response;
             try
             {
-                var billPocket = new BillPocketService().GetTokensByUserId(userId);
+                var billPocket = new BillPocketService().GetTokensByUserId(routeId);
                 response = Request.CreateResponse(HttpStatusCode.OK, billPocket);
             }
             catch (Exception e)

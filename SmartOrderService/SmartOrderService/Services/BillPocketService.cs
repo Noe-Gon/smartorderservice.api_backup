@@ -12,23 +12,22 @@ namespace SmartOrderService.Services
     {
         SmartOrderModel db = new SmartOrderModel();
 
-        public ResponseBase<BillPocketTokensResponse> GetTokensByUserId(int userId)
+        public ResponseBase<BillPocketTokensResponse> GetTokensByUserId(int routeId)
         {
-            var user = db.Configuracion_WorkByCloud.Where(x => x.userId == userId).FirstOrDefault();
-
-            if (user != null)
+            int? branchId = db.so_route.Where(x => x.routeId == routeId).Select(x => x.branchId).FirstOrDefault();
+            var token = db.Configuracion_WorkByCloud.Where(x => x.branchId == branchId).Select(x => x.BillPocket_TokenUsuario).FirstOrDefault();
+            if (token != null)
             {
                 return ResponseBase<BillPocketTokensResponse>.Create(new BillPocketTokensResponse
                 {
-                    BillPocket_TokenDispositivo = user.BillPocket_TokenDispositivo,
-                    BillPocket_TokenUsuario = user.BillPocket_TokenUsuario
+                    BillPocket_TokenUsuario = token
                 });
             }
             else
             {
                 return ResponseBase<BillPocketTokensResponse>.Create(new List<string>
                 {
-                    "No se logró encontrar al usuario."
+                    "No se cuenta con una cuenta de BillPocket para esta ruta."
                 });
             }
         }
