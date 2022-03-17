@@ -13,10 +13,12 @@ namespace SmartOrderService.Models.Requests
     #region Create Order And Send to APIPreventa
     public class SendOrderRequest
     {
-        public string DeliveryDate { get; set; }
+        public int UserId { get; set; }
+        public DateTime DeliveryDate { get; set; }
         public int RouteId { get; set; }
         public int CustomerId { get; set; }
-        public bool PrePaid { get; set; }
+        public double TotalCash { get; set; }
+        public double TotalCredit { get; set; }
         public List<SendOrderProduct> Products { get; set; }
     }
 
@@ -25,6 +27,8 @@ namespace SmartOrderService.Models.Requests
         public int ProductId { get; set; }
         public int Quantity { get; set; }
         public Single Price { get; set; }
+        public double Import { get; set; }
+        public int CreditAmount { get; set; }
     }
 
     public class SendOrderResponse

@@ -244,6 +244,12 @@ namespace SmartOrderService.Controllers
             {
                 return BadRequest();
             }
+            catch (ApiPreventaException e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.MethodNotAllowed, e.Message);
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
+            }
             catch (Exception e)
             {
                 responseMessage = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);

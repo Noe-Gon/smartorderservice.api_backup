@@ -20,6 +20,6 @@ namespace SmartOrderService.DB
         [Column("status")]
         public bool Status { get; set; }
 
-        public virtual ICollection<so_delivery> Deliveries { get; set; }
+        public virtual ICollection<so_delivery_additional_data> DeliveryAdditionalData { get; set; }
     }
 }

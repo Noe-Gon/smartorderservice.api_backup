@@ -427,9 +427,16 @@ namespace SmartOrderService.Services
                                 modifiedby = 2777,
                                 modifiedon = DateTime.Now,
                                 status = true,
-                                visit_order = 0,
+                                visit_order = 0
+                            };
+
+                            var newDeliveryAdditionalData = new so_delivery_additional_data()
+                            {
                                 deliveryStatusId = deliveriStatus == null ? null : (int?)deliveriStatus.Id
                             };
+
+                            newDelivery.so_delivery_additional_data = newDeliveryAdditionalData;
+
                             var newDeliveryDetails = new List<so_delivery_detail>();
                             foreach (var detail in delivery.products)
                             {

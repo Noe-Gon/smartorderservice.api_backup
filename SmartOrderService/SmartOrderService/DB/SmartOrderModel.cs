@@ -165,6 +165,8 @@ namespace SmartOrderService.DB
 
         public virtual DbSet<so_article_promotional_route> so_article_promotional_route { get; set; }
         public virtual DbSet<so_delivery_status> so_delivery_status { get; set; }
+        public virtual DbSet<so_order> so_order { get; set; }
+        public virtual DbSet<so_order_detail> so_order_detail { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -1832,11 +1834,26 @@ namespace SmartOrderService.DB
                 .HasKey(x => x.Id)
                 .Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
 
-            modelBuilder.Entity<so_delivery>()
-                .HasOptional(x => x.DeliveryStatus)
-                .WithMany(x => x.Deliveries)
+            modelBuilder.Entity<so_order>()
+               .Property(e => e.tags)
+               .IsUnicode(false);
+
+            modelBuilder.Entity<so_order>()
+                .HasMany(e => e.so_order_detail)
+                .WithRequired(e => e.so_order)
+                .WillCascadeOnDelete(false);
+
+            var deliveryAdditionalData = modelBuilder.Entity<so_delivery_additional_data>();
+            deliveryAdditionalData.HasKey(x => x.deliveryAdditionalDataId)
+                .Property(x => x.deliveryAdditionalDataId).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+
+            deliveryAdditionalData.HasOptional(x => x.DeliveryStatus)
+                .WithMany(x => x.DeliveryAdditionalData)
                 .HasForeignKey(x => x.deliveryStatusId);
 
+            modelBuilder.Entity<so_delivery>()
+                .HasOptional(x => x.so_delivery_additional_data)
+                .WithRequired(x => x.Delivery);
         }
     }
 }

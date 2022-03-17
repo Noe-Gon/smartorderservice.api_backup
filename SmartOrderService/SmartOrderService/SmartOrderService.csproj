@@ -375,6 +375,7 @@
     <Compile Include="DB\so_data_input.cs" />
     <Compile Include="DB\so_data_out.cs" />
     <Compile Include="DB\so_delivery.cs" />
+    <Compile Include="DB\so_delivery_additional_data.cs" />
     <Compile Include="DB\so_delivery_detail.cs" />
     <Compile Include="DB\so_delivery_devolution.cs" />
     <Compile Include="DB\so_delivery_promotion.cs" />
@@ -402,6 +403,8 @@
     <Compile Include="DB\so_loan_order.cs" />
     <Compile Include="DB\so_loan_sale.cs" />
     <Compile Include="DB\so_log_errors.cs" />
+    <Compile Include="DB\so_order.cs" />
+    <Compile Include="DB\so_order_detail.cs" />
     <Compile Include="DB\so_portal_links_log.cs" />
     <Compile Include="DB\so_preventa_View.cs" />
     <Compile Include="DB\so_price_list_products_detail.cs" />

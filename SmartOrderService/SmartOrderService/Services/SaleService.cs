@@ -1242,6 +1242,11 @@ namespace SmartOrderService.Services
                         transaction.Commit();
                     }
                 }
+                catch (ApiPreventaException e)
+                {
+                    transaction.Rollback();
+                    throw e;
+                }
                 catch (Exception exception)
                 {
                     transaction.Rollback();
@@ -1262,7 +1267,7 @@ namespace SmartOrderService.Services
                 .Where(x => x.deliveryId == deliveryId)
                 .FirstOrDefault();
 
-            delivery.deliveryStatusId = statusDelivery.Id;
+            delivery.so_delivery_additional_data.deliveryStatusId = statusDelivery.Id;
             db.so_delivery.Attach(delivery);
             db.Entry(delivery).State = EntityState.Modified;
             db.SaveChanges();
@@ -1306,13 +1311,14 @@ namespace SmartOrderService.Services
                     .Where(x => x.deliveryId == sale.DeliveryId)
                     .FirstOrDefault();
 
-                delivery.deliveryStatusId = statusDelivery.Id;
+                delivery.so_delivery_additional_data.deliveryStatusId = statusDelivery.Id;
                 db.so_delivery.Attach(delivery);
                 db.Entry(delivery).State = EntityState.Modified;
                 db.SaveChanges();
             }
             catch (Exception)
             {
+                throw new ApiPreventaException("Error al actualizar el delivery status");
             }
         }
 

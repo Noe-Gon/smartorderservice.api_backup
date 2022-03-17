@@ -281,10 +281,7 @@ namespace SmartOrderService.Services
                 }
 
             }
-
-
             return newDevolution;
-
         }
 
         public ResponseBase<SendOrderResponse> SendOrder(SendOrderRequest request)
@@ -310,67 +307,57 @@ namespace SmartOrderService.Services
                     "No se encontró al cliente con id: " + request.CustomerId + " o ha dado de baja"
                 });
 
-            var apiRequest = new SendDeliveryToPreventaAPIRequest()
+            //Guardar en so_order
+            var deliveryReference = db.so_delivery_references
+                .Where(x => x.value == 80)
+                .FirstOrDefault();
+
+            if (deliveryReference == null)
+                throw new Exception("No existe el delivery reference con valor 80");
+
+            var newOrder = new so_order()
             {
-                branchId = route.BranchCode,
-                routeId = route.RouteCode,
+                createdby = request.UserId,
+                createdon = DateTime.Now,
                 customerId = request.CustomerId,
-                deliveryDate = request.DeliveryDate,
-                createdOn = DateTime.Now,
-                originSystem = "wbcprev",
-                customer = new SendDeliveryToPreventaAPICustomer()
-                {
-                    address = customer.address,
-                    branchId = route.RouteId,
-                    contact = customer.contact,
-                    customerId = customer.customerId,
-                    email = customer.email,
-                    name = customer.name,
-                    originSistem = "wbcprev",
-                    originSistemId = customer.customerId,
-                    prePaid = request.PrePaid,
-                    routeId = route.RouteId
-                },
-                products = request.Products.Select(x => new SendDeliveryToPreventaAPIProduct
-                {
-                    price = x.Price,
-                    productId = x.ProductId,
-                    quantity = x.Quantity
-                }).ToList()
+                date = DateTime.Now, //Validar que valor va en date
+                datesync = null,
+                delivery = request.DeliveryDate, //Se cambio de string a Datetime
+                delivery_reference = deliveryReference.delivery_references_Id,
+                modifiedby = request.UserId,
+                modifiedon = DateTime.Now,
+                status = true,
+                tags = "preventa",
+                userId = request.UserId,
+                total_cash = request.TotalCash,
+                total_credit = request.TotalCredit,
+                so_order_detail = new List<so_order_detail>()
             };
 
-            var aux = Newtonsoft.Json.JsonConvert.SerializeObject(apiRequest);
-            Console.Write(aux);
-            var response = SendDeliveryToPreventaAPI(apiRequest);
-           
-            if (response)
-                return ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
-                {
-                    Msg = "Orden realizada con exitó"
-                });
-
-            return ResponseBase<SendOrderResponse>.Create(new List<string>()
+            foreach (var product in request.Products)
             {
-                "Ha ocurridó un error"
+                newOrder.so_order_detail.Add(new so_order_detail()
+                {
+                    amount = product.Quantity,
+                    createdby = request.UserId,
+                    createdon = DateTime.Now,
+                    import = product.Import,
+                    productId = product.ProductId,
+                    price = product.Price,
+                    modifiedby = request.UserId,
+                    status = true,
+                    modifiedon = DateTime.Now,
+                    credit_amount = product.CreditAmount
+                });
+            }
+
+            db.so_order.Add(newOrder);
+            db.SaveChanges();
+
+            return ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
+            {
+                Msg = "Orden realizada con exitó"
             });
-        }
-
-        public bool SendDeliveryToPreventaAPI(SendDeliveryToPreventaAPIRequest request)
-        {
-            var clientPreventaApi = new RestClient();
-            clientPreventaApi.BaseUrl = new Uri(ConfigurationManager.AppSettings["PreventaAPI"]);
-            var requestPreventaApiConfig = new RestRequest("/api/v1/preOrder/register", Method.POST);
-            requestPreventaApiConfig.AddHeader("x-api-key", ConfigurationManager.AppSettings["x-api-key"]);
-            requestPreventaApiConfig.RequestFormat = DataFormat.Json;
-            var GetDeliveriesResponse = clientPreventaApi.Execute(requestPreventaApiConfig);
-
-            if (GetDeliveriesResponse.StatusCode == System.Net.HttpStatusCode.OK)
-                return true;
-
-            if (GetDeliveriesResponse.StatusCode == System.Net.HttpStatusCode.Forbidden && GetDeliveriesResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                throw new ApiPreventaNoAuthorizationException(GetDeliveriesResponse.Content);
-
-            throw new ApiPreventaException(GetDeliveriesResponse.Content);
         }
 
         public List<so_delivery_devolution> getDevolutionsByPeriod(int UserId,DateTime Begin,DateTime End)
@@ -466,7 +453,10 @@ namespace SmartOrderService.Services
             if (delivery == null)
                 throw new EntityNotFoundException("No se encontró el delivery");
 
-            if(delivery.deliveryStatusId == null || delivery.deliveryStatusId == 0)
+            if(delivery.so_delivery_additional_data == null)
+                throw new ArgumentNullException("No cuenta con delivery additional data");
+
+            if(delivery.so_delivery_additional_data.deliveryStatusId == null)
                 throw new ArgumentNullException("No cuenta con el status del delivery");
 
             var clientPreventaApi = new RestClient();
@@ -477,7 +467,7 @@ namespace SmartOrderService.Services
             requestPreventaApiConfig.AddBody(new UpdateDeliveryAPIPreventaRequest
             {
                 groupCode = delivery.code,
-                statusCode = delivery.DeliveryStatus.Code
+                statusCode = delivery.so_delivery_additional_data.DeliveryStatus.Code
             });
 
             var apiResponse = clientPreventaApi.Execute(requestPreventaApiConfig);
@@ -537,17 +527,20 @@ namespace SmartOrderService.Services
             if (delivery == null)
                 throw new EntityNotFoundException("No se encontró el delivery");
 
+            if (delivery.so_delivery_additional_data == null)
+                throw new ArgumentNullException("No cuenta con delivery additional data");
+
+            if (delivery.so_delivery_additional_data.deliveryStatusId == null)
+                throw new ArgumentNullException("No cuenta con el status del delivery");
+
             var statusDelivery = db.so_delivery_status
                     .Where(x => x.Code == DeliveryStatus.CANCELED)
                     .FirstOrDefault();
 
-            delivery.deliveryStatusId = statusDelivery.Id;
+            delivery.so_delivery_additional_data.deliveryStatusId = statusDelivery.Id;
             db.so_delivery.Attach(delivery);
             db.Entry(delivery).State = EntityState.Modified;
             db.SaveChanges();
-
-            if (delivery.deliveryStatusId == null || delivery.deliveryStatusId == 0)
-                throw new ArgumentNullException("No cuenta con el status del delivery");
 
             var clientPreventaApi = new RestClient();
             clientPreventaApi.BaseUrl = new Uri(ConfigurationManager.AppSettings["PreventaAPI"]);
@@ -557,7 +550,7 @@ namespace SmartOrderService.Services
             requestPreventaApiConfig.AddBody(new UpdateDeliveryAPIPreventaRequest
             {
                 groupCode = delivery.code,
-                statusCode = delivery.DeliveryStatus.Code
+                statusCode = delivery.so_delivery_additional_data.DeliveryStatus.Code
             });
 
             var apiResponse = clientPreventaApi.Execute(requestPreventaApiConfig);
