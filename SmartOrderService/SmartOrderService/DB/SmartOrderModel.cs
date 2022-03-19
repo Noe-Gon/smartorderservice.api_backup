@@ -167,6 +167,8 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_delivery_status> so_delivery_status { get; set; }
         public virtual DbSet<so_order> so_order { get; set; }
         public virtual DbSet<so_order_detail> so_order_detail { get; set; }
+        public virtual DbSet<so_delivery_additional_data> so_delivery_additional_data { get; set; }
+
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

@@ -1263,14 +1263,28 @@ namespace SmartOrderService.Services
                     .Where(x => x.Code == DeliveryStatus.CANCELED)
                     .FirstOrDefault();
 
-            var delivery = db.so_delivery
+            var deliveryAD = db.so_delivery_additional_data
                 .Where(x => x.deliveryId == deliveryId)
                 .FirstOrDefault();
+            //Buscar additional data y crearlo en caso contrario
+            if(deliveryAD == null)
+            {
+                deliveryAD = new so_delivery_additional_data()
+                {
+                    deliveryId = deliveryId,
+                    deliveryStatusId = statusDelivery.Id
+                };
 
-            delivery.so_delivery_additional_data.deliveryStatusId = statusDelivery.Id;
-            db.so_delivery.Attach(delivery);
-            db.Entry(delivery).State = EntityState.Modified;
-            db.SaveChanges();
+                db.so_delivery_additional_data.Add(deliveryAD);
+                db.SaveChanges();
+            }
+            else
+            {
+                deliveryAD.deliveryStatusId = statusDelivery.Id;
+                db.so_delivery_additional_data.Attach(deliveryAD);
+                db.Entry(deliveryAD).State = EntityState.Modified;
+                db.SaveChanges();
+            }
         }
 
         public void UpdateDeliveryStatus(SaleTeam sale)
@@ -1307,14 +1321,29 @@ namespace SmartOrderService.Services
                     .Where(x => x.Code == status)
                     .FirstOrDefault();
 
-                var delivery = db.so_delivery
-                    .Where(x => x.deliveryId == sale.DeliveryId)
-                    .FirstOrDefault();
+                var deliveryAD = db.so_delivery_additional_data
+                .Where(x => x.deliveryId == sale.DeliveryId)
+                .FirstOrDefault();
 
-                delivery.so_delivery_additional_data.deliveryStatusId = statusDelivery.Id;
-                db.so_delivery.Attach(delivery);
-                db.Entry(delivery).State = EntityState.Modified;
-                db.SaveChanges();
+                //Buscar additional data y crearlo en caso contrario
+                if (deliveryAD == null)
+                {
+                    deliveryAD = new so_delivery_additional_data()
+                    {
+                        deliveryId = sale.DeliveryId,
+                        deliveryStatusId = statusDelivery.Id
+                    };
+
+                    db.so_delivery_additional_data.Add(deliveryAD);
+                    db.SaveChanges();
+                }
+                else
+                {
+                    deliveryAD.deliveryStatusId = statusDelivery.Id;
+                    db.so_delivery_additional_data.Attach(deliveryAD);
+                    db.Entry(deliveryAD).State = EntityState.Modified;
+                    db.SaveChanges();
+                }
             }
             catch (Exception)
             {
