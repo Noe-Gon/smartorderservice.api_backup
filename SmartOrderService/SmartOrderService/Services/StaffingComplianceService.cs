@@ -57,7 +57,8 @@ namespace SmartOrderService.Services
 
             if (routeTeam == null)
                 throw new EntityNotFoundException("El usuario no esta asignado a un equipo");
-
+            bool inTripulacs = false;
+            List<string> exceptionMessages = new List<string>();
             //Notificar a la API
             try
             {
@@ -65,9 +66,9 @@ namespace SmartOrderService.Services
                 //Si es impulsor
                 if (routeTeam.roleTeamId == (int)ERolTeam.Impulsor)
                 {
-                    //Buscar si hay algun ayudante
+                    //Buscar si el ayudante se autenticó antes que el impulsor para registrarlo. 
                     int ayudanteId = UoWConsumer.RouteTeamRepository
-                        .Get(x => x.roleTeamId == (int)ERolTeam.Impulsor && x.routeId == request.RouteId)
+                        .Get(x => x.roleTeamId == (int)ERolTeam.Ayudante && x.routeId == request.RouteId)
                         .Select(x => x.userId)
                         .FirstOrDefault();
 
@@ -82,33 +83,85 @@ namespace SmartOrderService.Services
                     requestNotify.impulsorId = Convert.ToInt32(request.EmployeeCode);
                     requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
                     requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
+
+                    var response = NotifyWorkday(requestNotify);
+                    if (response == "\"{\\\"errors\\\":[]}\"")
+                    {
+                        //Lógica del fallo con el registro en tripulacs
+                        inTripulacs = true;
+                        if (ayudanteCode != null)
+                        {
+                            ayudante.Status = true;
+                            UoWConsumer.AuthentificationLogRepository.Update(ayudante);
+                        }
+                    }
                 }
                 //Si es ayudante
                 else
                 {
                     //Buscar si ya inicio un Impulsor
-                    int impulsorId = UoWConsumer.RouteTeamRepository
+                    int? impulsorId = UoWConsumer.RouteTeamRepository
                         .Get(x => x.roleTeamId == (int)ERolTeam.Impulsor && x.routeId == request.RouteId)
                         .Select(x => x.userId)
                         .FirstOrDefault();
+
+                    if (impulsorId == null)
+                    {
+                        return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
+                        {
+                        });
+                        throw new NoUserFoundException("No se encontró al impulsor en WBC. Revisar que exista el impulsor en la ruta por medio de la tabla so_route_team");
+                    }
+
+                    var isWorkDayActive = UoWConsumer.WorkDayRepository
+                        .Get(x => x.userId == impulsorId);
+                    if (isWorkDayActive == null)
+                    {
+                        return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
+                        {
+                        });
+                        throw new WorkdayNotFoundException("No se encontró el Work Day del impulsor.");
+                    }
+
 
                     var impulsor = UoWConsumer.AuthentificationLogRepository
                         .Get(x => !x.WasLeaderCodeAuthorization && DbFunctions.TruncateTime(x.CreatedDate) == DbFunctions.TruncateTime(DateTime.Now) 
                                     && x.UserId == impulsorId && x.RouteId == request.RouteId)
                         .FirstOrDefault();
+                    if (impulsor != null)
+                    {
+                        //Lógica del fallo con el registro en tripulacs
+                        inTripulacs = true;
+                        var impulsorCode = impulsor.UserCode;
+                        requestNotify.auxiliarid = Convert.ToInt32(request.EmployeeCode);
+                        requestNotify.impulsorId = Convert.ToInt32(impulsorCode);
+                        requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
+                        requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
 
-                    string impulsorCode = impulsor != null ? impulsor.UserCode : null;
-
-                    requestNotify.auxiliarid = Convert.ToInt32(request.EmployeeCode);
-                    requestNotify.impulsorId = Convert.ToInt32(impulsorCode);
-                    requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
-                    requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
+                        var response = NotifyWorkday(requestNotify);
+                        if (response == "\"{\\\"errors\\\":[]}\"")
+                        {
+                            //Lógica del fallo con el registro en tripulacs
+                            inTripulacs = true;
+                        }
+                        if (response == "\"{\\\"errors\\\":[{\\\"error\\\":9001,\\\"message\\\":\\\"No existe la tripulación configurada para la ruta " + routeBranch.Route.code + ".\\\"}]}\"")
+                        {
+                            exceptionMessages.Add("No se encuentra configurada la ruta en tripulacs");
+                            //throw new NoRouteConfigTripulacsException("No se encuentra configurada la ruta en tripulacs");
+                        }
+                        if (response == "\"{\\\"errors\\\":[{\\\"error\\\":404,\\\"message\\\":\\\"El id del impulsor no es válido\\\"}]}\"")
+                        {
+                            exceptionMessages.Add("El id del impulsor no es válido");
+                        }
+                    }
+                    else
+                    {
+                        exceptionMessages.Add("El impulsor no se ha autenticado");
+                    }
                 }
-
-                NotifyWorkday(requestNotify);
             }
             catch (Exception) {
-                throw new ExternalAPIException("Error al notificar a WSWmpleados");
+                exceptionMessages.Add("Error al notificar a WSempleados");
             }
 
             //Buscar si ya existe un registro para este usuario
@@ -126,7 +179,7 @@ namespace SmartOrderService.Services
                     CreatedDate = DateTime.Now,
                     LeaderCode = null,
                     ModifiedDate = null,
-                    Status = true,
+                    Status = inTripulacs,
                     RouteId = routeBranch.Route.routeId,
                     UserCode = request.EmployeeCode,
                     UserId = user.userId
@@ -140,8 +193,8 @@ namespace SmartOrderService.Services
                 if (existLog.UserCode != request.EmployeeCode)
                     throw new UnauthorizedAccessException("Otro Empleado ya inicio sesión con este usuario");
             }
-            
-            return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
+
+            var responseAuthentication = ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
             {
                 UserId = user.userId,
                 UserName = employee.name + " " + employee.lastname,
@@ -153,6 +206,8 @@ namespace SmartOrderService.Services
                 RouteId = routeBranch.Route.routeId,
                 RouteName = routeBranch.Route.name
             });
+            responseAuthentication.Errors = exceptionMessages;
+            return responseAuthentication;
         }
 
         public ResponseBase<AuthenticateLeaderCodeResponse> AuthenticateLeaderCode(AuthenticateLeaderCodeRequest request)
@@ -233,7 +288,7 @@ namespace SmartOrderService.Services
             throw new ExternalAPIException("Falló al intentar obtener el token");
         }
 
-        private void NotifyWorkday(NotifyWorkdayRequest request)
+        private string NotifyWorkday(NotifyWorkdayRequest request)
         {
             var client = new RestClient();
             client.BaseUrl = new Uri(ConfigurationManager.AppSettings["APIdeOPECDV1"]);
@@ -243,6 +298,7 @@ namespace SmartOrderService.Services
             requestConfig.AddBody(request);
 
             var RestResponse = client.Execute(requestConfig);
+            return JsonConvert.SerializeObject(RestResponse.Content);
         }
 
         private Employee SingleEmployee(string idcia, string emp)

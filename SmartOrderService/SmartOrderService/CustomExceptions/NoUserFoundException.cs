@@ -7,6 +7,13 @@ namespace SmartOrderService.CustomExceptions
 {
     public class NoUserFoundException : Exception
     {
+        public NoUserFoundException() : base()
+        {
 
+        }
+
+        public NoUserFoundException(string message) : base(message)
+        {
+        }
     }
 }
