@@ -295,7 +295,8 @@ namespace SmartOrderService.Services
                    .FirstOrDefault();
 
                 if (existCustomer != null)
-                    throw new DuplicateEntityException("Ya existe un consumidor con ese CFE");
+                    if(existCustomer.customerId != request.CustomerId)
+                        throw new DuplicateEntityException("Ya existe un consumidor con ese CFE");
 
                 var route = UoWConsumer.RouteRepository
                     .GetByID(request.RouteId);
