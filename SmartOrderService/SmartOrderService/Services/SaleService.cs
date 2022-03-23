@@ -1067,7 +1067,7 @@ namespace SmartOrderService.Services
                 Sale saleResult = CreateSaleResultFromSale(sale);
                 try
                 {
-                    if (sale.SaleDetails.Count() > 0)
+                    if (sale.SaleDetails.Count() > 0 || sale.SalePromotions.Count > 0)
                     {
                         if (!checkIfSaleExist(sale))
                         {
@@ -1078,6 +1078,7 @@ namespace SmartOrderService.Services
                             }
                             saleResult.SaleId = sale.SaleId;
                             UpdateRouteTeamInventory(sale);
+                            saleResult.SalePromotions = sale.SalePromotions;
                         }
 
                         transaction.Commit();

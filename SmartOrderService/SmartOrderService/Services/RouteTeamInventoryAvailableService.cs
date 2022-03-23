@@ -36,19 +36,26 @@ namespace SmartOrderService.Services
                     .FirstOrDefault().Available_Amount -= productInventory.Amount;
             }
             db.SaveChanges();
-
+            var promotionIndex = 0;
             foreach (var Promotion in salePromotion)
             {
-                foreach (var producPromotion in Promotion.DetailProduct)
+                var amountPromotionsSaled = 0;
+                foreach (var productPromotion in Promotion.DetailProduct)
                 {
                     var availableProduct = db.so_route_team_inventory_available
-                        .Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(producPromotion.ProductId))
+                        .Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productPromotion.ProductId))
                         .FirstOrDefault();
-                    if (availableProduct.Available_Amount > producPromotion.Amount)
+                    if (availableProduct.Available_Amount > productPromotion.Amount)
                     {
-                        availableProduct.Available_Amount -= producPromotion.Amount;
+                        availableProduct.Available_Amount -= productPromotion.Amount;
+                        amountPromotionsSaled += productPromotion.Amount;
+                    }
+                    else
+                    {
+                        productPromotion.Amount = 0;
                     }
                 }
+                sale.SalePromotions[promotionIndex].Amount = amountPromotionsSaled;
             }
             db.SaveChanges();
         }
