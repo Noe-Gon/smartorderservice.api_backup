@@ -41,9 +41,13 @@ namespace SmartOrderService.Services
             {
                 foreach (var producPromotion in Promotion.DetailProduct)
                 {
-                    db.so_route_team_inventory_available
+                    var availableProduct = db.so_route_team_inventory_available
                         .Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(producPromotion.ProductId))
-                        .FirstOrDefault().Available_Amount -= producPromotion.Amount;
+                        .FirstOrDefault();
+                    if (availableProduct.Available_Amount > producPromotion.Amount)
+                    {
+                        availableProduct.Available_Amount -= producPromotion.Amount;
+                    }
                 }
             }
             db.SaveChanges();

@@ -406,47 +406,74 @@ namespace SmartOrderService.Services
 
         public Sale CreateSaleResultFromSale(Sale sale)
         {
-                RoleTeamService roleTeamService = new RoleTeamService();
-                ERolTeam userRole = roleTeamService.GetUserRole(sale.UserId);
-                if (userRole == ERolTeam.SinAsignar)
-                {
-                    return sale;
-                }
-                SaleDetailResultService saleDetailResultService = new SaleDetailResultService();
-                InventoryService inventoryService = new InventoryService();
-                Sale saleResult = new Sale();
-                saleResult.UserId = sale.UserId;
-                saleResult.TotalCash = sale.TotalCash;
-                saleResult.SaleId = sale.SaleId;
-                saleResult.TotalCredit = sale.TotalCredit;
-                saleResult.CustomerTag = sale.CustomerTag;
-                saleResult.InventoryId = sale.InventoryId;
-                saleResult.Date = sale.Date;
-                saleResult.CustomerId = sale.CustomerId;
-                saleResult.DeliveryId = sale.DeliveryId;
-                saleResult.SaleDetails = new List<SaleDetail>();
-            for (int i = 0; i < sale.SaleDetails.Count(); i++)
-                {
-                    int amountSaled = 0;
-                    SaleDetailResult saleDetailResult = new SaleDetailResult(sale.SaleDetails[i]);
+            RoleTeamService roleTeamService = new RoleTeamService();
+            ERolTeam userRole = roleTeamService.GetUserRole(sale.UserId);
+            if (userRole == ERolTeam.SinAsignar)
+            {
+                return sale;
+            }
+            SaleDetailResultService saleDetailResultService = new SaleDetailResultService();
+            InventoryService inventoryService = new InventoryService();
+            Sale saleResult = new Sale();
+            saleResult.UserId = sale.UserId;
+            saleResult.TotalCash = sale.TotalCash;
+            saleResult.SaleId = sale.SaleId;
+            saleResult.TotalCredit = sale.TotalCredit;
+            saleResult.CustomerTag = sale.CustomerTag;
+            saleResult.InventoryId = sale.InventoryId;
+            saleResult.Date = sale.Date;
+            saleResult.CustomerId = sale.CustomerId;
+            saleResult.DeliveryId = sale.DeliveryId;
+            saleResult.SaleDetails = new List<SaleDetail>();
 
-                    if (inventoryService.CheckInventoryAvailability(sale.InventoryId, sale.SaleDetails[i].ProductId, sale.SaleDetails[i].Amount))
+            for (int i = 0; i < sale.SaleDetails.Count(); i++)
+            {
+                int amountSaled = 0;
+                SaleDetailResult saleDetailResult = new SaleDetailResult(sale.SaleDetails[i]);
+
+                if (inventoryService.CheckInventoryAvailability(sale.InventoryId, sale.SaleDetails[i].ProductId, sale.SaleDetails[i].Amount))
+                {
+                    amountSaled = sale.SaleDetails[i].Amount;
+                }
+                else
+                {
+                    sale.TotalCash -= Decimal.ToDouble(sale.SaleDetails[i].Import);
+                    sale.SaleDetails.RemoveAt(i);
+                    i--;
+                }
+                saleDetailResult.AmountSold = amountSaled;
+                saleResult.SaleDetails.Add(saleDetailResult);
+            }
+            //saleResult.SalePromotions = sale.SalePromotions;
+            saleResult.SalePromotions = new List<SalePromotion>();
+            for (int i = 0; i < sale.SalePromotions.Count(); i++)
+            {
+                int amountSaled = 0;
+                SalePromotion salePromotionResult = new SalePromotion(sale.SalePromotions[i]);
+
+                List<SalePromotionDetailProduct> promotionProducts = salePromotionResult.DetailProduct;
+
+                for (int j = 0; j < sale.SalePromotions[i].DetailProduct.Count(); j++)
+                {
+                    int amountSalePerPromotionProduct = 0;
+                    if (inventoryService.CheckInventoryAvailability(sale.InventoryId, promotionProducts[j].ProductId, promotionProducts[j].Amount))
                     {
-                        amountSaled = sale.SaleDetails[i].Amount;
+                        amountSalePerPromotionProduct = promotionProducts[j].Amount;
+                        amountSaled += amountSalePerPromotionProduct;
+                        salePromotionResult.DetailProduct[j].Amount = amountSalePerPromotionProduct;
                     }
                     else
                     {
-                        sale.TotalCash -= Decimal.ToDouble(sale.SaleDetails[i].Import);
-                        sale.SaleDetails.RemoveAt(i);
-                        i--;
+                        sale.TotalCash -= Decimal.ToDouble(promotionProducts[j].Import);
+                        sale.SalePromotions[i].DetailProduct.RemoveAt(j);
+                        j--;
                     }
-                    saleDetailResult.AmountSold = amountSaled;
-                    saleResult.SaleDetails.Add(saleDetailResult);
                 }
-                saleResult.TotalCash = Math.Round(sale.TotalCash, 3);
-                saleResult.SaleReplacements = sale.SaleReplacements;
-                saleResult.SalePromotions = sale.SalePromotions;
-                return saleResult;
+                saleResult.SalePromotions.Add(salePromotionResult);
+            }
+            saleResult.TotalCash = Math.Round(sale.TotalCash, 3);
+            saleResult.SaleReplacements = sale.SaleReplacements;
+            return saleResult;
         }
 
         public SaleTeam CreateSaleResultFromSale(SaleTeam sale)
