@@ -313,7 +313,6 @@ namespace SmartOrderService.Services
                 entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
                 SetTaxes(entitySale);
                 sale.SaleId = UntransactionalSaveSale(entitySale);
-
             }
             else
             {
@@ -455,20 +454,19 @@ namespace SmartOrderService.Services
 
                 for (int j = 0; j < sale.SalePromotions[i].DetailProduct.Count(); j++)
                 {
-                    int amountSalePerPromotionProduct = 0;
                     if (inventoryService.CheckInventoryAvailability(sale.InventoryId, promotionProducts[j].ProductId, promotionProducts[j].Amount))
                     {
-                        amountSalePerPromotionProduct = promotionProducts[j].Amount;
-                        amountSaled += amountSalePerPromotionProduct;
-                        salePromotionResult.DetailProduct[j].Amount = amountSalePerPromotionProduct;
+                        amountSaled += promotionProducts[j].Amount;
                     }
                     else
                     {
+                        salePromotionResult.DetailProduct[j].Amount = 0;
                         sale.TotalCash -= Decimal.ToDouble(promotionProducts[j].Import);
                         sale.SalePromotions[i].DetailProduct.RemoveAt(j);
                         j--;
                     }
                 }
+                salePromotionResult.Amount = amountSaled;
                 saleResult.SalePromotions.Add(salePromotionResult);
             }
             saleResult.TotalCash = Math.Round(sale.TotalCash, 3);
@@ -1083,6 +1081,11 @@ namespace SmartOrderService.Services
 
                         transaction.Commit();
                     }
+                }
+                catch (EmptySaleException exception)
+                {
+                    transaction.Rollback();
+                    throw exception;
                 }
                 catch (Exception exception)
                 {

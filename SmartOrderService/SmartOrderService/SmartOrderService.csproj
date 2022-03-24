@@ -294,6 +294,7 @@
     <Compile Include="CustomExceptions\DeliveryNotFoundException.cs" />
     <Compile Include="CustomExceptions\DeviceNotFoundException.cs" />
     <Compile Include="CustomExceptions\DuplicateEntityException.cs" />
+    <Compile Include="CustomExceptions\EmptySaleException.cs" />
     <Compile Include="CustomExceptions\EntityNotFoundException.cs" />
     <Compile Include="CustomExceptions\ExternalAPIException.cs" />
     <Compile Include="CustomExceptions\InventoryEmptyException.cs" />
