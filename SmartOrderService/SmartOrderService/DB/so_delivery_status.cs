@@ -9,7 +9,7 @@ namespace SmartOrderService.DB
     public class so_delivery_status
     {
         [Column("deliveryStatusId")]
-        public int Id { get; set; }
+        public int deliveryStatusId { get; set; }
 
         [Column("code")]
         public string Code { get; set; }

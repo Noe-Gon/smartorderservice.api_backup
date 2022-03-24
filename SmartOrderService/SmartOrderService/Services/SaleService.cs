@@ -186,7 +186,7 @@ namespace SmartOrderService.Services
                     sale.modifiedon = DateTime.Now;
 
                     if (sale.deliveryId != null && sale.deliveryId != 0)
-                        CancelDeliveryStatus(sale.deliveryId.Value);
+                        CancelDeliveryStatus(sale.deliveryId.Value, db);
 
                     db.SaveChanges();
                     //Enviar Ticket
@@ -1149,7 +1149,7 @@ namespace SmartOrderService.Services
                             UpdateRouteTeamInventory(sale, db);
                             CreatePaymentMethod(sale);
                             if (sale.DeliveryId != 0)
-                                UpdateDeliveryStatus(sale);
+                                UpdateDeliveryStatus(sale, db);
 
                             sRespuesta = CreatePromotion(sale, db);
                             if (sRespuesta != string.Empty)
@@ -1257,7 +1257,7 @@ namespace SmartOrderService.Services
 
         }
 
-        public void CancelDeliveryStatus(int deliveryId)
+        public void CancelDeliveryStatus(int deliveryId, SmartOrderModel db)
         {
             var statusDelivery = db.so_delivery_status
                     .Where(x => x.Code == DeliveryStatus.CANCELED)
@@ -1266,13 +1266,17 @@ namespace SmartOrderService.Services
             var deliveryAD = db.so_delivery_additional_data
                 .Where(x => x.deliveryId == deliveryId)
                 .FirstOrDefault();
+
+            if (statusDelivery == null)
+                throw new EntityNotFoundException("No se puedé actualizar el estado del delivery, no se encontró el status: " + DeliveryStatus.CANCELED);
+
             //Buscar additional data y crearlo en caso contrario
-            if(deliveryAD == null)
+            if (deliveryAD == null)
             {
                 deliveryAD = new so_delivery_additional_data()
                 {
                     deliveryId = deliveryId,
-                    deliveryStatusId = statusDelivery.Id
+                    deliveryStatusId = statusDelivery.deliveryStatusId
                 };
 
                 db.so_delivery_additional_data.Add(deliveryAD);
@@ -1280,74 +1284,72 @@ namespace SmartOrderService.Services
             }
             else
             {
-                deliveryAD.deliveryStatusId = statusDelivery.Id;
+                deliveryAD.deliveryStatusId = statusDelivery.deliveryStatusId;
                 db.so_delivery_additional_data.Attach(deliveryAD);
                 db.Entry(deliveryAD).State = EntityState.Modified;
                 db.SaveChanges();
             }
         }
 
-        public void UpdateDeliveryStatus(SaleTeam sale)
+        public void UpdateDeliveryStatus(SaleTeam sale, SmartOrderModel db)
         {
             var deliveriesProducts = db.so_delivery_detail
                 .Where(x => x.deliveryId == sale.DeliveryId)
                 .ToList();
 
             string status = DeliveryStatus.DELIVERED;
-            bool isPartial = false;
+            bool isUndelivered = true;
             foreach (var product in deliveriesProducts)
             {
                 var aux = sale.SaleDetails
                     .Where(x => x.ProductId == product.productId)
                     .FirstOrDefault();
 
-                if (aux.Amount == product.amount)
-                {
-                    isPartial = true;
+                if (aux == null)
                     continue;
-                }
 
-                if (isPartial)
-                {
-                    status = DeliveryStatus.PARTIALLY_DELIVERED;
-                    break;
-                }
-                status = DeliveryStatus.UNDELIVERED;
+                if (aux.Amount == 0)
+                    continue;
+
+                isUndelivered = false;
+                if (aux.Amount >= product.amount)
+                    continue;
+
+                status = DeliveryStatus.PARTIALLY_DELIVERED;
             }
 
-            try
-            {
-                var statusDelivery = db.so_delivery_status
-                    .Where(x => x.Code == status)
-                    .FirstOrDefault();
+            if(isUndelivered)
+                status = DeliveryStatus.UNDELIVERED;
 
-                var deliveryAD = db.so_delivery_additional_data
-                .Where(x => x.deliveryId == sale.DeliveryId)
+            var statusDelivery = db.so_delivery_status
+                .Where(x => x.Code == status)
                 .FirstOrDefault();
 
-                //Buscar additional data y crearlo en caso contrario
-                if (deliveryAD == null)
-                {
-                    deliveryAD = new so_delivery_additional_data()
-                    {
-                        deliveryId = sale.DeliveryId,
-                        deliveryStatusId = statusDelivery.Id
-                    };
+            if (statusDelivery == null)
+                throw new EntityNotFoundException("No se puedé actualizar el estado del delivery, no se encontró el status: " + status);
 
-                    db.so_delivery_additional_data.Add(deliveryAD);
-                    db.SaveChanges();
-                }
-                else
-                {
-                    deliveryAD.deliveryStatusId = statusDelivery.Id;
-                    db.so_delivery_additional_data.Attach(deliveryAD);
-                    db.Entry(deliveryAD).State = EntityState.Modified;
-                    db.SaveChanges();
-                }
-            }
-            catch (Exception)
+            var deliveryAD = db.so_delivery_additional_data
+            .Where(x => x.deliveryId == sale.DeliveryId)
+            .FirstOrDefault();
+
+            //Buscar additional data y crearlo en caso contrario
+            if (deliveryAD == null)
             {
-                throw new ApiPreventaException("Error al actualizar el delivery status");
+                deliveryAD = new so_delivery_additional_data()
+                {
+                    deliveryId = sale.DeliveryId,
+                    deliveryStatusId = statusDelivery.deliveryStatusId
+                };
+
+                db.so_delivery_additional_data.Add(deliveryAD);
+                db.SaveChanges();
+            }
+            else
+            {
+                deliveryAD.deliveryStatusId = statusDelivery.deliveryStatusId;
+                db.so_delivery_additional_data.Attach(deliveryAD);
+                db.Entry(deliveryAD).State = EntityState.Modified;
+                db.SaveChanges();
             }
         }
 

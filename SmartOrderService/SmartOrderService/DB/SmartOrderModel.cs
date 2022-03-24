@@ -1833,8 +1833,8 @@ namespace SmartOrderService.DB
                 .HasForeignKey(x => x.LeaderAuthenticationCodeId);
 
             modelBuilder.Entity<so_delivery_status>()
-                .HasKey(x => x.Id)
-                .Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+                .HasKey(x => x.deliveryStatusId)
+                .Property(x => x.deliveryStatusId).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
 
             modelBuilder.Entity<so_order>()
                .Property(e => e.tags)
@@ -1846,8 +1846,7 @@ namespace SmartOrderService.DB
                 .WillCascadeOnDelete(false);
 
             var deliveryAdditionalData = modelBuilder.Entity<so_delivery_additional_data>();
-            deliveryAdditionalData.HasKey(x => x.deliveryAdditionalDataId)
-                .Property(x => x.deliveryAdditionalDataId).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            deliveryAdditionalData.HasKey(x => x.deliveryId);
 
             deliveryAdditionalData.HasOptional(x => x.DeliveryStatus)
                 .WithMany(x => x.DeliveryAdditionalData)

@@ -41,7 +41,7 @@ namespace SmartOrderService.DB
 
         private int _sale_note = 0;
 
-        public so_delivery_additional_data so_delivery_additional_data { get; set; }
+        public virtual so_delivery_additional_data so_delivery_additional_data { get; set; }
 
         public int? sale_note {
             set
