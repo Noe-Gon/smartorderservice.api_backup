@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
 using SmartOrderService.Models;
 using SmartOrderService.Models.DTO;
@@ -28,12 +29,14 @@ namespace SmartOrderService.Services
         {
             List<SaleDetail> salesDetail = sale.SaleDetails;
             List<SalePromotion> salePromotion = sale.SalePromotions;
+            bool isEmptySale = true;
 
             foreach (var productInventory in salesDetail)
             {
                 db.so_route_team_inventory_available
                     .Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productInventory.ProductId))
                     .FirstOrDefault().Available_Amount -= productInventory.Amount;
+                isEmptySale = false;
             }
             db.SaveChanges();
             var promotionIndex = 0;
@@ -45,10 +48,11 @@ namespace SmartOrderService.Services
                     var availableProduct = db.so_route_team_inventory_available
                         .Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productPromotion.ProductId))
                         .FirstOrDefault();
-                    if (availableProduct.Available_Amount > productPromotion.Amount)
+                    if (productPromotion.Amount != 0 && availableProduct.Available_Amount > productPromotion.Amount)
                     {
                         availableProduct.Available_Amount -= productPromotion.Amount;
                         amountPromotionsSaled += productPromotion.Amount;
+                        isEmptySale = false;
                     }
                     else
                     {
@@ -58,6 +62,11 @@ namespace SmartOrderService.Services
                 sale.SalePromotions[promotionIndex].Amount = amountPromotionsSaled;
             }
             db.SaveChanges();
+            if (isEmptySale)
+            {
+                throw new EmptySaleException("La venta ha sido ejecutado correctamente " +
+                    "pero no sido registrado debido a que no se está vendiendo nada.");
+            }
         }
 
         public void UpdateRouteTeamInventory(SaleTeam sale)
