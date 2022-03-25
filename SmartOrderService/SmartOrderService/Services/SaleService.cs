@@ -185,9 +185,6 @@ namespace SmartOrderService.Services
                     sale.state = 2;
                     sale.modifiedon = DateTime.Now;
 
-                    if (sale.deliveryId != null && sale.deliveryId != 0)
-                        CancelDeliveryStatus(sale.deliveryId.Value, db);
-
                     db.SaveChanges();
                     //Enviar Ticket
                     try
@@ -1154,91 +1151,91 @@ namespace SmartOrderService.Services
                             sRespuesta = CreatePromotion(sale, db);
                             if (sRespuesta != string.Empty)
                                 throw new Exception(sRespuesta);
-                        }
 
-                        var updateCustomerAdditionalData = db.so_customerr_additional_data
-                            .Where(x => x.CustomerId == sale.CustomerId)
-                            .FirstOrDefault();
 
-                        if (updateCustomerAdditionalData != null || !string.IsNullOrEmpty(sale.Email))
-                        {
-                            #region Consumidores logica
-                            //Actualizar contador
-                            if(updateCustomerAdditionalData != null)
+                            var updateCustomerAdditionalData = db.so_customerr_additional_data
+                                .Where(x => x.CustomerId == sale.CustomerId)
+                                .FirstOrDefault();
+
+                            if (updateCustomerAdditionalData != null || !string.IsNullOrEmpty(sale.Email))
                             {
-                                updateCustomerAdditionalData.CounterVisitsWithoutSales = 0;
-                                db.SaveChanges();
-                            }
-
-                            if (sale.EmailDeliveryTicket == null)
-                                sale.EmailDeliveryTicket = false;
-                            
-                            //Envio de Ticket
-                            if (sale.EmailDeliveryTicket == true)
-                            {
-                                var customer = db.so_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
-
-                                if (customer.CustomerAdditionalData != null || !string.IsNullOrEmpty(sale.Email))
+                                #region Consumidores logica
+                                //Actualizar contador
+                                if (updateCustomerAdditionalData != null)
                                 {
-                                    var customerAux = customer.CustomerAdditionalData.FirstOrDefault();
-                                    if (customerAux == null)
-                                        customerAux = new so_customer_additional_data { IsMailingActive = false };
+                                    updateCustomerAdditionalData.CounterVisitsWithoutSales = 0;
+                                    db.SaveChanges();
+                                }
 
-                                    if (!string.IsNullOrEmpty(sale.Email))
-                                        customer.email = sale.Email;
+                                if (sale.EmailDeliveryTicket == null)
+                                    sale.EmailDeliveryTicket = false;
 
-                                    if (customerAux.IsMailingActive || !string.IsNullOrEmpty(sale.Email))
+                                //Envio de Ticket
+                                if (sale.EmailDeliveryTicket == true)
+                                {
+                                    var customer = db.so_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
+
+                                    if (customer.CustomerAdditionalData != null || !string.IsNullOrEmpty(sale.Email))
                                     {
-                                        //Se prepara la información
-                                        var route = db.so_route_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
-                                        var user = db.so_user.Where(x => x.userId == sale.UserId).FirstOrDefault();
-                                        DataTable dtTicket = GetPromotionsTicketDigital(db, sale.SaleId);
+                                        var customerAux = customer.CustomerAdditionalData.FirstOrDefault();
+                                        if (customerAux == null)
+                                            customerAux = new so_customer_additional_data { IsMailingActive = false };
 
-                                        var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
+                                        if (!string.IsNullOrEmpty(sale.Email))
+                                            customer.email = sale.Email;
+
+                                        if (customerAux.IsMailingActive || !string.IsNullOrEmpty(sale.Email))
                                         {
-                                            CustomerName = customer.name,
-                                            RouteAddress = Convert.ToString(route.routeId),
-                                            CustomerEmail = customer.email,
-                                            CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
-                                            Date = DateTime.Now,
-                                            PaymentMethod = sale.PaymentMethod,
-                                            SellerName = user.code + " - " + user.name,
-                                            dtTicket = dtTicket
-                                        };
+                                            //Se prepara la información
+                                            var route = db.so_route_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
+                                            var user = db.so_user.Where(x => x.userId == sale.UserId).FirstOrDefault();
+                                            DataTable dtTicket = GetPromotionsTicketDigital(db, sale.SaleId);
 
-                                        var sales = new List<SendTicketDigitalEmailSales>();
-                                        foreach (var detail in saleResult.SaleDetails)
-                                        {
-                                            var product = db.so_product.Where(x => x.productId == detail.ProductId).FirstOrDefault();
-                                            if (product == null)
-                                                continue;
-
-                                            
-                                            sales.Add(new SendTicketDigitalEmailSales
+                                            var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
                                             {
-                                                Amount = detail.Amount,
-                                                ProductName = detail.ProductId + " - " + product.name,
-                                                TotalPrice = Convert.ToDouble(detail.Amount) * Convert.ToDouble(detail.PriceValue),
-                                                UnitPrice = Convert.ToDouble(detail.PriceValue)
-                                            });
-                                        }
+                                                CustomerName = customer.name,
+                                                RouteAddress = Convert.ToString(route.routeId),
+                                                CustomerEmail = customer.email,
+                                                CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
+                                                Date = DateTime.Now,
+                                                PaymentMethod = sale.PaymentMethod,
+                                                SellerName = user.code + " - " + user.name,
+                                                dtTicket = dtTicket
+                                            };
 
-                                        sendTicketDigitalEmail.CancelTicketLink = GetCancelLinkByCustomerId(customer.customerId);
-                                        sendTicketDigitalEmail.Sales = sales;
+                                            var sales = new List<SendTicketDigitalEmailSales>();
+                                            foreach (var detail in saleResult.SaleDetails)
+                                            {
+                                                var product = db.so_product.Where(x => x.productId == detail.ProductId).FirstOrDefault();
+                                                if (product == null)
+                                                    continue;
 
-                                        //Se envia el ticket
-                                        if (sales != null)
-                                        {
-                                            var emailService = new EmailService();
-                                            var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);
+
+                                                sales.Add(new SendTicketDigitalEmailSales
+                                                {
+                                                    Amount = detail.Amount,
+                                                    ProductName = detail.ProductId + " - " + product.name,
+                                                    TotalPrice = Convert.ToDouble(detail.Amount) * Convert.ToDouble(detail.PriceValue),
+                                                    UnitPrice = Convert.ToDouble(detail.PriceValue)
+                                                });
+                                            }
+
+                                            sendTicketDigitalEmail.CancelTicketLink = GetCancelLinkByCustomerId(customer.customerId);
+                                            sendTicketDigitalEmail.Sales = sales;
+
+                                            //Se envia el ticket
+                                            if (sales != null)
+                                            {
+                                                var emailService = new EmailService();
+                                                var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);
+                                            }
                                         }
                                     }
                                 }
+
+                                #endregion
                             }
-
-                            #endregion
                         }
-
                         transaction.Commit();
                     }
                 }
