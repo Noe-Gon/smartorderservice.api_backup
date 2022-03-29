@@ -19,6 +19,7 @@ using SmartOrderService.Utils;
 using SmartOrderService.Models.DTO;
 using Newtonsoft.Json;
 using System.Text;
+using SmartOrderService.Models.Message;
 
 namespace SmartOrderService.Controllers
 {
@@ -28,6 +29,12 @@ namespace SmartOrderService.Controllers
 
         private static SaleService objectService = new SaleService();
         SaleService service;
+
+        private static SaleTeamService saleTeamService = SaleTeamService.Create();
+        public SaleTeamService GetSaleTeamService()
+        {
+            return SaleTeamService.Create();
+        }
 
         [HttpGet,Route("api/sales/{SaleId}/Lines")]
         public HttpResponseMessage getLines(int SaleId, [FromUri] InvoiceDataDto invoiceData)
@@ -215,24 +222,37 @@ namespace SmartOrderService.Controllers
         // POST: api/Sales
         [ResponseType(typeof(so_sale))]
         [HttpPost, Route("api/sales/saleTeam_v2")]
-        public IHttpActionResult so_sale_team_v2(SaleTeam sale)
+        public IHttpActionResult so_sale_team_v2(SaleTeamTransactionMessage sale)
         {
             IHttpActionResult responseActionResult;
             HttpResponseMessage responseMessage;
-            SaleTeam saleResult = new SaleTeam();
+            SaleTeamTransactionMessage saleResult = new SaleTeamTransactionMessage();
             try
             {
-                lock (objectService)
+                //lock (objectService)
+                //{
+                //    if(sale.PaymentMethod == null)
+                //    {
+                //        responseMessage = Request.CreateResponse(HttpStatusCode.BadRequest, "El método de pago es requerido");
+                //        responseActionResult = ResponseMessage(responseMessage);
+                //        return responseActionResult;
+                //    }
+
+                //    saleResult = objectService.SaleTeamTransaction(sale);
+                //}
+
+                lock (saleTeamService)
                 {
-                    if(sale.PaymentMethod == null)
+                    if (sale.PaymentMethod == null)
                     {
                         responseMessage = Request.CreateResponse(HttpStatusCode.BadRequest, "El método de pago es requerido");
                         responseActionResult = ResponseMessage(responseMessage);
                         return responseActionResult;
                     }
 
-                    saleResult = objectService.SaleTeamTransaction(sale);
+                    saleResult = saleTeamService.SaleTeamTransaction(sale);
                 }
+
             }
             catch (ProductNotFoundBillingException e)
             {

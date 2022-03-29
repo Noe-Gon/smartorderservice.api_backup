@@ -146,7 +146,7 @@ namespace SmartOrderService.Services
                         "No hay usuarios para esa ruta"
                     });
 
-                var productPriceListId = UoWConsumer.CustomerProductPriceList
+                var productPriceListId = UoWConsumer.CustomerProductPriceListRepository
                     .Get(x => customerIds.Contains(x.customerId))
                     .Select(x => x.products_price_listId)
                     .FirstOrDefault();
@@ -162,7 +162,7 @@ namespace SmartOrderService.Services
                     status = true
                 };
 
-                UoWConsumer.CustomerProductPriceList.Insert(newCustomerProductPriceList);
+                UoWConsumer.CustomerProductPriceListRepository.Insert(newCustomerProductPriceList);
 
                 //Generar el link para cancelar el envio de correo
                 Guid id = Guid.NewGuid();

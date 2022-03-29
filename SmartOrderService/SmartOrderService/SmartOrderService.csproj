@@ -582,6 +582,7 @@
     <Compile Include="Models\DTO\ProductDto.cs" />
     <Compile Include="Models\DTO\ProductArticle.cs" />
     <Compile Include="Models\DTO\Promotion.cs" />
+    <Compile Include="Models\Message\SaleTeamMessage.cs" />
     <Compile Include="Models\Requests\CRMRequests.cs" />
     <Compile Include="Models\Message\StaffingComplianceMessage.cs" />
     <Compile Include="Models\Message\WsEmployeeDataMessage.cs" />
@@ -678,6 +679,7 @@
     <Compile Include="Controllers\RouteTeamController.cs" />
     <Compile Include="Services\RouteTeamTravelsService.cs" />
     <Compile Include="Services\SaleDetailResultService.cs" />
+    <Compile Include="Services\SaleTeamService.cs" />
     <Compile Include="Services\StaffingComplianceService.cs" />
     <Compile Include="Services\SurveyCustomerService.cs" />
     <Compile Include="Services\TrackingService.cs" />

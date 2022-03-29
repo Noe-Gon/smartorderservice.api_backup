@@ -1145,8 +1145,7 @@ namespace SmartOrderService.Services
                             saleResult.SaleId = sale.SaleId;
                             UpdateRouteTeamInventory(sale, db);
                             CreatePaymentMethod(sale);
-                            if (sale.DeliveryId != 0)
-                                UpdateDeliveryStatus(sale, db);
+                            
 
                             sRespuesta = CreatePromotion(sale, db);
                             if (sRespuesta != string.Empty)
@@ -1236,6 +1235,10 @@ namespace SmartOrderService.Services
                                 #endregion
                             }
                         }
+
+                        if (sale.DeliveryId != 0)
+                            UpdateDeliveryStatus(sale, db);
+
                         transaction.Commit();
                     }
                 }

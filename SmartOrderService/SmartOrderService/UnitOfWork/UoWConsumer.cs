@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using System.Web;
+using System.Configuration;
 
 namespace SmartOrderService.UnitOfWork
 {
@@ -31,17 +32,24 @@ namespace SmartOrderService.UnitOfWork
             BinnacleVisitRepository = new GenericRepository<so_binnacle_visit>(Context);
             CodePlaceRepository = new GenericRepository<so_code_place>(Context);
             SaleRepository = new GenericRepository<so_sale>(Context);
-            CustomerProductPriceList = new GenericRepository<so_customer_products_price_list>(Context);
-            ProductPriceList = new GenericRepository<so_products_price_list>(Context);
+            CustomerProductPriceListRepository = new GenericRepository<so_customer_products_price_list>(Context);
+            ProductPriceListRepository = new GenericRepository<so_products_price_list>(Context);
             PortalLinksLogRepository = new GenericRepository<so_portal_links_log>(Context);
             RouteTeamTravelsCustomerBlocked = new GenericRepository<so_route_team_travels_customer_blocked>(Context);
             WorkDayRepository = new GenericRepository<so_work_day>(Context);
             LeaderAuthorizationCodeRepository = new GenericRepository<so_leader_authorization_code>(Context);
             AuthentificationLogRepository = new GenericRepository<so_authentication_log>(Context);
-
+            RouteTeamInventoryAvailableRepository = new GenericRepository<so_route_team_inventory_available>(Context);
+            BranchTaxRepository = new GenericRepository<so_branch_tax>(Context);
+            ProductRepository = new GenericRepository<so_product>(Context);
+            DeliveryDetailRepository = new GenericRepository<so_delivery_detail>(Context);
+            DeliveryStatusRepository = new GenericRepository<so_delivery_status>(Context);
+            DeliveryAdditionalData = new GenericRepository<so_delivery_additional_data>(Context);
+            SaleAdditionalDataRepository = new GenericRepository<so_sale_aditional_data>(Context);
+            ProductTaxRepository = new GenericRepository<so_product_tax>(Context);
         }
 
-        private SmartOrderModel Context { get; set; }
+        public SmartOrderModel Context { get; set; }
         public GenericRepository<so_customer_additional_data> CustomerAdditionalDataRepository { get; set; }
         public GenericRepository<so_customer> CustomerRepository { get; set; }
         public GenericRepository<so_customer_removal_request> CustomerRemovalRequestRepository { get; set; }
@@ -56,13 +64,21 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_binnacle_visit> BinnacleVisitRepository { get; set; }
         public GenericRepository<so_code_place> CodePlaceRepository { get; set; }
         public GenericRepository<so_sale> SaleRepository { get; set; }
-        public GenericRepository<so_customer_products_price_list> CustomerProductPriceList { get; set; }
-        public GenericRepository<so_products_price_list> ProductPriceList { get; set; }
+        public GenericRepository<so_customer_products_price_list> CustomerProductPriceListRepository { get; set; }
+        public GenericRepository<so_products_price_list> ProductPriceListRepository { get; set; }
         public GenericRepository<so_portal_links_log> PortalLinksLogRepository { get; set; }
         public GenericRepository<so_route_team_travels_customer_blocked> RouteTeamTravelsCustomerBlocked { get; set; }
         public GenericRepository<so_work_day> WorkDayRepository { get; set; }
         public GenericRepository<so_leader_authorization_code> LeaderAuthorizationCodeRepository { get; set; }
         public GenericRepository<so_authentication_log> AuthentificationLogRepository { get; set; }
+        public GenericRepository<so_route_team_inventory_available> RouteTeamInventoryAvailableRepository { get; set; }
+        public GenericRepository<so_product_tax> ProductTaxRepository { get; set; }
+        public GenericRepository<so_branch_tax> BranchTaxRepository { get; set; }
+        public GenericRepository<so_product> ProductRepository { get; set; }
+        public GenericRepository<so_delivery_detail> DeliveryDetailRepository { get; set; }
+        public GenericRepository<so_delivery_status> DeliveryStatusRepository { get; set; }
+        public GenericRepository<so_delivery_additional_data> DeliveryAdditionalData { get; set; }
+        public GenericRepository<so_sale_aditional_data> SaleAdditionalDataRepository { get; set; }
 
         public void Save()
         {
@@ -115,5 +131,60 @@ namespace SmartOrderService.UnitOfWork
             int DrivingId = RouteTeamRepository.Get(i => i.routeId == teamRoute.routeId && i.roleTeamId == (int)ERolTeam.Impulsor).ToList().FirstOrDefault().userId;
             return DrivingId;
         }
+
+        public bool CheckInventoryAvailability(int inventoryId, int productId, int amount)
+        {
+            var inventoryTeam = RouteTeamInventoryAvailableRepository.Get(s => s.inventoryId.Equals(inventoryId)).ToList();
+            var inventoryProduct = inventoryTeam.Where(s => s.productId.Equals(productId)).FirstOrDefault();
+            if (inventoryProduct == null)
+            {
+                throw new ProductNotFoundBillingException("No se encontro el producto con el id " + productId);
+            }
+            if (amount <= inventoryProduct.Available_Amount)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public string GetCancelLinkByCustomerId(int customerId)
+        {
+            var portalLinkLogs = PortalLinksLogRepository
+                .Get(x => x.CustomerId == customerId && x.Status == (int)PortalLinks.STATUS.PENDING && x.Type == (int)PortalLinks.TYPE.EMAIL_DEACTIVATION)
+                .FirstOrDefault();
+
+            if (portalLinkLogs == null)
+            {
+                //Generar el link para cancelar el envio de correo
+                Guid id = Guid.NewGuid();
+                var cancelEmail = new so_portal_links_log
+                {
+                    CustomerId = customerId,
+                    CreatedDate = DateTime.Today,
+                    Id = id,
+                    LimitDays = 0,
+                    Status = (int)PortalLinks.STATUS.PENDING,
+                    Type = (int)PortalLinks.TYPE.EMAIL_DEACTIVATION
+                };
+
+                PortalLinksLogRepository.Insert(cancelEmail);
+
+                return ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/CancelTicketDigital/" + id;
+            }
+
+            return ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/CancelTicketDigital/" + portalLinkLogs.Id;
+        }
+
+        public ERolTeam GetUserRole(int userId)
+        {
+            so_route_team userRoleTeam = RouteTeamRepository.Get(i => i.userId == userId).FirstOrDefault();
+            if (userRoleTeam == null)
+            {
+                return ERolTeam.SinAsignar;
+            }
+            return (ERolTeam)userRoleTeam.roleTeamId;
+        }
+
+
     }
 }
