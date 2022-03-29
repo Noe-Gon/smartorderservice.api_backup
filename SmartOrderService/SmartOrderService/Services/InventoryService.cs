@@ -288,6 +288,9 @@ namespace SmartOrderService.Services
 
             }
 
+            var inventoryService = new InventoryService();
+            var response = inventoryService.LoadDeliveries(Inventories.FirstOrDefault().InventoryId);
+
             return Inventories;
 
         }
