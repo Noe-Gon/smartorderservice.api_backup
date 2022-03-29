@@ -16,6 +16,8 @@ namespace SmartOrderService.Mappers
             return new so_sale_promotion_detail() {
                 productId = model.ProductId,
                 amount = model.Amount,
+                price = Convert.ToDouble(model.price),
+                import = Decimal.ToDouble(model.Import),
                 base_price = model.base_price,
                 discount = model.discount,
                 discount_amount = model.discount_amount,

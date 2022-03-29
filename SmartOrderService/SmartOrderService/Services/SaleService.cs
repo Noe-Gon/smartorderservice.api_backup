@@ -433,6 +433,7 @@ namespace SmartOrderService.Services
                 if (inventoryService.CheckInventoryAvailability(sale.InventoryId, sale.SaleDetails[i].ProductId, sale.SaleDetails[i].Amount))
                 {
                     amountSaled = sale.SaleDetails[i].Amount;
+                    saleResult.SaleDetails.Add(saleDetailResult);
                 }
                 else
                 {
@@ -441,7 +442,6 @@ namespace SmartOrderService.Services
                     i--;
                 }
                 saleDetailResult.AmountSold = amountSaled;
-                saleResult.SaleDetails.Add(saleDetailResult);
             }
             //saleResult.SalePromotions = sale.SalePromotions;
             saleResult.SalePromotions = new List<SalePromotion>();
@@ -564,7 +564,6 @@ namespace SmartOrderService.Services
                     createdby = userId,
                     createdon = DateTime.Now,
                     modifiedon = DateTime.Now
-                    
                 };
 
                 promotions.Add(entityPromotion);
@@ -1069,14 +1068,20 @@ namespace SmartOrderService.Services
                     {
                         if (!checkIfSaleExist(sale))
                         {
-                            UnlockCreate(sale);
+                            //UnlockCreate(sale);
+                            //if (sale.SaleId == 0)
+                            //{
+                            //    throw new BadRequestException();
+                            //}
+                            saleResult.SaleId = sale.SaleId;
+                            UpdateRouteTeamInventory(sale);
+                            saleResult.SalePromotions = sale.SalePromotions;
+
+                            UnlockCreate(saleResult);
                             if (sale.SaleId == 0)
                             {
                                 throw new BadRequestException();
                             }
-                            saleResult.SaleId = sale.SaleId;
-                            UpdateRouteTeamInventory(sale);
-                            saleResult.SalePromotions = sale.SalePromotions;
                         }
 
                         transaction.Commit();
