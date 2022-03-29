@@ -8,6 +8,7 @@ using SmartOrderService.Models.Enum;
 using SmartOrderService.Models.Requests;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Web;
 
@@ -196,15 +197,33 @@ namespace SmartOrderService.Services
                 var ItemToDownload = new ControlDownloadService().createControlDownload(visit.binnacleId, UserId, ControlDownloadService.MODEL_TYPE_BINNACLE_VISIT);
 
                 db.so_control_download.Add(ItemToDownload);
-                //Aumentar el contador de visitas sin ventas 
-                var updateCustomerAdditionalData = db.so_customerr_additional_data
-                            .Where(x => x.CustomerId == dto.CustomerId)
-                            .FirstOrDefault();
-                if (updateCustomerAdditionalData != null)
-                    updateCustomerAdditionalData.CounterVisitsWithoutSales++;
 
-                db.SaveChanges();
+                //Obtener venta
+                var sale = db.so_sale
+                    .Where(x => x.status == true && x.customerId == dto.CustomerId && DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(DateTime.Now))
+                    .FirstOrDefault();
 
+                if(sale == null)
+                {
+                    //Aumentar el contador de visitas sin ventas 
+                    var updateCustomerAdditionalData = db.so_customerr_additional_data
+                                .Where(x => x.CustomerId == dto.CustomerId)
+                                .FirstOrDefault();
+                    if (updateCustomerAdditionalData != null)
+                        updateCustomerAdditionalData.CounterVisitsWithoutSales++;
+                    db.SaveChanges();
+                }
+                else
+                {
+                    //Returnar en cero
+                    var updateCustomerAdditionalData = db.so_customerr_additional_data
+                                .Where(x => x.CustomerId == dto.CustomerId)
+                                .FirstOrDefault();
+                    if (updateCustomerAdditionalData != null)
+                        updateCustomerAdditionalData.CounterVisitsWithoutSales = 0;
+                    db.SaveChanges();
+                }
+                
                 //Si es de un quipo hacer el guardado de so_reoute_team
                 ERolTeam userRole = roleTeamService.GetUserRole(visit.userId);
                 if (userRole == ERolTeam.Ayudante || userRole == ERolTeam.Impulsor)
