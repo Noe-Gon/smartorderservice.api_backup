@@ -211,7 +211,7 @@ namespace SmartOrderService.Controllers
         }
 
         [HttpPost]
-        [Route("~/delivery/status/update")]
+        [Route("~/api/delivery/status/update")]
         public IHttpActionResult UpdateDeliveryStatus(UpdateDeliveryStatus request)
         {
             try
