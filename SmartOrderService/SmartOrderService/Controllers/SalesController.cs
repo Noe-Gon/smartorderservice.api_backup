@@ -30,12 +30,6 @@ namespace SmartOrderService.Controllers
         private static SaleService objectService = new SaleService();
         SaleService service;
 
-        private static SaleTeamService saleTeamService = SaleTeamService.Create();
-        public SaleTeamService GetSaleTeamService()
-        {
-            return SaleTeamService.Create();
-        }
-
         [HttpGet,Route("api/sales/{SaleId}/Lines")]
         public HttpResponseMessage getLines(int SaleId, [FromUri] InvoiceDataDto invoiceData)
 
@@ -222,26 +216,14 @@ namespace SmartOrderService.Controllers
         // POST: api/Sales
         [ResponseType(typeof(so_sale))]
         [HttpPost, Route("api/sales/saleTeam_v2")]
-        public IHttpActionResult so_sale_team_v2(SaleTeamTransactionMessage sale)
+        public IHttpActionResult so_sale_team_v2(SaleTeam sale)
         {
             IHttpActionResult responseActionResult;
             HttpResponseMessage responseMessage;
-            SaleTeamTransactionMessage saleResult = new SaleTeamTransactionMessage();
+            SaleTeam saleResult = new SaleTeam();
             try
             {
-                //lock (objectService)
-                //{
-                //    if(sale.PaymentMethod == null)
-                //    {
-                //        responseMessage = Request.CreateResponse(HttpStatusCode.BadRequest, "El método de pago es requerido");
-                //        responseActionResult = ResponseMessage(responseMessage);
-                //        return responseActionResult;
-                //    }
-
-                //    saleResult = objectService.SaleTeamTransaction(sale);
-                //}
-
-                lock (saleTeamService)
+                lock (objectService)
                 {
                     if (sale.PaymentMethod == null)
                     {
@@ -250,7 +232,7 @@ namespace SmartOrderService.Controllers
                         return responseActionResult;
                     }
 
-                    saleResult = saleTeamService.SaleTeamTransaction(sale);
+                    saleResult = objectService.SaleTeamTransaction(sale);
                 }
 
             }

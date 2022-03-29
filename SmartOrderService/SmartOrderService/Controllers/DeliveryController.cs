@@ -14,6 +14,11 @@ namespace SmartOrderService.Controllers
 {
     public class DeliveryController : ApiController
     {
+        public DeliveryStatusService GetDeliveryStatusService()
+        {
+            return DeliveryStatusService.Create();
+        }
+
         // GET: api/Delivery
         public HttpResponseMessage Get([FromUri] DeliveryRequest request)
         {
@@ -203,6 +208,34 @@ namespace SmartOrderService.Controllers
                     e.Message
                 }));
             }
+        }
+
+        [HttpPost]
+        [Route("~/delivery/status/update")]
+        public IHttpActionResult UpdateDeliveryStatus(UpdateDeliveryStatus request)
+        {
+            try
+            {
+                using (var serivce = GetDeliveryStatusService())
+                {
+                    var response = serivce.UpdateDeliveryStatus(request);
+
+                    if (response.Status)
+                        return Content(HttpStatusCode.OK, response);
+
+                    return Content(HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    "Error del sistema", e.Message
+                });
+
+                return Content(HttpStatusCode.InternalServerError, response);
+            }
+            
         }
     }
 }

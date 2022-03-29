@@ -1236,9 +1236,6 @@ namespace SmartOrderService.Services
                             }
                         }
 
-                        if (sale.DeliveryId != 0)
-                            UpdateDeliveryStatus(sale, db);
-
                         transaction.Commit();
                     }
                 }

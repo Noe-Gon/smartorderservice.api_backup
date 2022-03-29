@@ -143,4 +143,11 @@ namespace SmartOrderService.Models.Requests
     }
 
     #endregion
+
+    #region Update Delivery Status
+    public class UpdateDeliveryStatus
+    {
+        public int SaleId { get; set; }
+    }
+    #endregion
 }
