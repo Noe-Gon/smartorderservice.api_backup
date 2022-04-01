@@ -599,6 +599,7 @@
     <Compile Include="Models\Responses\CustomerBlockedResponses.cs" />
     <Compile Include="Models\Responses\CustomerResponse.cs" />
     <Compile Include="Models\Responses\EmailResponse.cs" />
+    <Compile Include="Models\Responses\InventoryOpenResponse.cs" />
     <Compile Include="Models\Responses\InvoiceOpeFacturaResponse.cs" />
     <Compile Include="Models\Responses\MsgResponseBase.cs" />
     <Compile Include="Models\Responses\PriceResponse.cs" />

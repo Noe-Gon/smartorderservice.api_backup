@@ -12,6 +12,7 @@ using OpeCDLib.Models;
 using SmartOrderService.Models.Enum;
 using RestSharp;
 using System.Configuration;
+using SmartOrderService.Models.Responses;
 
 namespace SmartOrderService.Services
 {
@@ -631,6 +632,25 @@ namespace SmartOrderService.Services
                     }
                 }
             }
+        }
+
+        public InventoryOpenResponse isInventoryOpen(int inventoryId)
+        {
+            var inventory = db.so_inventory.Where(x => x.inventoryId == inventoryId && x.state == INVENTORY_OPEN).FirstOrDefault();
+
+            if (inventory != null)
+            {
+                return new InventoryOpenResponse
+                {
+                    InventoryId = inventoryId,
+                    IsOpen = true
+                };
+            }
+            return new InventoryOpenResponse
+            {
+                InventoryId = inventoryId,
+                IsOpen = false
+            };
         }
 
         private so_inventory GetCurrentInventory(int userId)
