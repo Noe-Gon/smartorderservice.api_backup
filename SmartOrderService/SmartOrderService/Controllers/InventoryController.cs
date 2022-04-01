@@ -197,7 +197,7 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
-        [HttpPost, Route("api/inventory/isInventoryOpen")]
+        [HttpGet, Route("api/inventory/isInventoryOpen")]
         public HttpResponseMessage isInventoryOpen([FromUri] int inventoryId)
         {
             HttpResponseMessage response;
