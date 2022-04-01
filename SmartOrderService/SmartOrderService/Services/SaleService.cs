@@ -1078,7 +1078,7 @@ namespace SmartOrderService.Services
                             saleResult.SalePromotions = sale.SalePromotions;
 
                             UnlockCreate(saleResult);
-                            if (sale.SaleId == 0)
+                            if (saleResult.SaleId == 0)
                             {
                                 throw new BadRequestException();
                             }
