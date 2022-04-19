@@ -42,6 +42,34 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
+        [HttpGet]
+        [Route("~/api/CustomersWithVario")]
+        public HttpResponseMessage GetCustomer([FromUri] CustomerWithVarioRequest request)
+        {
+            HttpResponseMessage response;
+            try
+            {
+
+                var Customers = new CustomerService().FindCustomersWithVario(request);
+                response = Request.CreateResponse(HttpStatusCode.OK, Customers);
+            }
+            catch (CustomerNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.NotFound, "Error: " + e.Message);
+            }
+            catch (InventoryEmptyException)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, "Error: no se han cargado los clientes a visitar en el recorrido, no hay inventario del día");
+            }
+
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, "Error: " + e.Message);
+            }
+
+            return response;
+        }
+
         [HttpGet, Route("api/Customer/Data/GetByRoute/{RouteId}")]
         public HttpResponseMessage GetDataByRoute(int RouteId)
         {
