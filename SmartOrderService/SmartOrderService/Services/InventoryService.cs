@@ -207,7 +207,15 @@ namespace SmartOrderService.Services
             }
             if (userTeamRole == ERolTeam.Ayudante)
             {
-                RecordRouteTeamTravelStatus(userId, inventoryId);
+                using (var dbContextTransaction = db.Database.BeginTransaction())
+                {
+                    RecordRouteTeamTravelStatus(userId, inventoryId);
+                    var inventoryOpen = isInventoryOpen(inventoryId, userId);
+                    if (!inventoryOpen.IsOpen)
+                    {
+                        dbContextTransaction.Rollback();
+                    }
+                }
             }
         }
 
