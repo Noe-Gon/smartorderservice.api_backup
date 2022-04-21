@@ -79,11 +79,24 @@ namespace SmartOrderService.Services
                     status = true,
                 };
 
+                var stringColonia = "";
+                if (request.Neighborhood.HasValue)
+                    stringColonia = ", " + UoWCRM.ColoniasRepository
+                        .Get(x => x.Ope_coloniaId == request.Neighborhood)
+                        .Select(x => x.Ope_name).FirstOrDefault();
+
+                var stringMunicipio = "";
+                if (request.MunicipalityId.HasValue)
+                    stringMunicipio = ", " + UoWCRM.MunicipiosRepository
+                        .Get(x => x.Ope_municipioId == request.MunicipalityId)
+                        .Select(x => x.Ope_name).FirstOrDefault();
+
                 string address = "";
                 address += string.IsNullOrEmpty(request.Street) ? "" : "C." + request.Street;
                 address += string.IsNullOrEmpty(request.ExternalNumber) ? "" : " #" + request.ExternalNumber;
                 address += string.IsNullOrEmpty(request.Crossroads) ? "" : " X " + request.Crossroads;
                 address += string.IsNullOrEmpty(request.Crossroads_2) ? "" : " Y " + request.Crossroads_2;
+                address += stringColonia + stringMunicipio;
                 newCustomer.address = address;
 
                 var newCustomerAdditionalData = new so_customer_additional_data
@@ -405,13 +418,25 @@ namespace SmartOrderService.Services
 
                     UoWConsumer.CustomerDataRepository.Update(updateCustomerData);
                 }
-                
+
+                var stringColonia = "";
+                if (request.Neighborhood.HasValue)
+                    stringColonia = ", " + UoWCRM.ColoniasRepository
+                        .Get(x => x.Ope_coloniaId == request.Neighborhood)
+                        .Select(x => x.Ope_name).FirstOrDefault();
+
+                var stringMunicipio = "";
+                if (request.MunicipalityId.HasValue)
+                    stringMunicipio = ", " + UoWCRM.MunicipiosRepository
+                        .Get(x => x.Ope_municipioId == request.MunicipalityId)
+                        .Select(x => x.Ope_name).FirstOrDefault();
 
                 string address = "";
                 address += string.IsNullOrEmpty(request.Street) ? updateCustomerData.address_street : "C." + request.Street;
                 address += string.IsNullOrEmpty(request.ExternalNumber) ? updateCustomerData.address_number : " #" + request.ExternalNumber;
                 address += string.IsNullOrEmpty(request.Crossroads) ? updateCustomerData.address_number_cross1 : " X " + request.Crossroads;
                 address += string.IsNullOrEmpty(request.Crossroads_2) ? updateCustomerData.address_number_cross2 : " Y " + request.Crossroads_2;
+                address += stringColonia + stringMunicipio;
                 updateCustomer.address = address;
 
                 //Ágregar y eliminar dias
