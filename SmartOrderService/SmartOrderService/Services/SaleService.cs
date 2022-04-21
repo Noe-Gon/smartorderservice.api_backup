@@ -313,7 +313,6 @@ namespace SmartOrderService.Services
                 entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
                 SetTaxes(entitySale);
                 sale.SaleId = UntransactionalSaveSale(entitySale);
-
             }
             else
             {
@@ -406,47 +405,73 @@ namespace SmartOrderService.Services
 
         public Sale CreateSaleResultFromSale(Sale sale)
         {
-                RoleTeamService roleTeamService = new RoleTeamService();
-                ERolTeam userRole = roleTeamService.GetUserRole(sale.UserId);
-                if (userRole == ERolTeam.SinAsignar)
-                {
-                    return sale;
-                }
-                SaleDetailResultService saleDetailResultService = new SaleDetailResultService();
-                InventoryService inventoryService = new InventoryService();
-                Sale saleResult = new Sale();
-                saleResult.UserId = sale.UserId;
-                saleResult.TotalCash = sale.TotalCash;
-                saleResult.SaleId = sale.SaleId;
-                saleResult.TotalCredit = sale.TotalCredit;
-                saleResult.CustomerTag = sale.CustomerTag;
-                saleResult.InventoryId = sale.InventoryId;
-                saleResult.Date = sale.Date;
-                saleResult.CustomerId = sale.CustomerId;
-                saleResult.DeliveryId = sale.DeliveryId;
-                saleResult.SaleDetails = new List<SaleDetail>();
-            for (int i = 0; i < sale.SaleDetails.Count(); i++)
-                {
-                    int amountSaled = 0;
-                    SaleDetailResult saleDetailResult = new SaleDetailResult(sale.SaleDetails[i]);
+            RoleTeamService roleTeamService = new RoleTeamService();
+            ERolTeam userRole = roleTeamService.GetUserRole(sale.UserId);
+            if (userRole == ERolTeam.SinAsignar)
+            {
+                return sale;
+            }
+            SaleDetailResultService saleDetailResultService = new SaleDetailResultService();
+            InventoryService inventoryService = new InventoryService();
+            Sale saleResult = new Sale();
+            saleResult.UserId = sale.UserId;
+            saleResult.TotalCash = sale.TotalCash;
+            saleResult.SaleId = sale.SaleId;
+            saleResult.TotalCredit = sale.TotalCredit;
+            saleResult.CustomerTag = sale.CustomerTag;
+            saleResult.InventoryId = sale.InventoryId;
+            saleResult.Date = sale.Date;
+            saleResult.CustomerId = sale.CustomerId;
+            saleResult.DeliveryId = sale.DeliveryId;
+            saleResult.SaleDetails = new List<SaleDetail>();
 
-                    if (inventoryService.CheckInventoryAvailability(sale.InventoryId, sale.SaleDetails[i].ProductId, sale.SaleDetails[i].Amount))
+            for (int i = 0; i < sale.SaleDetails.Count(); i++)
+            {
+                int amountSaled = 0;
+                SaleDetailResult saleDetailResult = new SaleDetailResult(sale.SaleDetails[i]);
+
+                if (inventoryService.CheckInventoryAvailability(sale.InventoryId, sale.SaleDetails[i].ProductId, sale.SaleDetails[i].Amount))
+                {
+                    amountSaled = sale.SaleDetails[i].Amount;
+                    saleResult.SaleDetails.Add(saleDetailResult);
+                }
+                else
+                {
+                    sale.TotalCash -= Decimal.ToDouble(sale.SaleDetails[i].Import);
+                    sale.SaleDetails.RemoveAt(i);
+                    i--;
+                }
+                saleDetailResult.AmountSold = amountSaled;
+            }
+            //saleResult.SalePromotions = sale.SalePromotions;
+            saleResult.SalePromotions = new List<SalePromotion>();
+            for (int i = 0; i < sale.SalePromotions.Count(); i++)
+            {
+                int amountSaled = 0;
+                SalePromotion salePromotionResult = new SalePromotion(sale.SalePromotions[i]);
+
+                List<SalePromotionDetailProduct> promotionProducts = salePromotionResult.DetailProduct;
+
+                for (int j = 0; j < sale.SalePromotions[i].DetailProduct.Count(); j++)
+                {
+                    if (inventoryService.CheckInventoryAvailability(sale.InventoryId, promotionProducts[j].ProductId, promotionProducts[j].Amount))
                     {
-                        amountSaled = sale.SaleDetails[i].Amount;
+                        amountSaled += promotionProducts[j].Amount;
                     }
                     else
                     {
-                        sale.TotalCash -= Decimal.ToDouble(sale.SaleDetails[i].Import);
-                        sale.SaleDetails.RemoveAt(i);
-                        i--;
+                        salePromotionResult.DetailProduct[j].Amount = 0;
+                        sale.TotalCash -= Decimal.ToDouble(promotionProducts[j].Import);
+                        sale.SalePromotions[i].DetailProduct.RemoveAt(j);
+                        j--;
                     }
-                    saleDetailResult.AmountSold = amountSaled;
-                    saleResult.SaleDetails.Add(saleDetailResult);
                 }
-                saleResult.TotalCash = Math.Round(sale.TotalCash, 3);
-                saleResult.SaleReplacements = sale.SaleReplacements;
-                saleResult.SalePromotions = sale.SalePromotions;
-                return saleResult;
+                salePromotionResult.Amount = amountSaled;
+                saleResult.SalePromotions.Add(salePromotionResult);
+            }
+            saleResult.TotalCash = Math.Round(sale.TotalCash, 3);
+            saleResult.SaleReplacements = sale.SaleReplacements;
+            return saleResult;
         }
 
         public SaleTeam CreateSaleResultFromSale(SaleTeam sale)
@@ -539,7 +564,6 @@ namespace SmartOrderService.Services
                     createdby = userId,
                     createdon = DateTime.Now,
                     modifiedon = DateTime.Now
-                    
                 };
 
                 promotions.Add(entityPromotion);
@@ -1040,21 +1064,33 @@ namespace SmartOrderService.Services
                 Sale saleResult = CreateSaleResultFromSale(sale);
                 try
                 {
-                    if (sale.SaleDetails.Count() > 0)
+                    if (sale.SaleDetails.Count() > 0 || sale.SalePromotions.Count > 0)
                     {
                         if (!checkIfSaleExist(sale))
                         {
-                            UnlockCreate(sale);
-                            if (sale.SaleId == 0)
+                            //UnlockCreate(sale);
+                            //if (sale.SaleId == 0)
+                            //{
+                            //    throw new BadRequestException();
+                            //}
+                            saleResult.SaleId = sale.SaleId;
+                            UpdateRouteTeamInventory(sale);
+                            saleResult.SalePromotions = sale.SalePromotions;
+
+                            UnlockCreate(saleResult);
+                            if (saleResult.SaleId == 0)
                             {
                                 throw new BadRequestException();
                             }
-                            saleResult.SaleId = sale.SaleId;
-                            UpdateRouteTeamInventory(sale);
                         }
 
                         transaction.Commit();
                     }
+                }
+                catch (EmptySaleException exception)
+                {
+                    transaction.Rollback();
+                    throw exception;
                 }
                 catch (Exception exception)
                 {

@@ -18,7 +18,14 @@ namespace SmartOrderService.Services
 
             var InventoryDeliveries = db.so_delivery.Where(d => d.inventoryId == InventoryId && d.status);
 
-            var so_user = db.so_inventory.Where(i => i.inventoryId == InventoryId && i.status).FirstOrDefault().so_user;
+            var inventoryAvailable = db.so_inventory.Where(i => i.inventoryId == InventoryId && i.state != 2 && i.status).FirstOrDefault();
+
+            if (inventoryAvailable == null)
+            {
+                throw new InventoryNotOpenException("El inventario se encuentra cerrado");
+            }
+
+            var so_user = inventoryAvailable.so_user;
 
 
             if ((!InventoryDeliveries.Any() || InventoryDeliveries.Count() == 0)&& so_user.type != so_user.CCEH_TYPE && so_user.type != so_user.POAC_TYPE)

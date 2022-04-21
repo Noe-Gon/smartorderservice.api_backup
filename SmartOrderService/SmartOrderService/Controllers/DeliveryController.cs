@@ -31,6 +31,10 @@ namespace SmartOrderService.Controllers
                 response = Request.CreateResponse(HttpStatusCode.Conflict, "No hay entregas para ese inventario");
 
             }
+            catch (InventoryNotOpenException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+            }
             catch (Exception e)
             {
                 response = Request.CreateResponse(HttpStatusCode.InternalServerError, "upss, lo arreglaremos...");
