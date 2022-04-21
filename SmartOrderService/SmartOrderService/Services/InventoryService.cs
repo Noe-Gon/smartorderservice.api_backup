@@ -215,6 +215,10 @@ namespace SmartOrderService.Services
                     {
                         dbContextTransaction.Rollback();
                     }
+                    else
+                    {
+                        dbContextTransaction.Commit();
+                    }
                 }
             }
         }
