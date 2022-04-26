@@ -273,8 +273,8 @@ namespace SmartOrderService.Services
             var requestConfig = new RestRequest("/AuthenticateUser", Method.POST);
             requestConfig.RequestFormat = DataFormat.Json;
 
-            requestConfig.AddParameter("username", "usrbepensa");
-            requestConfig.AddParameter("password", "8Aksl8Hh8");
+            requestConfig.AddParameter("username", ConfigurationManager.AppSettings["wsempleadosUSER"]);
+            requestConfig.AddParameter("password", ConfigurationManager.AppSettings["wsempleadosPASSWORD"]);
             requestConfig.AddHeader("Content-Type", "application/x-www-form-urlencoded");
 
             var RestResponse = client.Execute(requestConfig);

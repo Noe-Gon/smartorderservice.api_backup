@@ -208,7 +208,19 @@ namespace SmartOrderService.Services
             }
             if (userTeamRole == ERolTeam.Ayudante)
             {
-                RecordRouteTeamTravelStatus(userId, inventoryId);
+                using (var dbContextTransaction = db.Database.BeginTransaction())
+                {
+                    RecordRouteTeamTravelStatus(userId, inventoryId);
+                    var inventoryOpen = isInventoryOpen(inventoryId, userId);
+                    if (!inventoryOpen.IsOpen)
+                    {
+                        dbContextTransaction.Rollback();
+                    }
+                    else
+                    {
+                        dbContextTransaction.Commit();
+                    }
+                }
             }
         }
 
@@ -831,6 +843,46 @@ namespace SmartOrderService.Services
                         throw new Exception(e.Message);
                     }
                 }
+            }
+        }
+
+        public InventoryOpenResponse isInventoryOpen(int inventoryId, int userId)
+        {
+            ERolTeam userTeamRole = roleTeamService.GetUserRole(userId);
+            RouteTeamInventoryAvailableService routeTeamInventoryAvailable = new RouteTeamInventoryAvailableService();
+            if (userTeamRole == ERolTeam.Impulsor)
+            {
+                var inventory = db.so_inventory.Where(x => x.inventoryId == inventoryId && (x.state == INVENTORY_OPEN || x.state == INVENTORY_AVAILABLE)).FirstOrDefault();
+                if (inventory != null)
+                {
+                    return new InventoryOpenResponse
+                    {
+                        InventoryId = inventoryId,
+                        IsOpen = true
+                    };
+                }
+                return new InventoryOpenResponse
+                {
+                    InventoryId = inventoryId,
+                    IsOpen = false
+                };
+            }
+            else//Rol de ayudante
+            {
+                var inventory = db.so_inventory.Where(x => x.inventoryId == inventoryId && (x.state == INVENTORY_OPEN)).FirstOrDefault();
+                if (inventory != null)
+                {
+                    return new InventoryOpenResponse
+                    {
+                        InventoryId = inventoryId,
+                        IsOpen = true
+                    };
+                }
+                return new InventoryOpenResponse
+                {
+                    InventoryId = inventoryId,
+                    IsOpen = false
+                };
             }
         }
 
