@@ -37,6 +37,7 @@ namespace SmartOrderService.Services
         {
             try
             {
+                var defaultGuid = new Guid("00000000-0000-0000-0000-000000000000");
                 var route = UoWConsumer.RouteRepository
                     .GetByID(request.RouteId);
 
@@ -78,11 +79,24 @@ namespace SmartOrderService.Services
                     status = true,
                 };
 
+                var stringColonia = "";
+                if (request.Neighborhood.HasValue)
+                    stringColonia = ", " + UoWCRM.ColoniasRepository
+                        .Get(x => x.Ope_coloniaId == request.Neighborhood)
+                        .Select(x => x.Ope_name).FirstOrDefault();
+
+                var stringMunicipio = "";
+                if (request.MunicipalityId.HasValue)
+                    stringMunicipio = ", " + UoWCRM.MunicipiosRepository
+                        .Get(x => x.Ope_municipioId == request.MunicipalityId)
+                        .Select(x => x.Ope_name).FirstOrDefault();
+
                 string address = "";
                 address += string.IsNullOrEmpty(request.Street) ? "" : "C." + request.Street;
                 address += string.IsNullOrEmpty(request.ExternalNumber) ? "" : " #" + request.ExternalNumber;
                 address += string.IsNullOrEmpty(request.Crossroads) ? "" : " X " + request.Crossroads;
                 address += string.IsNullOrEmpty(request.Crossroads_2) ? "" : " Y " + request.Crossroads_2;
+                address += stringColonia + stringMunicipio;
                 newCustomer.address = address;
 
                 var newCustomerAdditionalData = new so_customer_additional_data
@@ -98,7 +112,7 @@ namespace SmartOrderService.Services
                     CodePlaceId = request.CodePlace,
                     CounterVisitsWithoutSales = 0,
                     InteriorNumber = request.InteriorNumber,
-                    NeighborhoodId = request.Neighborhood,
+                    NeighborhoodId = request.Neighborhood == null || request.Neighborhood == defaultGuid ? null : request.Neighborhood,
                     ReferenceCode = request.ReferenceCode
                 };
 
@@ -145,7 +159,7 @@ namespace SmartOrderService.Services
                         "No hay usuarios para esa ruta"
                     });
 
-                var productPriceListId = UoWConsumer.CustomerProductPriceList
+                var productPriceListId = UoWConsumer.CustomerProductPriceListRepository
                     .Get(x => customerIds.Contains(x.customerId))
                     .Select(x => x.products_price_listId)
                     .FirstOrDefault();
@@ -161,7 +175,7 @@ namespace SmartOrderService.Services
                     status = true
                 };
 
-                UoWConsumer.CustomerProductPriceList.Insert(newCustomerProductPriceList);
+                UoWConsumer.CustomerProductPriceListRepository.Insert(newCustomerProductPriceList);
 
                 //Generar el link para cancelar el envio de correo
                 Guid id = Guid.NewGuid();
@@ -209,10 +223,10 @@ namespace SmartOrderService.Services
                     Email = newCustomer.email,
                     Phone = newCustomerAdditionalData.Phone,
                     CFECode = newCustomer.code,
-                    CountryId = request.CountryId,
-                    StateId = request.StateId,
-                    MunicipalityId = request.MunicipalityId,
-                    Neighborhood = newCustomerAdditionalData.NeighborhoodId,
+                    CountryId = request.CountryId == null || request.CountryId == defaultGuid ? null : request.CountryId,
+                    StateId = request.StateId == null || request.StateId == defaultGuid ? null : request.StateId,
+                    MunicipalityId = request.MunicipalityId == null || request.MunicipalityId == defaultGuid ? null : request.MunicipalityId,
+                    Neighborhood = newCustomerAdditionalData.NeighborhoodId == null || newCustomerAdditionalData.NeighborhoodId == defaultGuid ? null : newCustomerAdditionalData.NeighborhoodId,
                     InteriorNumber = newCustomerAdditionalData.InteriorNumber,
                     ExternalNumber = newCustomerData.address_number,
                     Crossroads = newCustomerData.address_number_cross1,
@@ -278,9 +292,44 @@ namespace SmartOrderService.Services
         {
             try
             {
-                var updateCustomer = UoWConsumer.CustomerRepository
-                    .Get(x => x.customerId == request.CustomerId && x.status)
-                    .FirstOrDefault();
+                var defaultGuid = new Guid("00000000-0000-0000-0000-000000000000");
+                
+                so_customer updateCustomer;
+
+                if (request.OriginalCustomerId == null || request.OriginalCustomerId == 0)
+                    updateCustomer = UoWConsumer.CustomerRepository
+                        .Get(x => x.customerId == request.CustomerId && x.status)
+                        .FirstOrDefault();
+                else
+                {
+                    updateCustomer = UoWConsumer.CustomerRepository
+                        .Get(x => x.customerId == request.OriginalCustomerId && x.status)
+                        .FirstOrDefault();
+
+                    if (updateCustomer == null)
+                        return ResponseBase<UpdateConsumerResponse>
+                        .Create(new List<string>() { "No se encontró al cliente: " + request.OriginalCustomerId });
+
+                    so_customer deleteCustomer = UoWConsumer.CustomerRepository
+                        .Get(x => x.customerId == x.customerId)
+                        .FirstOrDefault();
+
+                    if (deleteCustomer == null)
+                        return ResponseBase<UpdateConsumerResponse>
+                        .Create(new List<string>() { "No se encontró al cliente: " + request.CustomerId });
+
+                    //Se actualiza los deliveries
+                    var deliveries = UoWConsumer.DeliveryRepository
+                        .Get(x => x.customerId == deleteCustomer.customerId);
+
+                    foreach (var delivery in deliveries)
+                    {
+                        delivery.customerId = updateCustomer.customerId;
+                    }
+
+                    UoWConsumer.DeliveryRepository.UpdateByRange(deliveries);
+                    UoWConsumer.CustomerRepository.Delete(deleteCustomer);
+                }
 
                 if (updateCustomer == null)
                     return ResponseBase<UpdateConsumerResponse>.Create(new List<string>()
@@ -293,7 +342,8 @@ namespace SmartOrderService.Services
                    .FirstOrDefault();
 
                 if (existCustomer != null)
-                    throw new DuplicateEntityException("Ya existe un consumidor con ese CFE");
+                    if(existCustomer.customerId != request.CustomerId)
+                        throw new DuplicateEntityException("Ya existe un consumidor con ese CFE");
 
                 var route = UoWConsumer.RouteRepository
                     .GetByID(request.RouteId);
@@ -344,7 +394,7 @@ namespace SmartOrderService.Services
                         CodePlaceId = request.CodePlace,
                         CounterVisitsWithoutSales = 0,
                         InteriorNumber = request.InteriorNumber,
-                        NeighborhoodId = request.Neighborhood,
+                        NeighborhoodId = request.Neighborhood == null || request.Neighborhood == defaultGuid ? null : request.Neighborhood,
                         ReferenceCode = request.ReferenceCode,
                         Code = null
                     };
@@ -402,13 +452,25 @@ namespace SmartOrderService.Services
 
                     UoWConsumer.CustomerDataRepository.Update(updateCustomerData);
                 }
-                
+
+                var stringColonia = "";
+                if (request.Neighborhood.HasValue)
+                    stringColonia = ", " + UoWCRM.ColoniasRepository
+                        .Get(x => x.Ope_coloniaId == request.Neighborhood)
+                        .Select(x => x.Ope_name).FirstOrDefault();
+
+                var stringMunicipio = "";
+                if (request.MunicipalityId.HasValue)
+                    stringMunicipio = ", " + UoWCRM.MunicipiosRepository
+                        .Get(x => x.Ope_municipioId == request.MunicipalityId)
+                        .Select(x => x.Ope_name).FirstOrDefault();
 
                 string address = "";
                 address += string.IsNullOrEmpty(request.Street) ? updateCustomerData.address_street : "C." + request.Street;
                 address += string.IsNullOrEmpty(request.ExternalNumber) ? updateCustomerData.address_number : " #" + request.ExternalNumber;
                 address += string.IsNullOrEmpty(request.Crossroads) ? updateCustomerData.address_number_cross1 : " X " + request.Crossroads;
                 address += string.IsNullOrEmpty(request.Crossroads_2) ? updateCustomerData.address_number_cross2 : " Y " + request.Crossroads_2;
+                address += stringColonia + stringMunicipio;
                 updateCustomer.address = address;
 
                 //Ágregar y eliminar dias
@@ -451,10 +513,10 @@ namespace SmartOrderService.Services
                     Email = updateCustomer.email,
                     Phone = customerAdditionalDateAux.Phone,
                     CFECode = updateCustomer.code,
-                    CountryId = request.CountryId,
-                    StateId = request.StateId,
-                    MunicipalityId = request.MunicipalityId,
-                    Neighborhood = customerAdditionalDateAux.NeighborhoodId,
+                    CountryId = request.CountryId == null || request.CountryId == defaultGuid ? null : request.CountryId,
+                    StateId = request.StateId == null || request.StateId == defaultGuid ? null : request.StateId,
+                    MunicipalityId = request.MunicipalityId == null || request.MunicipalityId == defaultGuid ? null : request.MunicipalityId,
+                    Neighborhood = customerAdditionalDateAux.NeighborhoodId == null || customerAdditionalDateAux.NeighborhoodId == defaultGuid ? null : customerAdditionalDateAux.NeighborhoodId,
                     InteriorNumber = customerAdditionalDateAux.InteriorNumber,
                     ExternalNumber = updateCustomerData.address_number,
                     Crossroads = updateCustomerData.address_number_cross1,
@@ -590,6 +652,7 @@ namespace SmartOrderService.Services
         {
             try
             {
+                var defualtGuid = new Guid("00000000-0000-0000-0000-000000000000");
                 var soUser = UoWConsumer.UserRepository.Get(u => u.userId == request.userId).FirstOrDefault();
                 int day = (int)DateTime.Today.DayOfWeek;
                 day++;
@@ -712,6 +775,14 @@ namespace SmartOrderService.Services
                         dto.StateId = ubication.StateId;
                         dto.CountryId = ubication.CountryId;
                         dto.TownId = ubication.TownId;
+                    }
+                    //Asignar valores default a las colonias
+                    if(customerAdditionalData == null ? false : customerAdditionalData.NeighborhoodId == null)
+                    {
+                        dto.Neighborhood = defualtGuid;
+                        dto.StateId = defualtGuid;
+                        dto.CountryId = defualtGuid;
+                        dto.TownId = defualtGuid;
                     }
 
                     visits.Add(dto);
@@ -881,6 +952,12 @@ namespace SmartOrderService.Services
                         Name = x.Ope_name
                     }).ToList();
 
+                countries.Insert(0, new GetCountriesResponse()
+                {
+                    Id = new Guid("00000000-0000-0000-0000-000000000000"),
+                    Name = "Por asignar"
+                });
+
                 return ResponseBase<List<GetCountriesResponse>>.Create(countries);
             }
             catch (Exception e)
@@ -909,6 +986,12 @@ namespace SmartOrderService.Services
                 Name = x.Ope_name
             }).ToList();
 
+            states.Insert(0, new GetStatesResponse()
+            {
+                Id = new Guid("00000000-0000-0000-0000-000000000000"),
+                Name = "Por asignar"
+            });
+
             return ResponseBase<List<GetStatesResponse>>.Create(states);
         }
 
@@ -934,6 +1017,12 @@ namespace SmartOrderService.Services
                     Id = x.Ope_municipioId,
                     Name = x.Ope_name
                 }).ToList();
+
+            towns.Insert(0, new GetMunicipalitiesResponse()
+            {
+                Id = new Guid("00000000-0000-0000-0000-000000000000"),
+                Name = "Por asignar"
+            });
 
             return ResponseBase<List<GetMunicipalitiesResponse>>.Create(towns);
         }
@@ -967,6 +1056,12 @@ namespace SmartOrderService.Services
                     Name = x.Ope_name
                 })
                 .ToList();
+
+            colonias.Insert(0, new GetNeighborhoodsResponse()
+            {
+                Id = new Guid("00000000-0000-0000-0000-000000000000"),
+                Name = "Por asignar"
+            });
 
             return ResponseBase<List<GetNeighborhoodsResponse>>.Create(colonias);
         }

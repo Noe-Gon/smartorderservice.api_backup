@@ -26,4 +26,9 @@ namespace SmartOrderService.Models.Responses
         public T Data { get; set; }
         public List<string> Errors { get; set; }
     }
+
+    public class MsgResponseBase
+    {
+        public string Msg { get; set; }
+    }
 }

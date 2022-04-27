@@ -36,6 +36,7 @@ namespace SmartOrderService.Models.Requests
     {
         public int UserId { get; set; }
         public int CustomerId { get; set; }
+        public int? OriginalCustomerId { get; set; }
         public int RouteId { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }

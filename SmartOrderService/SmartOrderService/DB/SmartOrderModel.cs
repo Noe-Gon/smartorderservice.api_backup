@@ -165,6 +165,10 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_promotion_article_movement> so_promotion_article_movement { get; set; }
 
         public virtual DbSet<so_article_promotional_route> so_article_promotional_route { get; set; }
+        public virtual DbSet<so_delivery_status> so_delivery_status { get; set; }
+        public virtual DbSet<so_order> so_order { get; set; }
+        public virtual DbSet<so_order_detail> so_order_detail { get; set; }
+        public virtual DbSet<so_delivery_additional_data> so_delivery_additional_data { get; set; }
         public virtual DbSet<Configuracion_WorkByCloud> Configuracion_WorkByCloud { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)

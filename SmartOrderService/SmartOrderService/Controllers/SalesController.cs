@@ -19,6 +19,7 @@ using SmartOrderService.Utils;
 using SmartOrderService.Models.DTO;
 using Newtonsoft.Json;
 using System.Text;
+using SmartOrderService.Models.Message;
 
 namespace SmartOrderService.Controllers
 {
@@ -84,7 +85,7 @@ namespace SmartOrderService.Controllers
         }
 
         // GET: api/Sales
-        public HttpResponseMessage Getso_sale([FromUri ]SaleRequest request)
+        public HttpResponseMessage Getso_sale([FromUri]SaleRequest request)
         {
             HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.NoContent);
          
@@ -199,6 +200,12 @@ namespace SmartOrderService.Controllers
             {
                 return BadRequest();
             }
+            catch (EmptySaleException e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
+            }
             catch (Exception e)
             {
                 responseMessage = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
@@ -224,7 +231,7 @@ namespace SmartOrderService.Controllers
             {
                 lock (objectService)
                 {
-                    if(sale.PaymentMethod == null)
+                    if (sale.PaymentMethod == null)
                     {
                         responseMessage = Request.CreateResponse(HttpStatusCode.BadRequest, "El método de pago es requerido");
                         responseActionResult = ResponseMessage(responseMessage);
@@ -233,6 +240,7 @@ namespace SmartOrderService.Controllers
 
                     saleResult = objectService.SaleTeamTransaction(sale);
                 }
+
             }
             catch (ProductNotFoundBillingException e)
             {
@@ -243,6 +251,12 @@ namespace SmartOrderService.Controllers
             catch (BadRequestException e)
             {
                 return BadRequest();
+            }
+            catch (ApiPreventaException e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.MethodNotAllowed, e.Message);
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
             }
             catch (Exception e)
             {

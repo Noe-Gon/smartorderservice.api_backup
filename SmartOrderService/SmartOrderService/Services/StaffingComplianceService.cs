@@ -112,6 +112,9 @@ namespace SmartOrderService.Services
 
                     if (impulsorId == null)
                     {
+                        return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
+                        {
+                        });
                         throw new NoUserFoundException("No se encontró al impulsor en WBC. Revisar que exista el impulsor en la ruta por medio de la tabla so_route_team");
                     }
 
@@ -119,16 +122,21 @@ namespace SmartOrderService.Services
                         .Get(x => x.userId == impulsorId);
                     if (isWorkDayActive == null)
                     {
+                        return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
+                        {
+                        });
                         throw new WorkdayNotFoundException("No se encontró el Work Day del impulsor.");
                     }
 
-                    //Buscar si ya inicio un Impulsor
+
                     var impulsor = UoWConsumer.AuthentificationLogRepository
                         .Get(x => !x.WasLeaderCodeAuthorization && DbFunctions.TruncateTime(x.CreatedDate) == DbFunctions.TruncateTime(DateTime.Now) 
                                     && x.UserId == impulsorId && x.RouteId == request.RouteId)
                         .FirstOrDefault();
                     if (impulsor != null)
                     {
+                        //Lógica del fallo con el registro en tripulacs
+                        inTripulacs = true;
                         var impulsorCode = impulsor.UserCode;
                         requestNotify.auxiliarid = Convert.ToInt32(request.EmployeeCode);
                         requestNotify.impulsorId = Convert.ToInt32(impulsorCode);
@@ -271,8 +279,8 @@ namespace SmartOrderService.Services
             var requestConfig = new RestRequest("/AuthenticateUser", Method.POST);
             requestConfig.RequestFormat = DataFormat.Json;
 
-            requestConfig.AddParameter("username", "usrbepensa");
-            requestConfig.AddParameter("password", "8Aksl8Hh8");
+            requestConfig.AddParameter("username", ConfigurationManager.AppSettings["wsempleadosUSER"]);
+            requestConfig.AddParameter("password", ConfigurationManager.AppSettings["wsempleadosPASSWORD"]);
             requestConfig.AddHeader("Content-Type", "application/x-www-form-urlencoded");
 
             var RestResponse = client.Execute(requestConfig);
