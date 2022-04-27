@@ -1851,8 +1851,8 @@ namespace SmartOrderService.DB
                 .HasForeignKey(x => x.saleId);
 
             var deliveryStatus = modelBuilder.Entity<so_delivery_status>();
-            deliveryStatus.HasKey(x => x.Id);
-            deliveryStatus.Property(x => x.Id).IsRequired().HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            deliveryStatus.HasKey(x => x.deliveryStatusId);
+            deliveryStatus.Property(x => x.deliveryStatusId).IsRequired().HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
 
             modelBuilder.Entity<so_delivery>()
                 .HasOptional(x => x.so_delivery_additional_data)

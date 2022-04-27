@@ -38,7 +38,6 @@ namespace SmartOrderService.UnitOfWork
             WorkDayRepository = new GenericRepository<so_work_day>(Context);
             RouteCustomerVarioRepository = new GenericRepository<so_route_customer_vario>(Context);
             ProductBottleRepository = new GenericRepository<so_product_bottle>(Context);
-            ProductRepository = new GenericRepository<so_product>(Context);
             SaleDetailRepository = new GenericRepository<so_sale_detail>(Context);
             LiquidationLogRepository = new GenericRepository<so_liquidation_log>(Context);
             LiquidationLogStatusRepository = new GenericRepository<so_liquidation_log_status>(Context);
@@ -85,6 +84,12 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_product> ProductRepository { get; set; }
         public GenericRepository<so_inventory> InventoryRepository { get; set; }
         public GenericRepository<so_route_team_inventory_available> RouteTeamInventoryAvailableRepository { get; set; }
+        public GenericRepository<so_product_tax> ProductTaxRepository { get; set; }
+        public GenericRepository<so_branch_tax> BranchTaxRepository { get; set; }
+        public GenericRepository<so_delivery_detail> DeliveryDetailRepository { get; set; }
+        public GenericRepository<so_delivery_status> DeliveryStatusRepository { get; set; }
+        public GenericRepository<so_delivery_additional_data> DeliveryAdditionalData { get; set; }
+        public GenericRepository<so_sale_aditional_data> SaleAdditionalDataRepository { get; set; }
         public GenericRepository<so_sale_detail> SaleDetailRepository { get; set; }
         public GenericRepository<so_liquidation_log> LiquidationLogRepository { get; set; }
         public GenericRepository<so_liquidation_log_status> LiquidationLogStatusRepository { get; set; }
