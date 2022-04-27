@@ -1854,10 +1854,9 @@ namespace SmartOrderService.DB
             deliveryStatus.HasKey(x => x.Id);
             deliveryStatus.Property(x => x.Id).IsRequired().HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
 
-            var delivery = modelBuilder.Entity<so_delivery>();
-            delivery.HasOptional(x => x.DeliveryStatus)
-                .WithMany(x => x.Deliveries)
-                .HasForeignKey(x => x.deliveryStatusId);
+            modelBuilder.Entity<so_delivery>()
+                .HasOptional(x => x.so_delivery_additional_data)
+                .WithRequired(x => x.Delivery);
 
             var liquidationLogStatus = modelBuilder.Entity<so_liquidation_log_status>();
             liquidationLogStatus.HasKey(x => x.Id);
