@@ -159,11 +159,11 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_leader_authorization_code> so_leader_authorization_codes { get; set; }
         public virtual DbSet<so_authentication_log> so_authentication_logs { get; set; }
 
-        public virtual DbSet<so_sale_detail_article> so_sale_detail_article { get; set; }
+        //public virtual DbSet<so_sale_detail_article> so_sale_detail_article { get; set; }
 
-        public virtual DbSet<so_promotion_article_movement> so_promotion_article_movement { get; set; }
+        //public virtual DbSet<so_promotion_article_movement> so_promotion_article_movement { get; set; }
 
-        public virtual DbSet<so_article_promotional_route> so_article_promotional_route { get; set; }
+        //public virtual DbSet<so_article_promotional_route> so_article_promotional_route { get; set; }
         public virtual DbSet<so_delivery_status> so_delivery_status { get; set; }
         public virtual DbSet<so_order> so_order { get; set; }
         public virtual DbSet<so_order_detail> so_order_detail { get; set; }
@@ -357,15 +357,15 @@ namespace SmartOrderService.DB
                 .WithRequired(e => e.so_article)
                 .WillCascadeOnDelete(false);
 
-            /*modelBuilder.Entity<so_article>()
+            modelBuilder.Entity<so_article>() //Comentar cuando se pongo Promociones
                 .HasMany(e => e.so_sale_promotion_detail_article)
                 .WithRequired(e => e.so_article)
-                .WillCascadeOnDelete(false);*/
-
-            modelBuilder.Entity<so_article_promotional_route>()
-                .HasMany(e => e.so_promotion_article_movement)
-                .WithRequired(e => e.so_article_promotional_route)
                 .WillCascadeOnDelete(false);
+
+            //modelBuilder.Entity<so_article_promotional_route>()
+            //    .HasMany(e => e.so_promotion_article_movement)
+            //    .WithRequired(e => e.so_article_promotional_route)
+            //    .WillCascadeOnDelete(false);
 
             modelBuilder.Entity<so_billing_data>()
                 .Property(e => e.code)

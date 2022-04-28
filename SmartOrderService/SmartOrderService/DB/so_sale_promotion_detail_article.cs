@@ -34,7 +34,7 @@ namespace SmartOrderService.DB
 
         public bool status { get; set; }
 
-        //public virtual so_article so_article { get; set; }
+        public virtual so_article so_article { get; set; } //Comentar cuando se ponga Promociones
 
         public virtual so_sale_promotion so_sale_promotion { get; set; }
     }

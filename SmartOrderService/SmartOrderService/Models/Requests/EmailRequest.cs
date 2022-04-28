@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Web;
 
 namespace SmartOrderService.Models.Requests
 {
@@ -25,7 +23,7 @@ namespace SmartOrderService.Models.Requests
         public string PaymentMethod { get; set; }
         public string CancelTicketLink { get; set; }
         public List<SendTicketDigitalEmailSales> Sales { get; set; }
-        public DataTable dtTicket { get; set; }
+        //public DataTable dtTicket { get; set; }
     }
 
     public class SendCancelTicketDigitalEmailRequest
@@ -38,7 +36,7 @@ namespace SmartOrderService.Models.Requests
         public string SellerName { get; set; }
         public string PaymentMethod { get; set; }
         public List<SendTicketDigitalEmailSales> Sales { get; set; }
-        public DataTable dtTicket { get; set; }
+        //public DataTable dtTicket { get; set; }
     }
 
 

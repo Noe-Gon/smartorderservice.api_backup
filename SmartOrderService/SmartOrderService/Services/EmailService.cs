@@ -62,10 +62,10 @@ namespace SmartOrderService.Services
                 bool lTienePromociones = false;
                 string sRutaPlantilla = "~/Content/Template/TicketDigitalEmail.html";
 
-                if(request.dtTicket.Columns.Count > 0 && request.dtTicket.Rows.Count > 0)
-                {
-                    lTienePromociones = true;
-                }
+                //if(request.dtTicket.Columns.Count > 0 && request.dtTicket.Rows.Count > 0)
+                //{
+                //    lTienePromociones = true;
+                //}
 
                     using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath(sRutaPlantilla)))
                 {
@@ -84,7 +84,7 @@ namespace SmartOrderService.Services
                         body = body.Replace("{PaymentMethod}", "Forma de pago: " + request.PaymentMethod);
 
                     string tdBody = "";
-                    string tdBodyPromociones = "";
+                    //string tdBodyPromociones = "";
 
                     int totalProductsSold = 0;
                     int totalBoxesSold = 0;
@@ -101,23 +101,23 @@ namespace SmartOrderService.Services
                         total += row.TotalPrice;
                     }
 
-                    if (lTienePromociones)
-                    {
-                        int totalPromos = 0;
-                        body = body.Replace("id='promociones' style='display:none'", "id='promociones' style='display:'");
-                        body = body.Replace("id='lblpromociones' style='display:none'", "id='lblpromociones' style='display:'");
-                        foreach (DataRow row in request.dtTicket.Rows)
-                        {
-                            tdBodyPromociones += "<tr><td style='width:400px'>" + row["id"] + ") " + row["name_product"].ToString() + "</td>";
-                            tdBodyPromociones += "<td style='width:100px'>" + row["amount"].ToString() + "</td>";
-                            tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", 0) + "</td>";
-                            tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", 0) + "</td></tr>";
-                            totalPromos += (int)row["amount"];
-                        }
+                    //if (lTienePromociones)
+                    //{
+                    //    int totalPromos = 0;
+                    //    body = body.Replace("id='promociones' style='display:none'", "id='promociones' style='display:'");
+                    //    body = body.Replace("id='lblpromociones' style='display:none'", "id='lblpromociones' style='display:'");
+                    //    foreach (DataRow row in request.dtTicket.Rows)
+                    //    {
+                    //        tdBodyPromociones += "<tr><td style='width:400px'>" + row["id"] + ") " + row["name_product"].ToString() + "</td>";
+                    //        tdBodyPromociones += "<td style='width:100px'>" + row["amount"].ToString() + "</td>";
+                    //        tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", 0) + "</td>";
+                    //        tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", 0) + "</td></tr>";
+                    //        totalPromos += (int)row["amount"];
+                    //    }
 
-                        body = body.Replace("{TdBodyPromociones}", tdBodyPromociones);
-                        body = body.Replace("{TotalPromos}", totalPromos.ToString());
-                    }
+                    //    body = body.Replace("{TdBodyPromociones}", tdBodyPromociones);
+                    //    body = body.Replace("{TotalPromos}", totalPromos.ToString());
+                    //}
 
                     body = body.Replace("{TdBody}", tdBody);
                     body = body.Replace("{TotalProductsSold}", totalProductsSold.ToString());
@@ -152,13 +152,13 @@ namespace SmartOrderService.Services
         {
             try
             {
-                bool lTienePromociones = false;
+                //bool lTienePromociones = false;
                 string sRutaPlantilla = "~/Content/Template/CancelTicketDigitalEmail.html";
 
-                if (request.dtTicket.Columns.Count > 0 && request.dtTicket.Rows.Count > 0)
-                {
-                    lTienePromociones = true;
-                }
+                //if (request.dtTicket.Columns.Count > 0 && request.dtTicket.Rows.Count > 0)
+                //{
+                //    lTienePromociones = true;
+                //}
 
                 using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath(sRutaPlantilla)))
                 {
@@ -192,24 +192,24 @@ namespace SmartOrderService.Services
                         total += row.TotalPrice;
                     }
 
-                    string tdBodyPromociones = "";
-                    if (lTienePromociones)
-                    {
-                        int totalPromos = 0;
-                        body = body.Replace("id='promociones' style='display:none'", "id='promociones' style='display:'");
-                        body = body.Replace("id='lblpromociones' style='display:none'", "id='lblpromociones' style='display:'");
-                        foreach (DataRow row in request.dtTicket.Rows)
-                        {
-                            tdBodyPromociones += "<tr><td style='width:400px'>" + row["id"] + ") " + row["name_product"].ToString() + "</td>";
-                            tdBodyPromociones += "<td style='width:100px'>" + row["amount"].ToString() + "</td>";
-                            tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", 0) + "</td>";
-                            tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", 0) + "</td></tr>";
-                            totalPromos += (int)row["amount"];
-                        }
+                    //string tdBodyPromociones = "";
+                    //if (lTienePromociones)
+                    //{
+                    //    int totalPromos = 0;
+                    //    body = body.Replace("id='promociones' style='display:none'", "id='promociones' style='display:'");
+                    //    body = body.Replace("id='lblpromociones' style='display:none'", "id='lblpromociones' style='display:'");
+                    //    foreach (DataRow row in request.dtTicket.Rows)
+                    //    {
+                    //        tdBodyPromociones += "<tr><td style='width:400px'>" + row["id"] + ") " + row["name_product"].ToString() + "</td>";
+                    //        tdBodyPromociones += "<td style='width:100px'>" + row["amount"].ToString() + "</td>";
+                    //        tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", 0) + "</td>";
+                    //        tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", 0) + "</td></tr>";
+                    //        totalPromos += (int)row["amount"];
+                    //    }
 
-                        body = body.Replace("{TdBodyPromociones}", tdBodyPromociones);
-                        body = body.Replace("{TotalPromos}", totalPromos.ToString());
-                    }
+                    //    body = body.Replace("{TdBodyPromociones}", tdBodyPromociones);
+                    //    body = body.Replace("{TotalPromos}", totalPromos.ToString());
+                    //}
 
                     body = body.Replace("{TdBody}", tdBody);
                     body = body.Replace("{TotalProductsSold}", totalProductsSold.ToString());

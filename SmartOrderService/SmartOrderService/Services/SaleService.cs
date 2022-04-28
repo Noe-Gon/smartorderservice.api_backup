@@ -198,7 +198,7 @@ namespace SmartOrderService.Services
                                 //Se prepara la información
                                 var route = db.so_route_customer.Where(x => x.customerId == sale.customerId).FirstOrDefault();
                                 var user = db.so_user.Where(x => x.userId == sale.userId).FirstOrDefault();
-                                DataTable dtTicket = GetPromotionsTicketDigital(db, sale.saleId);
+                                //DataTable dtTicket = GetPromotionsTicketDigital(db, sale.saleId);
 
                                 var sendTicketDigitalEmail = new SendCancelTicketDigitalEmailRequest
                                 {
@@ -209,7 +209,7 @@ namespace SmartOrderService.Services
                                     Date = DateTime.Now,
                                     PaymentMethod = PaymentMethod,
                                     SellerName = user.code + " - " + user.name,
-                                    dtTicket = dtTicket
+                                    //dtTicket = dtTicket
                                 };
 
                                 var sales = new List<SendTicketDigitalEmailSales>();
@@ -833,29 +833,29 @@ namespace SmartOrderService.Services
                                      amount = g.Sum(a => a.amount)
                                  }).ToList();
 
-            var amountArticle = (from it in (from promo in db.so_sale_promotion
-                                             join art in db.so_sale_promotion_detail_article
-                                             on promo.sale_promotionId equals art.sale_promotionId
-                                             where promo.saleId == saleId
-                                             select new
-                                             {
-                                                 art.article_promotionalId,
-                                                 amount = art.amount * promo.amount
-                                             }).ToList().Union((from art in db.so_sale_detail_article
-                                                                where art.saleId == saleId
-                                                                select new
-                                                                {
-                                                                    art.article_promotionalId,
-                                                                    art.amount
-                                                                }
-                                                   ).ToList())
-                                 group it by it.article_promotionalId
-                                 into g
-                                 select new
-                                 {
-                                     article_promotionalId = g.Key,
-                                     amount = g.Sum(a => a.amount)
-                                 }).ToList();
+            //var amountArticle = (from it in (from promo in db.so_sale_promotion
+            //                                 join art in db.so_sale_promotion_detail_article
+            //                                 on promo.sale_promotionId equals art.sale_promotionId
+            //                                 where promo.saleId == saleId
+            //                                 select new
+            //                                 {
+            //                                     art.article_promotionalId,
+            //                                     amount = art.amount * promo.amount
+            //                                 }).ToList().Union((from art in db.so_sale_detail_article
+            //                                                    where art.saleId == saleId
+            //                                                    select new
+            //                                                    {
+            //                                                        art.article_promotionalId,
+            //                                                        art.amount
+            //                                                    }
+            //                                       ).ToList())
+            //                     group it by it.article_promotionalId
+            //                     into g
+            //                     select new
+            //                     {
+            //                         article_promotionalId = g.Key,
+            //                         amount = g.Sum(a => a.amount)
+            //                     }).ToList();
 
             foreach (var product in amountProduct)
             {
@@ -872,23 +872,23 @@ namespace SmartOrderService.Services
                 }
             }
 
-            foreach (var article in amountArticle)
-            {
-                var inventarioArt = db.so_article_promotional_route
-                    .Where(e => e.branchId.Equals(branchId) && e.routeId.Equals(routeId) && e.article_promotionalId.Equals(article.article_promotionalId) && e.status == true).FirstOrDefault();
+            //foreach (var article in amountArticle)
+            //{
+            //    var inventarioArt = db.so_article_promotional_route
+            //        .Where(e => e.branchId.Equals(branchId) && e.routeId.Equals(routeId) && e.article_promotionalId.Equals(article.article_promotionalId) && e.status == true).FirstOrDefault();
 
-                if(inventarioArt != null)
-                {
-                    inventarioArt.amount += article.amount;
-                    inventarioArt.modifiedon = DateTime.Now;
-                }
-                else
-                {
-                    throw new Exception("No se encontró el Articulo con ID: " + article.article_promotionalId + " por lo tanto no se pudo incrementar el inventario");
-                }
+            //    if(inventarioArt != null)
+            //    {
+            //        inventarioArt.amount += article.amount;
+            //        inventarioArt.modifiedon = DateTime.Now;
+            //    }
+            //    else
+            //    {
+            //        throw new Exception("No se encontró el Articulo con ID: " + article.article_promotionalId + " por lo tanto no se pudo incrementar el inventario");
+            //    }
 
-                db.SaveChanges();
-            }
+            //    db.SaveChanges();
+            //}
         }
 
         private ICollection<so_sale_promotion_detail> createPromotionDetails(List<SalePromotionDetailProduct> details, int userId)
@@ -1181,9 +1181,8 @@ namespace SmartOrderService.Services
                             saleResult.SaleId = sale.SaleId;
                             UpdateRouteTeamInventory(sale, db);
                             CreatePaymentMethod(sale);
-                            
 
-                            sRespuesta = CreatePromotion(sale, db);
+                            //sRespuesta = CreatePromotion(sale, db);
                             if (sRespuesta != string.Empty)
                                 throw new Exception(sRespuesta);
 
@@ -1224,7 +1223,7 @@ namespace SmartOrderService.Services
                                             //Se prepara la información
                                             var route = db.so_route_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
                                             var user = db.so_user.Where(x => x.userId == sale.UserId).FirstOrDefault();
-                                            DataTable dtTicket = GetPromotionsTicketDigital(db, sale.SaleId);
+                                            //DataTable dtTicket = GetPromotionsTicketDigital(db, sale.SaleId);
 
                                             var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
                                             {
@@ -1235,7 +1234,7 @@ namespace SmartOrderService.Services
                                                 Date = DateTime.Now,
                                                 PaymentMethod = sale.PaymentMethod,
                                                 SellerName = user.code + " - " + user.name,
-                                                dtTicket = dtTicket
+                                                //dtTicket = dtTicket
                                             };
 
                                             var sales = new List<SendTicketDigitalEmailSales>();
@@ -1287,7 +1286,6 @@ namespace SmartOrderService.Services
                 }
                 return saleResult;
             }
-
         }
 
         public void CancelDeliveryStatus(int deliveryId, SmartOrderModel db)
@@ -1386,26 +1384,27 @@ namespace SmartOrderService.Services
             }
         }
 
-        public DataTable GetPromotionsTicketDigital(DbContext db, int SaleId)
-        {
-            DataTable dt = new DataTable();
-            DbDataAdapter adapter;
-            DataSet dataset = new DataSet();
+        //public DataTable GetPromotionsTicketDigital(DbContext db, int SaleId)
+        //{
+        //    DataTable dt = new DataTable();
+        //    DbDataAdapter adapter;
+        //    DataSet dataset = new DataSet();
 
-            DbCommand command = db.Database.Connection.CreateCommand();
-            command.Transaction = db.Database.CurrentTransaction.UnderlyingTransaction;
-            command.CommandText = "sp_getPromotionsTicketDigital";
-            command.CommandType = CommandType.StoredProcedure;
+        //    DbCommand command = db.Database.Connection.CreateCommand();
+        //    command.Transaction = db.Database.CurrentTransaction.UnderlyingTransaction;
+        //    command.CommandText = "sp_getPromotionsTicketDigital";
+        //    command.CommandType = CommandType.StoredProcedure;
 
-            SqlParameter pSaleId = new SqlParameter("@SaleId", SaleId);
-            command.Parameters.Add(pSaleId);
+        //    SqlParameter pSaleId = new SqlParameter("@SaleId", SaleId);
+        //    command.Parameters.Add(pSaleId);
     
-            adapter = new System.Data.SqlClient.SqlDataAdapter();
-            adapter.SelectCommand = command;
-            adapter.Fill(dataset);
+        //    adapter = new System.Data.SqlClient.SqlDataAdapter();
+        //    adapter.SelectCommand = command;
+        //    adapter.Fill(dataset);
 
-            return dataset.Tables[0]; 
-        }
+        //    return dataset.Tables[0]; 
+        //}
+
         public string GetCancelLinkByCustomerId(int customerId)
         {
             var portalLinkLogs = db.so_portal_links_logs
