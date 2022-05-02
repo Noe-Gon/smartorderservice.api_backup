@@ -504,15 +504,12 @@ namespace SmartOrderService.Services
             saleResult.DeliveryId = sale.DeliveryId;
             saleResult.SaleDetails = new List<SaleDetail>();
             saleResult.PaymentMethod = sale.PaymentMethod;
+
             for (int i = 0; i < sale.SaleDetails.Count(); i++)
             {
-                int amountSaled = 0;
-                SaleDetailResult saleDetailResult = new SaleDetailResult(sale.SaleDetails[i]);
-
                 if (inventoryService.CheckInventoryAvailability(sale.InventoryId, sale.SaleDetails[i].ProductId, sale.SaleDetails[i].Amount))
                 {
-                    amountSaled = sale.SaleDetails[i].Amount;
-
+                    saleResult.SaleDetails.Add(sale.SaleDetails[i]);
                     //Buscar si genera botella vacia
                     var emptyBottle = db.so_product_bottle
                         .Where(x => x.productId == sale.SaleDetails[i].ProductId)
@@ -539,12 +536,36 @@ namespace SmartOrderService.Services
                     sale.SaleDetails.RemoveAt(i);
                     i--;
                 }
-                saleDetailResult.AmountSold = amountSaled;
-                saleResult.SaleDetails.Add(saleDetailResult);
             }
+
+            saleResult.SalePromotions = new List<SalePromotion>();
+            for (int i = 0; i < sale.SalePromotions.Count(); i++)
+            {
+                int amountSaled = 0;
+                SalePromotion salePromotionResult = new SalePromotion(sale.SalePromotions[i]);
+
+                List<SalePromotionDetailProduct> promotionProducts = salePromotionResult.DetailProduct;
+
+                for (int j = 0; j < sale.SalePromotions[i].DetailProduct.Count(); j++)
+                {
+                    if (inventoryService.CheckInventoryAvailability(sale.InventoryId, promotionProducts[j].ProductId, promotionProducts[j].Amount))
+                    {
+                        amountSaled += promotionProducts[j].Amount;
+                    }
+                    else
+                    {
+                        salePromotionResult.DetailProduct[j].Amount = 0;
+                        sale.TotalCash -= Decimal.ToDouble(promotionProducts[j].Import);
+                        sale.SalePromotions[i].DetailProduct.RemoveAt(j);
+                        j--;
+                    }
+                }
+                salePromotionResult.Amount = amountSaled;
+                saleResult.SalePromotions.Add(salePromotionResult);
+            }
+
             saleResult.TotalCash = Math.Round(sale.TotalCash, 3);
             saleResult.SaleReplacements = sale.SaleReplacements;
-            saleResult.SalePromotions = sale.SalePromotions;
             return saleResult;
         }
 
