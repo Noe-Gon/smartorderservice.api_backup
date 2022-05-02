@@ -1174,10 +1174,7 @@ namespace SmartOrderService.Services
                             //{
                             //    throw new BadRequestException();
                             //}
-                            saleResult.SaleId = sale.SaleId;
-                            UpdateRouteTeamInventory(sale);
-                            saleResult.SalePromotions = sale.SalePromotions;
-
+                            UpdateRouteTeamInventory(saleResult);
                             UnlockCreate(saleResult);
                             if (saleResult.SaleId == 0)
                             {
@@ -1214,15 +1211,13 @@ namespace SmartOrderService.Services
                     {
                         if (!checkIfSaleExist(sale))
                         {
-                            saleResult.SaleId = sale.SaleId;
                             UpdateRouteTeamInventory(saleResult, db);
-                            CreatePaymentMethod(sale);
+                            CreatePaymentMethod(saleResult);
                             //AddEmptyBottles(sale.InventoryId, sale.UserId, saleResult.EmptyBottles);
-                            sRespuesta = CreatePromotion(sale, db);
-                            if (sRespuesta != string.Empty)
-                                throw new Exception(sRespuesta);
 
-
+                            //sRespuesta = CreatePromotion(sale, db);
+                            //if (sRespuesta != string.Empty)
+                            //    throw new Exception(sRespuesta);
                             var updateCustomerAdditionalData = db.so_customerr_additional_data
                                 .Where(x => x.CustomerId == sale.CustomerId)
                                 .FirstOrDefault();
@@ -1259,7 +1254,7 @@ namespace SmartOrderService.Services
                                             //Se prepara la información
                                             var route = db.so_route_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
                                             var user = db.so_user.Where(x => x.userId == sale.UserId).FirstOrDefault();
-                                            DataTable dtTicket = GetPromotionsTicketDigital(db, sale.SaleId);
+                                            DataTable dtTicket = GetPromotionsTicketDigital(db, saleResult.SaleId);
 
                                             var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
                                             {
