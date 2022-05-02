@@ -258,6 +258,12 @@ namespace SmartOrderService.Controllers
                 responseActionResult = ResponseMessage(responseMessage);
                 return responseActionResult;
             }
+            catch (EmptySaleException e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
+            }
             catch (Exception e)
             {
                 responseMessage = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);

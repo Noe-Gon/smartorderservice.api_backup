@@ -1214,13 +1214,8 @@ namespace SmartOrderService.Services
                     {
                         if (!checkIfSaleExist(sale))
                         {
-                            UnlockCreate(sale);
-                            if (sale.SaleId == 0)
-                            {
-                                throw new BadRequestException();
-                            }
                             saleResult.SaleId = sale.SaleId;
-                            UpdateRouteTeamInventory(sale, db);
+                            UpdateRouteTeamInventory(saleResult, db);
                             CreatePaymentMethod(sale);
                             //AddEmptyBottles(sale.InventoryId, sale.UserId, saleResult.EmptyBottles);
                             sRespuesta = CreatePromotion(sale, db);
