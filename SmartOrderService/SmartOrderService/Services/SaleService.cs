@@ -317,7 +317,15 @@ namespace SmartOrderService.Services
                 so_sale entitySale = createSale(sale);
                 entitySale.so_sale_detail = createDetails(sale.SaleDetails, userId);
                 entitySale.so_sale_replacement = createReplacements(sale.SaleReplacements, userId);
-                entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
+                var totalPromotion = 0;
+                foreach (var promotion in sale.SalePromotions)
+                {
+                    totalPromotion += promotion.Amount;
+                }
+                if (totalPromotion > 0)
+                {
+                    entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
+                }
                 SetTaxes(entitySale);
                 sale.SaleId = UntransactionalSaveSale(entitySale);
             }
@@ -348,7 +356,15 @@ namespace SmartOrderService.Services
                 so_sale entitySale = createSale(sale);
                 entitySale.so_sale_detail = createDetails(sale.SaleDetails, userId);
                 entitySale.so_sale_replacement = createReplacements(sale.SaleReplacements, userId);
-                entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
+                var totalPromotion = 0;
+                foreach (var promotion in sale.SalePromotions)
+                {
+                    totalPromotion += promotion.Amount;
+                }
+                if (totalPromotion > 0)
+                {
+                    entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
+                }
                 SetTaxes(entitySale);
                 sale.SaleId = UntransactionalSaveSale(entitySale);
 
@@ -1213,6 +1229,11 @@ namespace SmartOrderService.Services
                         if (!checkIfSaleExist(sale))
                         {
                             UpdateRouteTeamInventory(saleResult, db);
+                            UnlockCreate(saleResult);
+                            if (saleResult.SaleId == 0)
+                            {
+                                throw new BadRequestException();
+                            }
                             CreatePaymentMethod(saleResult);
                             //AddEmptyBottles(sale.InventoryId, sale.UserId, saleResult.EmptyBottles);
 
