@@ -104,6 +104,7 @@ namespace SmartOrderService.Services
                 {
                     var product = db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productInventory.ProductId)).FirstOrDefault();
                     product.Available_Amount -= productInventory.Amount;
+                    amountSaled += productInventory.Amount;
                     //verificar si el producto generá un envase vacio
                     var bottle = db.so_product_bottle.Where(x => productInventory.ProductId == x.productId).Select(x => x.so_product1).FirstOrDefault();
                     //Si es así verificar si existe en el inventario

@@ -510,9 +510,10 @@ namespace SmartOrderService.Services
                 if (inventoryService.CheckInventoryAvailability(sale.InventoryId, sale.SaleDetails[i].ProductId, sale.SaleDetails[i].Amount))
                 {
                     saleResult.SaleDetails.Add(sale.SaleDetails[i]);
+                    var productId = sale.SaleDetails[i].ProductId;
                     //Buscar si genera botella vacia
                     var emptyBottle = db.so_product_bottle
-                        .Where(x => x.productId == sale.SaleDetails[i].ProductId)
+                        .Where(x => x.productId == productId)
                         .Select(x => x.so_product)
                         .FirstOrDefault();
 
