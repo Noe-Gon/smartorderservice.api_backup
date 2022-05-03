@@ -317,7 +317,15 @@ namespace SmartOrderService.Services
                 so_sale entitySale = createSale(sale);
                 entitySale.so_sale_detail = createDetails(sale.SaleDetails, userId);
                 entitySale.so_sale_replacement = createReplacements(sale.SaleReplacements, userId);
-                entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
+                var totalPromotion = 0;
+                foreach (var promotion in sale.SalePromotions)
+                {
+                    totalPromotion += promotion.Amount;
+                }
+                if (totalPromotion > 0)
+                {
+                    entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
+                }
                 SetTaxes(entitySale);
                 sale.SaleId = UntransactionalSaveSale(entitySale);
             }
@@ -348,7 +356,15 @@ namespace SmartOrderService.Services
                 so_sale entitySale = createSale(sale);
                 entitySale.so_sale_detail = createDetails(sale.SaleDetails, userId);
                 entitySale.so_sale_replacement = createReplacements(sale.SaleReplacements, userId);
-                entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
+                var totalPromotion = 0;
+                foreach (var promotion in sale.SalePromotions)
+                {
+                    totalPromotion += promotion.Amount;
+                }
+                if (totalPromotion > 0)
+                {
+                    entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
+                }
                 SetTaxes(entitySale);
                 sale.SaleId = UntransactionalSaveSale(entitySale);
 
@@ -504,18 +520,16 @@ namespace SmartOrderService.Services
             saleResult.DeliveryId = sale.DeliveryId;
             saleResult.SaleDetails = new List<SaleDetail>();
             saleResult.PaymentMethod = sale.PaymentMethod;
+
             for (int i = 0; i < sale.SaleDetails.Count(); i++)
             {
-                int amountSaled = 0;
-                SaleDetailResult saleDetailResult = new SaleDetailResult(sale.SaleDetails[i]);
-
                 if (inventoryService.CheckInventoryAvailability(sale.InventoryId, sale.SaleDetails[i].ProductId, sale.SaleDetails[i].Amount))
                 {
-                    amountSaled = sale.SaleDetails[i].Amount;
-
+                    saleResult.SaleDetails.Add(sale.SaleDetails[i]);
+                    var productId = sale.SaleDetails[i].ProductId;
                     //Buscar si genera botella vacia
                     var emptyBottle = db.so_product_bottle
-                        .Where(x => x.productId == sale.SaleDetails[i].ProductId)
+                        .Where(x => x.productId == productId)
                         .Select(x => x.so_product)
                         .FirstOrDefault();
 
@@ -539,12 +553,36 @@ namespace SmartOrderService.Services
                     sale.SaleDetails.RemoveAt(i);
                     i--;
                 }
-                saleDetailResult.AmountSold = amountSaled;
-                saleResult.SaleDetails.Add(saleDetailResult);
             }
+
+            saleResult.SalePromotions = new List<SalePromotion>();
+            for (int i = 0; i < sale.SalePromotions.Count(); i++)
+            {
+                int amountSaled = 0;
+                SalePromotion salePromotionResult = new SalePromotion(sale.SalePromotions[i]);
+
+                List<SalePromotionDetailProduct> promotionProducts = salePromotionResult.DetailProduct;
+
+                for (int j = 0; j < sale.SalePromotions[i].DetailProduct.Count(); j++)
+                {
+                    if (inventoryService.CheckInventoryAvailability(sale.InventoryId, promotionProducts[j].ProductId, promotionProducts[j].Amount))
+                    {
+                        amountSaled += promotionProducts[j].Amount;
+                    }
+                    else
+                    {
+                        salePromotionResult.DetailProduct[j].Amount = 0;
+                        sale.TotalCash -= Decimal.ToDouble(promotionProducts[j].Import);
+                        sale.SalePromotions[i].DetailProduct.RemoveAt(j);
+                        j--;
+                    }
+                }
+                salePromotionResult.Amount = amountSaled;
+                saleResult.SalePromotions.Add(salePromotionResult);
+            }
+
             saleResult.TotalCash = Math.Round(sale.TotalCash, 3);
             saleResult.SaleReplacements = sale.SaleReplacements;
-            saleResult.SalePromotions = sale.SalePromotions;
             return saleResult;
         }
 
@@ -1153,10 +1191,7 @@ namespace SmartOrderService.Services
                             //{
                             //    throw new BadRequestException();
                             //}
-                            saleResult.SaleId = sale.SaleId;
-                            UpdateRouteTeamInventory(sale);
-                            saleResult.SalePromotions = sale.SalePromotions;
-
+                            UpdateRouteTeamInventory(saleResult);
                             UnlockCreate(saleResult);
                             if (saleResult.SaleId == 0)
                             {
@@ -1193,20 +1228,18 @@ namespace SmartOrderService.Services
                     {
                         if (!checkIfSaleExist(sale))
                         {
-                            UnlockCreate(sale);
-                            if (sale.SaleId == 0)
+                            UpdateRouteTeamInventory(saleResult, db);
+                            UnlockCreate(saleResult);
+                            if (saleResult.SaleId == 0)
                             {
                                 throw new BadRequestException();
                             }
-                            saleResult.SaleId = sale.SaleId;
-                            UpdateRouteTeamInventory(sale, db);
-                            CreatePaymentMethod(sale);
+                            CreatePaymentMethod(saleResult);
                             //AddEmptyBottles(sale.InventoryId, sale.UserId, saleResult.EmptyBottles);
-                            sRespuesta = CreatePromotion(sale, db);
-                            if (sRespuesta != string.Empty)
-                                throw new Exception(sRespuesta);
 
-
+                            //sRespuesta = CreatePromotion(sale, db);
+                            //if (sRespuesta != string.Empty)
+                            //    throw new Exception(sRespuesta);
                             var updateCustomerAdditionalData = db.so_customerr_additional_data
                                 .Where(x => x.CustomerId == sale.CustomerId)
                                 .FirstOrDefault();
@@ -1243,7 +1276,7 @@ namespace SmartOrderService.Services
                                             //Se prepara la información
                                             var route = db.so_route_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
                                             var user = db.so_user.Where(x => x.userId == sale.UserId).FirstOrDefault();
-                                            DataTable dtTicket = GetPromotionsTicketDigital(db, sale.SaleId);
+                                            DataTable dtTicket = GetPromotionsTicketDigital(db, saleResult.SaleId);
 
                                             var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
                                             {
