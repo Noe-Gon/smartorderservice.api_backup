@@ -1182,7 +1182,7 @@ namespace SmartOrderService.Services
                 Sale saleResult = CreateSaleResultFromSale(sale);
                 try
                 {
-                    if (sale.SaleDetails.Count() > 0 || sale.SalePromotions.Count > 0)
+                    if (sale.SaleDetails.Count() > 0)
                     {
                         if (!checkIfSaleExist(sale))
                         {
@@ -1200,6 +1200,10 @@ namespace SmartOrderService.Services
                         }
 
                         transaction.Commit();
+                    }
+                    else
+                    {
+                        throw new EmptySaleException("La venta no se ha podido realizar porque no hay productos disponibles");
                     }
                 }
                 catch (EmptySaleException exception)
@@ -1325,6 +1329,10 @@ namespace SmartOrderService.Services
                         }
 
                         transaction.Commit();
+                    }
+                    else
+                    {
+                        throw new EmptySaleException("La venta no se ha podido realizar porque no hay productos disponibles");
                     }
                 }
                 catch (ApiPreventaException e)

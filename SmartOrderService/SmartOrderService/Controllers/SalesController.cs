@@ -260,7 +260,7 @@ namespace SmartOrderService.Controllers
             }
             catch (EmptySaleException e)
             {
-                responseMessage = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+                responseMessage = Request.CreateResponse(HttpStatusCode.PreconditionFailed, e.Message);
                 responseActionResult = ResponseMessage(responseMessage);
                 return responseActionResult;
             }
