@@ -1209,7 +1209,11 @@ namespace SmartOrderService.Services
                 catch (EmptySaleException exception)
                 {
                     transaction.Rollback();
-                    throw exception;
+                    sale.SaleDetails = new List<SaleDetail>();
+                    sale.SalePromotions = new List<SalePromotion>();
+                    sale.TotalCash = 0.00;
+                    return sale;
+
                 }
                 catch (Exception exception)
                 {
@@ -1332,8 +1336,16 @@ namespace SmartOrderService.Services
                     }
                     else
                     {
-                        throw new EmptySaleException("La venta no se ha podido realizar porque no hay productos disponibles");
+                        throw new EmptySaleException();
                     }
+                }
+                catch (EmptySaleException e)
+                {
+                    transaction.Rollback();
+                    sale.SaleDetails = new List<SaleDetail>();
+                    sale.SalePromotions = new List<SalePromotion>();
+                    sale.TotalCash = 0.00;
+                    return sale;
                 }
                 catch (ApiPreventaException e)
                 {
