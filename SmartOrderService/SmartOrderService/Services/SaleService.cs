@@ -1236,18 +1236,20 @@ namespace SmartOrderService.Services
                     {
                         if (!checkIfSaleExist(sale))
                         {
-                            UpdateRouteTeamInventory(saleResult, db);
-                            UnlockCreate(saleResult);
-                            if (saleResult.SaleId == 0)
+                            UnlockCreate(sale);
+                            if (sale.SaleId == 0)
                             {
                                 throw new BadRequestException();
                             }
-                            CreatePaymentMethod(saleResult);
-                            //AddEmptyBottles(sale.InventoryId, sale.UserId, saleResult.EmptyBottles);
+                            saleResult.SaleId = sale.SaleId;
+                            UpdateRouteTeamInventory(sale, db);
+                            CreatePaymentMethod(sale);
 
-                            //sRespuesta = CreatePromotion(sale, db);
-                            //if (sRespuesta != string.Empty)
-                            //    throw new Exception(sRespuesta);
+                            sRespuesta = CreatePromotion(sale, db);
+                            if (sRespuesta != string.Empty)
+                                throw new Exception(sRespuesta);
+
+
                             var updateCustomerAdditionalData = db.so_customerr_additional_data
                                 .Where(x => x.CustomerId == sale.CustomerId)
                                 .FirstOrDefault();
@@ -1336,16 +1338,13 @@ namespace SmartOrderService.Services
                     }
                     else
                     {
-                        throw new EmptySaleException();
+                        throw new EmptySaleException("La venta no se ha podido realizar porque no hay productos disponibles");
                     }
                 }
-                catch (EmptySaleException e)
+                catch (EmptySaleException)
                 {
                     transaction.Rollback();
-                    sale.SaleDetails = new List<SaleDetail>();
-                    sale.SalePromotions = new List<SalePromotion>();
-                    sale.TotalCash = 0.00;
-                    return sale;
+                    throw new EmptySaleException();
                 }
                 catch (ApiPreventaException e)
                 {
@@ -1359,7 +1358,6 @@ namespace SmartOrderService.Services
                 }
                 return saleResult;
             }
-
         }
 
         public void CancelDeliveryStatus(int deliveryId, SmartOrderModel db)

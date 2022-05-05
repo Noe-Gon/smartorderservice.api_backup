@@ -342,6 +342,7 @@
     <Compile Include="DB\so_api_version.cs" />
     <Compile Include="DB\so_application.cs" />
     <Compile Include="DB\so_article.cs" />
+    <Compile Include="DB\so_article_promotional_route.cs" />
     <Compile Include="DB\so_authentication_log.cs" />
     <Compile Include="DB\so_autoventa_View.cs" />
     <Compile Include="DB\so_billing_data.cs" />
@@ -431,6 +432,7 @@
     <Compile Include="DB\so_product_company.cs" />
     <Compile Include="DB\so_product_tax.cs" />
     <Compile Include="DB\so_promotion.cs" />
+    <Compile Include="DB\so_promotion_article_movement.cs" />
     <Compile Include="DB\so_promotion_detail_article.cs" />
     <Compile Include="DB\so_promotion_detail_product.cs" />
     <Compile Include="DB\so_promotion_discount_list.cs" />
@@ -458,6 +460,7 @@
     <Compile Include="DB\so_sale.cs" />
     <Compile Include="DB\so_sale_aditional_data.cs" />
     <Compile Include="DB\so_sale_detail.cs" />
+    <Compile Include="DB\so_sale_detail_article.cs" />
     <Compile Include="DB\so_sale_inventory.cs" />
     <Compile Include="DB\so_sale_promotion.cs" />
     <Compile Include="DB\so_sale_promotion_detail.cs" />
@@ -710,9 +713,6 @@
     <Compile Include="Services\SaleService.cs" />
     <Compile Include="Services\WorkdayService.cs" />
     <Compile Include="Startup.cs" />
-    <Compile Include="DB\so_article_promotional_route.cs" />
-    <Compile Include="DB\so_promotion_article_movement.cs" />
-    <Compile Include="DB\so_sale_detail_article.cs" />
     <Compile Include="Templates\InsertCliente.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

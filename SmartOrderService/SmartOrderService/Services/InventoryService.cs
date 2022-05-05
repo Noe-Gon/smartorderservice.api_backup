@@ -352,13 +352,15 @@ namespace SmartOrderService.Services
                             }
 
                             //Obtener al cliente existente
-                            so_customer existCustomer;
+                            so_customer existCustomer = db.so_customer
+                                .Where(x => x.customerId == delivery.customerId)
+                                .FirstOrDefault(); ;
 
                             //Si el cliente no existe crear uno nuevo
-                            if (delivery.customerId == 0) //Si delivery.customerId == 0 No existe en WBC
+                            if (delivery.customerId == 0 || existCustomer == null) //Si delivery.customerId == 0 No existe en WBC
                             {
                                 //Buscar por CFE (so_customer.code)
-                                existCustomer = db.so_customer.Where(x => x.code == delivery.code).FirstOrDefault();
+                                existCustomer = db.so_customer.Where(x => x.code == delivery.code || x.code == "TEMP-" + delivery.code).FirstOrDefault();
                                 var day = ((int)DateTime.Now.DayOfWeek) + 1;
                                 if (existCustomer == null)
                                 {
@@ -366,7 +368,8 @@ namespace SmartOrderService.Services
                                     so_customer newCustomer = new so_customer
                                     {
                                         name = delivery.code,
-                                        code = delivery.code,
+                                        code = delivery.customerId == 0 ? delivery.code : "TEMP-" + delivery.code,
+                                        contact = "Sin definir",
                                         createdby = 2777,
                                         createdon = DateTime.Now,
                                         modifiedby = 2777,
@@ -389,6 +392,7 @@ namespace SmartOrderService.Services
                                     db.so_customer.Add(newCustomer);
                                     db.so_route_customer.Add(newRouteCustomer);
                                     db.SaveChanges();
+                                    existCustomer = newCustomer;
                                 }
                                 else
                                 {
@@ -416,12 +420,6 @@ namespace SmartOrderService.Services
                                         db.SaveChanges();
                                     }
                                 }
-                            }
-                            else
-                            {
-                                existCustomer = db.so_customer
-                                .Where(x => x.customerId == delivery.customerId)
-                                .FirstOrDefault();
                             }
 
                             var deliveriStatus = db.so_delivery_status

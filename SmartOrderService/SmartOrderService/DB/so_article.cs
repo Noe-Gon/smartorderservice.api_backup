@@ -41,6 +41,6 @@ namespace SmartOrderService.DB
         public virtual ICollection<so_branch_articles> so_branch_articles { get; set; }
 
         //[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        //public virtual ICollection<so_sale_promotion_detail_article> so_sale_promotion_detail_article { get; set; }
+        //public virtual ICollection<so_sale_promotion_detail_article> so_sale_promotion_detail_article { get; set; } 
     }
 }

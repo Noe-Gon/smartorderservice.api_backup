@@ -359,9 +359,9 @@ namespace SmartOrderService.DB
                 .WillCascadeOnDelete(false);
 
             /*modelBuilder.Entity<so_article>()
-                .HasMany(e => e.so_sale_promotion_detail_article)
-                .WithRequired(e => e.so_article)
-                .WillCascadeOnDelete(false);*/
+               .HasMany(e => e.so_sale_promotion_detail_article)
+               .WithRequired(e => e.so_article)
+               .WillCascadeOnDelete(false);*/
 
             modelBuilder.Entity<so_article_promotional_route>()
                 .HasMany(e => e.so_promotion_article_movement)
