@@ -1288,10 +1288,7 @@ namespace SmartOrderService.Services
                 catch (EmptySaleException exception)
                 {
                     transaction.Rollback();
-                    sale.SaleDetails = new List<SaleDetail>();
-                    sale.SalePromotions = new List<SalePromotion>();
-                    sale.TotalCash = 0.00;
-                    return sale;
+                    throw new EmptySaleException();
                 }
                 catch (ApiPreventaException e)
                 {
