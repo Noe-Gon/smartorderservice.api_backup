@@ -81,24 +81,44 @@ namespace SmartOrderService.Services
         public void UpdateRouteTeamInventory(SaleTeam sale)
         {
             List<SaleDetail> salesDetail = sale.SaleDetails;
-            //List<SalePromotion> salePromotion = sale.SalePromotions;
+            List<SalePromotion> salePromotion = sale.SalePromotions;
+            bool isEmptySale = true;
+
             foreach (var productInventory in salesDetail)
             {
-                var product = db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productInventory.ProductId)).FirstOrDefault();
-                product.Available_Amount -= productInventory.Amount;
-                db.SaveChanges();
+                db.so_route_team_inventory_available
+                    .Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productInventory.ProductId))
+                    .FirstOrDefault().Available_Amount -= productInventory.Amount;
+                isEmptySale = false;
             }
-
-            /*
+            db.SaveChanges();
+            var promotionIndex = 0;
             foreach (var Promotion in salePromotion)
             {
-                foreach (var producPromotion in Promotion.DetailProduct)
+                var amountPromotionsSaled = 0;
+                foreach (var productPromotion in Promotion.DetailProduct)
                 {
-                    var product = db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(producPromotion.ProductId)).FirstOrDefault();
-                    product.Available_Amount -= producPromotion.Amount;
-                    db.SaveChanges();
+                    var availableProduct = db.so_route_team_inventory_available
+                        .Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productPromotion.ProductId))
+                        .FirstOrDefault();
+                    if (productPromotion.Amount != 0 && availableProduct.Available_Amount >= productPromotion.Amount)
+                    {
+                        availableProduct.Available_Amount -= productPromotion.Amount;
+                        amountPromotionsSaled += productPromotion.Amount;
+                        isEmptySale = false;
+                    }
+                    else
+                    {
+                        productPromotion.Amount = 0;
+                    }
                 }
-            }*/
+                sale.SalePromotions[promotionIndex].Amount = amountPromotionsSaled;
+            }
+            db.SaveChanges();
+            if (isEmptySale)
+            {
+                throw new EmptySaleException("La venta no se ha podido realizar porque no hay productos disponibles");
+            }
         }
 
         public List<so_route_team_inventory_available> GetInventoryTeamByInventoryId(int inventoryId)
