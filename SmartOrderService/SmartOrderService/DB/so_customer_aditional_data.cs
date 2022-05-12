@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -32,8 +31,9 @@ namespace SmartOrderService.DB
         [MaxLength(100)]
         public string InteriorNumber { get; set; }
 
-        [Column("neighborhood_id")]
-        public Guid? NeighborhoodId { get; set; }
+        [Column("neighborhood")]
+        [MaxLength(100)]
+        public string Neighborhood { get; set; }
 
         [Column("is_mailing_active")]
         public bool IsMailingActive { get; set; }
@@ -46,9 +46,6 @@ namespace SmartOrderService.DB
 
         [Column("accepted_terms_and_conditions")]
         public bool AcceptedTermsAndConditions { get; set; }
-
-        [Column("code")]
-        public Guid? Code { get; set; }
 
         #region Relationship
         [Column("customerId")]

@@ -78,12 +78,23 @@ namespace SmartOrderService.Controllers
             }
             catch (NoUserFoundException e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict, "Usuario no registrado");
+                response = Request.CreateResponse(HttpStatusCode.Conflict, new {
+                   Message = "Usuario no registrado" 
+                });
             }
-          
+            catch(CreateWorkdayInventoryNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, new { 
+                   Message = e.Message
+                });
+            }
             catch (Exception e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict, "Error: "+e.Message);
+                response = Request.CreateResponse(HttpStatusCode.Conflict,
+                new
+                {
+                    Message = "Error: " + e.Message
+                });
             }
 
             return response;

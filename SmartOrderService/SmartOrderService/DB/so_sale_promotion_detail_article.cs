@@ -16,7 +16,7 @@ namespace SmartOrderService.DB
         [Key]
         [Column(Order = 1)]
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
-        public int article_promotionalId { get; set; }
+        public int articleId { get; set; }
 
         public int amount { get; set; }
 
@@ -34,7 +34,7 @@ namespace SmartOrderService.DB
 
         public bool status { get; set; }
 
-        //public virtual so_article so_article { get; set; }
+        public virtual so_article so_article { get; set; }
 
         public virtual so_sale_promotion so_sale_promotion { get; set; }
     }

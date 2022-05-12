@@ -16,10 +16,6 @@ namespace SmartOrderService.DB
         [MaxLength(10)]
         public string UserCode { get; set; }
 
-        [Column("leader_code")]
-        [MaxLength(50)]
-        public string LeaderCode { get; set; }
-
         [Column("was_leader_code_authorization")]
         public bool WasLeaderCodeAuthorization { get; set; }
 

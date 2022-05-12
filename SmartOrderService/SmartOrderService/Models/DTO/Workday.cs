@@ -14,11 +14,5 @@ namespace SmartOrderService.Models.DTO
         public bool CloseByPortal { get; set; }
         public bool CloseByDevice { get; set; }
         public string NameUserClosedSession { get; set; }
-        public List<WorkCloseDayArticle> WorkCloseDayArticle { get; set; }
-
-        public Workday()
-        {
-            WorkCloseDayArticle = new List<WorkCloseDayArticle>();
-        }
     }
 }

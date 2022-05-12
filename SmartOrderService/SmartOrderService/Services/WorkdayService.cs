@@ -10,8 +10,6 @@ using OpeCDLib.Models;
 using SmartOrderService.Models.Enum;
 using RestSharp;
 using System.Configuration;
-using System.Data;
-using System.Data.SqlClient;
 
 namespace SmartOrderService.Services
 {
@@ -25,6 +23,8 @@ namespace SmartOrderService.Services
 
         public Workday createWorkday(int userId)
         {
+
+            var time = DateTime.Now;
             ERolTeam userRol = roleTeamService.GetUserRole(userId);
 
             if (userRol != ERolTeam.SinAsignar)
@@ -37,7 +37,18 @@ namespace SmartOrderService.Services
                 inventoryService.CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
                 //End Load Inventory Process
             }
-
+            //Validamos que exista un inventari actual
+            try
+            {
+                if(userRol == ERolTeam.SinAsignar)
+                {
+                    inventoryService.GetCurrentInventory(userId, time.Date);
+                }
+            }
+            catch(InventoryEmptyException e)
+            {
+                throw new CreateWorkdayInventoryNotFoundException();
+            }
             Workday workday = new Workday();
 
             var currentWorkday = searchWorkDay(userId);
@@ -63,8 +74,6 @@ namespace SmartOrderService.Services
                     workday.IsOpen = true;
                     return workday;
                 }
-
-                var time = DateTime.Now;
 
                 var device = db.so_device.Where(d => d.userId == userId && d.status);
 
@@ -98,8 +107,6 @@ namespace SmartOrderService.Services
             else
             {
                 var id = Guid.NewGuid();
-
-                var time = DateTime.Now;
 
                 var device = db.so_device.Where(d => d.userId == userId && d.status);
 
@@ -203,86 +210,25 @@ namespace SmartOrderService.Services
                   
                     finalizarJornadaOPCD(route.so_branch.code, route.code, DateTime.Today, workDayUpdated.DateEnd);
                     //OPCD End
+
+                    using (var service = CustomerBlockedService.Create())
+                    {
+                        var response = service.ClearBlockedCustomer(new Models.Requests.ClearBlockedCustomerRequest
+                        {
+                            UserId = workday.UserId
+                        });
+                    }
                 }
             }
-            using (var service = CustomerBlockedService.Create())
-            {
-                var response = service.ClearBlockedCustomer(new Models.Requests.ClearBlockedCustomerRequest
-                {
-                    UserId = workday.UserId
-                });
-            }
+            
             workday.IsOpen = false;
             return workday;
-        }
-
-        public string UpdateArticleMovement(Workday workday, DbContext db, DbContextTransaction transaction)
-        {
-            DataTable dtWorkCloseDayArticle = new DataTable();
-            string sRespuesta = "";
-
-            #region CREACION ESTRUCTURA DE TABLA
-
-            DataColumn column = new DataColumn();
-            column.DataType = System.Type.GetType("System.Int32");
-            column.ColumnName = "routeId";
-            dtWorkCloseDayArticle.Columns.Add(column);
-
-            column = new DataColumn();
-            column.DataType = System.Type.GetType("System.Int32");
-            column.ColumnName = "branchId";
-            dtWorkCloseDayArticle.Columns.Add(column);
-
-            column = new DataColumn();
-            column.DataType = System.Type.GetType("System.Int32");
-            column.ColumnName = "article_promotionalId";
-            dtWorkCloseDayArticle.Columns.Add(column);
-
-            column = new DataColumn();
-            column.DataType = System.Type.GetType("System.Int32");
-            column.ColumnName = "amount";
-            dtWorkCloseDayArticle.Columns.Add(column);
-
-            #endregion
-
-            foreach (var item in workday.WorkCloseDayArticle)
-            {
-                DataRow row = dtWorkCloseDayArticle.NewRow();
-                row["routeId"] = item.routeId;
-                row["branchId"] = item.branchId;
-                row["article_promotionalId"] = item.article_promotionalId;
-                row["amount"] = item.amount;
-                dtWorkCloseDayArticle.Rows.Add(row);
-            }
-
-            var command = db.Database.Connection.CreateCommand();
-            command.Transaction = db.Database.CurrentTransaction.UnderlyingTransaction;
-            command.CommandText = "sp_updatearticlemovement";
-            command.CommandType = CommandType.StoredProcedure;
-
-            SqlParameter pWorkCloseDayArticle = new SqlParameter("@WorkCloseDayArticle", SqlDbType.Structured);
-            pWorkCloseDayArticle.TypeName = "dbo.WorkCloseDayArticle";
-            pWorkCloseDayArticle.Value = dtWorkCloseDayArticle;
-            command.Parameters.Add(pWorkCloseDayArticle);
-
-            SqlParameter pMensaje = new SqlParameter();
-            pMensaje.ParameterName = "@Mensaje";
-            pMensaje.DbType = DbType.String;
-            pMensaje.Direction = ParameterDirection.Output;
-            pMensaje.Size = 1000;
-            command.Parameters.Add(pMensaje);
-
-            command.ExecuteNonQuery();
-            sRespuesta = Convert.ToString(command.Parameters["@Mensaje"].Value);
-
-            return sRespuesta;
         }
 
         public Workday FinishWorkdayProcess(Workday workday)
         {
             int UserId = workday.UserId;
             Guid WorkdayId = workday.WorkdayId;
-            String sRespuestaSp = string.Empty;
 
             var currentWorkDay = db.so_work_day.Where(w =>
                 w.userId == UserId &&
@@ -302,20 +248,20 @@ namespace SmartOrderService.Services
 
             else
             {
+
+                ERolTeam userRol = roleTeamService.GetUserRole(UserId);
                 //checamos que se tenga visita para todos los clientes
                 var today = DateTime.Today;
-
+                var query = db.so_venta_View.Where(v => v.id_user == UserId
+                    && DbFunctions.TruncateTime(v.inventory_date) >= DbFunctions.TruncateTime(start)
+                    && DbFunctions.TruncateTime(v.inventory_date) <= DbFunctions.TruncateTime(today));
                 var visits = db.so_binnacle_visit.Where(
                     b => b.userId.Equals(UserId)
                     && DbFunctions.TruncateTime(b.createdon) >= DbFunctions.TruncateTime(start)
                     && DbFunctions.TruncateTime(b.createdon) <= DbFunctions.TruncateTime(today)
                 ).Select(c => c.customerId).ToList();
 
-                var count = db.so_venta_View.Where(v => v.id_user == UserId
-                    && !visits.Contains(v.id_customer)
-                    && DbFunctions.TruncateTime(v.inventory_date) >= DbFunctions.TruncateTime(start)
-                    && DbFunctions.TruncateTime(v.inventory_date) <= DbFunctions.TruncateTime(today)
-                    ).Count();
+                var count = query.Where(v =>!visits.Contains(v.id_customer)).Count();
 
                 if (count > 0)
                     throw new NoCustomerVisitException("clientes pendientes en este viaje");
@@ -331,11 +277,6 @@ namespace SmartOrderService.Services
                         finishWorkDay.modifiedon = DateTime.Now;
                         workday.DateEnd = finishWorkDay.date_end.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
                         TemporalCloseInventory(finishWorkDay.so_user);
-                        sRespuestaSp = UpdateArticleMovement(workday, db, dbContextTransaction);
-                        if(sRespuestaSp != string.Empty)
-                        {
-                            throw new Exception("Ocurrio un problema: " + sRespuestaSp);
-                        }
 
                         db.SaveChanges();
                         workday.IsOpen = false;
@@ -345,7 +286,6 @@ namespace SmartOrderService.Services
                     catch (Exception e)
                     {
                         dbContextTransaction.Rollback();
-                        throw new Exception(e.Message);
                     }
                 }
                 //}

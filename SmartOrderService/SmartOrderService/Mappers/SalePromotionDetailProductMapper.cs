@@ -13,9 +13,12 @@ namespace SmartOrderService.Mappers
     {
         public so_sale_promotion_detail toEntity(SalePromotionDetailProduct model)
         {
-            return new so_sale_promotion_detail() {
+            return new so_sale_promotion_detail()
+            {
                 productId = model.ProductId,
                 amount = model.Amount,
+                price = Convert.ToDouble(model.price),
+                import = Decimal.ToDouble(model.Import),
                 base_price = model.base_price,
                 discount = model.discount,
                 discount_amount = model.discount_amount,
@@ -38,7 +41,8 @@ namespace SmartOrderService.Mappers
 
         public SalePromotionDetailProduct toModel(so_sale_promotion_detail entity)
         {
-            return new SalePromotionDetailProduct() {
+            return new SalePromotionDetailProduct()
+            {
                 ProductId = entity.productId,
                 Amount = entity.amount,
                 Status = entity.status,

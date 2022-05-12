@@ -12,6 +12,7 @@ using OpeCDLib.Models;
 using SmartOrderService.Models.Enum;
 using RestSharp;
 using System.Configuration;
+using SmartOrderService.Models.Responses;
 
 namespace SmartOrderService.Services
 {
@@ -59,7 +60,7 @@ namespace SmartOrderService.Services
         public bool CloseInventory(int inventoryId)
         {
 
-            var CurrentInventory = db.so_inventory.Where(i => i.inventoryId == inventoryId).FirstOrDefault();
+            var CurrentInventory = db.so_inventory.Where(i => i.inventoryId == inventoryId && i.status).FirstOrDefault();
 
             if (CurrentInventory != null)
             {
@@ -192,7 +193,6 @@ namespace SmartOrderService.Services
                 OpenInventory(inventoryId);
                 return;
             }
-
             if (userTeamRole == ERolTeam.Impulsor)
             {
                 using (var dbContextTransaction = db.Database.BeginTransaction())
@@ -206,7 +206,19 @@ namespace SmartOrderService.Services
             }
             if (userTeamRole == ERolTeam.Ayudante)
             {
-                RecordRouteTeamTravelStatus(userId, inventoryId);
+                using (var dbContextTransaction = db.Database.BeginTransaction())
+                {
+                    RecordRouteTeamTravelStatus(userId, inventoryId);
+                    var inventoryOpen = isInventoryOpen(inventoryId, userId);
+                    if (!inventoryOpen.IsOpen)
+                    {
+                        dbContextTransaction.Rollback();
+                    }
+                    else
+                    {
+                        dbContextTransaction.Commit();
+                    }
+                }
             }
         }
 
@@ -630,6 +642,46 @@ namespace SmartOrderService.Services
                         throw new Exception(e.Message);
                     }
                 }
+            }
+        }
+
+        public InventoryOpenResponse isInventoryOpen(int inventoryId, int userId)
+        {
+            ERolTeam userTeamRole = roleTeamService.GetUserRole(userId);
+            RouteTeamInventoryAvailableService routeTeamInventoryAvailable = new RouteTeamInventoryAvailableService();
+            if (userTeamRole == ERolTeam.Impulsor)
+            {
+                var inventory = db.so_inventory.Where(x => x.inventoryId == inventoryId && (x.state == INVENTORY_OPEN || x.state == INVENTORY_AVAILABLE)).FirstOrDefault();
+                if (inventory != null)
+                {
+                    return new InventoryOpenResponse
+                    {
+                        InventoryId = inventoryId,
+                        IsOpen = true
+                    };
+                }
+                return new InventoryOpenResponse
+                {
+                    InventoryId = inventoryId,
+                    IsOpen = false
+                };
+            }
+            else//Rol de ayudante
+            {
+                var inventory = db.so_inventory.Where(x => x.inventoryId == inventoryId && (x.state == INVENTORY_OPEN)).FirstOrDefault();
+                if (inventory != null)
+                {
+                    return new InventoryOpenResponse
+                    {
+                        InventoryId = inventoryId,
+                        IsOpen = true
+                    };
+                }
+                return new InventoryOpenResponse
+                {
+                    InventoryId = inventoryId,
+                    IsOpen = false
+                };
             }
         }
 

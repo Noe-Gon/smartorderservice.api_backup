@@ -62,33 +62,5 @@ namespace SmartOrderService.Controllers
         public void Delete(int id)
         {
         }
-
-        [HttpGet, Route("api/promotion/user/{UserId}/inventary/{InventaryId}")]
-        public HttpResponseMessage GetPromotions(int UserId, int InventaryId)
-        {
-            try
-            {
-                var PromotionsDto = new PromotionService().GetSalePromotions(UserId, InventaryId);
-                return Request.CreateResponse(HttpStatusCode.OK, PromotionsDto);
-            }
-            catch (Exception e)
-            {
-                return Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
-            }
-        }
-
-        [HttpGet, Route("api/promotion/Delivered/user/{UserId}/inventary/{InventaryId}")]
-        public HttpResponseMessage GetSalePromotionsDelivered(int UserId, int InventaryId)
-        {
-            try
-            {
-                var PromotionsDeliveredDto = new PromotionService().GetSalePromotionsDelivered(UserId, InventaryId);
-                return Request.CreateResponse(HttpStatusCode.OK, PromotionsDeliveredDto);
-            }
-            catch (Exception e)
-            {
-                return Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
-            }
-        }
     }
 }

@@ -20,5 +20,6 @@ namespace SmartOrderService.Models.DTO
         public int BillingDataId;
         public int BottleId;
         public string BarCode;
+        public bool IsAlcohol { get; set; }
     }
 }
