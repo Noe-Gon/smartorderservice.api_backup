@@ -1,10 +1,12 @@
 ﻿using Algoritmos.Data.Enums;
 using Algoritmos.Data.UnitofWork;
+using AutoMapper;
 using CRM.Data.UnitOfWork;
 using RestSharp;
 using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
 using SmartOrderService.Models.Enum;
+using SmartOrderService.Models.DTO;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;
 using SmartOrderService.UnitOfWork;
@@ -33,7 +35,7 @@ namespace SmartOrderService.Services
 
         }
 
-        public ResponseBase<InsertConsumerResponse> InsertConsumer(InsertConsumerRequest request)
+        public ResponseBase<InsertConsumerResponseRefined> InsertConsumer(InsertConsumerRequest request)
         {
             try
             {
@@ -42,7 +44,7 @@ namespace SmartOrderService.Services
                     .GetByID(request.RouteId);
 
                 if (route == null)
-                    return ResponseBase<InsertConsumerResponse>
+                    return ResponseBase<InsertConsumerResponseRefined>
                     .Create(new List<string>() { "No se encontró la ruta" });
 
                 if (request.CodePlace == 0)
@@ -55,7 +57,7 @@ namespace SmartOrderService.Services
                         .FirstOrDefault();
 
                     if (codePlace == null)
-                        return ResponseBase<InsertConsumerResponse>
+                        return ResponseBase<InsertConsumerResponseRefined>
                         .Create(new List<string>() { "No se encontró la ubicación del código" });
                 }
 
@@ -154,7 +156,7 @@ namespace SmartOrderService.Services
                     .Select(x => x.customerId);
 
                 if (customerIds.Count() == 0)
-                    return ResponseBase<InsertConsumerResponse>.Create(new List<string>()
+                    return ResponseBase<InsertConsumerResponseRefined>.Create(new List<string>()
                     {
                         "No hay usuarios para esa ruta"
                     });
@@ -246,8 +248,16 @@ namespace SmartOrderService.Services
                 UoWConsumer.PortalLinksLogRepository.Insert(termsEmail);
                 UoWConsumer.PortalLinksLogRepository.Insert(cancelEmail);
                 UoWConsumer.Save();
+                InsertUnsynchronizedConsumer(newCustomer.customerId, request.UserId);
 
-                var response = new InsertConsumerResponse
+                PriceService service = new PriceService();
+                var Today = DateTime.Today;
+                var inventory = UoWConsumer.InventoryRepository.Get(x => x.userId == request.UserId && x.state == 1 && x.status &&
+                DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(Today)).FirstOrDefault();
+                var user = UoWConsumer.UserRepository.Get(x => x.userId == request.UserId).FirstOrDefault();
+                var prices = service.getPricesByInventoryCustomer(inventory.inventoryId, user.branchId, DateTime.Now, newCustomer.customerId);
+
+                var response = new InsertConsumerResponseRefined
                 {
                     CustomerId = newCustomer.customerId,
                     CFECode = request.CFECode,
@@ -272,10 +282,11 @@ namespace SmartOrderService.Services
                     StateId = request.StateId,
                     Status = request.Status,
                     Street = request.Street,
-                    UserId = request.UserId
+                    UserId = request.UserId,
+                    PriceList = prices
                 };
 
-                return ResponseBase<InsertConsumerResponse>.Create(response);
+                return ResponseBase<InsertConsumerResponseRefined>.Create(response);
             }
             catch (DuplicateEntityException e)
             {
@@ -283,8 +294,42 @@ namespace SmartOrderService.Services
             }
             catch (Exception e)
             {
-                return ResponseBase<InsertConsumerResponse>
+                return ResponseBase<InsertConsumerResponseRefined>
                     .Create(new List<string>() { e.Message });
+            }
+        }
+
+        public void InsertUnsynchronizedConsumer(int customerId, int userId)
+        {
+            try
+            {
+                var unsynchronized = new so_synchronized_consumer
+                {
+                    registeredBy = userId,
+                    customerId = customerId,
+                    status = true
+                };
+                UoWConsumer.SynchronizedConsumersRepository.Insert(unsynchronized);
+                UoWConsumer.Save();
+                var routeId = UoWConsumer.RouteTeamRepository.Get(x => x.userId == userId).Select(x => x.routeId).FirstOrDefault();
+                var partners = UoWConsumer.RouteTeamRepository.Get(x => x.routeId == routeId).Select(x => x.userId).ToList();
+                foreach (var partnerId in partners)
+                {
+                    if (partnerId != userId)
+                    {
+                        var unsynchronizedDetail = new so_synchronized_consumer_detail
+                        {
+                            synchronizedId = unsynchronized.synchronizedId,
+                            userId = partnerId,
+                            synchronized = false
+                        };
+                        UoWConsumer.SynchronizedConsumerDetailsRepository.Insert(unsynchronizedDetail);
+                        UoWConsumer.Save();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
             }
         }
 
@@ -1111,6 +1156,126 @@ namespace SmartOrderService.Services
                     e.Message
                 });
             }
+        }
+
+        public ResponseBase<GetConsumerAllInfo> GetCustomerAllInfo(PriceRequest request)
+        {
+            List<GetConsumersResponse> responseCustomers = GetConsumers(new GetConsumersRequest { userId = request.CustomerId }).Data;
+            GetConsumersResponse customer = responseCustomers.Where(x => x.CustomerId == request.CustomerId).FirstOrDefault();
+            GetConsumerAllInfo response = new GetConsumerAllInfo(customer);
+            PriceService service = new PriceService();
+            DateTime time = Utils.DateUtils.getDateTime(request.LastUpdate);
+            var prices = service.getPricesByInventoryCustomer(request.InventoryId, request.BranchId, time, request.CustomerId);
+            response.Pricelist = prices;
+
+            return ResponseBase<GetConsumerAllInfo>.Create(response);
+        }
+
+        public ResponseBase<GetConsumersResponse> GetCustomerUnsynchronized(GetConsumersRequest request)
+        {
+            int customerId = 1;
+            var defualtGuid = new Guid("00000000-0000-0000-0000-000000000000");
+            InventoryService inventoryService = new InventoryService();
+            try
+            {
+                request.userId = inventoryService.SearchDrivingId(request.userId);
+            }
+            catch (RelatedDriverNotFoundException)
+            { }
+
+            so_inventory inventory = inventoryService.GetCurrentInventory(request.userId, null);
+
+            GetConsumersResponse visits = new GetConsumersResponse();
+
+            var routeVisits = UoWConsumer.UserRouteRepository.GetAll()
+                .Join(UoWConsumer.RouteCustomerRepository.GetAll(),
+                    userRoute => userRoute.routeId,
+                    customerRoute => customerRoute.routeId,
+                    (userRoute, customerRoute) => new { userRoute.userId, customerRoute.customerId, customerRoute.so_customer, customerRoute.day, customerRoute.order, customerRoute.status, userRouteStatus = userRoute.status, routeId = userRoute.routeId, HasAdditionalData = customerRoute.so_customer.CustomerAdditionalData.Count() != 0 }
+                )
+                .Where(
+                    v => v.userId.Equals(request.userId)
+                    && v.userRouteStatus
+                    && v.status
+                    && v.customerId == customerId
+                ).Select(c => new { c.customerId, c.order, c.routeId, c.so_customer }).FirstOrDefault();
+
+            int order = routeVisits.order;
+
+            var customerAdditionalDataAux = UoWConsumer.CustomerRepository
+                .Get(x => x.customerId == routeVisits.customerId)
+                .Select(x => x.CustomerAdditionalData)
+                .FirstOrDefault();
+
+            var customerAdditionalData = customerAdditionalDataAux.FirstOrDefault();
+            var customer = routeVisits.so_customer;
+            var customerData = customer.so_customer_data.FirstOrDefault();
+
+
+            List<int> daysInRoute = UoWConsumer.RouteCustomerRepository
+                .Get(x => x.routeId == routeVisits.routeId && x.status && x.customerId == customer.customerId)
+                .Select(x => x.day)
+                .ToList();
+
+            GetConsumersResponse dto = new GetConsumersResponse()
+            {
+                CustomerId = routeVisits.customerId,
+                Order = order,
+                Visited = UoWConsumer.BinnacleVisitRepository.Get(bv => bv.customerId == routeVisits.customerId &&
+                    DbFunctions.TruncateTime(bv.createdon) == DbFunctions.TruncateTime(DateTime.Now))
+                    .FirstOrDefault() != null,
+                Name = customer.name,
+                CFECode = customer.code,
+                CodePlace = customerAdditionalData == null ? null : customerAdditionalData.CodePlaceId,
+                Contact = customerAdditionalData == null ? string.Empty : customerAdditionalData.Customer.contact,
+                Crossroads = customerData != null ? customerData.address_number_cross1 : string.Empty,
+                Crossroads_2 = customerData != null ? customerData.address_number_cross2 : string.Empty,
+                Email = customer.email,
+                Email_2 = customerAdditionalData == null ? string.Empty : customerAdditionalData.Email_2,
+                ExternalNumber = customerData != null ? customerData.address_number : string.Empty,
+                InteriorNumber = customerAdditionalData == null ? string.Empty : customerAdditionalData.InteriorNumber,
+                Latitude = customer.latitude,
+                Longitude = customer.longitude,
+                Neighborhood = customerAdditionalData == null ? null : customerAdditionalData.NeighborhoodId,
+                Phone = customerAdditionalData == null ? string.Empty : customerAdditionalData.Phone,
+                Phone_2 = customerAdditionalData == null ? string.Empty : customerAdditionalData.Phone_2,
+                ReferenceCode = customerAdditionalData == null ? string.Empty : customerAdditionalData.ReferenceCode,
+                RouteId = routeVisits.routeId,
+                Street = customerData != null ? customerData.address_street : string.Empty,
+                Days = daysInRoute,
+                CounterVisitsWithoutSales = customerAdditionalData == null ? 0 : customerAdditionalData.CounterVisitsWithoutSales,
+                IsActive = customerAdditionalData == null ? false : customerAdditionalData.Status == (int)Consumer.STATUS.CONSUMER,
+                IsMailingActive = customerAdditionalData == null ? false : customerAdditionalData.IsMailingActive,
+                IsSMSActive = customerAdditionalData == null ? false : customerAdditionalData.IsSMSActive,
+                IsTermsAndConditionsAccepted = customerAdditionalData == null ? false : customerAdditionalData.AcceptedTermsAndConditions,
+                CanBeRemoved = false
+            };
+
+            if (customerAdditionalData == null ? false : customerAdditionalData.NeighborhoodId != null)
+            {
+                var ubication = UoWCRM.ColoniasRepository
+                    .Get(x => x.Ope_coloniaId == customerAdditionalData.NeighborhoodId)
+                    .Select(x => new
+                    {
+                        CountryId = x.ope_PaisId,
+                        StateId = x.ope_EstadoId,
+                        TownId = x.Ope_MunicipioId
+                    }).FirstOrDefault();
+
+                dto.StateId = ubication.StateId;
+                dto.CountryId = ubication.CountryId;
+                dto.TownId = ubication.TownId;
+            }
+            //Asignar valores default a las colonias
+            if (customerAdditionalData == null ? false : customerAdditionalData.NeighborhoodId == null)
+            {
+                dto.Neighborhood = defualtGuid;
+                dto.StateId = defualtGuid;
+                dto.CountryId = defualtGuid;
+                dto.TownId = defualtGuid;
+            }
+
+            return ResponseBase<GetConsumersResponse>.Create(dto);
         }
 
         public int SearchDrivingId(int actualUserId)

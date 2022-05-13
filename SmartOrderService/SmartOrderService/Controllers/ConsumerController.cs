@@ -276,5 +276,49 @@ namespace SmartOrderService.Controllers
                 return Content(HttpStatusCode.BadRequest, response);
             }
         }
+
+        [HttpGet]
+        [Route("~/api/CustomerAllInfo")]
+        public IHttpActionResult GetCustomerAllInfo([FromUri] PriceRequest request)
+        {
+            try
+            {
+                using (var service = GetService())
+                {
+                    var response = service.GetCustomerAllInfo(request);
+
+                    if (response.Status)
+                        return Content(HttpStatusCode.OK, response.Data);
+
+                    return Content(HttpStatusCode.BadRequest, response.Data);
+                }
+            }
+            catch (Exception e)
+            {
+                return InternalServerError(e);
+            }
+        }
+
+        [HttpGet]
+        [Route("~/api/CustomerUnsynchronized")]
+        public IHttpActionResult GetCustomerUnsynchronized([FromUri] GetConsumersRequest request)
+        {
+            try
+            {
+                using (var service = GetService())
+                {
+                    var response = service.GetCustomerUnsynchronized(request);
+
+                    if (response.Status)
+                        return Content(HttpStatusCode.OK, response.Data);
+
+                    return Content(HttpStatusCode.BadRequest, response.Data);
+                }
+            }
+            catch (Exception e)
+            {
+                return InternalServerError(e);
+            }
+        }
     }
 }

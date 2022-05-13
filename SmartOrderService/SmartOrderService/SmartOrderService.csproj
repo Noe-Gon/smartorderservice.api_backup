@@ -457,6 +457,8 @@
     <Compile Include="DB\so_site.cs" />
     <Compile Include="DB\so_summary.cs" />
     <Compile Include="DB\so_survey_customer.cs" />
+    <Compile Include="DB\so_synchronized_consumer.cs" />
+    <Compile Include="DB\so_synchronized_consumer_detail.cs" />
     <Compile Include="DB\so_tag.cs" />
     <Compile Include="DB\so_tracking.cs" />
     <Compile Include="DB\so_tracking_configuration.cs" />
@@ -621,6 +623,7 @@
     <Compile Include="Models\Responses\CustomerBlockedResponses.cs" />
     <Compile Include="Models\Responses\CustomerResponse.cs" />
     <Compile Include="Models\Responses\EmailResponse.cs" />
+    <Compile Include="Models\Responses\GetCustomerAllInfoResponse.cs" />
     <Compile Include="Models\Responses\InventoryOpenResponse.cs" />
     <Compile Include="Models\Responses\InvoiceOpeFacturaResponse.cs" />
     <Compile Include="Models\Responses\MsgResponseBase.cs" />
