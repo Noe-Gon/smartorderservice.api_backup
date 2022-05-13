@@ -241,7 +241,7 @@ namespace SmartOrderService.Services
 
                     if (!lInventarioAfectado)
                     {
-                        RestoreInventoryAvailability(saleId);
+                        RestoreInventoryAvailability_v2(saleId);
                     }
 
                     dbContextTransaction.Commit();
@@ -803,6 +803,77 @@ namespace SmartOrderService.Services
         }
 
         public void RestoreInventoryAvailability(int saleId)
+        {
+            using (var dbContextTransaction = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    int inventoryId = db.so_sale.Where(s => s.saleId.Equals(saleId)).FirstOrDefault().inventoryId.Value;
+                    var saleDetail = db.so_sale_detail.Where(s => s.saleId.Equals(saleId))
+                        .Select(a => new
+                        {
+                            a.amount,
+                            a.productId
+                        }).ToList();
+
+                    var promotions = db.so_sale_promotion.Where(s => s.saleId.Equals(saleId));
+
+                    if (promotions.Count() == 0)
+                    {
+                        foreach (var sale in saleDetail)
+                        {
+                            int amountSold = sale.amount;
+                            int saleInventory = inventoryId;
+                            int saleProductId = sale.productId;
+                            db.so_route_team_inventory_available
+                                .Where(e => e.inventoryId.Equals(saleInventory) && e.productId.Equals(saleProductId)).FirstOrDefault()
+                                .Available_Amount += amountSold;
+                        }
+                        db.SaveChanges();
+                        dbContextTransaction.Commit();
+                        return;
+                    }
+
+                    List<int> promotionId = promotions.Select(x => x.sale_promotionId).ToList();
+
+                    var promotionDetail = db.so_sale_promotion_detail.Where(s => promotionId.Contains(s.sale_promotionId))
+                        .Select(a => new
+                        {
+                            a.amount,
+                            a.productId
+                        }).ToList();
+                    var sales = saleDetail
+                        .Concat(promotionDetail)
+                        .GroupBy(a => a.productId)
+                        .Select(
+                            g => new
+                            {
+                                productId = g.Key,
+                                amount = g.Sum(s => s.amount)
+                            });
+
+                    foreach (var sale in sales)
+                    {
+                        int amountSold = sale.amount;
+                        int saleInventory = inventoryId;
+                        int saleProductId = sale.productId;
+                        db.so_route_team_inventory_available
+                            .Where(e => e.inventoryId.Equals(saleInventory) && e.productId.Equals(saleProductId)).FirstOrDefault()
+                            .Available_Amount += amountSold;
+                    }
+                    db.SaveChanges();
+
+                }
+                catch (Exception e)
+                {
+                    dbContextTransaction.Rollback();
+                    throw new Exception();
+                }
+                dbContextTransaction.Commit();
+            }
+        }
+
+        public void RestoreInventoryAvailability_v2(int saleId)
         {
             int inventoryId = 0;
             int routeId = 0;
