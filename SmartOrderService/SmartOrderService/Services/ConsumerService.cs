@@ -1171,9 +1171,9 @@ namespace SmartOrderService.Services
             return ResponseBase<GetConsumerAllInfo>.Create(response);
         }
 
-        public ResponseBase<GetConsumersResponse> GetCustomerUnsynchronized(GetConsumersRequest request)
+        public ResponseBase<List<GetConsumersResponse>> GetCustomerUnsynchronized(GetConsumersRequest request)
         {
-            int customerId = 1;
+            List<int> customerIds = CustomersUnsynchronized(request.userId);
             var defualtGuid = new Guid("00000000-0000-0000-0000-000000000000");
             InventoryService inventoryService = new InventoryService();
             try
@@ -1183,99 +1183,121 @@ namespace SmartOrderService.Services
             catch (RelatedDriverNotFoundException)
             { }
 
-            so_inventory inventory = inventoryService.GetCurrentInventory(request.userId, null);
-
             GetConsumersResponse visits = new GetConsumersResponse();
 
-            var routeVisits = UoWConsumer.UserRouteRepository.GetAll()
-                .Join(UoWConsumer.RouteCustomerRepository.GetAll(),
-                    userRoute => userRoute.routeId,
-                    customerRoute => customerRoute.routeId,
-                    (userRoute, customerRoute) => new { userRoute.userId, customerRoute.customerId, customerRoute.so_customer, customerRoute.day, customerRoute.order, customerRoute.status, userRouteStatus = userRoute.status, routeId = userRoute.routeId, HasAdditionalData = customerRoute.so_customer.CustomerAdditionalData.Count() != 0 }
-                )
-                .Where(
-                    v => v.userId.Equals(request.userId)
-                    && v.userRouteStatus
-                    && v.status
-                    && v.customerId == customerId
-                ).Select(c => new { c.customerId, c.order, c.routeId, c.so_customer }).FirstOrDefault();
+            //var routeVisits = UoWConsumer.UserRouteRepository.GetAll()
+            //    .Join(UoWConsumer.RouteCustomerRepository.GetAll(),
+            //        userRoute => userRoute.routeId,
+            //        customerRoute => customerRoute.routeId,
+            //        (userRoute, customerRoute) => new { userRoute.userId, customerRoute.customerId, customerRoute.so_customer, customerRoute.day, customerRoute.order, customerRoute.status, userRouteStatus = userRoute.status, routeId = userRoute.routeId, HasAdditionalData = customerRoute.so_customer.CustomerAdditionalData.Count() != 0 }
+            //    )
+            //    .Where(
+            //        v => v.userId.Equals(request.userId)
+            //        && v.userRouteStatus
+            //        && v.status
+            //        && customerIds.Contains(v.customerId)
+            //    ).Select(c => new { c.customerId, c.order, c.routeId, c.so_customer }).ToList();
 
-            int order = routeVisits.order;
+            var customers = UoWConsumer.CustomerRepository.Get(x => customerIds.Contains(x.customerId)).ToList();
 
-            var customerAdditionalDataAux = UoWConsumer.CustomerRepository
-                .Get(x => x.customerId == routeVisits.customerId)
-                .Select(x => x.CustomerAdditionalData)
-                .FirstOrDefault();
-
-            var customerAdditionalData = customerAdditionalDataAux.FirstOrDefault();
-            var customer = routeVisits.so_customer;
-            var customerData = customer.so_customer_data.FirstOrDefault();
-
-
-            List<int> daysInRoute = UoWConsumer.RouteCustomerRepository
-                .Get(x => x.routeId == routeVisits.routeId && x.status && x.customerId == customer.customerId)
-                .Select(x => x.day)
-                .ToList();
-
-            GetConsumersResponse dto = new GetConsumersResponse()
+            List<GetConsumersResponse> dtos = new List<GetConsumersResponse>();
+            foreach (var data in customers)
             {
-                CustomerId = routeVisits.customerId,
-                Order = order,
-                Visited = UoWConsumer.BinnacleVisitRepository.Get(bv => bv.customerId == routeVisits.customerId &&
-                    DbFunctions.TruncateTime(bv.createdon) == DbFunctions.TruncateTime(DateTime.Now))
-                    .FirstOrDefault() != null,
-                Name = customer.name,
-                CFECode = customer.code,
-                CodePlace = customerAdditionalData == null ? null : customerAdditionalData.CodePlaceId,
-                Contact = customerAdditionalData == null ? string.Empty : customerAdditionalData.Customer.contact,
-                Crossroads = customerData != null ? customerData.address_number_cross1 : string.Empty,
-                Crossroads_2 = customerData != null ? customerData.address_number_cross2 : string.Empty,
-                Email = customer.email,
-                Email_2 = customerAdditionalData == null ? string.Empty : customerAdditionalData.Email_2,
-                ExternalNumber = customerData != null ? customerData.address_number : string.Empty,
-                InteriorNumber = customerAdditionalData == null ? string.Empty : customerAdditionalData.InteriorNumber,
-                Latitude = customer.latitude,
-                Longitude = customer.longitude,
-                Neighborhood = customerAdditionalData == null ? null : customerAdditionalData.NeighborhoodId,
-                Phone = customerAdditionalData == null ? string.Empty : customerAdditionalData.Phone,
-                Phone_2 = customerAdditionalData == null ? string.Empty : customerAdditionalData.Phone_2,
-                ReferenceCode = customerAdditionalData == null ? string.Empty : customerAdditionalData.ReferenceCode,
-                RouteId = routeVisits.routeId,
-                Street = customerData != null ? customerData.address_street : string.Empty,
-                Days = daysInRoute,
-                CounterVisitsWithoutSales = customerAdditionalData == null ? 0 : customerAdditionalData.CounterVisitsWithoutSales,
-                IsActive = customerAdditionalData == null ? false : customerAdditionalData.Status == (int)Consumer.STATUS.CONSUMER,
-                IsMailingActive = customerAdditionalData == null ? false : customerAdditionalData.IsMailingActive,
-                IsSMSActive = customerAdditionalData == null ? false : customerAdditionalData.IsSMSActive,
-                IsTermsAndConditionsAccepted = customerAdditionalData == null ? false : customerAdditionalData.AcceptedTermsAndConditions,
-                CanBeRemoved = false
-            };
+                var routeVisit = UoWConsumer.RouteCustomerRepository
+                .Get(
+                    x => x.customerId == data.customerId
+                ).FirstOrDefault();
+                int order = routeVisit.order;
 
-            if (customerAdditionalData == null ? false : customerAdditionalData.NeighborhoodId != null)
-            {
-                var ubication = UoWCRM.ColoniasRepository
-                    .Get(x => x.Ope_coloniaId == customerAdditionalData.NeighborhoodId)
-                    .Select(x => new
-                    {
-                        CountryId = x.ope_PaisId,
-                        StateId = x.ope_EstadoId,
-                        TownId = x.Ope_MunicipioId
-                    }).FirstOrDefault();
+                var customerAdditionalDataAux = UoWConsumer.CustomerRepository
+                    .Get(x => x.customerId == data.customerId)
+                    .Select(x => x.CustomerAdditionalData)
+                    .FirstOrDefault();
 
-                dto.StateId = ubication.StateId;
-                dto.CountryId = ubication.CountryId;
-                dto.TownId = ubication.TownId;
+                var customerAdditionalData = customerAdditionalDataAux.FirstOrDefault();
+                var customer = data;
+                var customerData = customer.so_customer_data.FirstOrDefault();
+
+
+                List<int> daysInRoute = UoWConsumer.RouteCustomerRepository
+                    .Get(x => x.routeId == routeVisit.routeId && x.status && x.customerId == customer.customerId)
+                    .Select(x => x.day)
+                    .ToList();
+
+                GetConsumersResponse dto = new GetConsumersResponse()
+                {
+                    CustomerId = data.customerId,
+                    Order = order,
+                    Visited = UoWConsumer.BinnacleVisitRepository.Get(bv => bv.customerId == data.customerId &&
+                        DbFunctions.TruncateTime(bv.createdon) == DbFunctions.TruncateTime(DateTime.Now))
+                        .FirstOrDefault() != null,
+                    Name = customer.name,
+                    CFECode = customer.code,
+                    CodePlace = customerAdditionalData == null ? null : customerAdditionalData.CodePlaceId,
+                    Contact = customerAdditionalData == null ? string.Empty : customerAdditionalData.Customer.contact,
+                    Crossroads = customerData != null ? customerData.address_number_cross1 : string.Empty,
+                    Crossroads_2 = customerData != null ? customerData.address_number_cross2 : string.Empty,
+                    Email = customer.email,
+                    Email_2 = customerAdditionalData == null ? string.Empty : customerAdditionalData.Email_2,
+                    ExternalNumber = customerData != null ? customerData.address_number : string.Empty,
+                    InteriorNumber = customerAdditionalData == null ? string.Empty : customerAdditionalData.InteriorNumber,
+                    Latitude = customer.latitude,
+                    Longitude = customer.longitude,
+                    Neighborhood = customerAdditionalData == null ? null : customerAdditionalData.NeighborhoodId,
+                    Phone = customerAdditionalData == null ? string.Empty : customerAdditionalData.Phone,
+                    Phone_2 = customerAdditionalData == null ? string.Empty : customerAdditionalData.Phone_2,
+                    ReferenceCode = customerAdditionalData == null ? string.Empty : customerAdditionalData.ReferenceCode,
+                    RouteId = routeVisit.routeId,
+                    Street = customerData != null ? customerData.address_street : string.Empty,
+                    Days = daysInRoute,
+                    CounterVisitsWithoutSales = customerAdditionalData == null ? 0 : customerAdditionalData.CounterVisitsWithoutSales,
+                    IsActive = customerAdditionalData == null ? false : customerAdditionalData.Status == (int)Consumer.STATUS.CONSUMER,
+                    IsMailingActive = customerAdditionalData == null ? false : customerAdditionalData.IsMailingActive,
+                    IsSMSActive = customerAdditionalData == null ? false : customerAdditionalData.IsSMSActive,
+                    IsTermsAndConditionsAccepted = customerAdditionalData == null ? false : customerAdditionalData.AcceptedTermsAndConditions,
+                    CanBeRemoved = false
+                };
+
+                if (customerAdditionalData == null ? false : customerAdditionalData.NeighborhoodId != null)
+                {
+                    var ubication = UoWCRM.ColoniasRepository
+                        .Get(x => x.Ope_coloniaId == customerAdditionalData.NeighborhoodId)
+                        .Select(x => new
+                        {
+                            CountryId = x.ope_PaisId,
+                            StateId = x.ope_EstadoId,
+                            TownId = x.Ope_MunicipioId
+                        }).FirstOrDefault();
+
+                    dto.StateId = ubication.StateId;
+                    dto.CountryId = ubication.CountryId;
+                    dto.TownId = ubication.TownId;
+                }
+                //Asignar valores default a las colonias
+                if (customerAdditionalData == null ? false : customerAdditionalData.NeighborhoodId == null)
+                {
+                    dto.Neighborhood = defualtGuid;
+                    dto.StateId = defualtGuid;
+                    dto.CountryId = defualtGuid;
+                    dto.TownId = defualtGuid;
+                }
+                dtos.Add(dto);
             }
-            //Asignar valores default a las colonias
-            if (customerAdditionalData == null ? false : customerAdditionalData.NeighborhoodId == null)
-            {
-                dto.Neighborhood = defualtGuid;
-                dto.StateId = defualtGuid;
-                dto.CountryId = defualtGuid;
-                dto.TownId = defualtGuid;
-            }
 
-            return ResponseBase<GetConsumersResponse>.Create(dto);
+            return ResponseBase<List<GetConsumersResponse>>.Create(dtos);
+        }
+
+        public List<int> CustomersUnsynchronized(int userId)
+        {
+            var unsynchronizeds = UoWConsumer.SynchronizedConsumerDetailsRepository.Get(x => x.userId == userId && !x.synchronized).ToList();
+            foreach (var unsynchronized in unsynchronizeds)
+            {
+                unsynchronized.synchronized = true;
+            }
+            UoWConsumer.Save();
+            var unsynchronizedIds = unsynchronizeds.Select(x => x.synchronizedId).ToList();
+            var unsynchronizedConsumers = UoWConsumer.SynchronizedConsumersRepository.Get(x => unsynchronizedIds.Contains(x.synchronizedId)).Select(p => p.customerId).ToList();
+            return unsynchronizedConsumers;
         }
 
         public int SearchDrivingId(int actualUserId)
