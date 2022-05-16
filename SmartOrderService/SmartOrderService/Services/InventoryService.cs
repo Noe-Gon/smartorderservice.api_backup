@@ -100,6 +100,7 @@ namespace SmartOrderService.Services
                     {
                         //closingRouteTeamTravelStatus(userId, inventoryId, userTeamRole);
                         CloseUserTravel(inventoryId, userId, workDay);
+                        UpdateUnsynchronizedConsumer(driverId);
                         dbContextTransaction.Commit();
                         return true;
                     }
@@ -108,6 +109,18 @@ namespace SmartOrderService.Services
             }
             CloseUserTravel(inventoryId, userId, workDay);
             return true;
+        }
+
+        private void UpdateUnsynchronizedConsumer(int userId)
+        {
+            var routeId = db.so_route_team.Where(x => x.userId.Equals(userId)).Select(p => p.routeId).FirstOrDefault();
+            var userIds = db.so_route_team.Where(x => x.routeId.Equals(routeId)).Select(p => p.userId).ToList();
+            var unsynchronizedConsumers = db.so_synchronized_consumer_detail.Where(x => userIds.Contains(x.userId) && !x.synchronized).ToList();
+            foreach (var unsynchronizedConsumer in unsynchronizedConsumers)
+            {
+                unsynchronizedConsumer.synchronized = true;
+            }
+            db.SaveChanges();
         }
 
         private void CloseUserTravel(int inventoryId, int userId, so_work_day workDay)
