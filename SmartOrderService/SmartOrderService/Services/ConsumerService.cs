@@ -35,7 +35,7 @@ namespace SmartOrderService.Services
 
         }
 
-        public ResponseBase<InsertConsumerResponseRefined> InsertConsumer(InsertConsumerRequest request)
+        public ResponseBase<InsertConsumerResponse> InsertConsumer(InsertConsumerRequest request)
         {
             try
             {
@@ -44,7 +44,7 @@ namespace SmartOrderService.Services
                     .GetByID(request.RouteId);
 
                 if (route == null)
-                    return ResponseBase<InsertConsumerResponseRefined>
+                    return ResponseBase<InsertConsumerResponse>
                     .Create(new List<string>() { "No se encontró la ruta" });
 
                 if (request.CodePlace == 0)
@@ -57,7 +57,7 @@ namespace SmartOrderService.Services
                         .FirstOrDefault();
 
                     if (codePlace == null)
-                        return ResponseBase<InsertConsumerResponseRefined>
+                        return ResponseBase<InsertConsumerResponse>
                         .Create(new List<string>() { "No se encontró la ubicación del código" });
                 }
 
@@ -156,7 +156,7 @@ namespace SmartOrderService.Services
                     .Select(x => x.customerId);
 
                 if (customerIds.Count() == 0)
-                    return ResponseBase<InsertConsumerResponseRefined>.Create(new List<string>()
+                    return ResponseBase<InsertConsumerResponse>.Create(new List<string>()
                     {
                         "No hay usuarios para esa ruta"
                     });
@@ -250,14 +250,14 @@ namespace SmartOrderService.Services
                 UoWConsumer.Save();
                 InsertUnsynchronizedConsumer(newCustomer.customerId, request.UserId);
 
-                PriceService service = new PriceService();
-                var Today = DateTime.Today;
-                var inventory = UoWConsumer.InventoryRepository.Get(x => x.userId == request.UserId && x.state == 1 && x.status &&
-                DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(Today)).FirstOrDefault();
-                var user = UoWConsumer.UserRepository.Get(x => x.userId == request.UserId).FirstOrDefault();
-                var prices = service.getPricesByInventoryCustomer(inventory.inventoryId, user.branchId, DateTime.Now, newCustomer.customerId);
+                //PriceService service = new PriceService();
+                //var Today = DateTime.Today;
+                //var inventory = UoWConsumer.InventoryRepository.Get(x => x.userId == request.UserId && x.state == 1 && x.status &&
+                //DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(Today)).FirstOrDefault();
+                //var user = UoWConsumer.UserRepository.Get(x => x.userId == request.UserId).FirstOrDefault();
+                //var prices = service.getPricesByInventoryCustomer(inventory.inventoryId, user.branchId, DateTime.Now, newCustomer.customerId);
 
-                var response = new InsertConsumerResponseRefined
+                var response = new InsertConsumerResponse
                 {
                     CustomerId = newCustomer.customerId,
                     CFECode = request.CFECode,
@@ -282,11 +282,10 @@ namespace SmartOrderService.Services
                     StateId = request.StateId,
                     Status = request.Status,
                     Street = request.Street,
-                    UserId = request.UserId,
-                    PriceList = prices
+                    UserId = request.UserId
                 };
 
-                return ResponseBase<InsertConsumerResponseRefined>.Create(response);
+                return ResponseBase<InsertConsumerResponse>.Create(response);
             }
             catch (DuplicateEntityException e)
             {
@@ -294,7 +293,7 @@ namespace SmartOrderService.Services
             }
             catch (Exception e)
             {
-                return ResponseBase<InsertConsumerResponseRefined>
+                return ResponseBase<InsertConsumerResponse>
                     .Create(new List<string>() { e.Message });
             }
         }
