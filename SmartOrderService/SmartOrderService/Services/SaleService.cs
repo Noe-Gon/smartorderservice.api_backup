@@ -223,8 +223,8 @@ namespace SmartOrderService.Services
                                     {
                                         Amount = detail.amount,
                                         ProductName = detail.productId + " - " + product.name,
-                                        TotalPrice = Convert.ToDouble(detail.amount) * Convert.ToDouble(detail.base_price_no_tax),
-                                        UnitPrice = Convert.ToDouble(detail.base_price_no_tax)
+                                        TotalPrice = Convert.ToDouble(detail.amount) * Convert.ToDouble(detail.base_price_no_tax + detail.stps_fee),
+                                        UnitPrice = Convert.ToDouble(detail.base_price_no_tax + detail.stps_fee)
                                     });
                                 }
                                 sendTicketDigitalEmail.Sales = sales;
