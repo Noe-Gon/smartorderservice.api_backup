@@ -511,6 +511,8 @@ namespace SmartOrderService.Services
             saleResult.DeliveryId = sale.DeliveryId;
             saleResult.SaleDetails = new List<SaleDetail>();
             saleResult.PaymentMethod = sale.PaymentMethod;
+            saleResult.EmailDeliveryTicket = sale.EmailDeliveryTicket;
+            saleResult.Email = sale.Email;
 
             for (int i = 0; i < sale.SaleDetails.Count(); i++)
             {

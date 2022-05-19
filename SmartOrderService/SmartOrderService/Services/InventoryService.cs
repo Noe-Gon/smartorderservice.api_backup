@@ -335,6 +335,12 @@ namespace SmartOrderService.Services
                         .FirstOrDefault())
                     .FirstOrDefault();
 
+                if (route == null)
+                    return ResponseBase<MsgResponseBase>.Create(new List<string>
+                    {
+                        "No se encontró el inventario"
+                    });
+
                 string routeId = route.routeId + "";
                 string branchId = route.branchId + "";
 
@@ -494,6 +500,14 @@ namespace SmartOrderService.Services
                             Msg = "Ha finalizado con Exito"
                         });
                     }
+                }
+                if(GetDeliveriesResponse.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                {
+
+                    return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                    {
+                        "Error en API preventa", GetDeliveriesResponse.Content
+                    });
                 }
 
                 #endregion
