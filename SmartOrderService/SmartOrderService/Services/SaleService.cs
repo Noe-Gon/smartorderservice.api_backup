@@ -1288,13 +1288,15 @@ namespace SmartOrderService.Services
                         {
                             UpdateRouteTeamInventory(saleResult, db);
                             UnlockCreate(saleResult);
-                            CreatePaymentMethod(saleResult);
+                            if(!string.IsNullOrEmpty(saleResult.PaymentMethod))
+                                CreatePaymentMethod(saleResult);
                             if (saleResult.SaleId == 0)
                             {
                                 throw new BadRequestException();
                             }
 
-                            PrepareTicketDigital(saleResult);
+                            if (!string.IsNullOrEmpty(saleResult.PaymentMethod))
+                                PrepareTicketDigital(saleResult);
                         }
 
                         transaction.Commit();

@@ -231,13 +231,6 @@ namespace SmartOrderService.Controllers
             {
                 lock (objectService)
                 {
-                    if (sale.PaymentMethod == null)
-                    {
-                        responseMessage = Request.CreateResponse(HttpStatusCode.BadRequest, "El método de pago es requerido");
-                        responseActionResult = ResponseMessage(responseMessage);
-                        return responseActionResult;
-                    }
-
                     saleResult = objectService.SaleTeamTransaction(sale);
                 }
 
