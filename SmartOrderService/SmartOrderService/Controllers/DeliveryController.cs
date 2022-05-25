@@ -14,10 +14,6 @@ namespace SmartOrderService.Controllers
 {
     public class DeliveryController : ApiController
     {
-        public DeliveryStatusService GetDeliveryStatusService()
-        {
-            return DeliveryStatusService.Create();
-        }
 
         // GET: api/Delivery
         public HttpResponseMessage Get([FromUri] DeliveryRequest request)
@@ -220,7 +216,7 @@ namespace SmartOrderService.Controllers
         {
             try
             {
-                using (var serivce = GetDeliveryStatusService())
+                using (var serivce = DeliveryStatusService.Create())
                 {
                     var response = serivce.UpdateDeliveryStatus(request);
 

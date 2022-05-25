@@ -219,7 +219,6 @@ namespace SmartOrderService.Controllers
 
         }
 
-        // POST: api/Sales
         [ResponseType(typeof(so_sale))]
         [HttpPost, Route("api/sales/saleTeam_v2")]
         public IHttpActionResult so_sale_team_v2(SaleTeam sale)
@@ -227,6 +226,51 @@ namespace SmartOrderService.Controllers
             IHttpActionResult responseActionResult;
             HttpResponseMessage responseMessage;
             SaleTeam saleResult = new SaleTeam();
+            try
+            {
+                lock (objectService)
+                {
+                    saleResult = objectService.SaleTeamTransaction(sale);
+                }
+
+            }
+            catch (ProductNotFoundBillingException e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.NotFound, e.Message);
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
+            }
+            catch (BadRequestException e)
+            {
+                return BadRequest();
+            }
+            catch (ApiPreventaException e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.MethodNotAllowed, e.Message);
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
+            }
+            catch (Exception e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
+            }
+
+            responseMessage = Request.CreateResponse(HttpStatusCode.OK, saleResult);
+            responseActionResult = ResponseMessage(responseMessage);
+            return responseActionResult;
+
+        }
+
+        // POST: api/Sales
+        [ResponseType(typeof(so_sale))]
+        [HttpPost, Route("api/sales/saleTeam_v3")]
+        public IHttpActionResult so_sale_team_v3(SaleTeamv3 sale)
+        {
+            IHttpActionResult responseActionResult;
+            HttpResponseMessage responseMessage;
+            SaleTeamv3 saleResult = new SaleTeamv3();
             try
             {
                 lock (objectService)
@@ -312,7 +356,34 @@ namespace SmartOrderService.Controllers
             try
             {
                 var service = new SaleService();
-                var sale = service.Cancel(id, PaymentMethod);
+                var sale = service.Cancel_v2(id, PaymentMethod);
+                response = Request.CreateResponse(HttpStatusCode.OK, sale);
+            }
+            catch (DeviceNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Unauthorized, "no estas autorizado");
+            }
+            catch (EntityNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.NotFound);
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, "la venta no fue afectada");
+            }
+
+            return response;
+        }
+
+        [HttpDelete, Route("api/sales/saleteam_v3")]
+        public HttpResponseMessage Deleteso_sale_team_v3(int id, string PaymentMethod)
+        {
+            HttpResponseMessage response;
+
+            try
+            {
+                var service = new SaleService();
+                var sale = service.Cancel_v3(id, PaymentMethod);
                 response = Request.CreateResponse(HttpStatusCode.OK, sale);
             }
             catch (DeviceNotFoundException e)

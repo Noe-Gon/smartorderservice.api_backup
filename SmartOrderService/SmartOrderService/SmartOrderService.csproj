@@ -500,6 +500,7 @@
     <Compile Include="Mappers\SalePromotionDetailProductMapper.cs" />
     <Compile Include="Mappers\SaleReplacementMapper.cs" />
     <Compile Include="Mappers\SaleTeamMapper.cs" />
+    <Compile Include="Mappers\SaleTeamv3Mapper.cs" />
     <Compile Include="Mappers\TrackingConfigurationMapper.cs" />
     <Compile Include="Models\AccountBindingModels.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
