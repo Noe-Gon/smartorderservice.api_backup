@@ -184,7 +184,6 @@ namespace SmartOrderService.Services
                         });
                 }
 
-                /*
                 var promotiondetailarticles = promotion.so_delivery_promotion_article_detail;
 
                 foreach(var detailarticle in promotiondetailarticles)
@@ -196,7 +195,7 @@ namespace SmartOrderService.Services
                         Status = detailarticle.status
                     });
 
-                }*/
+                }
 
                 dto.DeliveryPromotions.Add(DeliveryPromotion);
 

@@ -76,9 +76,5 @@ namespace SmartOrderService.DB
 
         public virtual so_customer so_customer { get; set; }
 
-        #region Relations
-        public int? deliveryStatusId { get; set; }
-        public so_delivery_status DeliveryStatus { get; set; }
-        #endregion
     }
 }
