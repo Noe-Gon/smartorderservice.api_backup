@@ -25,7 +25,7 @@ namespace SmartOrderService.Controllers
     public class SalesController : ApiController
     {
         private SmartOrderModel db = new SmartOrderModel();
-
+        private static Dictionary<string, SaleService> mapObjectService = new Dictionary<string, SaleService>();
         private static SaleService objectService = new SaleService();
         SaleService service;
 
@@ -228,9 +228,24 @@ namespace SmartOrderService.Controllers
             SaleTeam saleResult = new SaleTeam();
             try
             {
-                lock (objectService)
+                SaleService serviceLock = null;
+                RouteTeamService servce = new RouteTeamService();
+                var routeId = servce.searchRouteId(sale.UserId);
+                if (mapObjectService.ContainsKey(routeId.ToString()))
                 {
-                    saleResult = objectService.SaleTeamTransaction(sale);
+                    serviceLock = mapObjectService[routeId.ToString()];
+                }
+                else
+                {
+                    serviceLock = new SaleService();
+                    mapObjectService.Add(routeId.ToString(), serviceLock);
+                }
+                if (serviceLock == null)
+                    serviceLock = objectService;
+
+                lock (serviceLock)
+                {
+                    saleResult = serviceLock.SaleTeamTransaction(sale);
                 }
             }
             catch (ProductNotFoundBillingException e)
