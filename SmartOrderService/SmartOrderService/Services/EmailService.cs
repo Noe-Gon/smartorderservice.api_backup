@@ -1,19 +1,13 @@
-﻿using SmartOrderService.Models.Email;
+﻿using RestSharp;
 using SmartOrderService.Models.Requests;
+using SmartOrderService.Models.Responses;
 using System;
-using System.IO;
-using System.Net;
-using System.Net.Mail;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.IO;
 using System.Linq;
 using System.Web;
-using System.Web.UI;
-using System.Web.UI.WebControls;
-using System.Configuration;
-using SmartOrderService.Models.Responses;
-using System.Net.Mime;
-using RestSharp;
-using System.Data;
 
 namespace SmartOrderService.Services
 {
@@ -31,14 +25,14 @@ namespace SmartOrderService.Services
                     body = body.Replace("{TermsAndConditionLink}", request.TermsAndConditionLink);
                     body = body.Replace("{CanceledLink}", request.CanceledLink);
 
-                    var mailInfo = new SendAPIEmailrequest()
+                    var mailInfo = new APIEmailSendEmailRequest()
                     {
                         To = request.CustomerEmail,
                         Subject = "¡Gracias por ser cliente Bepensa!",
                         Body = body
                     };
 
-                    DummySendEmail(mailInfo);
+                    APIEmailSendEmail(mailInfo);
                 }
 
                 return ResponseBase<SendWellcomeEmailResponse>.Create(new SendWellcomeEmailResponse
@@ -124,14 +118,14 @@ namespace SmartOrderService.Services
                     body = body.Replace("{TotalBoxesSold}", totalBoxesSold.ToString());
                     body = body.Replace("{TotalPrice}", String.Format("{0:0.00}", total));
 
-                    var mailInfo = new SendAPIEmailrequest()
+                    var mailInfo = new APIEmailSendEmailRequest()
                     {
                         To = request.CustomerEmail,
                         Subject = "¡Gracias por ser cliente Bepensa!",
                         Body = body
                     };
 
-                    DummySendEmail(mailInfo);
+                    APIEmailSendEmail(mailInfo);
                 }
 
                 return ResponseBase<SendTicketDigitalEmailResponse>.Create(new SendTicketDigitalEmailResponse
@@ -216,14 +210,14 @@ namespace SmartOrderService.Services
                     body = body.Replace("{TotalBoxesSold}", totalBoxesSold.ToString());
                     body = body.Replace("{TotalPrice}", String.Format("{0:0.00}", total));
 
-                    var mailInfo = new SendAPIEmailrequest()
+                    var mailInfo = new APIEmailSendEmailRequest()
                     {
                         To = request.CustomerEmail,
                         Subject = "¡Gracias por ser cliente Bepensa!",
                         Body = body
                     };
 
-                    DummySendEmail(mailInfo);
+                    APIEmailSendEmail(mailInfo);
                 }
 
                 return ResponseBase<SendTicketDigitalEmailResponse>.Create(new SendTicketDigitalEmailResponse
@@ -251,14 +245,14 @@ namespace SmartOrderService.Services
                     body = body.Replace("{CustomerName}", request.CustomerName);
                     body = body.Replace("{TermsAndConditionLink}", request.TermsAndConditionLink);
 
-                    var mailInfo = new SendAPIEmailrequest()
+                    var mailInfo = new APIEmailSendEmailRequest()
                     {
                         To = request.CustomerEmail,
                         Subject = "Solicitud envío de ticket de compra",
                         Body = body
                     };
 
-                    DummySendEmail(mailInfo);
+                    APIEmailSendEmail(mailInfo);
                 }
 
                 return ResponseBase<SendReactivationTicketDigitalResponse>.Create(new SendReactivationTicketDigitalResponse()
@@ -317,49 +311,6 @@ namespace SmartOrderService.Services
                 {
                     e.Message
                 });
-            }
-        }
-
-        public void DummySendEmail(SendAPIEmailrequest request)
-        {
-            MailMessage mmsg = new MailMessage();
-
-            mmsg.To.Add(request.To);
-            mmsg.Subject = request.Subject;
-            mmsg.SubjectEncoding = System.Text.Encoding.UTF8;
-
-            //Add image
-            Attachment att = new Attachment(HttpContext.Current.Server.MapPath("~/Src/bepensa.png"));
-            att.ContentDisposition.Inline = true;
-            att.ContentDisposition.DispositionType = DispositionTypeNames.Inline;
-            att.ContentId = "Bepensa";
-            att.ContentType.MediaType = "image/png";
-            att.ContentType.Name = Path.GetFileName(HttpContext.Current.Server.MapPath("~/Src/bepensa.png"));
-            request.Body = request.Body.Replace("{image}", "<img class=\"image\" src=\"cid:Bepensa\" />");
-
-            mmsg.Body = request.Body;
-            mmsg.BodyEncoding = System.Text.Encoding.UTF8;
-            mmsg.IsBodyHtml = true;
-            mmsg.Attachments.Add(att);
-
-            mmsg.From = new MailAddress("bepensafullpotentialaws@walook.com.mx");
-
-            SmtpClient client = new SmtpClient();
-
-            client.Credentials = new NetworkCredential("AKIA4VWPJ4MQA5N5FLVM", "BE7TsEtOBV/9SIIFTZ6r9hDvg8HWTWbvyu/dRgXRvenz");
-
-            client.Port = 587;
-            client.EnableSsl = true;
-
-            client.Host = "email-smtp.us-east-2.amazonaws.com";
-
-            try
-            {
-                client.Send(mmsg);
-            }
-            catch (Exception e)
-            {
-                throw;
             }
         }
 
