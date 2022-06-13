@@ -289,6 +289,7 @@ namespace SmartOrderService.Controllers
             {
                 var service = new SaleService();
                 var sale = service.Delete(id);
+                service.RestoreInventoryAvailability(id);
                 response = Request.CreateResponse(HttpStatusCode.OK, sale);
             }
             catch (DeviceNotFoundException e)
