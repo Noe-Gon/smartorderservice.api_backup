@@ -1,0 +1,46 @@
+﻿<br />
+<div style="border: double; background-color: lightgray; text-align-last: center;">
+    <strong>Pedido</strong>
+</div>
+
+<div style="width: 100%; margin-top: 5px; margin-bottom: 5px; margin-left: 20%;">
+    <div style="width: 75%; text-align: right;">
+        <strong>Fecha de entrega: &nbsp;&nbsp;&nbsp;{OrderDeliveryDate}</strong>
+    </div>
+</div>
+
+<div>
+
+    <table style="margin-left: 10px;margin-top: 10px;margin-bottom: 10px; width: 100%;">
+        <tr>
+            <th style="text-align: left;width:400px"><strong>Producto</strong></th>
+            <th style="text-align: left;width:100px"><strong>Cantidad</strong></th>
+            <th style="text-align: left;width:100px"><strong>Precio</strong></th>
+            <th style="text-align: left;width:100px"><strong>Total</strong></th>
+        </tr>
+        {OrderTdBody}
+    </table>
+
+</div>
+
+<div style="margin-bottom: 20px; width: 100%; display:inline-flex">
+    <div style="width: 35%; height: 10px;">
+
+    </div>
+    <div style="width: 65%; margin-left: 10px; margin-top: 10px; margin-bottom: 10px;">
+        <table style="width: 100%">
+            <tr>
+                <td>Total de productos solicitados:</td>
+                <td class="right">{OrderTotalProductsSold}</td>
+            </tr>
+            <tr>
+                <td>Total:</td>
+                <td class="right">{OrderTotalPrice}</td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div style="width: 100%">
+    * Los precios pueden variar sin previo aviso
+</div>
+<br />

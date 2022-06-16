@@ -11,7 +11,9 @@ namespace SmartOrderService.Models.Requests
         public string CustomerName { get; set; }
         public string CustomerEmail { get; set; }
     }
+    #region Send Ticket Digital Email
 
+    
     public class SendTicketDigitalEmailRequest
     {
         public string CustomerName { get; set; }
@@ -24,8 +26,26 @@ namespace SmartOrderService.Models.Requests
         public string CancelTicketLink { get; set; }
         public List<SendTicketDigitalEmailSales> Sales { get; set; }
         //public DataTable dtTicket { get; set; }
+        public SendTicketDigitalEmailOrder Order { get; set; }
     }
 
+    public class SendTicketDigitalEmailOrder
+    {
+        public DateTime DeliveryDate { get; set; }
+        public List<SendTicketDigitalEmailOrderDetail> OrderDetail { get; set; }
+    }
+
+    public class SendTicketDigitalEmailOrderDetail
+    {
+        public string ProductName { get; set; }
+        public int Amount { get; set; }
+        public double UnitPrice { get; set; }
+        public double TotalPrice { get; set; }
+    }
+    #endregion
+    #region Send Cancel Ticket Digital Email
+
+    
     public class SendCancelTicketDigitalEmailRequest
     {
         public string CustomerName { get; set; }
@@ -37,8 +57,23 @@ namespace SmartOrderService.Models.Requests
         public string PaymentMethod { get; set; }
         public List<SendTicketDigitalEmailSales> Sales { get; set; }
         //public DataTable dtTicket { get; set; }
+        public SendCancelTicketDigitalEmailOrder Order { get; set; }
     }
 
+    public class SendCancelTicketDigitalEmailOrder
+    {
+        public DateTime DeliveryDate { get; set; }
+        public List<SendCancelTicketDigitalEmailOrderDetail> OrderDetail { get; set; }
+    }
+
+    public class SendCancelTicketDigitalEmailOrderDetail
+    {
+        public string ProductName { get; set; }
+        public int Amount { get; set; }
+        public double UnitPrice { get; set; }
+        public double TotalPrice { get; set; }
+    }
+    #endregion
 
     public class SendTicketDigitalEmailSales
     {
@@ -69,6 +104,27 @@ namespace SmartOrderService.Models.Requests
         public string ImpulsorName { get; set; }
         public string Reason { get; set; }
         public DateTime Date { get; set; }
+    }
+
+    public class SendOrderTicketRequest
+    {
+        public string CustomerName { get; set; }
+        public string CustomerFullName { get; set; }
+        public string RouteAddress { get; set; }
+        public string SallerName { get; set; }
+        public DateTime Date { get; set; }
+        public DateTime DeliveryDate { get; set; }
+        public string CustomerMail { get; set; }
+        public List<SendOrderTicketItem> Items { get; set; }
+    }
+
+    public class SendOrderTicketItem
+    {
+        public string ProductName { get; set; }
+        public int Amount { get; set; }
+        public double UnitPrice { get; set; }
+        public double TotalPrice { get; set; }
+
     }
 
     #region API EMAIL

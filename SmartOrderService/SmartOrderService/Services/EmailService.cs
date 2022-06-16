@@ -61,7 +61,7 @@ namespace SmartOrderService.Services
                 //    lTienePromociones = true;
                 //}
 
-                    using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath(sRutaPlantilla)))
+                using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath(sRutaPlantilla)))
                 {
                     string body = reader.ReadToEnd();
 
@@ -79,6 +79,39 @@ namespace SmartOrderService.Services
 
                     string tdBody = "";
                     //string tdBodyPromociones = "";
+
+                    //Orders
+                    if (request.Order == null)
+                        body = body.Replace("{OrderTableTamplate}", "");
+                    else
+                    {
+                        using (StreamReader readerTemplate = new StreamReader(HttpContext.Current.Server.MapPath("~/Content/Template/OrderTableTemplate.html")))
+                        {
+                            string bodyOrderTemplate = readerTemplate.ReadToEnd();
+
+                            body = body.Replace("{OrderTableTamplate}", bodyOrderTemplate);
+                            body = body.Replace("{OrderDeliveryDate}", request.Order.DeliveryDate.ToString("dd/MM/yyyy"));
+                            string tableData = "";
+                            double totalPrice = 0;
+                            int index = 0;
+                            int totalOrderProductsSold = 0;
+
+                            foreach (var item in request.Order.OrderDetail)
+                            {
+                                index++;
+                                totalOrderProductsSold += item.Amount;
+                                totalPrice += item.TotalPrice;
+                                tableData += "<tr><td>" + index + ") " + item.ProductName + "</td>";
+                                tableData += "<td>" + item.Amount + "</td>";
+                                tableData += "<td>" + item.UnitPrice.ToString("0.00") + "</td>";
+                                tableData += "<td>" + item.TotalPrice.ToString("0.00") + "</td></tr>";
+                            }
+
+                            body = body.Replace("{OrderTdBody}", tableData);
+                            body = body.Replace("{OrderTotalProductsSold}", totalOrderProductsSold.ToString());
+                            body = body.Replace("{OrderTotalPrice}", totalPrice.ToString("0.00"));
+                        }
+                    }
 
                     int totalProductsSold = 0;
                     int totalBoxesSold = 0;
@@ -117,6 +150,8 @@ namespace SmartOrderService.Services
                     body = body.Replace("{TotalProductsSold}", totalProductsSold.ToString());
                     body = body.Replace("{TotalBoxesSold}", totalBoxesSold.ToString());
                     body = body.Replace("{TotalPrice}", String.Format("{0:0.00}", total));
+
+                    
 
                     var mailInfo = new APIEmailSendEmailRequest()
                     {
@@ -169,6 +204,39 @@ namespace SmartOrderService.Services
                         body = body.Replace("{PaymentMethod}", "");
                     else
                         body = body.Replace("{PaymentMethod}", "Forma de pago: " + request.PaymentMethod);
+
+                    //Orders
+                    if (request.Order == null)
+                        body = body.Replace("{OrderTableTamplate}", "");
+                    else
+                    {
+                        using (StreamReader readerTemplate = new StreamReader(HttpContext.Current.Server.MapPath("~/Content/Template/OrderTableTemplate.html")))
+                        {
+                            string bodyOrderTemplate = readerTemplate.ReadToEnd();
+
+                            body = body.Replace("{OrderTableTamplate}", bodyOrderTemplate);
+                            body = body.Replace("{OrderDeliveryDate}", request.Order.DeliveryDate.ToString("dd/MM/yyyy"));
+                            string tableData = "";
+                            double totalPrice = 0;
+                            int index = 0;
+                            int totalOrderProductsSold = 0;
+
+                            foreach (var item in request.Order.OrderDetail)
+                            {
+                                index++;
+                                totalOrderProductsSold += item.Amount;
+                                totalPrice += item.TotalPrice;
+                                tableData += "<tr><td>" + index + ") " + item.ProductName + "</td>";
+                                tableData += "<td>" + item.Amount + "</td>";
+                                tableData += "<td>" + item.UnitPrice.ToString("0.00") + "</td>";
+                                tableData += "<td>" + item.TotalPrice.ToString("0.00") + "</td></tr>";
+                            }
+
+                            body = body.Replace("{OrderTdBody}", tableData);
+                            body = body.Replace("{OrderTotalProductsSold}", totalOrderProductsSold.ToString());
+                            body = body.Replace("{OrderTotalPrice}", totalPrice.ToString("0.00"));
+                        }
+                    }
 
                     string tdBody = "";
                     int totalProductsSold = 0;
@@ -314,6 +382,62 @@ namespace SmartOrderService.Services
             }
         }
 
+        public ResponseBase<MsgResponseBase> SendOrderTicket(SendOrderTicketRequest request)
+        {
+            try
+            {
+                using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath("~/Content/Template/OrderTicket.html")))
+                {
+                    string body = reader.ReadToEnd();
+                    string tableData = "";
+
+                    body = body.Replace("{CustomerName}", request.CustomerName);
+                    body = body.Replace("{Date}", request.Date.ToString("dd/MMM/yy hh:mmtt"));
+                    body = body.Replace("{CustomerFullName}", request.CustomerFullName);
+                    body = body.Replace("{RouteAddress}", request.RouteAddress);
+                    body = body.Replace("{SellerName}", request.SallerName);
+                    body = body.Replace("{DeliveryDate}", request.DeliveryDate.ToString("dd/MM/yyyy"));
+
+                    int totalProductsSold = 0;
+                    double totalPrice = 0;
+                    int index = 0;
+                    foreach (var item in request.Items)
+                    {
+                        index++;
+                        totalProductsSold += item.Amount;
+                        totalPrice += item.TotalPrice;
+                        tableData += "<tr><td>" + index + ") " + item.ProductName + "</td>";
+                        tableData += "<td>" + item.Amount + "</td>";
+                        tableData += "<td>" + item.UnitPrice.ToString("0.00") + "</td>";
+                        tableData += "<td>" + item.TotalPrice.ToString("0.00") + "</td></tr>";
+                    }
+
+                    body = body.Replace("{TdBody}", tableData);
+                    body = body.Replace("{TotalProductsSold}", totalProductsSold.ToString());
+                    body = body.Replace("{TotalPrice}", totalPrice.ToString("0.00"));
+
+                    APIEmailSendEmail(new APIEmailSendEmailRequest
+                    {
+                        Body = body,
+                        Subject = "Hemos recibido tu pedido en Bepensa",
+                        To = request.CustomerMail
+                    });
+                }
+
+                return ResponseBase<MsgResponseBase>.Create(new MsgResponseBase()
+                {
+                    Msg = "Se ha enviadó con exito"
+                });
+            }
+            catch (Exception e)
+            {
+                return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                });
+            }
+        }
+
         public void APIEmailSendEmail(APIEmailSendEmailRequest request)
         {
             var client = new RestClient();
@@ -324,6 +448,11 @@ namespace SmartOrderService.Services
             requesto.AddJsonBody(request);
 
             var RestResponse = client.Execute(requesto);
+
+            if (RestResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                return;
+
+            throw new Exception(RestResponse.ErrorMessage);
         }
 
         public void APIEmailSendEmailToManyUsers(APIEmailSendEmailToManyUsersRequest request)

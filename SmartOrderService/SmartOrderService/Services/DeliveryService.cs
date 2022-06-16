@@ -519,10 +519,95 @@ namespace SmartOrderService.Services
             db.so_order.Add(newOrder);
             db.SaveChanges();
 
-            return ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
+            var response = ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
             {
                 Msg = "Orden realizada con exitó"
             });
+
+            try
+            {
+                string mailRespnse = SendOrderEmail(newOrder, request.RouteId);
+
+                response.Data.Msg = response.Data.Msg + " - " + mailRespnse;
+            }
+            catch (Exception e)
+            {
+                response.Errors = new List<string>()
+                {
+                    e.Message
+                };
+            }
+
+            return response;
+        }
+
+        public string SendOrderEmail(so_order order, int routeId)
+        {
+            var customer = db.so_customer
+                .Where(x => x.customerId == order.customerId)
+                .Select(x => new { x, x.CustomerAdditionalData })
+                .FirstOrDefault();
+
+            if (customer == null)
+                throw new Exception("No se encontró al cliente");
+
+            if (customer.CustomerAdditionalData.Count == 0)
+                throw new Exception("El cliente no tiene datos adicionales");
+
+            if (!customer.CustomerAdditionalData.FirstOrDefault().IsMailingActive)
+                return "El email no se envio ya que no tiene activado la recepción de mails";
+
+            var route = db.so_route
+                .Where(x => x.routeId == routeId)
+                .FirstOrDefault();
+
+            if (route == null)
+                throw new Exception("No se encontró la ruta");
+
+            var user = db.so_user
+                .Where(x => x.userId == order.userId)
+                .FirstOrDefault();
+
+            if (user == null)
+                throw new Exception("No se encontró al usuario");
+
+            SendOrderTicketRequest mailRequest = new SendOrderTicketRequest()
+            {
+                RouteAddress = route.code,
+                CustomerFullName = customer.x.code + " - " + customer.x.name + " " + customer.x.address,
+                CustomerMail = customer.x.email,
+                CustomerName = customer.x.name,
+                Date = DateTime.Now,
+                DeliveryDate = order.delivery.Value,
+                SallerName = user.code + " - " + user.name,
+                Items = new List<SendOrderTicketItem>()
+            };
+
+            var productIds = order.so_order_detail.Select(x => x.productId).ToList();
+            var products = db.so_product
+                .Where(x => productIds.Contains(x.productId))
+                .ToList();
+
+            foreach (var item in order.so_order_detail)
+            {
+                var product = products.Where(x => x.productId == item.productId).FirstOrDefault();
+
+                mailRequest.Items.Add(new SendOrderTicketItem()
+                {
+                    Amount = item.amount,
+                    ProductName = product.name,
+                    TotalPrice = item.price * (double)item.amount,
+                    UnitPrice = item.price
+                });
+            }
+
+            var service = new EmailService();
+            var response = service.SendOrderTicket(mailRequest);
+
+            if (response.Status)
+                return response.Data.Msg;
+
+            throw new Exception(response.Errors.FirstOrDefault());
         }
 
         public List<so_delivery_devolution> getDevolutionsByPeriod(int UserId,DateTime Begin,DateTime End)
