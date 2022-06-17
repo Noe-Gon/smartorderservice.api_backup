@@ -27,6 +27,7 @@ namespace SmartOrderService.Models.Requests
         public List<SendTicketDigitalEmailSales> Sales { get; set; }
         //public DataTable dtTicket { get; set; }
         public SendTicketDigitalEmailOrder Order { get; set; }
+        public string ReferenceCode { get; set; }
     }
 
     public class SendTicketDigitalEmailOrder
@@ -55,6 +56,7 @@ namespace SmartOrderService.Models.Requests
         public string RouteAddress { get; set; }
         public string SellerName { get; set; }
         public string PaymentMethod { get; set; }
+        public string ReferenceCode { get; set; }
         public List<SendTicketDigitalEmailSales> Sales { get; set; }
         //public DataTable dtTicket { get; set; }
         public SendCancelTicketDigitalEmailOrder Order { get; set; }
@@ -115,6 +117,7 @@ namespace SmartOrderService.Models.Requests
         public DateTime Date { get; set; }
         public DateTime DeliveryDate { get; set; }
         public string CustomerMail { get; set; }
+        public string ReferenceCode { get; set; }
         public List<SendOrderTicketItem> Items { get; set; }
     }
 

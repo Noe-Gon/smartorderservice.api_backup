@@ -110,6 +110,15 @@ namespace SmartOrderService.Services
                             body = body.Replace("{OrderTdBody}", tableData);
                             body = body.Replace("{OrderTotalProductsSold}", totalOrderProductsSold.ToString());
                             body = body.Replace("{OrderTotalPrice}", totalPrice.ToString("0.00"));
+
+                            if (string.IsNullOrEmpty(request.ReferenceCode))
+                                body = body.Replace("id='reference_code'", "id='reference_code' style='display: none'");
+                            else
+                            {
+                                body = body.Replace("id='reference_code'", "id='reference_code' style='text-align: center; margin-bottom: 5px;'");
+                                body = body.Replace("{OrderReferenceCode}", request.ReferenceCode);
+                            }
+                                
                         }
                     }
 
@@ -235,6 +244,14 @@ namespace SmartOrderService.Services
                             body = body.Replace("{OrderTdBody}", tableData);
                             body = body.Replace("{OrderTotalProductsSold}", totalOrderProductsSold.ToString());
                             body = body.Replace("{OrderTotalPrice}", totalPrice.ToString("0.00"));
+
+                            if (string.IsNullOrEmpty(request.ReferenceCode))
+                                body = body.Replace("id='reference_code'", "id='reference_code' style='display: none'");
+                            else
+                            {
+                                body = body.Replace("id='reference_code'", "id='reference_code' style='text-align: center; margin-bottom: 5px;'");
+                                body = body.Replace("{OrderReferenceCode}", request.ReferenceCode);
+                            }
                         }
                     }
 
@@ -415,6 +432,11 @@ namespace SmartOrderService.Services
                     body = body.Replace("{TdBody}", tableData);
                     body = body.Replace("{TotalProductsSold}", totalProductsSold.ToString());
                     body = body.Replace("{TotalPrice}", totalPrice.ToString("0.00"));
+
+                    if (string.IsNullOrEmpty(request.ReferenceCode))
+                        body = body.Replace("id='reference_code'", "id='reference_code' style='display: none'");
+                    else
+                        body = body.Replace("{ReferenceCode}", request.ReferenceCode);
 
                     APIEmailSendEmail(new APIEmailSendEmailRequest
                     {

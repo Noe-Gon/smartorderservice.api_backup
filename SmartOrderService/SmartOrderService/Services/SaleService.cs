@@ -229,11 +229,12 @@ namespace SmartOrderService.Services
                                 CustomerName = customer.name,
                                 RouteAddress = route,
                                 CustomerEmail = customer.email,
-                                CustomerFullName = customer.code + " - " + customer.name + " " + customer.address,
+                                CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
                                 Date = DateTime.Now,
                                 PaymentMethod = PaymentMethod,
                                 SellerName = user.code + " - " + user.name,
-                                //dtTicket = dtTicket
+                                //dtTicket = dtTicket,
+                                ReferenceCode = customer.customerId.ToString()
                             };
 
                             //Preparar Order
@@ -1489,11 +1490,12 @@ namespace SmartOrderService.Services
                                 CustomerName = customer.name,
                                 RouteAddress = route,
                                 CustomerEmail = customer.email,
-                                CustomerFullName = customer.code + " - " + customer.name + " " + customer.address,
+                                CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
                                 Date = DateTime.Now,
                                 PaymentMethod = sale.PaymentMethod,
                                 SellerName = user.code + " - " + user.name,
-                                //dtTicket = dtTicket
+                                //dtTicket = dtTicket,
+                                ReferenceCode = customer.customerId.ToString()
                             };
 
                             //Preparar Order

@@ -574,12 +574,13 @@ namespace SmartOrderService.Services
             SendOrderTicketRequest mailRequest = new SendOrderTicketRequest()
             {
                 RouteAddress = route.code,
-                CustomerFullName = customer.x.code + " - " + customer.x.name + " " + customer.x.address,
+                CustomerFullName = customer.x.customerId + " - " + customer.x.name + " " + customer.x.address,
                 CustomerMail = customer.x.email,
                 CustomerName = customer.x.name,
                 Date = DateTime.Now,
                 DeliveryDate = order.delivery.Value,
                 SallerName = user.code + " - " + user.name,
+                ReferenceCode = customer.x.customerId.ToString(),
                 Items = new List<SendOrderTicketItem>()
             };
 
