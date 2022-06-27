@@ -1062,7 +1062,11 @@ namespace SmartOrderService.Services
                     productId = productId,
                     Amount = item.Amount, 
                     pointsPerUnit = item.points,
-                    totalPoints = item.points * item.Amount
+                    totalPoints = item.points * item.Amount,
+                    createdby = sale.UserId,
+                    createdon = DateTime.Now,
+                    modifiedby = sale.UserId,
+                    modifiedon = DateTime.Now
                 });
             }
             return saleWithPoints;

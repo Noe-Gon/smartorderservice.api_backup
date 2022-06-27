@@ -111,7 +111,11 @@ namespace SmartOrderService.Services
                         productId = loyaltyProductId,
                         Amount = loyaltyProductInventory.Amount,
                         pointsPerUnit = loyaltyProductInventory.points,
-                        totalPoints = loyaltyProductInventory.points * loyaltyProductInventory.Amount
+                        totalPoints = loyaltyProductInventory.points * loyaltyProductInventory.Amount,
+                        createdby = sale.UserId,
+                        createdon = DateTime.Now,
+                        modifiedby = sale.UserId,
+                        modifiedon = DateTime.Now
                     };
                     db.so_sale_with_points_details.Add(saleWithPointsDetails);
                     db.SaveChanges();
