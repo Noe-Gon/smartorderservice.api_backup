@@ -99,6 +99,10 @@ namespace SmartOrderService.Services
                     date = DateTime.Parse(sale.Date),
                     userId = sale.UserId,
                     customerId = sale.CustomerId,
+                    createdby = sale.UserId,
+                    createdon = DateTime.Now,
+                    modifiedby = sale.UserId,
+                    modifiedon = DateTime.Now
                 };
                 db.so_sale_with_points.Add(saleWithPoint);
                 db.SaveChanges();

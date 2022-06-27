@@ -1045,7 +1045,11 @@ namespace SmartOrderService.Services
                 saleId = sale.SaleId,
                 date = DateTime.Parse(sale.Date),
                 userId = sale.UserId,
-                customerId = sale.CustomerId
+                customerId = sale.CustomerId,
+                createdby = sale.UserId,
+                createdon = DateTime.Now,
+                modifiedby = sale.UserId,
+                modifiedon = DateTime.Now
             });
             return saleWithPoints;
         }
