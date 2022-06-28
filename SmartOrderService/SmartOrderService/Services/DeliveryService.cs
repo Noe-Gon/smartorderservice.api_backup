@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.Entity;
+using System.Data.Entity.Core.Objects;
 using System.Linq;
 using System.Web;
 
@@ -73,10 +74,12 @@ namespace SmartOrderService.Services
 
         }
 
+        [Obsolete]
         public List<OrderDTO> GetNewDeliveriesByCustomerId(int customerId)
         {
             List<OrderDTO> response = new List<OrderDTO>();
-            var orders = db.so_order.Where(x => x.customerId == customerId && ((DateTime)x.createdon).Date == DateTime.Now.Date).ToList();
+            var currentDate = DateTime.Now.Date;
+            var orders = db.so_order.Where(x => x.customerId == customerId && EntityFunctions.TruncateTime(x.createdon) == EntityFunctions.TruncateTime(currentDate)).ToList();
             foreach (var order in orders)
             {
                 List<OrderDetailDTO> orderDetails = new List<OrderDetailDTO>();
@@ -553,6 +556,70 @@ namespace SmartOrderService.Services
             return ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
             {
                 Msg = "Orden realizada con exitó"
+            });
+        }
+
+        public ResponseBase<SendOrderResponse> UpdateOrder(NewDeliveryUpdateRequest request)
+        {
+            //var route = db.so_route
+            //    .Where(x => x.routeId == request.RouteId && x.status)
+            //    .Select(x => new { RouteCode = x.code, BranchCode = x.so_branch.code, RouteId = x.branchId, BranchId = x.branchId })
+            //    .FirstOrDefault();
+
+            //if (route == null)
+            //    return ResponseBase<SendOrderResponse>.Create(new List<string>()
+            //    {
+            //        "No se encontró la ruta o ha sido eliminada"
+            //    });
+
+            var customer = db.so_customer
+                .Where(x => x.customerId == request.CustomerId && x.status)
+                .FirstOrDefault();
+
+            if (customer == null)
+                return ResponseBase<SendOrderResponse>.Create(new List<string>()
+                {
+                    "No se encontró al cliente con id: " + request.CustomerId + " o ha dado de baja"
+                });
+
+            //Guardar en so_order
+            var deliveryReference = db.so_delivery_references
+                .Where(x => x.value == 80)
+                .FirstOrDefault();
+
+            if (deliveryReference == null)
+                throw new Exception("No existe el delivery reference con valor 80");
+
+            so_order orderToUpdate = db.so_order.Where(x => x.orderId == request.DeliveryId).FirstOrDefault();
+            orderToUpdate.modifiedon = DateTime.Now;
+            orderToUpdate.modifiedby = request.UserId;
+
+            db.so_order_detail.RemoveRange(orderToUpdate.so_order_detail);
+            db.SaveChanges();
+            orderToUpdate.so_order_detail = new List<so_order_detail>();
+
+            foreach (var product in request.Products)
+            {
+                orderToUpdate.so_order_detail.Add(new so_order_detail()
+                {
+                    amount = product.Quantity,
+                    createdby = request.UserId,
+                    createdon = DateTime.Now,
+                    import = product.Import,
+                    productId = product.ProductId,
+                    price = product.Price,
+                    modifiedby = request.UserId,
+                    status = true,
+                    modifiedon = DateTime.Now,
+                    credit_amount = product.CreditAmount
+                });
+            }
+            db.so_order.Attach(orderToUpdate);
+            db.SaveChanges();
+
+            return ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
+            {
+                Msg = "Orden actualizada con exitó"
             });
         }
 

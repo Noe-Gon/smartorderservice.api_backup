@@ -102,6 +102,37 @@ namespace SmartOrderService.Controllers
         }
 
         [HttpPost]
+        [Route("~/api/NewDeliveries/update")]
+        public IHttpActionResult PutNewDeliveries(NewDeliveryUpdateRequest request)
+        {
+
+            try
+            {
+                var service = new DeliveryService();
+                var response = service.UpdateOrder(request);
+
+                if (response.Status)
+                    return Content(HttpStatusCode.OK, response);
+
+                return Content(HttpStatusCode.BadRequest, response);
+            }
+            catch (ApiPreventaNoAuthorizationException e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<SendOrderResponse>.Create(new List<string>()
+                {
+                    "Petición no autorizada, se requiere enviar el token de autorización o no cuenta con permisos.", e.Message
+                }));
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<SendOrderResponse>.Create(new List<string>()
+                {
+                    "Ocurrio un error al momento de procesar la información.", e.Message
+                }));
+            }
+        }
+
+        [HttpPost]
         [Route("~/api/registerorder")]
         public IHttpActionResult RegisterOrder(SendOrderRequest request)
         {
