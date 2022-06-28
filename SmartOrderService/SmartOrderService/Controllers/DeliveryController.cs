@@ -75,6 +75,32 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
+        [HttpGet]
+        [Route("~/api/NewDeliveries")]
+        public HttpResponseMessage GetNewDeliveries([FromUri] int customerId)
+        {
+            HttpResponseMessage response;
+
+            try
+            {
+
+                List<OrderDTO> deliveries = new DeliveryService().GetNewDeliveriesByCustomerId(customerId);
+
+                response = Request.CreateResponse(HttpStatusCode.OK, deliveries);
+
+            }
+            catch (InventoryEmptyException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, "No hay entregas para ese cliente");
+
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, "upss, lo arreglaremos...");
+            }
+            return response;
+        }
+
         [HttpPost]
         [Route("~/api/registerorder")]
         public IHttpActionResult RegisterOrder(SendOrderRequest request)

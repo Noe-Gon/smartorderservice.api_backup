@@ -73,6 +73,37 @@ namespace SmartOrderService.Services
 
         }
 
+        public List<OrderDTO> GetNewDeliveriesByCustomerId(int customerId)
+        {
+            List<OrderDTO> response = new List<OrderDTO>();
+            var orders = db.so_order.Where(x => x.customerId == customerId && ((DateTime)x.createdon).Date == DateTime.Now.Date).ToList();
+            foreach (var order in orders)
+            {
+                List<OrderDetailDTO> orderDetails = new List<OrderDetailDTO>();
+                foreach (var orderDetail in order.so_order_detail.ToList())
+                {
+                    orderDetails.Add(new OrderDetailDTO
+                    {
+                        productId = orderDetail.productId,
+                        amount = orderDetail.amount,
+                        price = orderDetail.price,
+                        import = orderDetail.import
+                    });
+                }
+                response.Add(new OrderDTO
+                {
+                    OrderId = order.orderId,
+                    CustomerId = order.customerId,
+                    UserId = order.customerId,
+                    DeliveryDate = order.delivery,
+                    OrderDetails = orderDetails
+                });
+            }
+
+            return response;
+
+        }
+
         public List<so_customer> getCustomersToDeliver(int InventoryId, int UserId)
         {
             var Deliveries = db.so_delivery.Where(d => d.inventoryId == InventoryId && d.status);
