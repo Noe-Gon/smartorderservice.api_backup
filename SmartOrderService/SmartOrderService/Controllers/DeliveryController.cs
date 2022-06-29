@@ -116,12 +116,29 @@ namespace SmartOrderService.Controllers
 
                 return Content(HttpStatusCode.BadRequest, response);
             }
-            catch (ApiPreventaNoAuthorizationException e)
+            catch (Exception e)
             {
                 return Content(HttpStatusCode.InternalServerError, ResponseBase<SendOrderResponse>.Create(new List<string>()
                 {
-                    "Petición no autorizada, se requiere enviar el token de autorización o no cuenta con permisos.", e.Message
+                    "Ocurrio un error al momento de procesar la información.", e.Message
                 }));
+            }
+        }
+
+        [HttpPost]
+        [Route("~/api/NewDeliveries/cancel")]
+        public IHttpActionResult PutNewDeliveries([FromUri] int orderId, int userId)
+        {
+
+            try
+            {
+                var service = new DeliveryService();
+                var response = service.CancelOrder(orderId, userId);
+
+                if (response.Status)
+                    return Content(HttpStatusCode.OK, response);
+
+                return Content(HttpStatusCode.BadRequest, response);
             }
             catch (Exception e)
             {

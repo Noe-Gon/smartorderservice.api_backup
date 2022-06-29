@@ -79,7 +79,10 @@ namespace SmartOrderService.Services
         {
             List<OrderDTO> response = new List<OrderDTO>();
             var currentDate = DateTime.Now.Date;
-            var orders = db.so_order.Where(x => x.customerId == customerId && EntityFunctions.TruncateTime(x.createdon) == EntityFunctions.TruncateTime(currentDate)).ToList();
+            var orders = db.so_order.Where(x => x.customerId == customerId 
+            && EntityFunctions.TruncateTime(x.createdon) == EntityFunctions.TruncateTime(currentDate) 
+            && x.status).ToList();
+
             foreach (var order in orders)
             {
                 List<OrderDetailDTO> orderDetails = new List<OrderDetailDTO>();
@@ -561,16 +564,6 @@ namespace SmartOrderService.Services
 
         public ResponseBase<SendOrderResponse> UpdateOrder(NewDeliveryUpdateRequest request)
         {
-            //var route = db.so_route
-            //    .Where(x => x.routeId == request.RouteId && x.status)
-            //    .Select(x => new { RouteCode = x.code, BranchCode = x.so_branch.code, RouteId = x.branchId, BranchId = x.branchId })
-            //    .FirstOrDefault();
-
-            //if (route == null)
-            //    return ResponseBase<SendOrderResponse>.Create(new List<string>()
-            //    {
-            //        "No se encontró la ruta o ha sido eliminada"
-            //    });
 
             var customer = db.so_customer
                 .Where(x => x.customerId == request.CustomerId && x.status)
@@ -620,6 +613,22 @@ namespace SmartOrderService.Services
             return ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
             {
                 Msg = "Orden actualizada con exitó"
+            });
+        }
+
+        public ResponseBase<SendOrderResponse> CancelOrder(int orderId, int userId)
+        {
+
+            so_order orderToCancel = db.so_order.Where(x => x.orderId == orderId && x.status).FirstOrDefault();
+            orderToCancel.modifiedon = DateTime.Now;
+            orderToCancel.modifiedby = userId;
+            orderToCancel.status = false;
+            db.so_order.Attach(orderToCancel);
+            db.SaveChanges();
+
+            return ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
+            {
+                Msg = "Orden cancelada con exitó"
             });
         }
 
