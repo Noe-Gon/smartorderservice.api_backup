@@ -19,6 +19,7 @@ namespace SmartOrderService.Models.DTO
         public int UserId { get; set; }
 
         public DateTime? DeliveryDate { get; set; }
+        public double TotalCash { get; set; }
 
         public List<OrderDetailDTO> OrderDetails { get; set; }
     }

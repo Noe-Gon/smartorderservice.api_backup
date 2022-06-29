@@ -102,7 +102,8 @@ namespace SmartOrderService.Services
                     CustomerId = order.customerId,
                     UserId = order.userId,
                     DeliveryDate = order.delivery,
-                    OrderDetails = orderDetails
+                    OrderDetails = orderDetails,
+                    TotalCash = order.total_cash
                 });
             }
             OrderDTO response = new OrderDTO
