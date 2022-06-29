@@ -624,11 +624,12 @@ namespace SmartOrderService.Services
         public ResponseBase<SendOrderResponse> CancelOrder(int orderId, int userId)
         {
 
-            so_order orderToCancel = db.so_order.Where(x => x.orderId == orderId && x.status).FirstOrDefault();
+            //var orderToCancel = db.so_order.Where(x => x.orderId == orderId && x.status).FirstOrDefault();
+            var orderToCancel = db.so_order.SingleOrDefault(x => x.orderId == orderId);
             orderToCancel.modifiedon = DateTime.Now;
             orderToCancel.modifiedby = userId;
             orderToCancel.status = false;
-            db.so_order.Attach(orderToCancel);
+            //db.so_order.Attach(orderToCancel);
             db.SaveChanges();
 
             return ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
