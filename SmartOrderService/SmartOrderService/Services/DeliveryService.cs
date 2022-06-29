@@ -590,6 +590,7 @@ namespace SmartOrderService.Services
             so_order orderToUpdate = db.so_order.Where(x => x.orderId == request.OrderId).FirstOrDefault();
             orderToUpdate.modifiedon = DateTime.Now;
             orderToUpdate.modifiedby = request.UserId;
+            orderToUpdate.delivery = Convert.ToDateTime(request.DeliveryDate);
 
             db.so_order_detail.RemoveRange(orderToUpdate.so_order_detail);
             db.SaveChanges();
@@ -611,7 +612,6 @@ namespace SmartOrderService.Services
                     credit_amount = product.CreditAmount
                 });
             }
-            orderToUpdate.delivery = Convert.ToDateTime(request.DeliveryDate);
             db.so_order.Attach(orderToUpdate);
             db.SaveChanges();
 
