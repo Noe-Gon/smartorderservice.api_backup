@@ -587,7 +587,7 @@ namespace SmartOrderService.Services
             if (deliveryReference == null)
                 throw new Exception("No existe el delivery reference con valor 80");
 
-            so_order orderToUpdate = db.so_order.Where(x => x.orderId == request.DeliveryId).FirstOrDefault();
+            so_order orderToUpdate = db.so_order.Where(x => x.orderId == request.OrderId).FirstOrDefault();
             orderToUpdate.modifiedon = DateTime.Now;
             orderToUpdate.modifiedby = request.UserId;
 
