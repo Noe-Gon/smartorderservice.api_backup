@@ -75,9 +75,9 @@ namespace SmartOrderService.Services
         }
 
         [Obsolete]
-        public List<OrderDTO> GetNewDeliveriesByCustomerId(int customerId)
+        public OrderDTO GetNewDeliveriesByCustomerId(int customerId)
         {
-            List<OrderDTO> response = new List<OrderDTO>();
+            List<OrderBodyDTO> body = new List<OrderBodyDTO>();
             var currentDate = DateTime.Now.Date;
             var orders = db.so_order.Where(x => x.customerId == customerId 
             && EntityFunctions.TruncateTime(x.createdon) == EntityFunctions.TruncateTime(currentDate) 
@@ -96,15 +96,19 @@ namespace SmartOrderService.Services
                         import = orderDetail.import
                     });
                 }
-                response.Add(new OrderDTO
+                body.Add(new OrderBodyDTO
                 {
                     OrderId = order.orderId,
                     CustomerId = order.customerId,
-                    UserId = order.customerId,
+                    UserId = order.userId,
                     DeliveryDate = order.delivery,
                     OrderDetails = orderDetails
                 });
             }
+            OrderDTO response = new OrderDTO
+            {
+                Orders = body
+            };
 
             return response;
 
@@ -607,6 +611,7 @@ namespace SmartOrderService.Services
                     credit_amount = product.CreditAmount
                 });
             }
+            orderToUpdate.delivery = Convert.ToDateTime(request.DeliveryDate);
             db.so_order.Attach(orderToUpdate);
             db.SaveChanges();
 

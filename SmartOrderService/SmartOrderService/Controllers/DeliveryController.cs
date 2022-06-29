@@ -84,7 +84,7 @@ namespace SmartOrderService.Controllers
             try
             {
 
-                List<OrderDTO> deliveries = new DeliveryService().GetNewDeliveriesByCustomerId(customerId);
+                OrderDTO deliveries = new DeliveryService().GetNewDeliveriesByCustomerId(customerId);
 
                 response = Request.CreateResponse(HttpStatusCode.OK, deliveries);
 

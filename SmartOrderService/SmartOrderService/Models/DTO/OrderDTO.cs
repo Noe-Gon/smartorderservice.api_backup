@@ -7,6 +7,11 @@ namespace SmartOrderService.Models.DTO
 {
     public class OrderDTO
     {
+        public List<OrderBodyDTO> Orders { get; set; }
+    }
+
+    public class OrderBodyDTO
+    {
         public int OrderId { get; set; }
 
         public int CustomerId { get; set; }

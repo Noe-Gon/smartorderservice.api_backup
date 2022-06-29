@@ -24,7 +24,7 @@ namespace SmartOrderService.Models.Requests
 
     public class NewDeliveryUpdateRequest : SendOrderRequest
     {
-        public int DeliveryId { get; set; }
+        public int OrderId { get; set; }
     }
 
     public class SendOrderProduct
