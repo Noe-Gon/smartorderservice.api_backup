@@ -507,6 +507,7 @@
     <Compile Include="Models\DTO\Invoice\InvoiceLineOpeFacturaDto.cs" />
     <Compile Include="Models\DTO\Invoice\InvoiceOpeFacturaDto.cs" />
     <Compile Include="Models\DTO\Invoice\SimpleInvoiceLineOpeFactura.cs" />
+    <Compile Include="Models\DTO\OrderDTO.cs" />
     <Compile Include="Models\DTO\Product.cs" />
     <Compile Include="Models\DTO\PromocionData.cs" />
     <Compile Include="Models\DTO\PromotionCatalog.cs" />

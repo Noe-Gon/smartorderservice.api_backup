@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.Entity;
+using System.Data.Entity.Core.Objects;
 using System.Linq;
 using System.Web;
 
@@ -70,6 +71,47 @@ namespace SmartOrderService.Services
             }
 
             return Deliveries;
+
+        }
+
+        [Obsolete]
+        public OrderDTO GetNewDeliveriesByCustomerId(int customerId)
+        {
+            List<OrderBodyDTO> body = new List<OrderBodyDTO>();
+            var currentDate = DateTime.Now.Date;
+            var orders = db.so_order.Where(x => x.customerId == customerId 
+            && EntityFunctions.TruncateTime(x.createdon) == EntityFunctions.TruncateTime(currentDate) 
+            && x.status).ToList();
+
+            foreach (var order in orders)
+            {
+                List<OrderDetailDTO> orderDetails = new List<OrderDetailDTO>();
+                foreach (var orderDetail in order.so_order_detail.ToList())
+                {
+                    orderDetails.Add(new OrderDetailDTO
+                    {
+                        productId = orderDetail.productId,
+                        amount = orderDetail.amount,
+                        price = orderDetail.price,
+                        import = orderDetail.import
+                    });
+                }
+                body.Add(new OrderBodyDTO
+                {
+                    OrderId = order.orderId,
+                    CustomerId = order.customerId,
+                    UserId = order.userId,
+                    DeliveryDate = order.delivery,
+                    OrderDetails = orderDetails,
+                    TotalCash = order.total_cash
+                });
+            }
+            OrderDTO response = new OrderDTO
+            {
+                Orders = body
+            };
+
+            return response;
 
         }
 
@@ -609,6 +651,78 @@ namespace SmartOrderService.Services
                 return response.Data.Msg;
 
             throw new Exception(response.Errors.FirstOrDefault());
+        }
+
+        public ResponseBase<SendOrderResponse> UpdateOrder(NewDeliveryUpdateRequest request)
+        {
+
+            var customer = db.so_customer
+                .Where(x => x.customerId == request.CustomerId && x.status)
+                .FirstOrDefault();
+
+            if (customer == null)
+                return ResponseBase<SendOrderResponse>.Create(new List<string>()
+                {
+                    "No se encontró al cliente con id: " + request.CustomerId + " o ha dado de baja"
+                });
+
+            //Guardar en so_order
+            var deliveryReference = db.so_delivery_references
+                .Where(x => x.value == 80)
+                .FirstOrDefault();
+
+            if (deliveryReference == null)
+                throw new Exception("No existe el delivery reference con valor 80");
+
+            so_order orderToUpdate = db.so_order.Where(x => x.orderId == request.OrderId).FirstOrDefault();
+            orderToUpdate.modifiedon = DateTime.Now;
+            orderToUpdate.modifiedby = request.UserId;
+            orderToUpdate.delivery = Convert.ToDateTime(request.DeliveryDate);
+
+            db.so_order_detail.RemoveRange(orderToUpdate.so_order_detail);
+            db.SaveChanges();
+            orderToUpdate.so_order_detail = new List<so_order_detail>();
+
+            foreach (var product in request.Products)
+            {
+                orderToUpdate.so_order_detail.Add(new so_order_detail()
+                {
+                    amount = product.Quantity,
+                    createdby = request.UserId,
+                    createdon = DateTime.Now,
+                    import = product.Import,
+                    productId = product.ProductId,
+                    price = product.Price,
+                    modifiedby = request.UserId,
+                    status = true,
+                    modifiedon = DateTime.Now,
+                    credit_amount = product.CreditAmount
+                });
+            }
+            db.so_order.Attach(orderToUpdate);
+            db.SaveChanges();
+
+            return ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
+            {
+                Msg = "Orden actualizada con exitó"
+            });
+        }
+
+        public ResponseBase<SendOrderResponse> CancelOrder(int orderId, int userId)
+        {
+
+            //var orderToCancel = db.so_order.Where(x => x.orderId == orderId && x.status).FirstOrDefault();
+            var orderToCancel = db.so_order.SingleOrDefault(x => x.orderId == orderId);
+            orderToCancel.modifiedon = DateTime.Now;
+            orderToCancel.modifiedby = userId;
+            orderToCancel.status = false;
+            //db.so_order.Attach(orderToCancel);
+            db.SaveChanges();
+
+            return ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
+            {
+                Msg = "Orden cancelada con exitó"
+            });
         }
 
         public List<so_delivery_devolution> getDevolutionsByPeriod(int UserId,DateTime Begin,DateTime End)
