@@ -134,6 +134,72 @@ namespace SmartOrderService.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("~/api/Authenticate/v2/EmployeeCode")]
+        public IHttpActionResult AuthenticateEmployeeCodev2(string code, int routeId, int userId, int operationType)
+        {
+            try
+            {
+                using (var service = StaffingComplianceService.Create())
+                {
+                    var response = service.AuthenticateEmployeeCodeV2(new AuthenticateEmployeeCodeRequestV2
+                    {
+                        EmployeeCode = code,
+                        RouteId = routeId,
+                        UserId = userId,
+                        OperationType = operationType
+                    });
+
+                    if (response.Status)
+                        return Content(HttpStatusCode.Accepted, response);
+                    else
+                        return Content(HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                return Content(HttpStatusCode.Unauthorized, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (ExternalAPIException e)
+            {
+                return Content(HttpStatusCode.BadRequest, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (EntityNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (NoUserFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (WorkdayNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+        }
+
         [HttpPost]
         [Route("~/api/Authenticate/LeaderCode")]
         public IHttpActionResult AuthenticateLeaderCode(AuthenticateLeaderCodeRequest request)
