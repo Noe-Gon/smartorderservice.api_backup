@@ -134,21 +134,62 @@ namespace SmartOrderService.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("~/api/Authenticate/v2/EmployeeCode")]
-        public IHttpActionResult AuthenticateEmployeeCodev2(string code, int routeId, int userId, int operationType)
+        [HttpPost]
+        [Route("~/api/Authenticate/LeaderCode")]
+        public IHttpActionResult AuthenticateLeaderCode(AuthenticateLeaderCodeRequest request)
         {
             try
             {
                 using (var service = StaffingComplianceService.Create())
                 {
-                    var response = service.AuthenticateEmployeeCodeV2(new AuthenticateEmployeeCodeRequestV2
-                    {
-                        EmployeeCode = code,
-                        RouteId = routeId,
-                        UserId = userId,
-                        OperationType = operationType
-                    });
+                    var response = service.AuthenticateLeaderCode(request);
+
+                    if (response.Data != null)
+                        return Content(HttpStatusCode.Accepted, response);
+
+                    return Content(HttpStatusCode.OK, response);
+                }
+            }
+            catch (LeaderCodeNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateLeaderCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (LeaderCodeExpiredException e)
+            {
+                return Content(HttpStatusCode.BadRequest, ResponseBase<AuthenticateLeaderCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (EntityNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<AuthenticateLeaderCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+
+        }
+
+        [HttpPost]
+        [Route("~/api/Authenticate/EmployeeCode/Single")]
+        public IHttpActionResult AuthenticateEmployeeCodeSingle(AuthenticateEmployeeCodeRequest request)
+        {
+            try
+            {
+                using (var service = StaffingComplianceService.Create())
+                {
+                    var response = service.AuthenticateEmployeeCodeGet(request);
 
                     if (response.Status)
                         return Content(HttpStatusCode.Accepted, response);
@@ -201,31 +242,31 @@ namespace SmartOrderService.Controllers
         }
 
         [HttpPost]
-        [Route("~/api/Authenticate/LeaderCode")]
-        public IHttpActionResult AuthenticateLeaderCode(AuthenticateLeaderCodeRequest request)
+        [Route("~/api/Authenticate/EmployeeCode/Tripulac")]
+        public IHttpActionResult AuthenticateEmployeeCodeTripulac(AuthenticateEmployeeCodeRequest request)
         {
             try
             {
                 using (var service = StaffingComplianceService.Create())
                 {
-                    var response = service.AuthenticateLeaderCode(request);
+                    var response = service.AuthenticateEmployeeCodeV2(request);
 
-                    if (response.Data != null)
+                    if (response.Status)
                         return Content(HttpStatusCode.Accepted, response);
-
-                    return Content(HttpStatusCode.OK, response);
+                    else
+                        return Content(HttpStatusCode.BadRequest, response);
                 }
             }
-            catch (LeaderCodeNotFoundException e)
+            catch (UnauthorizedAccessException e)
             {
-                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateLeaderCodeResponse>.Create(new List<string>()
+                return Content(HttpStatusCode.Unauthorized, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
                 {
                     e.Message
                 }));
             }
-            catch (LeaderCodeExpiredException e)
+            catch (ExternalAPIException e)
             {
-                return Content(HttpStatusCode.BadRequest, ResponseBase<AuthenticateLeaderCodeResponse>.Create(new List<string>()
+                return Content(HttpStatusCode.BadRequest, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
                 {
                     e.Message
                 }));
@@ -237,14 +278,27 @@ namespace SmartOrderService.Controllers
                     e.Message
                 }));
             }
-            catch (Exception e)
+            catch (NoUserFoundException e)
             {
-                return Content(HttpStatusCode.InternalServerError, ResponseBase<AuthenticateLeaderCodeResponse>.Create(new List<string>()
+                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
                 {
                     e.Message
                 }));
             }
-
+            catch (WorkdayNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
         }
     }
 }

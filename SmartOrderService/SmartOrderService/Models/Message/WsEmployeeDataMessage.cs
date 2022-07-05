@@ -10,7 +10,7 @@ namespace SmartOrderService.Models.Message
         public List<Employee> employee { get; set; }
     }
 
-    public class Employee : IAuthenticateEmployeeCodeResponse
+    public class Employee 
     {
         public string division { get; set; }
         public string idcia { get; set; }

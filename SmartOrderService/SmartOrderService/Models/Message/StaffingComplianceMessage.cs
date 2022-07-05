@@ -13,15 +13,7 @@ namespace SmartOrderService.Models.Message
         public int UserId { get; set; }
     }
 
-    public class AuthenticateEmployeeCodeRequestV2 : AuthenticateEmployeeCodeRequest
-    {
-        public int OperationType { get; set; }
-    }
-
-    public class IAuthenticateEmployeeCodeResponse
-    { }
-
-    public class AuthenticateEmployeeCodeResponse : IAuthenticateEmployeeCodeResponse
+    public class AuthenticateEmployeeCodeResponse
     {
         public DateTime Date { get; set; }
         public int RouteId { get; set; }

@@ -210,7 +210,7 @@ namespace SmartOrderService.Services
             return responseAuthentication;
         }
 
-        public ResponseBase<IAuthenticateEmployeeCodeResponse> AuthenticateEmployeeCodeV2(AuthenticateEmployeeCodeRequestV2 request)
+        public ResponseBase<Employee> AuthenticateEmployeeCodeGet(AuthenticateEmployeeCodeRequest request)
         {
             var user = UoWConsumer.UserRepository
                 .Get(x => x.userId == request.UserId)
@@ -229,14 +229,30 @@ namespace SmartOrderService.Services
 
             var employee = SingleEmployee(routeBranch.Code, request.EmployeeCode);
 
-            if (request.OperationType == 1)
-            {
-                return ResponseBase<IAuthenticateEmployeeCodeResponse>.Create(employee);
-            }
-            if (request.OperationType != 2)
-            {
-                throw new Exception("Tipo de operación no identificada");
-            }
+            if (employee == null)
+                throw new EntityNotFoundException("No se encontró al usuarió en WsEmpleados");
+
+            return ResponseBase<Employee>.Create(employee);
+        }
+
+        public ResponseBase<AuthenticateEmployeeCodeResponse> AuthenticateEmployeeCodeV2(AuthenticateEmployeeCodeRequest request)
+        {
+            var user = UoWConsumer.UserRepository
+                .Get(x => x.userId == request.UserId)
+                .FirstOrDefault();
+
+            if (user == null)
+                throw new EntityNotFoundException("No se encuentró al usuario en WByC");
+
+            var routeBranch = UoWConsumer.RouteRepository
+                .Get(x => x.routeId == request.RouteId)
+                .Select(x => new { Route = x, Code = x.so_branch.so_company.code, Branch = x.so_branch })
+                .FirstOrDefault();
+
+            if (routeBranch == null)
+                throw new EntityNotFoundException("No se encuentró el branch o la ruta");
+
+            var employee = SingleEmployee(routeBranch.Code, request.EmployeeCode);
 
             if (employee == null)
                 throw new EntityNotFoundException("No se encontró al usuarió en WsEmpleados");
@@ -297,7 +313,7 @@ namespace SmartOrderService.Services
 
                     if (impulsorId == null)
                     {
-                        return ResponseBase<IAuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
+                        return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
                         {
                         });
                         throw new NoUserFoundException("No se encontró al impulsor en WBC. Revisar que exista el impulsor en la ruta por medio de la tabla so_route_team");
@@ -307,7 +323,7 @@ namespace SmartOrderService.Services
                         .Get(x => x.userId == impulsorId);
                     if (isWorkDayActive == null)
                     {
-                        return ResponseBase<IAuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
+                        return ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
                         {
                         });
                         throw new WorkdayNotFoundException("No se encontró el Work Day del impulsor.");
@@ -385,7 +401,7 @@ namespace SmartOrderService.Services
                     throw new UnauthorizedAccessException("Otro Empleado ya inicio sesión con este usuario");
             }
 
-            var responseAuthentication = ResponseBase<IAuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
+            var responseAuthentication = ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new AuthenticateEmployeeCodeResponse()
             {
                 UserId = user.userId,
                 UserName = employee.name + " " + employee.lastname,
