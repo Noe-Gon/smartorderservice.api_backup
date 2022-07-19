@@ -210,7 +210,7 @@ namespace SmartOrderService.Services
             return responseAuthentication;
         }
 
-        public ResponseBase<Employee> AuthenticateEmployeeCodeGet(AuthenticateEmployeeCodeRequest request)
+        public ResponseBase<AuthenticateLeaderCodeResponse> AuthenticateEmployeeCodeGet(AuthenticateEmployeeCodeRequest request)
         {
             var user = UoWConsumer.UserRepository
                 .Get(x => x.userId == request.UserId)
@@ -232,7 +232,27 @@ namespace SmartOrderService.Services
             if (employee == null)
                 throw new EntityNotFoundException("No se encontró al usuarió en WsEmpleados");
 
-            return ResponseBase<Employee>.Create(employee);
+            var routeTeam = UoWConsumer.RouteTeamRepository
+                    .Get(x => x.userId == request.UserId)
+                    .FirstOrDefault();
+
+            if (routeTeam == null)
+                throw new EntityNotFoundException("El usuario no esta asignado a un equipo");
+
+            var response = new AuthenticateLeaderCodeResponse()
+            {
+                UserId = user.userId,
+                UserName = employee.name + " " + employee.lastname,
+                BranchId = routeBranch.Route.branchId,
+                BranchName = routeBranch.Branch.name,
+                Date = DateTime.Now,
+                RoleId = routeTeam.roleTeamId,
+                RoleName = routeTeam.roleTeamId == (int)ERolTeam.Ayudante ? "Ayudante" : "Impulsor",
+                RouteId = routeBranch.Route.routeId,
+                RouteName = routeBranch.Route.name
+            };
+
+            return ResponseBase<AuthenticateLeaderCodeResponse>.Create(response);
         }
 
         public ResponseBase<AuthenticateEmployeeCodeResponse> AuthenticateEmployeeCodeV2(AuthenticateEmployeeCodeRequest request)
@@ -492,7 +512,7 @@ namespace SmartOrderService.Services
                 return aray.Last();
             }
 
-            throw new ExternalAPIException("Falló al intentar obtener el token");
+            throw new ExternalAPIException("Falló al intentar obtener el token. " + RestResponse.StatusCode);
         }
 
         private string NotifyWorkday(NotifyWorkdayRequest request)
