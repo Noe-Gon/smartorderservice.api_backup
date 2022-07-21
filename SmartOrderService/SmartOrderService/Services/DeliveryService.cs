@@ -54,7 +54,7 @@ namespace SmartOrderService.Services
 
             List<GetDeliveriesByInventoryResponse> Deliveries = new List<GetDeliveriesByInventoryResponse>();
 
-            var InventoryDeliveries = db.so_delivery.Where(d => d.inventoryId == InventoryId && d.status);
+            var InventoryDeliveries = db.so_delivery.Where(d => d.inventoryId == InventoryId && d.status && d.so_customer.status);
 
             var so_user = db.so_inventory.Where(i => i.inventoryId == InventoryId && i.status).FirstOrDefault().so_user;
 
