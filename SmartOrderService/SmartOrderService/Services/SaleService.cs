@@ -2291,6 +2291,23 @@ namespace SmartOrderService.Services
                         var emailService = new EmailService();
                         var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);
                     }
+                    else
+                        return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                        {
+                            "No se puede enviar el email", "El cliente no tiene activado el envio de Emails"
+                        });
+                else
+                    return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                    {
+                        "No se puede enviar el email", "No cuenta con datos suficientes (Datos adicionales.)"
+                    });
+            }
+            else
+            {
+                return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    "No se puede enviar el email", "No cuenta con datos suficientes (Datos adicionales.)"
+                });
             }
 
             return ResponseBase<MsgResponseBase>.Create(new MsgResponseBase()
