@@ -2204,7 +2204,7 @@ namespace SmartOrderService.Services
                             RouteAddress = route,
                             CustomerEmail = customer.email,
                             CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
-                            Date = DateTime.Now,
+                            Date = sale.date,
                             PaymentMethod = PaymentMethod,
                             SellerName = user.code + " - " + user.name,
                             //dtTicket = dtTicket,
