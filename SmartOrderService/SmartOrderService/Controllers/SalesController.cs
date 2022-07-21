@@ -455,5 +455,39 @@ namespace SmartOrderService.Controllers
             }
             return response.ToString();
         }
+
+        [HttpPost]
+        [Route("~/api/sale/SendTicketDigital")]
+        public IHttpActionResult SendTicketDigital(SendTicketDigitalRequest request)
+        {
+            try
+            {
+                var service = new SaleService();
+                var response = service.SenTicketDigital(request);
+
+                if (response.Status)
+                    return Content(HttpStatusCode.OK, response);
+
+                return Content(HttpStatusCode.BadRequest, response);
+            }
+            catch (EntityNotFoundException e)
+            {
+                var response = ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                });
+
+                return Content(HttpStatusCode.InternalServerError, response);
+            }
+            catch (Exception e)
+            {
+                var response = ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                });
+
+                return Content(HttpStatusCode.InternalServerError, response); 
+            }
+        }
     }
 }

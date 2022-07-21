@@ -83,6 +83,8 @@ namespace SmartOrderService.Services
                     //Orders
                     if (request.Order == null)
                         body = body.Replace("{OrderTableTamplate}", "");
+                    else if(request.Order.OrderDetail.Count() == 0)
+                        body = body.Replace("{OrderTableTamplate}", "");
                     else
                     {
                         using (StreamReader readerTemplate = new StreamReader(HttpContext.Current.Server.MapPath("~/Content/Template/OrderTableTemplate.html")))
