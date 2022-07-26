@@ -1,11 +1,14 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Client;
+using Microsoft.Xrm.Sdk.Discovery;
+using Newtonsoft.Json;
 using RestSharp;
 using SmartOrderService.Models.Requests;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Linq;
-using System.Web;
+using System.Net;
+using System.ServiceModel.Description;
 
 namespace SmartOrderService.Services
 {
@@ -66,6 +69,34 @@ namespace SmartOrderService.Services
                 return null;
             }
         }
+
+        public static OrganizationServiceProxy CreateService()
+        {
+            OrganizationServiceProxy serviceProxy = null;
+            string url = ConfigurationManager.AppSettings["Discovery_CRM_URL"];
+            string user = ConfigurationManager.AppSettings["_userCRM"]; //wicaamaly";
+            string domain = ConfigurationManager.AppSettings["_domainCRM"]; //"bepensa";
+            string password = ConfigurationManager.AppSettings["_passwordCRM"]; //"b3p3ns4*18";
+            var serviceManagement = ServiceConfigurationFactory.CreateManagement<IDiscoveryService>(new Uri(url));
+
+            switch (serviceManagement.AuthenticationType)
+            {
+                case AuthenticationProviderType.Federation:
+                    ClientCredentials clientCredentials = new ClientCredentials();
+                    clientCredentials.UserName.UserName = domain + "\\" + user;
+                    clientCredentials.UserName.Password = password;
+                   // serviceProxy = new OrganizationServiceProxy(serviceManagement, clientCredentials);
+                    break;
+                case AuthenticationProviderType.ActiveDirectory:
+                    ClientCredentials credentials = new ClientCredentials();
+                    credentials.Windows.ClientCredential = new NetworkCredential(user, password, domain);
+                    serviceProxy = new OrganizationServiceProxy(new Uri(url), null, credentials, null);
+                    break;
+            }
+
+            return serviceProxy;
+        }
+
 
         public Guid? SendToCRM(Object model, string url, Method method)
         {

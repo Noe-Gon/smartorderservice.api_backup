@@ -16,6 +16,7 @@ using System.Configuration;
 using System.Data.Entity;
 using System.Linq;
 using System.Web;
+using Microsoft.Xrm.Sdk.Query;
 
 namespace SmartOrderService.Services
 {
@@ -39,6 +40,7 @@ namespace SmartOrderService.Services
         {
             try
             {
+                IsCFEInCRM(request.CFECode);
                 var defaultGuid = new Guid("00000000-0000-0000-0000-000000000000");
                 var route = UoWConsumer.RouteRepository
                     .GetByID(request.RouteId);
@@ -67,6 +69,9 @@ namespace SmartOrderService.Services
 
                 if (existCustomer != null)
                     throw new DuplicateEntityException("Ya existe un consumidor con ese CFE");
+
+                if(IsCFEInCRM(request.CFECode))
+                    throw new DuplicateEntityException("Ya existe un consumidor con ese CFE en CRM");
 
                 var newCustomer = new so_customer
                 {
@@ -1381,6 +1386,39 @@ namespace SmartOrderService.Services
 
             return DrivingId;
         }
+
+        private bool IsCFEInCRM(string cfe)
+        {
+            //var service = CRMService.CreateService();
+
+            string fetchXml =
+                       @"<fetch version='1.0' output-format='xml-platform' mapping='logical' distinct='false'>
+                             <entity name='ope_clientes cancun'>
+
+                                <attribute name='ope_clientes_cancunId' /> 
+
+                                <attribute name='ope_name' />
+                                <attribute name='ope_cfe' />
+
+                                 <attribute name='ope_RutasIdName' /> 
+
+                                <attribute name='ope_tipocliente' />" +
+                                @"<filter type='and'>
+                                        <condition attribute='ope_cfe' operator='eq' value = '" + cfe + "'/>" +
+                                        "<condition attribute='ope_tipocliente' operator='eq' value = '1' />" +
+                                    "</filter>" +
+                            "</entity>" +
+                        " </fetch>";
+
+            //var results = service.RetrieveMultiple(new FetchExpression(fetchXml));
+
+            //if (results.Entities.Any())
+            //{
+            //    return true;
+            //}
+            return false;
+        }
+
         public void Dispose()
         {
             this.UoWConsumer.Dispose();

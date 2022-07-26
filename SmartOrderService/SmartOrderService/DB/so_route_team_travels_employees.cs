@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SmartOrderService.Models.Generic;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -6,7 +7,7 @@ using System.Data.Entity.Spatial;
 
 namespace SmartOrderService.DB
 {
-    public class so_route_team_travels_employees
+    public class so_route_team_travels_employees : AuditDate
     {
         [Key]
         [Column(Order = 0)]
