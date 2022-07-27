@@ -973,6 +973,7 @@ namespace SmartOrderService.Services
             {
                 inventoryCloneObject.Add((so_route_team_inventory_available)routeProduct.Clone());
                 routeProduct.Available_Amount = 0;
+                routeProduct.modifiedon = DateTime.Now;
             }
             db.SaveChanges();
             return inventoryCloneObject.Where(s => s.Available_Amount > 0).ToList();
