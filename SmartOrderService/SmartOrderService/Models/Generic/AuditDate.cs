@@ -10,5 +10,10 @@ namespace SmartOrderService.Models.Generic
         public DateTime? createdon { get; set; }
 
         public DateTime? modifiedon { get; set; }
+
+        public AuditDate()
+        {
+            createdon = DateTime.Now;
+        }
     }
 }

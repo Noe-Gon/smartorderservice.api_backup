@@ -889,7 +889,7 @@ namespace SmartOrderService.Services
                 // Crear la entidad
                 if (delivery.so_delivery_additional_data == null)
                 {
-                    so_delivery_additional_data newDeliveryAdditionalData = new so_delivery_additional_data
+                    so_delivery_additional_data newDeliveryAdditionalData = new so_delivery_additional_data()
                     {
                         deliveryId = delivery.deliveryId,
                         deliveryStatusId = statusDelivery.deliveryStatusId

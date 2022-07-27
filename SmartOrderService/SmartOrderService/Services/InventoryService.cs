@@ -129,6 +129,7 @@ namespace SmartOrderService.Services
                 .Where(s => s.inventoryId.Equals(inventoryId) && s.userId.Equals(userId) && s.work_dayId == workDay.work_dayId)
                 .FirstOrDefault();
             routeTeamTravel.active = false;
+            routeTeamTravel.modifiedon = DateTime.Now;
             db.SaveChanges();
         }
 

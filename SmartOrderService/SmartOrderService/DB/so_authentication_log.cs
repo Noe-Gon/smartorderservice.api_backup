@@ -41,10 +41,10 @@ namespace SmartOrderService.DB
 
         #region Audit
 
-        [Column("created_date")]
+        [Column("createdon")]
         public DateTime CreatedDate { get; set; }
 
-        [Column("modified_date")]
+        [Column("modifiedon")]
         public DateTime? ModifiedDate { get; set; }
 
         [Column("status")]

@@ -31,5 +31,9 @@ namespace SmartOrderService.DB
 
         public bool active { get; set; }
 
+        public so_route_team_travels_employees() : base()
+        {
+            
+        }
     }
 }

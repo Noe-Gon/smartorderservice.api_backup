@@ -1620,6 +1620,7 @@ namespace SmartOrderService.Services
             else
             {
                 deliveryAD.deliveryStatusId = statusDelivery.deliveryStatusId;
+                deliveryAD.modifiedon = DateTime.Now;
                 db.so_delivery_additional_data.Attach(deliveryAD);
                 db.Entry(deliveryAD).State = EntityState.Modified;
                 db.SaveChanges();
@@ -1682,6 +1683,7 @@ namespace SmartOrderService.Services
             else
             {
                 deliveryAD.deliveryStatusId = statusDelivery.deliveryStatusId;
+                deliveryAD.modifiedon = DateTime.Now;
                 db.so_delivery_additional_data.Attach(deliveryAD);
                 db.Entry(deliveryAD).State = EntityState.Modified;
                 db.SaveChanges();
