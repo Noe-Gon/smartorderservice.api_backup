@@ -251,6 +251,7 @@
     <Compile Include="Controllers\ApiVersionController.cs" />
     <Compile Include="Controllers\ApplicationController.cs" />
     <Compile Include="Controllers\BillingDataController.cs" />
+    <Compile Include="Controllers\BillPocketController.cs" />
     <Compile Include="Controllers\BinnacleVisitController.cs" />
     <Compile Include="Controllers\BranchController.cs" />
     <Compile Include="Controllers\CategoryController.cs" />
@@ -322,6 +323,7 @@
     <Compile Include="CustomExceptions\InventoryNotOpenException.cs" />
     <Compile Include="CustomExceptions\WorkdayNotFoundException.cs" />
     <Compile Include="CustomExceptions\WorkdayStartedException.cs" />
+    <Compile Include="DB\Configuracion_WorkByCloud.cs" />
     <Compile Include="DB\DEVOLUTIONS_VIEW.cs" />
     <Compile Include="DB\factdet.cs" />
     <Compile Include="DB\factura.cs" />
@@ -624,6 +626,7 @@
     <Compile Include="Models\Requests\UserRequest.cs" />
     <Compile Include="Models\Requests\VisitRequest.cs" />
     <Compile Include="Models\Requests\WorkDayRequest.cs" />
+    <Compile Include="Models\Responses\BillPocketTokensResponse.cs" />
     <Compile Include="Models\Responses\CodePlaceResponses.cs" />
     <Compile Include="Models\Responses\ConsumerResponses.cs" />
     <Compile Include="Models\Responses\CountConfigurationResponse.cs" />
@@ -655,6 +658,7 @@
     <Compile Include="Results\ChallengeResult.cs" />
     <Compile Include="Services\ApiVersionService.cs" />
     <Compile Include="Services\ApplicationService.cs" />
+    <Compile Include="Services\BillPocketService.cs" />
     <Compile Include="Services\CodePlaceService.cs" />
     <Compile Include="Services\ConsumerService.cs" />
     <Compile Include="Services\CRMService.cs" />
