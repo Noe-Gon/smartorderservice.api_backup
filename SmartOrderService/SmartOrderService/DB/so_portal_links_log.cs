@@ -10,7 +10,7 @@ namespace SmartOrderService.DB
     {
         public Guid Id { get; set; }
 
-        [Column("createdon")]
+        [Column("created_date")]
         public DateTime CreatedDate { get; set; }
 
         [Column("limit_days")]
@@ -27,5 +27,7 @@ namespace SmartOrderService.DB
         public int CustomerId { get; set; }
         public so_customer Customer { get; set; }
         #endregion
+
+        public DateTime? modifiedon { get; set; }
     }
 }

@@ -278,7 +278,7 @@ namespace SmartOrderService.Services
                                                 Amount = detail.amount, //Se usa el detail porque el amount puede ser menor
                                                 ProductName = product.code + " - " + product.name,
                                                 TotalPrice = (double)detail.amount * productOrder.price.Value,
-                                                UnitPrice = detail.price
+                                                UnitPrice = productOrder.price.Value
                                             });
                                         }
                                         else
@@ -288,8 +288,8 @@ namespace SmartOrderService.Services
                                             {
                                                 Amount = productOrder.amount,
                                                 ProductName = product.code + " - " + product.name,
-                                                TotalPrice = (double)productOrder.amount * detail.price,
-                                                UnitPrice = detail.price
+                                                TotalPrice = (double)productOrder.amount * productOrder.price.Value,
+                                                UnitPrice = productOrder.price.Value
                                             });
 
                                             sales.Add(new SendTicketDigitalEmailSales
@@ -1539,7 +1539,7 @@ namespace SmartOrderService.Services
                                                 Amount = detail.Amount, //Se usa el detail porque el amount puede ser menor
                                                 ProductName = product.code + " - " + product.name,
                                                 TotalPrice = (double)detail.Amount * Convert.ToDouble(productOrder.price.Value),
-                                                UnitPrice = Convert.ToDouble(detail.PriceValue)
+                                                UnitPrice = Convert.ToDouble(productOrder.price.Value)
                                             });
                                         }
                                         else
@@ -1549,16 +1549,16 @@ namespace SmartOrderService.Services
                                             {
                                                 Amount = productOrder.amount,
                                                 ProductName = product.code + " - " + product.name,
-                                                TotalPrice = (double)productOrder.amount * Convert.ToDouble(detail.PriceValue),
-                                                UnitPrice = Convert.ToDouble(detail.PriceValue)
+                                                TotalPrice = (double)productOrder.amount * Convert.ToDouble(productOrder.price.Value),
+                                                UnitPrice = Convert.ToDouble(productOrder.price.Value)
                                             });
 
                                             sales.Add(new SendTicketDigitalEmailSales
                                             {
                                                 Amount = detail.Amount - productOrder.amount,
                                                 ProductName = product.code + " - " + product.name,
-                                                TotalPrice = Convert.ToDouble(detail.Amount - productOrder.amount) * Convert.ToDouble(detail.PriceValue),
-                                                UnitPrice = Convert.ToDouble(detail.PriceValue)
+                                                TotalPrice = Convert.ToDouble(detail.Amount - productOrder.amount) * Convert.ToDouble(detail.price),
+                                                UnitPrice = Convert.ToDouble(detail.price)
                                             });
 
                                         }
@@ -1620,6 +1620,7 @@ namespace SmartOrderService.Services
             else
             {
                 deliveryAD.deliveryStatusId = statusDelivery.deliveryStatusId;
+                deliveryAD.modifiedon = DateTime.Now;
                 db.so_delivery_additional_data.Attach(deliveryAD);
                 db.Entry(deliveryAD).State = EntityState.Modified;
                 db.SaveChanges();
@@ -1682,6 +1683,7 @@ namespace SmartOrderService.Services
             else
             {
                 deliveryAD.deliveryStatusId = statusDelivery.deliveryStatusId;
+                deliveryAD.modifiedon = DateTime.Now;
                 db.so_delivery_additional_data.Attach(deliveryAD);
                 db.Entry(deliveryAD).State = EntityState.Modified;
                 db.SaveChanges();
@@ -2252,7 +2254,7 @@ namespace SmartOrderService.Services
                                                 Amount = detail.amount, //Se usa el detail porque el amount puede ser menor
                                                 ProductName = product.code + " - " + product.name,
                                                 TotalPrice = (double)detail.amount * productOrder.price.Value,
-                                                UnitPrice = detail.price
+                                                UnitPrice = productOrder.price.Value
                                             });
                                         }
                                         else
@@ -2262,8 +2264,8 @@ namespace SmartOrderService.Services
                                             {
                                                 Amount = productOrder.amount,
                                                 ProductName = product.code + " - " + product.name,
-                                                TotalPrice = (double)productOrder.amount * detail.price,
-                                                UnitPrice = detail.price
+                                                TotalPrice = (double)productOrder.amount * productOrder.price.Value,
+                                                UnitPrice = productOrder.price.Value
                                             });
 
                                             sales.Add(new SendTicketDigitalEmailSales
@@ -2354,7 +2356,7 @@ namespace SmartOrderService.Services
                                                 Amount = detail.amount, //Se usa el detail porque el amount puede ser menor
                                                 ProductName = product.code + " - " + product.name,
                                                 TotalPrice = (double)detail.amount * productOrder.price.Value,
-                                                UnitPrice = detail.price
+                                                UnitPrice = productOrder.price.Value
                                             });
                                         }
                                         else
@@ -2364,8 +2366,8 @@ namespace SmartOrderService.Services
                                             {
                                                 Amount = productOrder.amount,
                                                 ProductName = product.code + " - " + product.name,
-                                                TotalPrice = (double)productOrder.amount * detail.price,
-                                                UnitPrice = detail.price
+                                                TotalPrice = (double)productOrder.amount * productOrder.price.Value,
+                                                UnitPrice = productOrder.price.Value
                                             });
 
                                             sales.Add(new SendTicketDigitalEmailSales

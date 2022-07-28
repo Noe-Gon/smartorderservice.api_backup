@@ -26,6 +26,9 @@
             text-align: center;
             padding-top: 10px;
         }
+        .saleClass {
+            {SaleTableStyle}
+        }
     </style>
 </head>
 <body>
@@ -67,24 +70,26 @@
         <div style="text-align-last: right; font-size: smaller;">
             FAVOR DE VERIFICAR ENTREGA COMPLETA DE PRODUCTOS Y CANTIDADES
         </div>
-        <div style="border: double; background-color: lightgray; text-align-last: center;">
-            <strong>Venta</strong>
-        </div>
-        <div style="width: 100%; margin-top: 5px; margin-bottom: 5px; margin-left: 51%;">
-            <strong>{PaymentMethod}</strong>
-        </div>
-        <div>
+        <div class="saleClass">
+            <div style="border: double; background-color: lightgray; text-align-last: center;">
+                <strong>Venta</strong>
+            </div>
+            <div style="width: 100%; margin-top: 5px; margin-bottom: 5px; margin-left: 51%;">
+                <strong>{PaymentMethod}</strong>
+            </div>
+            <div>
 
-            <table style="margin-left: 10px;margin-top: 10px;margin-bottom: 10px; width: 100%;">
-                <tr>
-                    <th style="text-align: left;width:400px"><strong>Producto</strong></th>
-                    <th style="text-align: left;width:100px"><strong>Cantidad</strong></th>
-                    <th style="text-align: left;width:100px"><strong>Precio</strong></th>
-                    <th style="text-align: left;width:100px"><strong>Total</strong></th>
-				</tr>
-                {TdBody}
-            </table>
+                <table style="margin-left: 10px;margin-top: 10px;margin-bottom: 10px; width: 100%;">
+                    <tr>
+                        <th style="text-align: left;width:400px"><strong>Producto</strong></th>
+                        <th style="text-align: left;width:100px"><strong>Cantidad</strong></th>
+                        <th style="text-align: left;width:100px"><strong>Precio</strong></th>
+                        <th style="text-align: left;width:100px"><strong>Total</strong></th>
+                    </tr>
+                    {TdBody}
+                </table>
 
+            </div>
         </div>
 		<!--<div id='promociones' style='display:none'>
 			<div style="border: double; background-color: lightgray; text-align-last: center;">
@@ -108,7 +113,7 @@
             </div>
             <div style="width: 65%; margin-left: 10px; margin-top: 10px; margin-bottom: 10px;">
                 <table style="width: 100%">
-                    <tr>
+                    <tr class="saleClass">
                         <td>Total de productos vendidos:</td>
                         <td class="right">{TotalProductsSold}</td>
                     </tr>
@@ -120,7 +125,7 @@
                     <td>Total de Promociones:</td>
                     <td class="right">{TotalPromos}</td>
                 </tr>-->
-                    <tr>
+                    <tr class="saleClass">
                         <td>Total:</td>
                         <td class="right">{TotalPrice}</td>
                     </tr>

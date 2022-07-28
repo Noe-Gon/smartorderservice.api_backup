@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SmartOrderService.Models.Generic;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Web;
 
 namespace SmartOrderService.DB
 {
-    public class so_customer_removal_request
+    public class so_customer_removal_request : AuditDate
     {
         public Guid Id { get; set; }
 
@@ -31,5 +32,10 @@ namespace SmartOrderService.DB
         public int UserId { get; set; }
         public so_user User { get; set; }
         #endregion
+
+        public so_customer_removal_request() : base()
+        {
+
+        }
     }
 }

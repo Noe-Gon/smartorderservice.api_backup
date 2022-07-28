@@ -104,6 +104,7 @@ namespace SmartOrderService.Services
                     if (productPromotion.Amount != 0 && availableProduct.Available_Amount >= productPromotion.Amount)
                     {
                         availableProduct.Available_Amount -= productPromotion.Amount;
+                        availableProduct.modifiedon = DateTime.Now;
                         amountPromotionsSaled += productPromotion.Amount;
                         isEmptySale = false;
                     }

@@ -26,5 +26,7 @@ namespace SmartOrderService.DB
 
         [Column("created_date")]
         public DateTime CreatedDate { get; set; }
+
+        public DateTime? modifiedon { get; set; }
     }
 }

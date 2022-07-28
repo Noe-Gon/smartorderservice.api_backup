@@ -103,6 +103,7 @@ namespace SmartOrderService.Services
             {
                 previousStatus = deliveryAD.DeliveryStatus.Description;
                 deliveryAD.deliveryStatusId = statusDelivery.deliveryStatusId;
+                deliveryAD.modifiedon = DateTime.Now;
                 UoWConsumer.DeliveryAdditionalData.Update(deliveryAD);
                 UoWConsumer.Save();
             }

@@ -16,6 +16,7 @@ using System.Configuration;
 using System.Data.Entity;
 using System.Linq;
 using System.Web;
+using Microsoft.Xrm.Sdk.Query;
 
 namespace SmartOrderService.Services
 {
@@ -68,6 +69,9 @@ namespace SmartOrderService.Services
                 if (existCustomer != null)
                     throw new DuplicateEntityException("Ya existe un consumidor con ese CFE");
 
+                //if (IsCFEInCRM(request.CFECode))
+                //    throw new DuplicateEntityException("Ya existe un consumidor con ese CFE en CRM");
+
                 var newCustomer = new so_customer
                 {
                     name = request.Name,
@@ -101,7 +105,7 @@ namespace SmartOrderService.Services
                 address += stringColonia + stringMunicipio;
                 newCustomer.address = address;
 
-                var newCustomerAdditionalData = new so_customer_additional_data
+                var newCustomerAdditionalData = new so_customer_additional_data()
                 {
                     Customer = newCustomer,
                     Phone = request.Phone,
@@ -118,7 +122,7 @@ namespace SmartOrderService.Services
                     ReferenceCode = request.ReferenceCode
                 };
 
-                var newCustomerData = new so_customer_data
+                var newCustomerData = new so_customer_data()
                 {
                     so_customer = newCustomer,
                     route_code = Convert.ToInt32(route.code),
@@ -425,7 +429,7 @@ namespace SmartOrderService.Services
 
                 if (updateCustomerAdditionalData == null)
                 {
-                    var newCustomerAdditionalData = new so_customer_additional_data
+                    var newCustomerAdditionalData = new so_customer_additional_data()
                     {
                         Customer = updateCustomer,
                         Phone = request.Phone,
@@ -459,6 +463,7 @@ namespace SmartOrderService.Services
                     updateCustomerAdditionalData.ReferenceCode = request.ReferenceCode ?? updateCustomerAdditionalData.ReferenceCode;
                     updateCustomerAdditionalData.InteriorNumber = request.InteriorNumber ?? updateCustomerAdditionalData.InteriorNumber;
                     updateCustomerAdditionalData.NeighborhoodId = request.Neighborhood ?? updateCustomerAdditionalData.NeighborhoodId;
+                    updateCustomerAdditionalData.modifiedon = DateTime.Now;
 
                     if (!request.IsActive)
                         updateCustomerAdditionalData.Status = (int)Consumer.STATUS.DEACTIVATED;
@@ -473,7 +478,7 @@ namespace SmartOrderService.Services
 
                 if(updateCustomerData == null)
                 {
-                    var newCustomerDate = new so_customer_data
+                    var newCustomerDate = new so_customer_data()
                     {
                         so_customer = updateCustomer,
                         route_code = Convert.ToInt32(route.code),
@@ -482,7 +487,9 @@ namespace SmartOrderService.Services
                         address_number_cross1 = request.Crossroads,
                         address_number_cross2 = request.Crossroads_2,
                         address_street = request.Street,
-                        status = true
+                        status = true,
+                        createdon = DateTime.Now,
+                        createdby = request.UserId
                     };
                     updateCustomerData = newCustomerDate;
                     UoWConsumer.CustomerDataRepository.Insert(newCustomerDate);
@@ -493,7 +500,7 @@ namespace SmartOrderService.Services
                     updateCustomerData.address_number_cross1 = request.Crossroads ?? updateCustomerData.address_number_cross1;
                     updateCustomerData.address_number_cross2 = request.Crossroads_2 ?? updateCustomerData.address_number_cross2;
                     updateCustomerData.address_street = request.Street ?? updateCustomerData.address_street;
-
+                    updateCustomerData.modifiedon = DateTime.Now;
                     UoWConsumer.CustomerDataRepository.Update(updateCustomerData);
                 }
 
@@ -620,7 +627,7 @@ namespace SmartOrderService.Services
                     });
 
                 var id = Guid.NewGuid();
-                var newCustomerRemovalRequest = new so_customer_removal_request
+                var newCustomerRemovalRequest = new so_customer_removal_request()
                 {
                     Id = id,
                     UserId = request.UserId,
@@ -1381,6 +1388,40 @@ namespace SmartOrderService.Services
 
             return DrivingId;
         }
+
+        private bool IsCFEInCRM(string cfe)
+        {
+            var service = CRMService.CreateService();
+            service.Timeout = new TimeSpan(0, 2, 0);
+
+            string fetchXml =
+                       @"<fetch version='1.0' output-format='xml-platform' mapping='logical' distinct='false'>
+                             <entity name='ope_clientes cancun'>
+
+                                <attribute name='ope_clientes_cancunId' /> 
+
+                                <attribute name='ope_name' />
+                                <attribute name='ope_cfe' />
+
+                                 <attribute name='ope_RutasIdName' /> 
+
+                                <attribute name='ope_tipocliente' />" +
+                                @"<filter type='and'>
+                                        <condition attribute='ope_cfe' operator='eq' value = '" + cfe + "'/>" +
+                                        "<condition attribute='ope_tipocliente' operator='eq' value = '1' />" +
+                                    "</filter>" +
+                            "</entity>" +
+                        " </fetch>";
+
+            var results = service.RetrieveMultiple(new FetchExpression(fetchXml));
+
+            if (results.Entities.Any())
+            {
+                return true;
+            }
+            return false;
+        }
+
         public void Dispose()
         {
             this.UoWConsumer.Dispose();

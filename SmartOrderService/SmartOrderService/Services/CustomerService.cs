@@ -233,7 +233,7 @@ namespace SmartOrderService.Services
                     var routeId = routeTeamService.searchRouteId(visit.userId);
                     var workDay = routeTeamService.GetWorkdayByUserAndDate(impulsorId, DateTime.Today);
 
-                    db.so_route_team_travels_visits.Add(new so_route_team_travels_visit
+                    db.so_route_team_travels_visits.Add(new so_route_team_travels_visit()
                     {
                         binnacleId = visit.binnacleId,
                         inventoryId = inventory.inventoryId,
