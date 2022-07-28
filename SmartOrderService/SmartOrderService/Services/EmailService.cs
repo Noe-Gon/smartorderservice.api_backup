@@ -124,6 +124,15 @@ namespace SmartOrderService.Services
                         }
                     }
 
+                    if(request.Sales.Count() == 0)
+                    {
+                        body = body.Replace("{SaleTableStyle}", "display: none;");
+                    }
+                    else
+                    {
+                        body = body.Replace("{SaleTableStyle}", "");
+                    }
+
                     int totalProductsSold = 0;
                     int totalBoxesSold = 0;
                     double total = 0.0;
@@ -255,6 +264,15 @@ namespace SmartOrderService.Services
                                 body = body.Replace("{OrderReferenceCode}", request.ReferenceCode);
                             }
                         }
+                    }
+
+                    if (request.Sales.Count() == 0)
+                    {
+                        body = body.Replace("{SaleTableStyle}", "display: none;");
+                    }
+                    else
+                    {
+                        body = body.Replace("{SaleTableStyle}", "");
                     }
 
                     string tdBody = "";
