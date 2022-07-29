@@ -456,6 +456,7 @@ namespace SmartOrderService.Services
                 }
                 else
                 {
+                    request.Neighborhood = request.Neighborhood == defaultGuid ? null : request.Neighborhood;
                     updateCustomerAdditionalData.Email_2 = request.Email_2 ?? updateCustomerAdditionalData.Email_2;
                     updateCustomerAdditionalData.Phone = request.Phone ?? updateCustomerAdditionalData.Phone;
                     updateCustomerAdditionalData.Phone_2 = request.Phone_2 ?? updateCustomerAdditionalData.Phone_2;
@@ -814,21 +815,31 @@ namespace SmartOrderService.Services
 
                     if (customerAdditionalData == null ? false : customerAdditionalData.NeighborhoodId != null)
                     {
-                        var ubication = UoWCRM.ColoniasRepository
-                            .Get(x => x.Ope_coloniaId == customerAdditionalData.NeighborhoodId)
-                            .Select(x => new
-                            {
-                                CountryId = x.ope_PaisId,
-                                StateId = x.ope_EstadoId,
-                                TownId = x.Ope_MunicipioId
-                            }).FirstOrDefault();
+                        if (customerAdditionalData.NeighborhoodId == defualtGuid)
+                        {
+                            dto.StateId = defualtGuid;
+                            dto.CountryId = defualtGuid;
+                            dto.TownId = defualtGuid;
+                        }
+                        else
+                        {
+                            var ubication = UoWCRM.ColoniasRepository
+                                .Get(x => x.Ope_coloniaId == customerAdditionalData.NeighborhoodId)
+                                .Select(x => new
+                                {
+                                    CountryId = x.ope_PaisId,
+                                    StateId = x.ope_EstadoId,
+                                    TownId = x.Ope_MunicipioId
+                                }).FirstOrDefault();
 
-                        dto.StateId = ubication.StateId;
-                        dto.CountryId = ubication.CountryId;
-                        dto.TownId = ubication.TownId;
+                            dto.StateId = ubication.StateId;
+                            dto.CountryId = ubication.CountryId;
+                            dto.TownId = ubication.TownId;
+                        }
+
                     }
                     //Asignar valores default a las colonias
-                    if(customerAdditionalData == null ? false : customerAdditionalData.NeighborhoodId == null)
+                    if (customerAdditionalData == null ? false : customerAdditionalData.NeighborhoodId == null)
                     {
                         dto.Neighborhood = defualtGuid;
                         dto.StateId = defualtGuid;
@@ -1391,7 +1402,7 @@ namespace SmartOrderService.Services
 
         private bool IsCFEInCRM(string cfe)
         {
-            var service = CRMService.CreateService();
+            var service = new CRMService().GetService();
             service.Timeout = new TimeSpan(0, 2, 0);
 
             string fetchXml =

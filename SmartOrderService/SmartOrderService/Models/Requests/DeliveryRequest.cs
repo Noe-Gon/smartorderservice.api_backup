@@ -103,6 +103,9 @@ namespace SmartOrderService.Models.Requests
         public string CustomerName { get; set; }
         public string CustomerCode { get; set; }
         public int State { get; set; }
+        public int StatusId { get; set; }
+        public string StatusName { get; set; }
+        public string StatusCode { get; set; }
         public List<GetDeliveriesProduct> Products { get; set; }
     }
 

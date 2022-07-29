@@ -97,6 +97,94 @@ namespace SmartOrderService.Services
             return serviceProxy;
         }
 
+        public OrganizationServiceProxy GetService()
+        {
+            string url = ConfigurationManager.AppSettings["Discovery_CRM_URL"];
+            string organization = ConfigurationManager.AppSettings["OrganizacionCRM"];
+            var serviceManagement = ServiceConfigurationFactory.CreateManagement<IDiscoveryService>(new Uri(url));
+            var endpointType = serviceManagement.AuthenticationType;
+            var authCredentials = GetCredentials(endpointType);
+            var organizationUri = String.Empty;
+            using (var discoveryProxy = GetProxy<IDiscoveryService, DiscoveryServiceProxy>(serviceManagement, authCredentials))
+            {
+                if (discoveryProxy != null)
+                {
+                    var orgs = DiscoverOrganizations(discoveryProxy);
+                    var orgDetails = orgs.ToArray();
+                    if (String.IsNullOrWhiteSpace(organization))
+                        throw new ArgumentNullException("orgUniqueName");
+                    if (orgDetails == null)
+                        throw new ArgumentNullException("orgDetails");
+                    OrganizationDetail orgDetail = null;
+                    foreach (OrganizationDetail detail in orgDetails)
+                    {
+                        if (String.Compare(detail.UniqueName, organization, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        {
+                            orgDetail = detail;
+                            break;
+                        }
+                    }
+                    organizationUri = orgDetail.Endpoints[EndpointType.OrganizationService];
+                }
+            }
+            var orgServiceManagement = ServiceConfigurationFactory.CreateManagement<IOrganizationService>(new Uri(organizationUri));
+            var credentials = GetCredentials(endpointType);
+            var organizationProxy = GetProxy<IOrganizationService, OrganizationServiceProxy>(orgServiceManagement, credentials);
+            organizationProxy.EnableProxyTypes();
+            return organizationProxy;
+        }
+
+        private TProxy GetProxy<TService, TProxy>(IServiceManagement<TService> serviceManagement, AuthenticationCredentials authCredentials) where TService : class where TProxy : ServiceProxy<TService>
+        {
+            var classType = typeof(TProxy);
+            if (serviceManagement.AuthenticationType != AuthenticationProviderType.ActiveDirectory)
+            {
+                var tokenCredentials = serviceManagement.Authenticate(authCredentials);
+                return (TProxy)classType
+                    .GetConstructor(new Type[] { typeof(IServiceManagement<TService>), typeof(SecurityTokenResponse) })
+                    .Invoke(new object[] { serviceManagement, tokenCredentials.SecurityTokenResponse });
+            }
+            return (TProxy)classType
+                .GetConstructor(new Type[] { typeof(IServiceManagement<TService>), typeof(ClientCredentials) })
+                .Invoke(new object[] { serviceManagement, authCredentials.ClientCredentials });
+        }
+
+        private AuthenticationCredentials GetCredentials(AuthenticationProviderType endpointType)
+        {
+            string user = ConfigurationManager.AppSettings["_userCRM"];
+            string domain = ConfigurationManager.AppSettings["_domainCRM"];
+            string password = ConfigurationManager.AppSettings["_passwordCRM"];
+            var authCredentials = new AuthenticationCredentials();
+            switch (endpointType)
+            {
+                case AuthenticationProviderType.ActiveDirectory:
+                    authCredentials.ClientCredentials.Windows.ClientCredential =
+                        new System.Net.NetworkCredential(user, password, domain);
+                    break;
+                case AuthenticationProviderType.LiveId:
+                    /*
+                    authCredentials.ClientCredentials.UserName.UserName = connectionData.user;
+                    authCredentials.ClientCredentials.UserName.Password = connectionData.password;
+                    authCredentials.SupportingCredentials = new AuthenticationCredentials();
+                    authCredentials.SupportingCredentials.ClientCredentials =
+                        dalTeleventa.DeviceIdManager.LoadOrRegisterDevice();*/
+                    break;
+                default:
+                    authCredentials.ClientCredentials.UserName.UserName = user;
+                    authCredentials.ClientCredentials.UserName.Password = password;
+                    break;
+            }
+            return authCredentials;
+        }
+
+        public OrganizationDetailCollection DiscoverOrganizations(IDiscoveryService service)
+        {
+            if (service == null) throw new ArgumentNullException("service");
+            RetrieveOrganizationsRequest orgRequest = new RetrieveOrganizationsRequest();
+            RetrieveOrganizationsResponse orgResponse =
+                (RetrieveOrganizationsResponse)service.Execute(orgRequest);
+            return orgResponse.Details;
+        }
 
         public Guid? SendToCRM(Object model, string url, Method method)
         {

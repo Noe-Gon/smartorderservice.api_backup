@@ -761,6 +761,9 @@ namespace SmartOrderService.Services
                     "No se encontró al impulsor"
                 });
 
+            var deliveryStatusUndifined = db.so_delivery_status.Where(x => x.Code == DeliveryStatus.UNDEFINED)
+               .FirstOrDefault();
+
             #endregion
 
             List<int> inventoryIds;
@@ -784,6 +787,14 @@ namespace SmartOrderService.Services
                     .ToList();
             }
 
+            if (deliveryStatusUndifined == null)
+                deliveryStatusUndifined =  new so_delivery_status
+                {
+                    Code = "UNDEFINED",
+                    Description = "Indefinido",
+                    deliveryStatusId = 0
+                };
+
             var response = db.so_sale
                 .Where(x => inventoryIds.Contains(x.inventoryId.Value) && x.deliveryId.HasValue)
                 .Select(x => new GetDeliveriesResponse
@@ -796,6 +807,9 @@ namespace SmartOrderService.Services
                     DeliveryId = x.deliveryId.Value,
                     State = x.state,
                     UserId = x.userId,
+                    StatusId = x.so_delivery.so_delivery_additional_data == null ? deliveryStatusUndifined.deliveryStatusId : (x.so_delivery.so_delivery_additional_data.DeliveryStatus == null ? deliveryStatusUndifined.deliveryStatusId : x.so_delivery.so_delivery_additional_data.DeliveryStatus.deliveryStatusId),
+                    StatusCode = x.so_delivery.so_delivery_additional_data == null ? deliveryStatusUndifined.Code : (x.so_delivery.so_delivery_additional_data.DeliveryStatus == null ? deliveryStatusUndifined.Code : x.so_delivery.so_delivery_additional_data.DeliveryStatus.Code),
+                    StatusName = x.so_delivery.so_delivery_additional_data == null ? deliveryStatusUndifined.Description : (x.so_delivery.so_delivery_additional_data.DeliveryStatus == null ? deliveryStatusUndifined.Description : x.so_delivery.so_delivery_additional_data.DeliveryStatus.Description),
                     Products = x.so_sale_detail.Select(s => new GetDeliveriesProduct
                     {
                         Id = s.productId,
