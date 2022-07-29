@@ -209,16 +209,7 @@ namespace SmartOrderService.Services
                 };
                 string termsEmailURL = ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/TermsAndConditions/" + termsId;
 
-                //Se envia el Correo
-                var emailService = new EmailService();
-
-                emailService.SendWellcomeEmail(new WellcomeEmailRequest
-                {
-                    CustomerName = newCustomer.name,
-                    TermsAndConditionLink = termsEmailURL,
-                    CustomerEmail = newCustomer.email,
-                    CanceledLink = cancelEmailURL
-                });
+                
 
                 //Se notifica al CMR
                 var CRMService = new CRMService();
@@ -260,6 +251,17 @@ namespace SmartOrderService.Services
                 //DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(Today)).FirstOrDefault();
                 //var user = UoWConsumer.UserRepository.Get(x => x.userId == request.UserId).FirstOrDefault();
                 //var prices = service.getPricesByInventoryCustomer(inventory.inventoryId, user.branchId, DateTime.Now, newCustomer.customerId);
+
+                //Se envia el Correo
+                var emailService = new EmailService();
+
+                emailService.SendWellcomeEmail(new WellcomeEmailRequest
+                {
+                    CustomerName = newCustomer.name,
+                    TermsAndConditionLink = termsEmailURL,
+                    CustomerEmail = newCustomer.email,
+                    CanceledLink = cancelEmailURL
+                });
 
                 var response = new InsertConsumerResponse
                 {
@@ -1418,7 +1420,7 @@ namespace SmartOrderService.Services
 
                                 <attribute name='ope_tipocliente' />" +
                                 @"<filter type='and'>
-                                        <condition attribute='ope_cfe' operator='eq' value = '110000039718'/>" +
+                                        <condition attribute='ope_cfe' operator='eq' value = '" + cfe + "'/>" +
                                         "<condition attribute='ope_tipocliente' operator='eq' value = '1' />" +
                                     "</filter>" +
                             "</entity>" +

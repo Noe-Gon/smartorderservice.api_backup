@@ -10,7 +10,7 @@ namespace SmartOrderService.DB
     {
         public Guid Id { get; set; }
 
-        [Column("created_datemade in abyss")]
+        [Column("created_date")]
         public DateTime CreatedDate { get; set; }
 
         [Column("limit_days")]
