@@ -69,8 +69,8 @@ namespace SmartOrderService.Services
                 if (existCustomer != null)
                     throw new DuplicateEntityException("Ya existe un consumidor con ese CFE");
 
-                //if (IsCFEInCRM(request.CFECode))
-                //    throw new DuplicateEntityException("Ya existe un consumidor con ese CFE en CRM");
+                if (IsCFEInCRM(request.CFECode))
+                    throw new DuplicateEntityException("Ya existe un consumidor con ese CFE en CRM");
 
                 var newCustomer = new so_customer
                 {
@@ -1407,23 +1407,24 @@ namespace SmartOrderService.Services
 
             string fetchXml =
                        @"<fetch version='1.0' output-format='xml-platform' mapping='logical' distinct='false'>
-                             <entity name='ope_clientes cancun'>
+                             <entity name='ope_clientes_cancun'>
 
-                                <attribute name='ope_clientes_cancunId' /> 
+                                <attribute name='ope_clientes_cancunid' /> 
 
                                 <attribute name='ope_name' />
                                 <attribute name='ope_cfe' />
 
-                                 <attribute name='ope_RutasIdName' /> 
+                                 <attribute name='ope_rutasidname' /> 
 
                                 <attribute name='ope_tipocliente' />" +
                                 @"<filter type='and'>
-                                        <condition attribute='ope_cfe' operator='eq' value = '" + cfe + "'/>" +
+                                        <condition attribute='ope_cfe' operator='eq' value = '110000039718'/>" +
                                         "<condition attribute='ope_tipocliente' operator='eq' value = '1' />" +
                                     "</filter>" +
                             "</entity>" +
                         " </fetch>";
 
+            
             var results = service.RetrieveMultiple(new FetchExpression(fetchXml));
 
             if (results.Entities.Any())

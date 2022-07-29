@@ -151,9 +151,9 @@ namespace SmartOrderService.Services
 
         private AuthenticationCredentials GetCredentials(AuthenticationProviderType endpointType)
         {
-            string user = ConfigurationManager.AppSettings["_userCRM"];
-            string domain = ConfigurationManager.AppSettings["_domainCRM"];
-            string password = ConfigurationManager.AppSettings["_passwordCRM"];
+            string user = ConfigurationManager.AppSettings["UsuarioCRM"];
+            string domain = "";//ConfigurationManager.AppSettings["DomainCRM"];
+            string password = ConfigurationManager.AppSettings["PasswordCRM"];
             var authCredentials = new AuthenticationCredentials();
             switch (endpointType)
             {

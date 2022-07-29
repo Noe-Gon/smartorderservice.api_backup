@@ -814,9 +814,9 @@ namespace SmartOrderService.Services
                     {
                         Id = s.productId,
                         Name = s.so_product.name,
-                        Price = s.base_price_no_tax.Value + s.vat.Value,
+                        Price = Convert.ToDecimal(s.price),
                         Quantity = s.amount,
-                        TotalPrice = s.import
+                        TotalPrice = s.price * s.amount
                     }).ToList()
                 }).ToList();
 
