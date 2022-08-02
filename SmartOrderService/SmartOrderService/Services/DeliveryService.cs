@@ -623,7 +623,8 @@ namespace SmartOrderService.Services
                 DeliveryDate = order.delivery.Value,
                 SallerName = user.code + " - " + user.name,
                 ReferenceCode = customer.x.customerId.ToString(),
-                Items = new List<SendOrderTicketItem>()
+                Items = new List<SendOrderTicketItem>(),
+                Status = order.status
             };
 
             var productIds = order.so_order_detail.Select(x => x.productId).ToList();
@@ -717,6 +718,14 @@ namespace SmartOrderService.Services
             orderToCancel.modifiedby = userId;
             orderToCancel.status = false;
             //db.so_order.Attach(orderToCancel);
+
+            var routeId = db.so_route_team
+                .Where(x => x.userId == userId)
+                .Select(x => x.routeId)
+                .FirstOrDefault();
+
+            SendOrderEmail(orderToCancel, routeId);
+
             db.SaveChanges();
 
             return ResponseBase<SendOrderResponse>.Create(new SendOrderResponse

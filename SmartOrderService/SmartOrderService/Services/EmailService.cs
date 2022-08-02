@@ -423,7 +423,9 @@ namespace SmartOrderService.Services
         {
             try
             {
-                using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath("~/Content/Template/OrderTicket.html")))
+                string template = request.Status ? "~/Content/Template/OrderTicket.html" : "~/Content/Template/CancelOrderTicket.html";
+
+                using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath(template)))
                 {
                     string body = reader.ReadToEnd();
                     string tableData = "";
@@ -461,7 +463,7 @@ namespace SmartOrderService.Services
                     APIEmailSendEmail(new APIEmailSendEmailRequest
                     {
                         Body = body,
-                        Subject = "Hemos recibido tu pedido en Bepensa",
+                        Subject = request.Status ? "Hemos recibido tu pedido en Bepensa" : "¡Gracias por ser cliente Bepensa!",
                         To = request.CustomerMail
                     });
                 }

@@ -39,6 +39,13 @@ namespace SmartOrderService.Services
                 AttributeCrm.CreateEntityReferenceValidation(entity.attributes, "ope_estado", "ope_estadoid", consumer.StateId.ToString());
                 AttributeCrm.CreateEntityReferenceValidation(entity.attributes, "ope_municipio", "ope_municipioid", consumer.MunicipalityId.ToString());
                 AttributeCrm.CreateEntityReferenceValidation(entity.attributes, "ope_colonia", "ope_coloniaid", consumer.Neighborhood.ToString());
+                AttributeCrm.CreateEntityReferenceValidation(entity.attributes, "ope_rutas", "ope_rutasid", consumer.RouteCRMId.ToString());
+
+                entity.attributes.Add(AttributeCrm.Create("ope_estadoidname", consumer.StateIdName));
+                entity.attributes.Add(AttributeCrm.Create("ope_paisidname", consumer.CountryIdName));
+                entity.attributes.Add(AttributeCrm.Create("ope_municipioidname", consumer.MunicipalityIdName));
+                entity.attributes.Add(AttributeCrm.Create("ope_coloniaidname", consumer.NeighborhoodIdName));
+
 
                 entity.attributes.Add(AttributeCrm.Create("ope_numero_interior", consumer.InteriorNumber));
                 entity.attributes.Add(AttributeCrm.Create("ope_numeroexterior", consumer.ExternalNumber));
@@ -57,6 +64,10 @@ namespace SmartOrderService.Services
                 entity.attributes.Add(AttributeCrm.CreateBoolean("ope_jueves", consumer.Days.Contains(5)));
                 entity.attributes.Add(AttributeCrm.CreateBoolean("ope_viernes", consumer.Days.Contains(6)));
                 entity.attributes.Add(AttributeCrm.CreateBoolean("ope_sabado", consumer.Days.Contains(7)));
+
+                //Price List
+                entity.attributes.Add(AttributeCrm.CreateInteger("ope_listprec", consumer.PriceListId));
+
 
                 entity.attributes.Add(AttributeCrm.CreateDateTime("ope_fechaalta", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")));
 

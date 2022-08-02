@@ -209,11 +209,11 @@ namespace SmartOrderService.Services
                 };
                 string termsEmailURL = ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/TermsAndConditions/" + termsId;
 
-                
-
                 //Se notifica al CMR
                 var CRMService = new CRMService();
-                
+
+                var routeId = GetIdRoute(route.code, route.so_branch.code);
+
                 var crmRequest = new CRMConsumerRequest
                 {
                     Name = newCustomer.name,
@@ -233,8 +233,15 @@ namespace SmartOrderService.Services
                     Longitude = newCustomer.longitude,
                     Address = address,
                     Days = request.Days,
-                    EntityId = null
+                    PriceListId = productPriceListId,
+                    EntityId = null,
+                    CountryIdName = request.CountryName,
+                    MunicipalityIdName = request.MunicipalityName,
+                    RouteCRMId = routeId,
+                    StateIdName = request.StateName,
+                    NeighborhoodIdName = request.NeighborhoodName
                 };
+
                 newCustomerAdditionalData.Code = CRMService.ConsumerToCRM(crmRequest, CRMService.TypeCreate, Method.POST);
 
                 UoWConsumer.CustomerAdditionalDataRepository.Insert(newCustomerAdditionalData);
@@ -458,14 +465,16 @@ namespace SmartOrderService.Services
                 }
                 else
                 {
-                    request.Neighborhood = request.Neighborhood == defaultGuid ? null : request.Neighborhood;
+                    if (IsCFEInCRM(request.CFECode, updateCustomerAdditionalData.Code == null ? null : updateCustomerAdditionalData.Code.ToString()))
+                        throw new DuplicateEntityException("Ya existe un consumidor con ese CFE en CRM");
+
+                    updateCustomerAdditionalData.NeighborhoodId = request.Neighborhood == defaultGuid ? null : request.Neighborhood;
                     updateCustomerAdditionalData.Email_2 = request.Email_2 ?? updateCustomerAdditionalData.Email_2;
                     updateCustomerAdditionalData.Phone = request.Phone ?? updateCustomerAdditionalData.Phone;
                     updateCustomerAdditionalData.Phone_2 = request.Phone_2 ?? updateCustomerAdditionalData.Phone_2;
                     updateCustomerAdditionalData.CodePlaceId = request.CodePlace ?? updateCustomerAdditionalData.CodePlaceId;
                     updateCustomerAdditionalData.ReferenceCode = request.ReferenceCode ?? updateCustomerAdditionalData.ReferenceCode;
                     updateCustomerAdditionalData.InteriorNumber = request.InteriorNumber ?? updateCustomerAdditionalData.InteriorNumber;
-                    updateCustomerAdditionalData.NeighborhoodId = request.Neighborhood ?? updateCustomerAdditionalData.NeighborhoodId;
                     updateCustomerAdditionalData.modifiedon = DateTime.Now;
 
                     if (!request.IsActive)
@@ -559,6 +568,8 @@ namespace SmartOrderService.Services
 
                 UoWConsumer.Save();
 
+                var routeId = GetIdRoute(route.code, route.so_branch.code);
+
                 //Notificar al CRM
                 var CRMService = new CRMService();
                 var crmRequest = new CRMConsumerRequest
@@ -580,7 +591,12 @@ namespace SmartOrderService.Services
                     Longitude = updateCustomer.longitude,
                     Address = address,
                     Days = request.Days,
-                    EntityId = customerAdditionalDateAux.Code
+                    EntityId = customerAdditionalDateAux.Code,
+                    CountryIdName = request.CountryName,
+                    MunicipalityIdName = request.MunicipalityName,
+                    RouteCRMId = routeId,
+                    StateIdName = request.StateName,
+                    NeighborhoodIdName = request.NeighborhoodName
                 };
 
                 if(customerAdditionalDateAux.Code != null)
@@ -1402,7 +1418,7 @@ namespace SmartOrderService.Services
             return DrivingId;
         }
 
-        private bool IsCFEInCRM(string cfe)
+        private bool IsCFEInCRM(string cfe, string id = null)
         {
             var service = new CRMService().GetService();
             service.Timeout = new TimeSpan(0, 2, 0);
@@ -1431,9 +1447,86 @@ namespace SmartOrderService.Services
 
             if (results.Entities.Any())
             {
+                if (id != null)
+                {
+                    var entityList = results.Entities.ToList();
+                    var idCRM = entityList.First().GetAttributeValue<Guid>("ope_clientes_cancunid").ToString();
+
+                    if (idCRM == id)
+                        return false;
+                    else
+                        return true;
+                }
+
                 return true;
             }
             return false;
+        }
+
+        private Guid? GetIdRoute(string routeCode, string brachCode)
+        {
+            var service = new CRMService().GetService();
+            service.Timeout = new TimeSpan(0, 2, 0);
+
+            var branchId = GetCRMCedisId(brachCode);
+
+            string fetchXml = @"<fetch version='1.0' output-format='xml-platform' mapping='logical' distinct='false'>
+                             <entity name='ope_rutas'>
+                                <attribute name='ope_name' />
+                                <attribute name='ope_idruta' />
+                                <attribute name='ope_rutasid' />
+                                <attribute name='createdon' />
+                                <attribute name='statecode' />
+                                <attribute name='ope_idbiruta' />
+                                <order attribute='createdon' descending='false' />" +
+                                @"<filter type='and'>
+                                        <condition attribute='ope_idruta' operator='eq' value = '" + routeCode + "'/>" +
+                                        "<condition attribute='ope_cedisid' operator='eq' value = '" + branchId.ToString() + "'/>" +
+                                        "<condition attribute='statecode' operator='eq' value = '0' />" +
+                                        "<condition attribute='ope_idbiruta' operator='not-null' />" +
+                                    "</filter>" +
+                            "</entity>" +
+                        " </fetch>";
+
+            var results = service.RetrieveMultiple(new FetchExpression(fetchXml));
+             
+            if (results.Entities.Any())
+            {
+                var entity = results.Entities.ToList().FirstOrDefault();
+                var ope_rutasid = entity == null ? null : entity.GetAttributeValue<Guid?>("ope_rutasid");
+
+                return ope_rutasid;
+            }
+            return null;
+        }
+
+        private Guid? GetCRMCedisId(string brachCode)
+        {
+            var service = new CRMService().GetService();
+            service.Timeout = new TimeSpan(0, 2, 0);
+
+            string fetchXml =
+                        @"<fetch version='1.0' output-format='xml-platform' mapping='logical' distinct='false'>
+                             <entity name='ope_cedis'>
+                                <attribute name='ope_name' />
+                                <attribute name='ope_idcedis' />
+                                <attribute name='ope_cedisid' />" +
+                                     @"<filter type='and'>
+                                        <condition attribute='ope_idcedis' operator='eq' value = '" + brachCode + "'/>" +
+                                     "</filter>" +
+                             "</entity>" +
+                         " </fetch>";
+
+            var results = service.RetrieveMultiple(new FetchExpression(fetchXml));
+
+            if (results.Entities.Any())
+            {
+                var entity = results.Entities.ToList().FirstOrDefault();
+                var ope_rutasid = entity == null ? null : entity.GetAttributeValue<Guid?>("ope_cedisid");
+
+                return ope_rutasid;
+            }
+            return null;
         }
 
         public void Dispose()
@@ -1441,5 +1534,13 @@ namespace SmartOrderService.Services
             this.UoWConsumer.Dispose();
             this.UoWConsumer = null;
         }
+    }
+
+    public class ope_clientes_cancun
+    {
+        public string ope_clientes_cancunid { get; set; }
+        public string ope_name { get; set; }
+        public string ope_cfe { get; set; }
+        public string ope_rutasidname { get; set; }
     }
 }

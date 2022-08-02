@@ -118,6 +118,7 @@ namespace SmartOrderService.Models.Requests
         public DateTime DeliveryDate { get; set; }
         public string CustomerMail { get; set; }
         public string ReferenceCode { get; set; }
+        public bool Status { get; set; }
         public List<SendOrderTicketItem> Items { get; set; }
     }
 
