@@ -90,6 +90,13 @@ namespace SmartOrderService.Controllers
                         return Content(HttpStatusCode.BadRequest, response);
                 }
             }
+            catch (UserInUseException e)
+            {
+                return Content(HttpStatusCode.Conflict, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
             catch (UnauthorizedAccessException e)
             {
                 return Content(HttpStatusCode.Unauthorized, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
