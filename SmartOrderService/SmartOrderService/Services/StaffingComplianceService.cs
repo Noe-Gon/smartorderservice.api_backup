@@ -164,8 +164,8 @@ namespace SmartOrderService.Services
             {
                 throw e;
             }
-            catch (Exception) {
-                exceptionMessages.Add("Error al notificar a WSempleados");
+            catch (Exception e) {
+                exceptionMessages.Add("Error al notificar a WSempleados: " + e.Message);
             }
 
             //Buscar si ya existe un registro para este usuario
@@ -394,9 +394,9 @@ namespace SmartOrderService.Services
             {
                 throw e;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                exceptionMessages.Add("Error al notificar a WSempleados");
+                exceptionMessages.Add("Error al notificar a WSempleados: " + e.Message);
             }
 
             //Buscar si ya existe un registro para este usuario
