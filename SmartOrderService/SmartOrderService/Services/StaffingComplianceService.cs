@@ -182,7 +182,8 @@ namespace SmartOrderService.Services
                     Status = inTripulacs,
                     RouteId = routeBranch.Route.routeId,
                     UserCode = request.EmployeeCode,
-                    UserId = user.userId
+                    UserId = user.userId,
+                    UserName = employee.name + " " + employee.lastname
                 };
 
                 UoWConsumer.AuthentificationLogRepository.Insert(newLogging);
@@ -409,7 +410,8 @@ namespace SmartOrderService.Services
                     Status = inTripulacs,
                     RouteId = routeBranch.Route.routeId,
                     UserCode = request.EmployeeCode,
-                    UserId = user.userId
+                    UserId = user.userId,
+                    UserName = employee.name + " " + employee.lastname
                 };
 
                 UoWConsumer.AuthentificationLogRepository.Insert(newLogging);
@@ -472,7 +474,8 @@ namespace SmartOrderService.Services
                         UserCode = request.EmployeeCode,
                         UserId = user.userId,
                         RouteId = request.RouteId,
-                        LeaderCode = leaderCode.Code
+                        LeaderCode = leaderCode.Code,
+                        UserName = null
                     };
 
                     UoWConsumer.AuthentificationLogRepository.Insert(newAuthenticationLog);
