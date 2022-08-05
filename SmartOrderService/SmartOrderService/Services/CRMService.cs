@@ -42,10 +42,10 @@ namespace SmartOrderService.Services
                 AttributeCrm.CreateEntityReferenceValidation(entity.attributes, "ope_colonia", "ope_coloniaid", consumer.Neighborhood.ToString());
                 AttributeCrm.CreateEntityReferenceValidation(entity.attributes, "ope_rutas", "ope_rutasid", consumer.RouteCRMId.ToString());
 
-                entity.attributes.Add(AttributeCrm.Create("ope_estadoidname", consumer.StateIdName));
-                entity.attributes.Add(AttributeCrm.Create("ope_paisidname", consumer.CountryIdName));
-                entity.attributes.Add(AttributeCrm.Create("ope_municipioidname", consumer.MunicipalityIdName));
-                entity.attributes.Add(AttributeCrm.Create("ope_coloniaidname", consumer.NeighborhoodIdName));
+                entity.attributes.Add(AttributeCrm.Create("ope_estadoidname", consumer.StateIdName ?? ""));
+                entity.attributes.Add(AttributeCrm.Create("ope_paisidname", consumer.CountryIdName ?? ""));
+                entity.attributes.Add(AttributeCrm.Create("ope_municipioidname", consumer.MunicipalityIdName ?? ""));
+                entity.attributes.Add(AttributeCrm.Create("ope_coloniaidname", consumer.NeighborhoodIdName ?? ""));
 
 
                 entity.attributes.Add(AttributeCrm.Create("ope_numero_interior", consumer.InteriorNumber));
