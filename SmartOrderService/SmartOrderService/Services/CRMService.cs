@@ -207,7 +207,7 @@ namespace SmartOrderService.Services
             request.AddBody(model);
             var RestResponse = client.Execute(request);
             string content = RestResponse.Content;
-            ramancevar jsonObject = JsonConvert.DeserializeObject<CRMResponse>(content);
+            var jsonObject = JsonConvert.DeserializeObject<CRMResponse>(content);
 
             return jsonObject.newEntityId;
         }
