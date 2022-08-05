@@ -33,6 +33,7 @@ namespace SmartOrderService.Services
                 entity.attributes.Add(AttributeCrm.Create("ope_email", consumer.Email));
                 entity.attributes.Add(AttributeCrm.Create("ope_telephone", consumer.Phone));
                 entity.attributes.Add(AttributeCrm.Create("ope_cfe", consumer.CFECode));
+                entity.attributes.Add(AttributeCrm.CreateBoolean("ope_tipocliente", true));
 
                 //Address
                 AttributeCrm.CreateEntityReferenceValidation(entity.attributes, "ope_pais", "ope_paisid", consumer.CountryId.ToString());
@@ -206,7 +207,7 @@ namespace SmartOrderService.Services
             request.AddBody(model);
             var RestResponse = client.Execute(request);
             string content = RestResponse.Content;
-            var jsonObject = JsonConvert.DeserializeObject<CRMResponse>(content);
+            ramancevar jsonObject = JsonConvert.DeserializeObject<CRMResponse>(content);
 
             return jsonObject.newEntityId;
         }
