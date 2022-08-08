@@ -20,6 +20,9 @@ namespace SmartOrderService.DB
         [MaxLength(200)]
         public string UserName { get; set; }
 
+        [Column("is_synchronized")]
+        public bool IsSynchronized { get; set; }
+
         [Column("leader_code")]
         [MaxLength(50)]
         public string LeaderCode { get; set; }

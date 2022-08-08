@@ -183,7 +183,8 @@ namespace SmartOrderService.Services
                     RouteId = routeBranch.Route.routeId,
                     UserCode = request.EmployeeCode,
                     UserId = user.userId,
-                    UserName = employee.name + " " + employee.lastname
+                    UserName = employee.name + " " + employee.lastname,
+                    IsSynchronized = true
                 };
 
                 UoWConsumer.AuthentificationLogRepository.Insert(newLogging);
@@ -411,7 +412,8 @@ namespace SmartOrderService.Services
                     RouteId = routeBranch.Route.routeId,
                     UserCode = request.EmployeeCode,
                     UserId = user.userId,
-                    UserName = employee.name + " " + employee.lastname
+                    UserName = employee.name + " " + employee.lastname,
+                    IsSynchronized = true
                 };
 
                 UoWConsumer.AuthentificationLogRepository.Insert(newLogging);
@@ -475,7 +477,8 @@ namespace SmartOrderService.Services
                         UserId = user.userId,
                         RouteId = request.RouteId,
                         LeaderCode = leaderCode.Code,
-                        UserName = null
+                        UserName = null,
+                        IsSynchronized = false
                     };
 
                     UoWConsumer.AuthentificationLogRepository.Insert(newAuthenticationLog);
