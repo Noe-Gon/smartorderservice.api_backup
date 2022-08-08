@@ -518,7 +518,7 @@ namespace SmartOrderService.Services
                 return aray.Last();
             }
 
-            throw new ExternalAPIException("Falló al intentar obtener el token. " + RestResponse.StatusCode);
+            throw new ExternalAPIException("Falló al intentar obtener el token. " + RestResponse.StatusCode + ": " + RestResponse.ErrorMessage);
         }
 
         private string NotifyWorkday(NotifyWorkdayRequest request)
