@@ -21,7 +21,7 @@ namespace SmartOrderService.DB
         public string UserName { get; set; }
 
         [Column("is_synchronized")]
-        public bool IsSynchronized { get; set; }
+        public bool? IsSynchronized { get; set; }
 
         [Column("leader_code")]
         [MaxLength(50)]
