@@ -213,6 +213,7 @@ namespace SmartOrderService.Services
                 var CRMService = new CRMService();
 
                 var routeId = GetIdRoute(route.code, route.so_branch.code);
+                var figuraId = GetFiguraCRM();
 
                 var crmRequest = new CRMConsumerRequest
                 {
@@ -239,7 +240,8 @@ namespace SmartOrderService.Services
                     MunicipalityIdName = request.MunicipalityName,
                     RouteCRMId = routeId,
                     StateIdName = request.StateName,
-                    NeighborhoodIdName = request.NeighborhoodName
+                    NeighborhoodIdName = request.NeighborhoodName,
+                    FiguraId = figuraId
                 };
 
                 newCustomerAdditionalData.Code = CRMService.ConsumerToCRM(crmRequest, CRMService.TypeCreate, Method.POST);
@@ -569,6 +571,7 @@ namespace SmartOrderService.Services
                 UoWConsumer.Save();
 
                 var routeId = GetIdRoute(route.code, route.so_branch.code);
+                var figuraId = GetFiguraCRM();
 
                 //Notificar al CRM
                 var CRMService = new CRMService();
@@ -596,7 +599,8 @@ namespace SmartOrderService.Services
                     MunicipalityIdName = request.MunicipalityName,
                     RouteCRMId = routeId,
                     StateIdName = request.StateName,
-                    NeighborhoodIdName = request.NeighborhoodName
+                    NeighborhoodIdName = request.NeighborhoodName,
+                    FiguraId = figuraId
                 };
 
                 if(customerAdditionalDateAux.Code != null)
@@ -1525,6 +1529,37 @@ namespace SmartOrderService.Services
                 var ope_rutasid = entity == null ? null : entity.GetAttributeValue<Guid?>("ope_cedisid");
 
                 return ope_rutasid;
+            }
+            return null;
+        }
+
+        public Guid? GetFiguraCRM()
+        {
+            string employeeCode = ConfigurationManager.AppSettings["CodigoEmpleadoCRM"];
+
+            var service = new CRMService().GetService();
+            service.Timeout = new TimeSpan(0, 2, 0);
+
+            string fetchXml =
+                        @"<fetch version='1.0' output-format='xml-platform' mapping='logical' distinct='false'>
+                             <entity name='ope_figura'>
+                                <attribute name='ope_name' />
+                                <attribute name='ope_codigoempleado' />
+                                <attribute name='ope_figuraid' />" +
+                                     @"<filter type='and'>
+                                        <condition attribute='ope_codigoempleado' operator='eq' value = '" + employeeCode + "'/>" +
+                                     "</filter>" +
+                             "</entity>" +
+                         " </fetch>";
+
+            var results = service.RetrieveMultiple(new FetchExpression(fetchXml));
+
+            if (results.Entities.Any())
+            {
+                var entity = results.Entities.ToList().FirstOrDefault();
+                var Ope_figuraId = entity == null ? null : entity.GetAttributeValue<Guid?>("ope_figuraid");
+
+                return Ope_figuraId;
             }
             return null;
         }

@@ -33,6 +33,7 @@ namespace SmartOrderService.Services
                 entity.attributes.Add(AttributeCrm.Create("ope_email", consumer.Email));
                 entity.attributes.Add(AttributeCrm.Create("ope_telephone", consumer.Phone));
                 entity.attributes.Add(AttributeCrm.Create("ope_cfe", consumer.CFECode));
+                entity.attributes.Add(AttributeCrm.CreateBoolean("ope_tipocliente", true));
 
                 //Address
                 AttributeCrm.CreateEntityReferenceValidation(entity.attributes, "ope_pais", "ope_paisid", consumer.CountryId.ToString());
@@ -40,11 +41,12 @@ namespace SmartOrderService.Services
                 AttributeCrm.CreateEntityReferenceValidation(entity.attributes, "ope_municipio", "ope_municipioid", consumer.MunicipalityId.ToString());
                 AttributeCrm.CreateEntityReferenceValidation(entity.attributes, "ope_colonia", "ope_coloniaid", consumer.Neighborhood.ToString());
                 AttributeCrm.CreateEntityReferenceValidation(entity.attributes, "ope_rutas", "ope_rutasid", consumer.RouteCRMId.ToString());
+                AttributeCrm.CreateEntityReferenceValidation(entity.attributes, "ope_figura", "ope_figuras_clientes_cancunid", consumer.FiguraId.ToString());
 
-                entity.attributes.Add(AttributeCrm.Create("ope_estadoidname", consumer.StateIdName));
-                entity.attributes.Add(AttributeCrm.Create("ope_paisidname", consumer.CountryIdName));
-                entity.attributes.Add(AttributeCrm.Create("ope_municipioidname", consumer.MunicipalityIdName));
-                entity.attributes.Add(AttributeCrm.Create("ope_coloniaidname", consumer.NeighborhoodIdName));
+                entity.attributes.Add(AttributeCrm.Create("ope_estadoidname", consumer.StateIdName ?? ""));
+                entity.attributes.Add(AttributeCrm.Create("ope_paisidname", consumer.CountryIdName ?? ""));
+                entity.attributes.Add(AttributeCrm.Create("ope_municipioidname", consumer.MunicipalityIdName ?? ""));
+                entity.attributes.Add(AttributeCrm.Create("ope_coloniaidname", consumer.NeighborhoodIdName ?? ""));
 
 
                 entity.attributes.Add(AttributeCrm.Create("ope_numero_interior", consumer.InteriorNumber));
@@ -79,6 +81,20 @@ namespace SmartOrderService.Services
             {
                 return null;
             }
+        }
+
+        public Guid? SendToCRM(Object model, string url, Method method)
+        {
+            var client = new RestClient();
+            client.BaseUrl = new Uri(ConfigurationManager.AppSettings["CRM_URL"]);
+            var request = new RestRequest(url, method);
+            request.RequestFormat = DataFormat.Json;
+            request.AddBody(model);
+            var RestResponse = client.Execute(request);
+            string content = RestResponse.Content;
+            var jsonObject = JsonConvert.DeserializeObject<CRMResponse>(content);
+
+            return jsonObject.newEntityId;
         }
 
         public static OrganizationServiceProxy CreateService()
@@ -197,19 +213,7 @@ namespace SmartOrderService.Services
             return orgResponse.Details;
         }
 
-        public Guid? SendToCRM(Object model, string url, Method method)
-        {
-            var client = new RestClient();
-            client.BaseUrl = new Uri(ConfigurationManager.AppSettings["CRM_URL"]);
-            var request = new RestRequest(url, method);
-            request.RequestFormat = DataFormat.Json;
-            request.AddBody(model);
-            var RestResponse = client.Execute(request);
-            string content = RestResponse.Content;
-            var jsonObject = JsonConvert.DeserializeObject<CRMResponse>(content);
-
-            return jsonObject.newEntityId;
-        }
+       
     }
 
     public class CRMResponse

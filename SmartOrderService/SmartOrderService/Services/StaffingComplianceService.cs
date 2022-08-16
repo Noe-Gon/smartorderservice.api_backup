@@ -137,7 +137,7 @@ namespace SmartOrderService.Services
                         requestNotify.impulsorId = Convert.ToInt32(impulsorCode);
                         requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
                         requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
-
+                        
                         var response = NotifyWorkday(requestNotify);
                         if (response == "\"{\\\"errors\\\":[]}\"")
                         {
@@ -160,8 +160,12 @@ namespace SmartOrderService.Services
                     }
                 }
             }
-            catch (Exception) {
-                exceptionMessages.Add("Error al notificar a WSempleados");
+            catch (UserInUseException e)
+            {
+                throw e;
+            }
+            catch (Exception e) {
+                exceptionMessages.Add("Error al notificar a WSempleados: " + e.Message);
             }
 
             //Buscar si ya existe un registro para este usuario
@@ -388,9 +392,13 @@ namespace SmartOrderService.Services
                     }
                 }
             }
-            catch (Exception)
+            catch (UserInUseException e)
             {
-                exceptionMessages.Add("Error al notificar a WSempleados");
+                throw e;
+            }
+            catch (Exception e)
+            {
+                exceptionMessages.Add("Error al notificar a WSempleados: " + e.Message);
             }
 
             //Buscar si ya existe un registro para este usuario
@@ -531,6 +539,10 @@ namespace SmartOrderService.Services
             requestConfig.AddBody(request);
 
             var RestResponse = client.Execute(requestConfig);
+            if (RestResponse.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+                throw new Exception(RestResponse.Content);
+            if (RestResponse.StatusCode == System.Net.HttpStatusCode.Conflict)
+                throw new UserInUseException("Este código ya fue agregado");
             return JsonConvert.SerializeObject(RestResponse.Content);
         }
 
@@ -559,6 +571,11 @@ namespace SmartOrderService.Services
             }
 
             throw new ExternalAPIException("Falló al intentar obtener la información del usuario");
+        }
+
+        private void RegisterLog()
+        {
+
         }
 
         public void Dispose()
