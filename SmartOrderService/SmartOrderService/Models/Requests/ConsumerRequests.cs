@@ -140,6 +140,7 @@ namespace SmartOrderService.Models.Requests
         public string CountryIdName { get; set; }
         public string MunicipalityIdName { get; set; }
         public string NeighborhoodIdName { get; set; }
+        public Guid? FiguraId { get; set; }
     }
 
     public class RemoveConsumerRequest

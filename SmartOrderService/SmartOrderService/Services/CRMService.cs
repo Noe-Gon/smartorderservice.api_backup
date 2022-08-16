@@ -41,6 +41,7 @@ namespace SmartOrderService.Services
                 AttributeCrm.CreateEntityReferenceValidation(entity.attributes, "ope_municipio", "ope_municipioid", consumer.MunicipalityId.ToString());
                 AttributeCrm.CreateEntityReferenceValidation(entity.attributes, "ope_colonia", "ope_coloniaid", consumer.Neighborhood.ToString());
                 AttributeCrm.CreateEntityReferenceValidation(entity.attributes, "ope_rutas", "ope_rutasid", consumer.RouteCRMId.ToString());
+                AttributeCrm.CreateEntityReferenceValidation(entity.attributes, "ope_figura", "ope_figuras_clientes_cancunid", consumer.FiguraId.ToString());
 
                 entity.attributes.Add(AttributeCrm.Create("ope_estadoidname", consumer.StateIdName ?? ""));
                 entity.attributes.Add(AttributeCrm.Create("ope_paisidname", consumer.CountryIdName ?? ""));
@@ -80,6 +81,20 @@ namespace SmartOrderService.Services
             {
                 return null;
             }
+        }
+
+        public Guid? SendToCRM(Object model, string url, Method method)
+        {
+            var client = new RestClient();
+            client.BaseUrl = new Uri(ConfigurationManager.AppSettings["CRM_URL"]);
+            var request = new RestRequest(url, method);
+            request.RequestFormat = DataFormat.Json;
+            request.AddBody(model);
+            var RestResponse = client.Execute(request);
+            string content = RestResponse.Content;
+            var jsonObject = JsonConvert.DeserializeObject<CRMResponse>(content);
+
+            return jsonObject.newEntityId;
         }
 
         public static OrganizationServiceProxy CreateService()
@@ -198,19 +213,7 @@ namespace SmartOrderService.Services
             return orgResponse.Details;
         }
 
-        public Guid? SendToCRM(Object model, string url, Method method)
-        {
-            var client = new RestClient();
-            client.BaseUrl = new Uri(ConfigurationManager.AppSettings["CRM_URL"]);
-            var request = new RestRequest(url, method);
-            request.RequestFormat = DataFormat.Json;
-            request.AddBody(model);
-            var RestResponse = client.Execute(request);
-            string content = RestResponse.Content;
-            var jsonObject = JsonConvert.DeserializeObject<CRMResponse>(content);
-
-            return jsonObject.newEntityId;
-        }
+       
     }
 
     public class CRMResponse
