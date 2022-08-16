@@ -186,7 +186,9 @@ namespace SmartOrderService.Services
                     Status = inTripulacs,
                     RouteId = routeBranch.Route.routeId,
                     UserCode = request.EmployeeCode,
-                    UserId = user.userId
+                    UserId = user.userId,
+                    UserName = employee.name + " " + employee.lastname,
+                    IsSynchronized = true
                 };
 
                 UoWConsumer.AuthentificationLogRepository.Insert(newLogging);
@@ -417,7 +419,9 @@ namespace SmartOrderService.Services
                     Status = inTripulacs,
                     RouteId = routeBranch.Route.routeId,
                     UserCode = request.EmployeeCode,
-                    UserId = user.userId
+                    UserId = user.userId,
+                    UserName = employee.name + " " + employee.lastname,
+                    IsSynchronized = true
                 };
 
                 UoWConsumer.AuthentificationLogRepository.Insert(newLogging);
@@ -480,7 +484,9 @@ namespace SmartOrderService.Services
                         UserCode = request.EmployeeCode,
                         UserId = user.userId,
                         RouteId = request.RouteId,
-                        LeaderCode = leaderCode.Code
+                        LeaderCode = leaderCode.Code,
+                        UserName = null,
+                        IsSynchronized = false
                     };
 
                     UoWConsumer.AuthentificationLogRepository.Insert(newAuthenticationLog);
@@ -520,7 +526,7 @@ namespace SmartOrderService.Services
                 return aray.Last();
             }
 
-            throw new ExternalAPIException("Falló al intentar obtener el token. " + RestResponse.StatusCode);
+            throw new ExternalAPIException("Falló al intentar obtener el token. " + RestResponse.StatusCode + ": " + RestResponse.ErrorMessage);
         }
 
         private string NotifyWorkday(NotifyWorkdayRequest request)
