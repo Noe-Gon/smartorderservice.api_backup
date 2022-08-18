@@ -731,7 +731,7 @@ namespace SmartOrderService.Services
                 .Select(x => x.routeId)
                 .FirstOrDefault();
 
-            //db.SaveChanges();
+            db.SaveChanges();
 
             try
             {
