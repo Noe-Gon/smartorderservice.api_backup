@@ -746,7 +746,7 @@ namespace SmartOrderService.Services
             {
                 var response = ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
                 {
-                    Msg = "Orden cancelada con exitó" + e.Message
+                    Msg = "Orden cancelada con exitó"
                 });
 
                 response.Errors = new List<string>()
