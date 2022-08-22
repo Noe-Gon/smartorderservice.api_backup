@@ -64,8 +64,11 @@ namespace SmartOrderService.Services
                     continue;
 
                 if (aux.amount == 0)
+                {
+                    status = DeliveryStatus.PARTIALLY_DELIVERED;
                     continue;
-
+                }
+                    
                 isUndelivered = false;
                 if (aux.amount >= product.amount)
                     continue;
