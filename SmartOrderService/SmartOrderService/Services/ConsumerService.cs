@@ -17,6 +17,7 @@ using System.Data.Entity;
 using System.Linq;
 using System.Web;
 using Microsoft.Xrm.Sdk.Query;
+using System.Data;
 
 namespace SmartOrderService.Services
 {
@@ -907,6 +908,8 @@ namespace SmartOrderService.Services
                 var route = UoWConsumer.RouteCustomerRepository
                     .Get(x => x.customerId == sale.customerId)
                     .FirstOrDefault();
+                var saleService = new SaleService();
+                DataTable dtTicket = saleService.GetPromotionsTicketDigital(UoWConsumer.Context, sale.saleId);
 
                 var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
                 {
@@ -917,7 +920,8 @@ namespace SmartOrderService.Services
                     Date = sale.date,
                     PaymentMethod = request.PaymentMethod,
                     SellerName = sale.so_user.code + " - " + sale.so_user.name,
-                    ReferenceCode = sale.customerId.ToString()
+                    ReferenceCode = sale.customerId.ToString(),
+                    dtTicket = dtTicket
                 };
 
                 //Preparar Order
