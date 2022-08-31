@@ -171,6 +171,7 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_synchronized_consumer> so_synchronized_consumer { get; set; }
         public virtual DbSet<so_synchronized_consumer_detail> so_synchronized_consumer_detail { get; set; }
         public virtual DbSet<Configuracion_WorkByCloud> Configuracion_WorkByCloud { get; set; }
+        public virtual DbSet<so_promotion_type_catalog> so_promotion_type_catalog { get; set; }
 
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
@@ -1861,6 +1862,9 @@ namespace SmartOrderService.DB
 
             modelBuilder.Entity<Configuracion_WorkByCloud>()
                 .HasKey(x => x.wbcConfId);
+
+            modelBuilder.Entity<so_promotion_type_catalog>()
+                .HasKey(x => x.id);
         }
     }
 }
