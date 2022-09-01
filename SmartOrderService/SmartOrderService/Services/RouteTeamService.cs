@@ -165,12 +165,12 @@ namespace SmartOrderService.Services
             int impulsorId = SearchDrivingId(userId);
             var routeTeam = db.so_route_team.Where(x => x.userId == impulsorId).First();
             var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
-
+            var inventory = db.so_inventory.Where(x => x.inventoryId == inventoryId).FirstOrDefault();
             inventoryService.CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
             //End Load Inventory Process
 
             //Si es de Viaje no sincronizado devolver true
-            var workDay = GetWorkdayByUserAndDate(impulsorId, DateTime.Today);
+            var workDay = GetWorkdayByUserAndDate(impulsorId, inventory.date);
             var isInTravelsemployees = db.so_route_team_travels_employees
                 .Where(x => x.userId == userId && x.inventoryId == inventoryId && x.work_dayId == workDay.work_dayId)
                 .FirstOrDefault() != null;
