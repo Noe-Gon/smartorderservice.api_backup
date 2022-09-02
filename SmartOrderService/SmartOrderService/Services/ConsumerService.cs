@@ -166,9 +166,14 @@ namespace SmartOrderService.Services
                         "No hay usuarios para esa ruta"
                     });
 
-                var productPriceListId = UoWConsumer.CustomerProductPriceListRepository
-                    .Get(x => customerIds.Contains(x.customerId))
+                int productPriceListId = UoWConsumer.CustomerProductPriceListRepository
+                    .Get(x => customerIds.Contains(x.customerId) && !x.so_products_price_list.is_master)
                     .Select(x => x.products_price_listId)
+                    .FirstOrDefault();
+
+                string productPriceListCode = UoWConsumer.ProductPriceListRepository
+                    .Get(x => x.products_price_listId == productPriceListId)
+                    .Select(x => x.code)
                     .FirstOrDefault();
 
                 var newCustomerProductPriceList = new so_customer_products_price_list
@@ -235,7 +240,7 @@ namespace SmartOrderService.Services
                     Longitude = newCustomer.longitude,
                     Address = address,
                     Days = request.Days,
-                    PriceListId = productPriceListId,
+                    PriceListId = Convert.ToInt32(productPriceListCode),
                     EntityId = null,
                     CountryIdName = request.CountryName,
                     MunicipalityIdName = request.MunicipalityName,
@@ -486,7 +491,6 @@ namespace SmartOrderService.Services
                     UoWConsumer.CustomerAdditionalDataRepository.Update(updateCustomerAdditionalData);
                 }
                 
-
                 var updateCustomerData = updateCustomer.so_customer_data
                     .Where(x => x.status)
                     .FirstOrDefault();
@@ -601,7 +605,8 @@ namespace SmartOrderService.Services
                     RouteCRMId = routeId,
                     StateIdName = request.StateName,
                     NeighborhoodIdName = request.NeighborhoodName,
-                    FiguraId = figuraId
+                    FiguraId = figuraId,
+                    PriceListId = null
                 };
 
                 if(customerAdditionalDateAux.Code != null)

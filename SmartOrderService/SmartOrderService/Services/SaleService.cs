@@ -1648,7 +1648,10 @@ namespace SmartOrderService.Services
                     .FirstOrDefault();
 
                 if (aux == null)
+                {
+                    status = DeliveryStatus.PARTIALLY_DELIVERED;
                     continue;
+                }
 
                 if (aux.Amount == 0)
                 {
