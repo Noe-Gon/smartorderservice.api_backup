@@ -134,7 +134,7 @@ namespace SmartOrderService.Models.Requests
         public Guid? StateId { get; set; }
         public Guid? MunicipalityId { get; set; }
         public string Address { get; set; }
-        public int PriceListId { get; set; }
+        public int? PriceListId { get; set; }
         public Guid? RouteCRMId { get; set; }
         public string StateIdName { get; set; }
         public string CountryIdName { get; set; }
