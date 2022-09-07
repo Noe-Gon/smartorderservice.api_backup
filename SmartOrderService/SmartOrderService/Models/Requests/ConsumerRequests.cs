@@ -26,10 +26,14 @@ namespace SmartOrderService.Models.Requests
         public string Crossroads { get; set; }
         public string Crossroads_2 { get; set; }
         public Guid? Neighborhood { get; set; }
+        public string NeighborhoodName { get; set; }
         public List<int> Days { get; set; }
         public Guid? CountryId { get; set; }
+        public string CountryName { get; set; }
         public Guid? StateId { get; set; }
+        public string StateName { get; set; }
         public Guid? MunicipalityId { get; set; }
+        public string MunicipalityName { get; set; }
     }
 
     public class UpdateConsumerRequest
@@ -60,6 +64,10 @@ namespace SmartOrderService.Models.Requests
         public Guid? CountryId { get; set; }
         public Guid? StateId { get; set; }
         public Guid? MunicipalityId { get; set; }
+        public string NeighborhoodName { get; set; }
+        public string CountryName { get; set; }
+        public string StateName { get; set; }
+        public string MunicipalityName { get; set; }
     }
 
     public class ConsumerRemovalRequestRequest
@@ -126,6 +134,13 @@ namespace SmartOrderService.Models.Requests
         public Guid? StateId { get; set; }
         public Guid? MunicipalityId { get; set; }
         public string Address { get; set; }
+        public int? PriceListId { get; set; }
+        public Guid? RouteCRMId { get; set; }
+        public string StateIdName { get; set; }
+        public string CountryIdName { get; set; }
+        public string MunicipalityIdName { get; set; }
+        public string NeighborhoodIdName { get; set; }
+        public Guid? FiguraId { get; set; }
     }
 
     public class RemoveConsumerRequest

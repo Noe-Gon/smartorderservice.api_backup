@@ -169,6 +169,8 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_order> so_order { get; set; }
         public virtual DbSet<so_order_detail> so_order_detail { get; set; }
         public virtual DbSet<so_delivery_additional_data> so_delivery_additional_data { get; set; }
+        public virtual DbSet<so_synchronized_consumer> so_synchronized_consumer { get; set; }
+        public virtual DbSet<so_synchronized_consumer_detail> so_synchronized_consumer_detail { get; set; }
         public virtual DbSet<Configuracion_WorkByCloud> Configuracion_WorkByCloud { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
@@ -1871,6 +1873,10 @@ namespace SmartOrderService.DB
             liquidationLog.HasRequired(x => x.LiquidationStatus)
                 .WithMany(x => x.LiquidationLogs)
                 .HasForeignKey(x => x.LiquidationStatusId);
+
+            modelBuilder.Entity<so_delivery>()
+                .HasOptional(x => x.so_delivery_additional_data)
+                .WithRequired(x => x.Delivery);
 
             modelBuilder.Entity<Configuracion_WorkByCloud>()
                 .HasKey(x => x.wbcConfId);

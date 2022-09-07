@@ -22,6 +22,11 @@ namespace SmartOrderService.Models.Requests
         public List<SendOrderProduct> Products { get; set; }
     }
 
+    public class NewDeliveryUpdateRequest : SendOrderRequest
+    {
+        public int OrderId { get; set; }
+    }
+
     public class SendOrderProduct
     {
         public int ProductId { get; set; }
@@ -98,6 +103,9 @@ namespace SmartOrderService.Models.Requests
         public string CustomerName { get; set; }
         public string CustomerCode { get; set; }
         public int State { get; set; }
+        public int StatusId { get; set; }
+        public string StatusName { get; set; }
+        public string StatusCode { get; set; }
         public List<GetDeliveriesProduct> Products { get; set; }
     }
 
@@ -106,7 +114,7 @@ namespace SmartOrderService.Models.Requests
         public int Id { get; set; }
         public string Name { get; set; }
         public int Quantity { get; set; }
-        public decimal Price { get; set; }
+        public double Price { get; set; }
         public double TotalPrice { get; set; }
     }
     #endregion

@@ -61,11 +61,17 @@ namespace SmartOrderService.Services
                     .FirstOrDefault();
 
                 if (aux == null)
+                {
+                    status = DeliveryStatus.PARTIALLY_DELIVERED;
                     continue;
+                }
 
                 if (aux.amount == 0)
+                {
+                    status = DeliveryStatus.PARTIALLY_DELIVERED;
                     continue;
-
+                }
+                    
                 isUndelivered = false;
                 if (aux.amount >= product.amount)
                     continue;
@@ -103,6 +109,7 @@ namespace SmartOrderService.Services
             {
                 previousStatus = deliveryAD.DeliveryStatus.Description;
                 deliveryAD.deliveryStatusId = statusDelivery.deliveryStatusId;
+                deliveryAD.modifiedon = DateTime.Now;
                 UoWConsumer.DeliveryAdditionalData.Update(deliveryAD);
                 UoWConsumer.Save();
             }

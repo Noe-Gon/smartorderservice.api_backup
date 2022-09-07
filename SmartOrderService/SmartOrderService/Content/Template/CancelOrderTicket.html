@@ -9,7 +9,7 @@
             text-align: center;
         }
 
-        .image{
+        .image {
             margin-top: 15%;
         }
 
@@ -26,16 +26,18 @@
             text-align: center;
             padding-top: 10px;
         }
-        .saleClass {
-            {SaleTableStyle}
+
+        #reference_code {
+            text-align: center;
+            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
     <div style="max-width: 800px;">
         <div>
-            <h2>¡GRACIAS POR TU COMPRA!</h2>
-            <h3>Hola {CustomerName}, que disfrutes tu compra, aquí puedes consultar el resumen: </h3>
+            <h2>¡PEDIDO CANCELADO!</h2>
+            <h3>Hola {CustomerName}, te informamos que se canceló el pedido, aquí puedes consultar los detalles. </h3>
         </div>
         <div style="display: inline-flex; width: 100%; height: 100%; align-items: center; ">
             <div style="width: 40%">
@@ -47,6 +49,9 @@
                 </div>
             </div>
             <div style="width: 60%; margin-left: 10px; margin-top: 10px; margin-bottom: 10px; border: double;">
+                <div class="cancelSale">
+                    PEDIDO CANCELADO
+                </div>
                 <table style="margin-left: 5px; margin-top: 10px; margin-bottom: 10px;">
                     <tr>
                         <td><strong>Fecha:</strong></td>
@@ -70,85 +75,63 @@
         <div style="text-align-last: right; font-size: smaller;">
             FAVOR DE VERIFICAR ENTREGA COMPLETA DE PRODUCTOS Y CANTIDADES
         </div>
-        <div class="saleClass">
-            <div style="border: double; background-color: lightgray; text-align-last: center;">
-                <strong>Venta</strong>
-            </div>
-            <div style="width: 100%; margin-top: 5px; margin-bottom: 5px; margin-left: 51%;">
-                <strong>{PaymentMethod}</strong>
-            </div>
-            <div>
+        <div style="border: double; background-color: lightgray; text-align-last: center;">
+            <strong>Pedido</strong>
+        </div>
 
-                <table style="margin-left: 10px;margin-top: 10px;margin-bottom: 10px; width: 100%;">
-                    <tr>
-                        <th style="text-align: left;width:400px"><strong>Producto</strong></th>
-                        <th style="text-align: left;width:100px"><strong>Cantidad</strong></th>
-                        <th style="text-align: left;width:100px"><strong>Precio</strong></th>
-                        <th style="text-align: left;width:100px"><strong>Total</strong></th>
-                    </tr>
-                    {TdBody}
-                </table>
-
+        <div style="width: 100%; margin-top: 5px; margin-bottom: 5px; margin-left: 20%;">
+            <div style="width: 75%; text-align: right;">
+                <strong>Fecha de entrega: &nbsp;&nbsp;&nbsp;{DeliveryDate}</strong>
             </div>
         </div>
-		<div id='promociones' style='display:none'>
-			<div style="border: double; background-color: lightgray; text-align-last: center;">
-				<strong>Promociones</strong>
-			</div>
-			<div>
-				<table style="margin-left: 10px;margin-top: 10px;margin-bottom: 10px; width: 100%;">
-					<tr style="display:none">
+
+        <div>
+
+            <table style="margin-left: 10px;margin-top: 10px;margin-bottom: 10px; width: 100%;">
+                <tr>
                     <th style="text-align: left;width:400px"><strong>Producto</strong></th>
                     <th style="text-align: left;width:100px"><strong>Cantidad</strong></th>
                     <th style="text-align: left;width:100px"><strong>Precio</strong></th>
                     <th style="text-align: left;width:100px"><strong>Total</strong></th>
-					</tr>
-					{TdBodyPromociones}
-				</table>
-			</div>
-		</div>
-		<div style="margin-bottom: 20px; width: 100%; display:inline-flex">
+                </tr>
+                {TdBody}
+            </table>
+
+        </div>
+
+        <div style="width: 100%; display:inline-flex">
             <div style="width: 35%; height: 10px;">
 
             </div>
             <div style="width: 65%; margin-left: 10px; margin-top: 10px; margin-bottom: 10px;">
                 <table style="width: 100%">
-                    <tr class="saleClass">
-                        <td>Total de productos vendidos:</td>
+                    <tr>
+                        <td>Total de productos solicitados:</td>
                         <td class="right">{TotalProductsSold}</td>
                     </tr>
-                    <!--<tr>
-                    <td>Total de cajas vendidas:</td>
-                    <td class="right">{TotalBoxesSold}</td>
-                </tr>-->
-				<tr id='lblpromociones' style='display:none'>
-                    <td>Total de Promociones:</td>
-                    <td class="right">{TotalPromos}</td>
-                </tr>
-                    <tr class="saleClass">
+                    <tr>
                         <td>Total:</td>
                         <td class="right">{TotalPrice}</td>
                     </tr>
                 </table>
             </div>
         </div>
-        {OrderTableTamplate}
-        <div style="text-align-last: center; margin-bottom: 5px;">
+        <div style="width: 100%; font-size: xx-small;">
+            * Los precios pueden variar sin previo aviso
+        </div>
+        <br />
+        <div id='reference_code'>
+            Comparte éste código {ReferenceCode} y gana puntos cuando se registren
+        </div>
+        <div style="text-align: center; margin-bottom: 5px;">
             ¡Gracias por tu preferencia!
         </div>
-        <div style="text-align-last: center; margin-bottom: 5px;">
-            <a href="{CancelTicketLink}">No quiero recibir tickets en mi cuenta de correo electrónico</a>
-        </div>
-        <div style="text-align-last: center; margin-bottom: 5px;">
-            Visitanos en: <a href="http://www.bepensaentuhogar.com/">http://www.bepensaentuhogar.com/</a>
-        </div>
-        <!--<div style="text-align-last: center; margin-bottom: 5px;">
-        Tu opinión es muy importante para nosotros y nos ayuda a mejorar, te invitamos a responder esta breve encuesta: <a href="{LinkEncuesta}">Ir a la encuesta</a>
+        <br />
+        <!--<div style="text-align: center; margin-bottom: 5px;">
+        Tu opinión es muy importante para nosotros y nos ayuda a mejorar, te invitamos a responder esta breve encuesta: <a href="http://www.bepensaentuhogar.com/">http://www.bepensaentuhogar.com/</a>
     </div>
-    <div style="text-align-last: center;">
-        Quieres felicitar a alguien, tienes alguna queja o comentario,
-    </div>-->
-        <div style="text-align: center;">
+        <br />-->
+        <div style="text-align-last: center;">
             Quieres felicitar a alguien, tienes alguna queja o comentario, llámanos al 800 CIC
         </div>
     </div>

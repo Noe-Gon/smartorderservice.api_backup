@@ -31,6 +31,15 @@ namespace SmartOrderService.Models.Requests
             value = value
         };
 
+        public static AttributeCrm CreateInteger(string name, int value) => new AttributeCrm
+        {
+            isDateTime = false,
+            isOptionSet = false,
+            entityReferenceName = null,
+            name = name,
+            value = value
+        };
+
         public static AttributeCrm CreateDateTime(string name, string value) => new AttributeCrm
         {
             isDateTime = true,

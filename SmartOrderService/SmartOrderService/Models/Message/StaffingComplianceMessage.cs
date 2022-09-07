@@ -50,6 +50,7 @@ namespace SmartOrderService.Models.Message
     }
     #endregion
 
+
     #region Helpers
     public class NotifyWorkdayRequest
     {

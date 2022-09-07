@@ -172,6 +172,7 @@ namespace SmartOrderService.Services
 
                 //Si no esta activo actualizar el registro
                 exist.CreatedDate = DateTime.Now;
+                exist.modifiedon = DateTime.Now;
                 UoWConsumer.RouteTeamTravelsCustomerBlocked.Update(exist);
                 UoWConsumer.Save();
             }

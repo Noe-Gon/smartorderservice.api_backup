@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.Entity;
+using System.Data.Entity.Core.Objects;
 using System.Linq;
 using System.Web;
 
@@ -53,7 +54,7 @@ namespace SmartOrderService.Services
 
             List<GetDeliveriesByInventoryResponse> Deliveries = new List<GetDeliveriesByInventoryResponse>();
 
-            var InventoryDeliveries = db.so_delivery.Where(d => d.inventoryId == InventoryId && d.status);
+            var InventoryDeliveries = db.so_delivery.Where(d => d.inventoryId == InventoryId && d.status && d.so_customer.status);
 
             var so_user = db.so_inventory.Where(i => i.inventoryId == InventoryId && i.status).FirstOrDefault().so_user;
 
@@ -70,6 +71,47 @@ namespace SmartOrderService.Services
             }
 
             return Deliveries;
+
+        }
+
+        [Obsolete]
+        public OrderDTO GetNewDeliveriesByCustomerId(int customerId)
+        {
+            List<OrderBodyDTO> body = new List<OrderBodyDTO>();
+            var currentDate = DateTime.Now.Date;
+            var orders = db.so_order.Where(x => x.customerId == customerId 
+            && EntityFunctions.TruncateTime(x.createdon) == EntityFunctions.TruncateTime(currentDate) 
+            && x.status).ToList();
+
+            foreach (var order in orders)
+            {
+                List<OrderDetailDTO> orderDetails = new List<OrderDetailDTO>();
+                foreach (var orderDetail in order.so_order_detail.ToList())
+                {
+                    orderDetails.Add(new OrderDetailDTO
+                    {
+                        productId = orderDetail.productId,
+                        amount = orderDetail.amount,
+                        price = orderDetail.price,
+                        import = orderDetail.import
+                    });
+                }
+                body.Add(new OrderBodyDTO
+                {
+                    OrderId = order.orderId,
+                    CustomerId = order.customerId,
+                    UserId = order.userId,
+                    DeliveryDate = order.delivery,
+                    OrderDetails = orderDetails,
+                    TotalCash = order.total_cash
+                });
+            }
+            OrderDTO response = new OrderDTO
+            {
+                Orders = body
+            };
+
+            return response;
 
         }
 
@@ -518,10 +560,201 @@ namespace SmartOrderService.Services
             db.so_order.Add(newOrder);
             db.SaveChanges();
 
-            return ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
+            var response = ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
             {
                 Msg = "Orden realizada con exitó"
             });
+
+            try
+            {
+                string mailRespnse = SendOrderEmail(newOrder, request.RouteId);
+
+                response.Data.Msg = response.Data.Msg + " - " + mailRespnse;
+            }
+            catch (Exception e)
+            {
+                response.Errors = new List<string>()
+                {
+                    e.Message
+                };
+            }
+
+            return response;
+        }
+
+        public string SendOrderEmail(so_order order, int routeId)
+        {
+            var customer = db.so_customer
+                .Where(x => x.customerId == order.customerId)
+                .Select(x => new { x, x.CustomerAdditionalData })
+                .FirstOrDefault();
+
+            if (customer == null)
+                throw new Exception("No se encontró al cliente");
+
+            if (customer.CustomerAdditionalData.Count == 0)
+                throw new Exception("El cliente no tiene datos adicionales");
+
+            if (!customer.CustomerAdditionalData.FirstOrDefault().IsMailingActive)
+                return "El email no se envio ya que no tiene activado la recepción de mails";
+
+            var route = db.so_route
+                .Where(x => x.routeId == routeId)
+                .FirstOrDefault();
+
+            if (route == null)
+                throw new Exception("No se encontró la ruta");
+
+            var user = db.so_user
+                .Where(x => x.userId == order.userId)
+                .FirstOrDefault();
+
+            if (user == null)
+                throw new Exception("No se encontró al usuario");
+
+            SendOrderTicketRequest mailRequest = new SendOrderTicketRequest()
+            {
+                RouteAddress = route.code,
+                CustomerFullName = customer.x.customerId + " - " + customer.x.name + " " + customer.x.address,
+                CustomerMail = customer.x.email,
+                CustomerName = customer.x.name,
+                Date = DateTime.Now,
+                DeliveryDate = order.delivery.Value,
+                SallerName = user.code + " - " + user.name,
+                ReferenceCode = customer.x.customerId.ToString(),
+                Items = new List<SendOrderTicketItem>(),
+                Status = order.status
+            };
+
+            var productIds = order.so_order_detail.Select(x => x.productId).ToList();
+            var products = db.so_product
+                .Where(x => productIds.Contains(x.productId))
+                .ToList();
+
+            foreach (var item in order.so_order_detail)
+            {
+                var product = products.Where(x => x.productId == item.productId).FirstOrDefault();
+
+                mailRequest.Items.Add(new SendOrderTicketItem()
+                {
+                    Amount = item.amount,
+                    ProductName = product.name,
+                    TotalPrice = item.price * (double)item.amount,
+                    UnitPrice = item.price
+                });
+            }
+
+            var service = new EmailService();
+            var response = service.SendOrderTicket(mailRequest);
+
+            if (response.Status)
+                return response.Data.Msg;
+
+            throw new Exception(response.Errors.FirstOrDefault());
+        }
+
+        public ResponseBase<SendOrderResponse> UpdateOrder(NewDeliveryUpdateRequest request)
+        {
+
+            var customer = db.so_customer
+                .Where(x => x.customerId == request.CustomerId && x.status)
+                .FirstOrDefault();
+
+            if (customer == null)
+                return ResponseBase<SendOrderResponse>.Create(new List<string>()
+                {
+                    "No se encontró al cliente con id: " + request.CustomerId + " o ha dado de baja"
+                });
+
+            //Guardar en so_order
+            var deliveryReference = db.so_delivery_references
+                .Where(x => x.value == 80)
+                .FirstOrDefault();
+
+            if (deliveryReference == null)
+                throw new Exception("No existe el delivery reference con valor 80");
+
+            so_order orderToUpdate = db.so_order.Where(x => x.orderId == request.OrderId).FirstOrDefault();
+            orderToUpdate.modifiedon = DateTime.Now;
+            orderToUpdate.modifiedby = request.UserId;
+            orderToUpdate.delivery = Convert.ToDateTime(request.DeliveryDate);
+
+            db.so_order_detail.RemoveRange(orderToUpdate.so_order_detail);
+            db.SaveChanges();
+            orderToUpdate.so_order_detail = new List<so_order_detail>();
+
+            foreach (var product in request.Products)
+            {
+                orderToUpdate.so_order_detail.Add(new so_order_detail()
+                {
+                    amount = product.Quantity,
+                    createdby = request.UserId,
+                    createdon = DateTime.Now,
+                    import = product.Import,
+                    productId = product.ProductId,
+                    price = product.Price,
+                    modifiedby = request.UserId,
+                    status = true,
+                    modifiedon = DateTime.Now,
+                    credit_amount = product.CreditAmount
+                });
+            }
+            db.so_order.Attach(orderToUpdate);
+            db.SaveChanges();
+
+            return ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
+            {
+                Msg = "Orden actualizada con exitó"
+            });
+        }
+
+        public ResponseBase<SendOrderResponse> CancelOrder(int orderId, int userId)
+        {
+
+            //var orderToCancel = db.so_order.Where(x => x.orderId == orderId && x.status).FirstOrDefault();
+            var orderToCancel = db.so_order.SingleOrDefault(x => x.orderId == orderId);
+
+            if (orderToCancel == null)
+                return ResponseBase<SendOrderResponse>.Create(new List<string>()
+                {
+                    "No se encontró el predido"
+                });
+
+            orderToCancel.modifiedon = DateTime.Now;
+            orderToCancel.modifiedby = userId;
+            orderToCancel.status = false;
+            //db.so_order.Attach(orderToCancel);
+
+            var routeId = db.so_route_team
+                .Where(x => x.userId == userId)
+                .Select(x => x.routeId)
+                .FirstOrDefault();
+
+            db.SaveChanges();
+
+            try
+            {
+                string mailRespnse = SendOrderEmail(orderToCancel, routeId);
+
+                return ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
+                {
+                    Msg = "Orden cancelada con exitó - Email: " + mailRespnse
+                });
+            }
+            catch (Exception e)
+            {
+                var response = ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
+                {
+                    Msg = "Orden cancelada con exitó"
+                });
+
+                response.Errors = new List<string>()
+                {
+                    "No se envió el email", e.Message
+                };
+
+                return response;
+            }  
         }
 
         public List<so_delivery_devolution> getDevolutionsByPeriod(int UserId,DateTime Begin,DateTime End)
@@ -560,6 +793,9 @@ namespace SmartOrderService.Services
                     "No se encontró al impulsor"
                 });
 
+            var deliveryStatusUndifined = db.so_delivery_status.Where(x => x.Code == DeliveryStatus.UNDEFINED)
+               .FirstOrDefault();
+
             #endregion
 
             List<int> inventoryIds;
@@ -583,6 +819,14 @@ namespace SmartOrderService.Services
                     .ToList();
             }
 
+            if (deliveryStatusUndifined == null)
+                deliveryStatusUndifined =  new so_delivery_status
+                {
+                    Code = "UNDEFINED",
+                    Description = "Indefinido",
+                    deliveryStatusId = 0
+                };
+
             var response = db.so_sale
                 .Where(x => inventoryIds.Contains(x.inventoryId.Value) && x.deliveryId.HasValue)
                 .Select(x => new GetDeliveriesResponse
@@ -595,13 +839,16 @@ namespace SmartOrderService.Services
                     DeliveryId = x.deliveryId.Value,
                     State = x.state,
                     UserId = x.userId,
+                    StatusId = x.so_delivery.so_delivery_additional_data == null ? deliveryStatusUndifined.deliveryStatusId : (x.so_delivery.so_delivery_additional_data.DeliveryStatus == null ? deliveryStatusUndifined.deliveryStatusId : x.so_delivery.so_delivery_additional_data.DeliveryStatus.deliveryStatusId),
+                    StatusCode = x.so_delivery.so_delivery_additional_data == null ? deliveryStatusUndifined.Code : (x.so_delivery.so_delivery_additional_data.DeliveryStatus == null ? deliveryStatusUndifined.Code : x.so_delivery.so_delivery_additional_data.DeliveryStatus.Code),
+                    StatusName = x.so_delivery.so_delivery_additional_data == null ? deliveryStatusUndifined.Description : (x.so_delivery.so_delivery_additional_data.DeliveryStatus == null ? deliveryStatusUndifined.Description : x.so_delivery.so_delivery_additional_data.DeliveryStatus.Description),
                     Products = x.so_sale_detail.Select(s => new GetDeliveriesProduct
                     {
                         Id = s.productId,
                         Name = s.so_product.name,
-                        Price = s.base_price_no_tax.Value + s.vat.Value,
+                        Price = s.price,
                         Quantity = s.amount,
-                        TotalPrice = s.import
+                        TotalPrice = s.price * s.amount
                     }).ToList()
                 }).ToList();
 
@@ -688,7 +935,7 @@ namespace SmartOrderService.Services
                 // Crear la entidad
                 if (delivery.so_delivery_additional_data == null)
                 {
-                    so_delivery_additional_data newDeliveryAdditionalData = new so_delivery_additional_data
+                    so_delivery_additional_data newDeliveryAdditionalData = new so_delivery_additional_data()
                     {
                         deliveryId = delivery.deliveryId,
                         deliveryStatusId = statusDelivery.deliveryStatusId

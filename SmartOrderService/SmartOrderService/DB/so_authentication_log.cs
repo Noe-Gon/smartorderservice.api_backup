@@ -1,4 +1,4 @@
-﻿using System;
+﻿    using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -15,6 +15,13 @@ namespace SmartOrderService.DB
         [Column("user_code")]
         [MaxLength(10)]
         public string UserCode { get; set; }
+
+        [Column("user_name")]
+        [MaxLength(200)]
+        public string UserName { get; set; }
+
+        [Column("is_synchronized")]
+        public bool? IsSynchronized { get; set; }
 
         [Column("leader_code")]
         [MaxLength(50)]

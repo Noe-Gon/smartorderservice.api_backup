@@ -1,5 +1,4 @@
-﻿using SmartOrderService.CustomExceptions;
-using SmartOrderService.Models.DTO;
+﻿using SmartOrderService.Models.DTO;
 using SmartOrderService.Models.Message;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;

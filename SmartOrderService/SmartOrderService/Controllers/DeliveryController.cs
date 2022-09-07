@@ -14,7 +14,6 @@ namespace SmartOrderService.Controllers
 {
     public class DeliveryController : ApiController
     {
-
         // GET: api/Delivery
         public HttpResponseMessage Get([FromUri] DeliveryRequest request)
         {
@@ -69,6 +68,80 @@ namespace SmartOrderService.Controllers
                 response = Request.CreateResponse(HttpStatusCode.InternalServerError, "upss, lo arreglaremos...");
             }
             return response;
+        }
+
+        [HttpGet]
+        [Route("~/api/NewDeliveries")]
+        public HttpResponseMessage GetNewDeliveries([FromUri] int customerId)
+        {
+            HttpResponseMessage response;
+
+            try
+            {
+
+                OrderDTO deliveries = new DeliveryService().GetNewDeliveriesByCustomerId(customerId);
+
+                response = Request.CreateResponse(HttpStatusCode.OK, deliveries);
+
+            }
+            catch (InventoryEmptyException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, "No hay entregas para ese cliente");
+
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, "upss, lo arreglaremos...");
+            }
+            return response;
+        }
+
+        [HttpPost]
+        [Route("~/api/NewDeliveries/update")]
+        public IHttpActionResult PutNewDeliveries(NewDeliveryUpdateRequest request)
+        {
+
+            try
+            {
+                var service = new DeliveryService();
+                var response = service.UpdateOrder(request);
+
+                if (response.Status)
+                    return Content(HttpStatusCode.OK, response);
+
+                return Content(HttpStatusCode.BadRequest, response);
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<SendOrderResponse>.Create(new List<string>()
+                {
+                    "Ocurrio un error al momento de procesar la información.", e.Message
+                }));
+            }
+        }
+
+        [HttpPost]
+        [Route("~/api/NewDeliveries/cancel")]
+        public IHttpActionResult PutNewDeliveries([FromUri] int orderId, int userId)
+        {
+
+            try
+            {
+                var service = new DeliveryService();
+                var response = service.CancelOrder(orderId, userId);
+
+                if (response.Status)
+                    return Content(HttpStatusCode.OK, response);
+
+                return Content(HttpStatusCode.BadRequest, response);
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<SendOrderResponse>.Create(new List<string>()
+                {
+                    "Ocurrio un error al momento de procesar la información.", e.Message
+                }));
+            }
         }
 
         [HttpPost]

@@ -74,6 +74,12 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.IdentityModel.Clients.ActiveDirectory, Version=5.2.9.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.IdentityModel.Clients.ActiveDirectory.5.2.9\lib\net45\Microsoft.IdentityModel.Clients.ActiveDirectory.dll</HintPath>
+    </Reference>
+    <Reference Include="microsoft.xrm.sdk, Version=5.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Xrm.Sdk.2011.5.0.18\lib\net40\microsoft.xrm.sdk.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -86,11 +92,13 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IdentityModel" />
     <Reference Include="System.Net.Http.Formatting, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.7\lib\net45\System.Net.Http.Formatting.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
     <Reference Include="System.Security" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Threading.Tasks.Dataflow, Version=4.5.24.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Tpl.Dataflow.4.5.24\lib\portable-net45+win8+wpa81\System.Threading.Tasks.Dataflow.dll</HintPath>
       <Private>True</Private>
@@ -109,8 +117,11 @@
       <HintPath>..\packages\Microsoft.AspNet.WebApi.WebHost.5.2.7\lib\net45\System.Web.Http.WebHost.dll</HintPath>
     </Reference>
     <Reference Include="System.Web.Routing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="System.Configuration" />
+    <Reference Include="System.Configuration">
+      <HintPath>..\..\..\..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Configuration.dll</HintPath>
+    </Reference>
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <Private>True</Private>
@@ -322,6 +333,7 @@
     <Compile Include="CustomExceptions\ServerErrorException.cs" />
     <Compile Include="CustomExceptions\InventoryNotOpenException.cs" />
     <Compile Include="CustomExceptions\UnauthorisedException.cs" />
+    <Compile Include="CustomExceptions\UserInUseException.cs" />
     <Compile Include="CustomExceptions\WorkdayNotFoundException.cs" />
     <Compile Include="CustomExceptions\WorkdayStartedException.cs" />
     <Compile Include="DB\Configuracion_WorkByCloud.cs" />
@@ -470,6 +482,8 @@
     <Compile Include="DB\so_site.cs" />
     <Compile Include="DB\so_summary.cs" />
     <Compile Include="DB\so_survey_customer.cs" />
+    <Compile Include="DB\so_synchronized_consumer.cs" />
+    <Compile Include="DB\so_synchronized_consumer_detail.cs" />
     <Compile Include="DB\so_tag.cs" />
     <Compile Include="DB\so_tracking.cs" />
     <Compile Include="DB\so_tracking_configuration.cs" />
@@ -519,6 +533,7 @@
     <Compile Include="Models\DTO\Invoice\InvoiceLineOpeFacturaDto.cs" />
     <Compile Include="Models\DTO\Invoice\InvoiceOpeFacturaDto.cs" />
     <Compile Include="Models\DTO\Invoice\SimpleInvoiceLineOpeFactura.cs" />
+    <Compile Include="Models\DTO\OrderDTO.cs" />
     <Compile Include="Models\DTO\Product.cs" />
     <Compile Include="Models\DTO\PromocionData.cs" />
     <Compile Include="Models\DTO\PromotionCatalog.cs" />
@@ -593,12 +608,14 @@
     <Compile Include="Models\Enum\PaymentMethod.cs" />
     <Compile Include="Models\Enum\PortalLinksStatus.cs" />
     <Compile Include="Models\Enum\HelperLiquidationLogStatus.cs" />
+    <Compile Include="Models\Generic\AuditDate.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\DTO\PriceDto.cs" />
     <Compile Include="Models\DTO\PriceList.cs" />
     <Compile Include="Models\DTO\ProductDto.cs" />
     <Compile Include="Models\DTO\ProductArticle.cs" />
     <Compile Include="Models\DTO\Promotion.cs" />
+    <Compile Include="Models\Message\SaleModels.cs" />
     <Compile Include="Models\Message\ApiDigitalizacionMessage.cs" />
     <Compile Include="Models\Message\LiquidationMessage.cs" />
     <Compile Include="Models\Responses\BillPocketTokensResponse.cs" />
@@ -634,12 +651,14 @@
     <Compile Include="Models\Requests\UserRequest.cs" />
     <Compile Include="Models\Requests\VisitRequest.cs" />
     <Compile Include="Models\Requests\WorkDayRequest.cs" />
+    <Compile Include="Models\Responses\BillPocketTokensResponse.cs" />
     <Compile Include="Models\Responses\CodePlaceResponses.cs" />
     <Compile Include="Models\Responses\ConsumerResponses.cs" />
     <Compile Include="Models\Responses\CountConfigurationResponse.cs" />
     <Compile Include="Models\Responses\CustomerBlockedResponses.cs" />
     <Compile Include="Models\Responses\CustomerResponse.cs" />
     <Compile Include="Models\Responses\EmailResponse.cs" />
+    <Compile Include="Models\Responses\GetCustomerAllInfoResponse.cs" />
     <Compile Include="Models\Responses\InventoryOpenResponse.cs" />
     <Compile Include="Models\Responses\InvoiceOpeFacturaResponse.cs" />
     <Compile Include="Models\Responses\MsgResponseBase.cs" />
@@ -845,7 +864,10 @@
     <Content Include="bin\WebGrease.dll" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\Template\CancelOrderTicket.html" />
     <Content Include="Content\Template\CancelTicketDigitalEmail.html" />
+    <Content Include="Content\Template\OrderTableTemplate.html" />
+    <Content Include="Content\Template\OrderTicket.html" />
     <Content Include="Content\Template\ReactivationTicketDigitalEmail.html" />
     <Content Include="Content\Template\RemovalRequestEmail.html" />
     <Content Include="Content\Template\TicketDigitalEmail.html" />

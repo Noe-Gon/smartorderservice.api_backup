@@ -90,6 +90,13 @@ namespace SmartOrderService.Controllers
                         return Content(HttpStatusCode.BadRequest, response);
                 }
             }
+            catch (UserInUseException e)
+            {
+                return Content(HttpStatusCode.Conflict, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
             catch (UnauthorizedAccessException e)
             {
                 return Content(HttpStatusCode.Unauthorized, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
@@ -186,6 +193,133 @@ namespace SmartOrderService.Controllers
                 }));
             }
 
+        }
+
+        [HttpPost]
+        [Route("~/api/Authenticate/EmployeeCode/Single")]
+        public IHttpActionResult AuthenticateEmployeeCodeSingle(AuthenticateEmployeeCodeRequest request)
+        {
+            try
+            {
+                using (var service = StaffingComplianceService.Create())
+                {
+                    var response = service.AuthenticateEmployeeCodeGet(request);
+
+                    if (response.Status)
+                        return Content(HttpStatusCode.Accepted, response);
+                    else
+                        return Content(HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                return Content(HttpStatusCode.Unauthorized, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (ExternalAPIException e)
+            {
+                return Content(HttpStatusCode.BadRequest, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (EntityNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (NoUserFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (WorkdayNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+        }
+
+        [HttpPost]
+        [Route("~/api/Authenticate/EmployeeCode/Tripulac")]
+        public IHttpActionResult AuthenticateEmployeeCodeTripulac(AuthenticateEmployeeCodeRequest request)
+        {
+            try
+            {
+                using (var service = StaffingComplianceService.Create())
+                {
+                    var response = service.AuthenticateEmployeeCodeV2(request);
+
+                    if (response.Status)
+                        return Content(HttpStatusCode.Accepted, response);
+                    else
+                        return Content(HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                return Content(HttpStatusCode.Unauthorized, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (ExternalAPIException e)
+            {
+                return Content(HttpStatusCode.BadRequest, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (EntityNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (NoUserFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (WorkdayNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (UserInUseException e)
+            {
+                return Content(HttpStatusCode.Conflict, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
         }
     }
 }

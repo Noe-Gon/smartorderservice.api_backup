@@ -84,7 +84,8 @@ namespace SmartOrderService.Services
             }
 
             int driverId = SearchDrivingId(userId);
-            var workDay = routeTeamService.GetWorkdayByUserAndDate(driverId, DateTime.Today);
+            var inventory = db.so_inventory.Where(x => x.inventoryId == inventoryId).FirstOrDefault();
+            var workDay = routeTeamService.GetWorkdayByUserAndDate(driverId, inventory.date);
 
             //Verificar que los demas ya hayan finalizado para cerrar el viaje
             var travelInProgress = db.so_route_team_travels_employees
@@ -100,6 +101,7 @@ namespace SmartOrderService.Services
                     {
                         //closingRouteTeamTravelStatus(userId, inventoryId, userTeamRole);
                         CloseUserTravel(inventoryId, userId, workDay);
+                        UpdateUnsynchronizedConsumer(driverId);
                         dbContextTransaction.Commit();
                         return true;
                     }
@@ -110,12 +112,25 @@ namespace SmartOrderService.Services
             return true;
         }
 
+        private void UpdateUnsynchronizedConsumer(int userId)
+        {
+            var routeId = db.so_route_team.Where(x => x.userId.Equals(userId)).Select(p => p.routeId).FirstOrDefault();
+            var userIds = db.so_route_team.Where(x => x.routeId.Equals(routeId)).Select(p => p.userId).ToList();
+            var unsynchronizedConsumers = db.so_synchronized_consumer_detail.Where(x => userIds.Contains(x.userId) && !x.synchronized).ToList();
+            foreach (var unsynchronizedConsumer in unsynchronizedConsumers)
+            {
+                unsynchronizedConsumer.synchronized = true;
+            }
+            db.SaveChanges();
+        }
+
         private void CloseUserTravel(int inventoryId, int userId, so_work_day workDay)
         {
             var routeTeamTravel = db.so_route_team_travels_employees
                 .Where(s => s.inventoryId.Equals(inventoryId) && s.userId.Equals(userId) && s.work_dayId == workDay.work_dayId)
                 .FirstOrDefault();
             routeTeamTravel.active = false;
+            routeTeamTravel.modifiedon = DateTime.Now;
             db.SaveChanges();
         }
 
@@ -322,6 +337,12 @@ namespace SmartOrderService.Services
                         .FirstOrDefault())
                     .FirstOrDefault();
 
+                if (route == null)
+                    return ResponseBase<MsgResponseBase>.Create(new List<string>
+                    {
+                        "No se encontró el inventario"
+                    });
+
                 string routeId = route.routeId + "";
                 string branchId = route.branchId + "";
 
@@ -481,6 +502,14 @@ namespace SmartOrderService.Services
                             Msg = "Ha finalizado con Exito"
                         });
                     }
+                }
+                if(GetDeliveriesResponse.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                {
+
+                    return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                    {
+                        "Error en API preventa", GetDeliveriesResponse.Content
+                    });
                 }
 
                 #endregion
@@ -945,6 +974,7 @@ namespace SmartOrderService.Services
             {
                 inventoryCloneObject.Add((so_route_team_inventory_available)routeProduct.Clone());
                 routeProduct.Available_Amount = 0;
+                routeProduct.modifiedon = DateTime.Now;
             }
             db.SaveChanges();
             return inventoryCloneObject.Where(s => s.Available_Amount > 0).ToList();

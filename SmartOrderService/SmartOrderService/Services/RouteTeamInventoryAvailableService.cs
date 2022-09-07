@@ -136,6 +136,7 @@ namespace SmartOrderService.Services
         {
             List<SaleDetail> salesDetail = sale.SaleDetails;
             List<SalePromotion> salePromotion = sale.SalePromotions;
+            bool isEmptySale = true;
             var amountSaled = 0;
 
             foreach (var productInventory in salesDetail)
@@ -206,16 +207,34 @@ namespace SmartOrderService.Services
             {
                 db.SaveChanges();
             }
-            /*
+            
             foreach (var Promotion in salePromotion)
             {
-                foreach (var producPromotion in Promotion.DetailProduct)
+                var amountPromotionsSaled = 0;
+                foreach (var productPromotion in Promotion.DetailProduct)
                 {
-                    var product = db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(producPromotion.ProductId)).FirstOrDefault();
-                    product.Available_Amount -= producPromotion.Amount;
-                    db.SaveChanges();
+                    var availableProduct = db.so_route_team_inventory_available
+                        .Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productPromotion.ProductId))
+                        .FirstOrDefault();
+                    if (productPromotion.Amount != 0 && availableProduct.Available_Amount >= productPromotion.Amount)
+                    {
+                        availableProduct.Available_Amount -= productPromotion.Amount;
+                        availableProduct.modifiedon = DateTime.Now;
+                        amountPromotionsSaled += productPromotion.Amount;
+                        isEmptySale = false;
+                    }
+                    else
+                    {
+                        productPromotion.Amount = 0;
+                    }
                 }
-            }*/
+                sale.SalePromotions[promotionIndex].Amount = amountPromotionsSaled;
+            }
+            db.SaveChanges();
+            if (isEmptySale)
+            {
+                throw new EmptySaleException("La venta no se ha podido realizar porque no hay productos disponibles");
+            }
         }
 
         public List<so_route_team_inventory_available> GetInventoryTeamByInventoryId(int inventoryId)

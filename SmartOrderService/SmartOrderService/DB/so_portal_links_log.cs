@@ -27,5 +27,7 @@ namespace SmartOrderService.DB
         public int CustomerId { get; set; }
         public so_customer Customer { get; set; }
         #endregion
+
+        public DateTime? modifiedon { get; set; }
     }
 }

@@ -1,11 +1,12 @@
-﻿using System;
+﻿using SmartOrderService.Models.Generic;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
 namespace SmartOrderService.DB
 {
-    public class so_route_team_travels_visit
+    public class so_route_team_travels_visit : AuditDate
     {
         public int binnacleId { get; set; }
         public so_binnacle_visit So_Binnacle_Visit { get; set; }
@@ -20,5 +21,9 @@ namespace SmartOrderService.DB
         public Guid workDayId { get; set; }
         #endregion
 
+        public so_route_team_travels_visit() : base()
+        {
+
+        }
     }
 }

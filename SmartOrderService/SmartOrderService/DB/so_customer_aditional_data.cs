@@ -1,11 +1,12 @@
-﻿using System;
+﻿using SmartOrderService.Models.Generic;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SmartOrderService.DB
 {
-    public class so_customer_additional_data
+    public class so_customer_additional_data : AuditDate
     {
         public int Id { get; set; }
 
@@ -61,6 +62,9 @@ namespace SmartOrderService.DB
         public virtual so_code_place CodePlace { get; set; }
         #endregion
 
-        
+        public so_customer_additional_data() : base()
+        {
+
+        }
     }
 }
