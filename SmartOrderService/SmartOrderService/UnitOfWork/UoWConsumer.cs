@@ -85,7 +85,6 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_sale_promotion> SalePromotionRepository { get; set; }
         public GenericRepository<so_product_bottle> ProductBottleRepository { get; set; }
         public GenericRepository<so_product> ProductRepository { get; set; }
-        public GenericRepository<so_inventory> InventoryRepository { get; set; }
         public GenericRepository<so_route_team_inventory_available> RouteTeamInventoryAvailableRepository { get; set; }
         public GenericRepository<so_product_tax> ProductTaxRepository { get; set; }
         public GenericRepository<so_branch_tax> BranchTaxRepository { get; set; }
@@ -97,6 +96,8 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_liquidation_log> LiquidationLogRepository { get; set; }
         public GenericRepository<so_liquidation_log_status> LiquidationLogStatusRepository { get; set; }
         public GenericRepository<so_route_team_travels_employees> RouteTeamTravlesEmployeesRepository { get; set; }
+        public GenericRepository<so_synchronized_consumer> SynchronizedConsumersRepository { get; set; }
+        public GenericRepository<so_synchronized_consumer_detail> SynchronizedConsumerDetailsRepository { get; set; }
 
         public void Save()
         {

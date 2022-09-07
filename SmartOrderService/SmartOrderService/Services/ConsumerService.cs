@@ -1271,6 +1271,47 @@ namespace SmartOrderService.Services
             }
         }
 
+        public ResponseBase<GetCustomerVarioResponse> GetCustomerVario(GetCustomerVarioRequest request)
+        {
+            int? customerId = UoWConsumer.RouteCustomerVarioRepository
+                .Get(x => x.RouteId == request.RouteId && x.Status)
+                .Select(x => x.CustomerId)
+                .FirstOrDefault();
+
+            if (customerId == null)
+                return ResponseBase<GetCustomerVarioResponse>.Create(new List<string>()
+                {
+                    "La ruta no cuenta con cliente vario o este ha sido eliminado de la ruta"
+                });
+
+            var response = UoWConsumer.CustomerRepository
+                .Get(x => x.customerId == customerId)
+                .Select(x => new GetCustomerVarioResponse
+                {
+                    Address = x.address,
+                    Code = x.code,
+                    Contact = x.contact,
+                    CustomerId = x.customerId,
+                    Description = x.description,
+                    Email = x.email,
+                    Latitude = x.latitude ?? 0,
+                    Longitude = x.longitude ?? 0,
+                    Name = x.name,
+                    Status = x.status,
+                    Tags = x.so_tag.Select(t => t.tag).ToList(),
+
+                })
+                .FirstOrDefault();
+
+            if (response == null)
+                return ResponseBase<GetCustomerVarioResponse>.Create(new List<string>()
+                {
+                    "Cliente no encontrado"
+                });
+
+            return ResponseBase<GetCustomerVarioResponse>.Create(response);
+        }
+
         public ResponseBase<GetConsumerAllInfo> GetCustomerAllInfo(PriceRequest request)
         {
             List<GetConsumersResponse> responseCustomers = GetConsumers(new GetConsumersRequest { userId = request.CustomerId }).Data;
