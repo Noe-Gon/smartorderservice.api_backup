@@ -131,11 +131,11 @@ namespace SmartOrderService.Services
 
         [HttpGet]
         [Route("api/routeam")]
-        public IHttpActionResult GetRouteTeam([FromUri]int? routeId)
+        public IHttpActionResult GetRouteTeam([FromUri] int? routeId)
         {
             try
             {
-                if(routeId == null || routeId <= 0)
+                if (routeId == null || routeId <= 0)
                     return Content(HttpStatusCode.NotFound, ResponseBase<List<GetRouteTeamResponse>>.Create(new List<string>()
                     {
                         "Es necesario proporcionar una ruta valida"
@@ -156,7 +156,7 @@ namespace SmartOrderService.Services
                     e.Message
                 }));
             }
-            catch (Exception  e)
+            catch (Exception e)
             {
                 return Content(HttpStatusCode.InternalServerError, ResponseBase<List<GetRouteTeamResponse>>.Create(new List<string>()
                 {

@@ -448,6 +448,7 @@
     <Compile Include="DB\so_promotion_detail_article.cs" />
     <Compile Include="DB\so_promotion_detail_product.cs" />
     <Compile Include="DB\so_promotion_discount_list.cs" />
+    <Compile Include="DB\so_promotion_type_catalog.cs" />
     <Compile Include="DB\so_reason_devolution.cs" />
     <Compile Include="DB\so_reason_failed_transaction.cs" />
     <Compile Include="DB\so_reason_replacement.cs" />
@@ -659,6 +660,7 @@
     <Compile Include="Models\Responses\CustomerResponse.cs" />
     <Compile Include="Models\Responses\EmailResponse.cs" />
     <Compile Include="Models\Responses\GetCustomerAllInfoResponse.cs" />
+    <Compile Include="Models\Responses\GetRouteTeamResponse.cs" />
     <Compile Include="Models\Responses\InventoryOpenResponse.cs" />
     <Compile Include="Models\Responses\InvoiceOpeFacturaResponse.cs" />
     <Compile Include="Models\Responses\MsgResponseBase.cs" />
