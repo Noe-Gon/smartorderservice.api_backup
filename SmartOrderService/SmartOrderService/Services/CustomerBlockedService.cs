@@ -24,21 +24,62 @@ namespace SmartOrderService.Services
             UoWConsumer = new UoWConsumer();
         }
 
+        public CustomerBlockedService(UoWConsumer uow)
+        {
+            UoWConsumer = uow;
+        }
+
         //Obtiene a los clientes bloqueados de la jornada o viaje
         public ResponseBase<List<GetCustomersBlockedResponse>> GetCustomersBlocked(GetCustomersBlockedRequest request)
         {
             try
             {
-                var workDay = UoWConsumer.GetWorkdayByUserAndDate(request.UserId, DateTime.Today);
+                Guid workDayId;
+                if (!request.WorkDayId.HasValue)
+                    workDayId = UoWConsumer.GetWorkdayByUserAndDate(request.UserId, DateTime.Today).work_dayId;
+                else
+                    workDayId = request.WorkDayId.Value;
+
                 int timeToUnblockCustomer = CustomerBlockedService.TimeToUnblockCustomer();
                 var customerBlocked = UoWConsumer.RouteTeamTravelsCustomerBlocked
                     .Get(x => DbFunctions.AddMinutes(x.CreatedDate, timeToUnblockCustomer) >= DateTime.Now
-                    && x.WorkDayId == workDay.work_dayId && x.UserId != request.UserId).ToList();
+                    && x.WorkDayId == workDayId && x.UserId != request.UserId).ToList();
 
                 if (request.InventoryId != null)
                     if (request.InventoryId != 0)
                         customerBlocked = customerBlocked
                             .Where(x => x.InventoryId == request.InventoryId)
+                            .ToList();
+
+                var response = customerBlocked
+                    .Select(x => new GetCustomersBlockedResponse
+                    {
+                        CustomerId = x.CustomerId,
+                        UserId = x.UserId
+                    }).ToList();
+
+                return ResponseBase<List<GetCustomersBlockedResponse>>.Create(response);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public ResponseBase<List<GetCustomersBlockedResponse>> GetCustomersBlockedByWorkday(Guid WorkDayId, int? inventoryId)
+        {
+            try
+            {
+
+                int timeToUnblockCustomer = CustomerBlockedService.TimeToUnblockCustomer();
+                var customerBlocked = UoWConsumer.RouteTeamTravelsCustomerBlocked
+                    .Get(x => DbFunctions.AddMinutes(x.CreatedDate, timeToUnblockCustomer) >= DateTime.Now
+                    && x.WorkDayId == WorkDayId).ToList();
+
+                if (inventoryId != null)
+                    if (inventoryId != 0)
+                        customerBlocked = customerBlocked
+                            .Where(x => x.InventoryId == inventoryId)
                             .ToList();
 
                 var response = customerBlocked
@@ -131,6 +172,7 @@ namespace SmartOrderService.Services
 
                 //Si no esta activo actualizar el registro
                 exist.CreatedDate = DateTime.Now;
+                exist.modifiedon = DateTime.Now;
                 UoWConsumer.RouteTeamTravelsCustomerBlocked.Update(exist);
                 UoWConsumer.Save();
             }

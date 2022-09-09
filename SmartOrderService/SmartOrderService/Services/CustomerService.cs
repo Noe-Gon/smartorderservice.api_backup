@@ -11,6 +11,7 @@ using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using System.Web;
@@ -41,7 +42,7 @@ namespace SmartOrderService.Services
             {
                 UserId = inventoryService.SearchDrivingId(UserId);
             }
-            catch (RelatedDriverNotFoundException e)
+            catch (RelatedDriverNotFoundException)
             {
             }
 
@@ -70,6 +71,61 @@ namespace SmartOrderService.Services
                     customer.Tags.AddRange(customerTags);
                     customer.IsFacturable = true;// facturables.Contains(customer.CustomerId);
                     
+                }
+
+            }
+
+            return customers;
+        }
+
+        public List<CustomerWithVarioDto> getAllWithVario(DateTime updated, int UserId)
+        {
+
+            List<CustomerWithVarioDto> customers = new List<CustomerWithVarioDto>();
+            InventoryService inventoryService = new InventoryService();
+
+            var UserRoute = db.so_user_route.Where(u => u.userId.Equals(UserId) && u.status).FirstOrDefault();
+            var datas = db.so_route_customer.Where(
+                c => c.routeId.Equals(UserRoute.routeId)
+                && c.status
+                && c.visit_type > 0)
+                .Select(c => c.so_customer)
+                .Distinct()
+                .ToList();
+
+            try
+            {
+                UserId = inventoryService.SearchDrivingId(UserId);
+            }
+            catch (RelatedDriverNotFoundException)
+            {
+            }
+
+            var Inventory = inventoryService.GetCurrentInventory(UserId, null);
+
+            var CustomerToDeliver = new DeliveryService().getCustomersToDeliver(Inventory.inventoryId, UserId);
+
+            var customerIds = datas.Select(c => c.customerId).ToList();
+
+            CustomerToDeliver.RemoveAll(c => customerIds.Contains(c.customerId));
+
+            datas.AddRange(CustomerToDeliver);
+
+            if (datas.Any())
+            {
+                var customerList = datas.Select(c => c.customerId).ToList();
+
+                var tags = db.so_tag.Where(t => customerList.Contains(t.customerId) && t.status);
+
+                customers = Mapper.Map<List<CustomerWithVarioDto>>(datas);
+
+                foreach (var customer in customers)
+                {
+                    var customerTags = tags.Where(t => t.customerId == customer.CustomerId).Select(t => t.tag).ToList();
+
+                    customer.Tags.AddRange(customerTags);
+                    customer.IsFacturable = true;// facturables.Contains(customer.CustomerId);
+
                 }
 
             }
@@ -157,6 +213,37 @@ namespace SmartOrderService.Services
             {
                 var date = Utils.DateUtils.getDateTime(request.LastUpdate);
                 customers.AddRange(getAll(date, request.UserId));
+            }
+
+            return customers;
+        }
+
+        public List<CustomerWithVarioDto> FindCustomersWithVario(CustomerWithVarioRequest request)
+        {
+
+            var customers = new List<CustomerWithVarioDto>();
+
+            if (request.Code != null && request.Code.Length > 0)
+            {
+                var customer = FindCustomerWithVarioByCode(request.Code);
+                customers.Add(customer);
+            }
+            else
+            {
+                var date = Utils.DateUtils.getDateTime(request.LastUpdate);
+                customers.AddRange(getAllWithVario(date, request.UserId));
+            }
+
+            ConsumerService service = ConsumerService.Create();
+            var customerVario = service.GetCustomerVario(new GetCustomerVarioRequest
+            {
+                RouteId = request.routeId
+            });
+
+            int indexResult = customers.FindIndex(q => q.CustomerId == customerVario.Data.CustomerId);
+            if (indexResult > -1)
+            {
+                customers[indexResult].isVario =true;
             }
 
             return customers;
@@ -285,15 +372,33 @@ namespace SmartOrderService.Services
                 var ItemToDownload = new ControlDownloadService().createControlDownload(visit.binnacleId, UserId, ControlDownloadService.MODEL_TYPE_BINNACLE_VISIT);
 
                 db.so_control_download.Add(ItemToDownload);
-                //Aumentar el contador de visitas sin ventas 
-                var updateCustomerAdditionalData = db.so_customerr_additional_data
-                            .Where(x => x.CustomerId == dto.CustomerId)
-                            .FirstOrDefault();
-                if (updateCustomerAdditionalData != null)
-                    updateCustomerAdditionalData.CounterVisitsWithoutSales++;
 
-                db.SaveChanges();
+                //Obtener venta
+                var sale = db.so_sale
+                    .Where(x => x.status == true && x.customerId == dto.CustomerId && DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(DateTime.Now))
+                    .FirstOrDefault();
 
+                if(sale == null)
+                {
+                    //Aumentar el contador de visitas sin ventas 
+                    var updateCustomerAdditionalData = db.so_customerr_additional_data
+                                .Where(x => x.CustomerId == dto.CustomerId)
+                                .FirstOrDefault();
+                    if (updateCustomerAdditionalData != null)
+                        updateCustomerAdditionalData.CounterVisitsWithoutSales++;
+                    db.SaveChanges();
+                }
+                else
+                {
+                    //Returnar en cero
+                    var updateCustomerAdditionalData = db.so_customerr_additional_data
+                                .Where(x => x.CustomerId == dto.CustomerId)
+                                .FirstOrDefault();
+                    if (updateCustomerAdditionalData != null)
+                        updateCustomerAdditionalData.CounterVisitsWithoutSales = 0;
+                    db.SaveChanges();
+                }
+                
                 //Si es de un quipo hacer el guardado de so_reoute_team
                 ERolTeam userRole = roleTeamService.GetUserRole(visit.userId);
                 if (userRole == ERolTeam.Ayudante || userRole == ERolTeam.Impulsor)
@@ -303,7 +408,7 @@ namespace SmartOrderService.Services
                     var routeId = routeTeamService.searchRouteId(visit.userId);
                     var workDay = routeTeamService.GetWorkdayByUserAndDate(impulsorId, DateTime.Today);
 
-                    db.so_route_team_travels_visits.Add(new so_route_team_travels_visit
+                    db.so_route_team_travels_visits.Add(new so_route_team_travels_visit()
                     {
                         binnacleId = visit.binnacleId,
                         inventoryId = inventory.inventoryId,
@@ -372,6 +477,18 @@ namespace SmartOrderService.Services
                 throw new CustomerNotFoundException(CustomerCode);
 
             var CustomerDto = Mapper.Map<CustomerDto>(customer);
+
+            return CustomerDto;
+        }
+
+        public CustomerWithVarioDto FindCustomerWithVarioByCode(string CustomerCode)
+        {
+            var customer = db.so_customer.Where(c => c.code.Equals(CustomerCode)).FirstOrDefault();
+
+            if (customer == null)
+                throw new CustomerNotFoundException(CustomerCode);
+
+            var CustomerDto = Mapper.Map<CustomerWithVarioDto>(customer);
 
             return CustomerDto;
         }

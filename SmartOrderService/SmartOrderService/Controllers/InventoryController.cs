@@ -1,6 +1,7 @@
 ﻿using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.DTO;
 using SmartOrderService.Models.Requests;
+using SmartOrderService.Models.Responses;
 using SmartOrderService.Services;
 using SmartOrderService.Utils;
 using System;
@@ -197,5 +198,58 @@ namespace SmartOrderService.Controllers
             return response;
         }
         
+        [HttpPost]
+        [Route("api/inventory/loaddeliveries")]
+        public IHttpActionResult LoadInventoryDeliveries([FromBody]LoadInventoryDeliveriesRequest request)
+        {
+
+            try
+            {
+                var inventoryService = new InventoryService();
+                 var response = inventoryService.LoadDeliveries(request.InventoryId);
+
+                if(response.Status)
+                    return Content(HttpStatusCode.OK, response);
+
+                return Content(HttpStatusCode.Conflict, response);
+            }
+            catch (EntityNotFoundException e)
+            {
+                var response = ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                });
+
+                return Content(HttpStatusCode.NotFound, response);
+            }
+            catch (Exception e)
+            {
+                var response = ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    "Error no especificado", e.Message
+                });
+
+                return Content(HttpStatusCode.InternalServerError, response);
+            }
+        }
+
+
+        [HttpGet, Route("api/inventory/isInventoryOpen")]
+        public HttpResponseMessage isInventoryOpen([FromUri] int inventoryId, [FromUri] int userId)
+        {
+            HttpResponseMessage response;
+            try
+            {
+                var inventoryService = new InventoryService();
+                var inventoryOpen = inventoryService.isInventoryOpen(inventoryId,userId);
+                response = Request.CreateResponse(HttpStatusCode.OK, inventoryOpen);
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, e);
+            }
+            return response;
+        }
+
     }
 }

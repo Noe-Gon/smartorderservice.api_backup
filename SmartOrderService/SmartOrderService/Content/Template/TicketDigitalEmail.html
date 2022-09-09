@@ -8,12 +8,15 @@
             width: 30%;
             text-align: center;
         }
+
         .image{
             margin-top: 15%;
         }
+
         .right {
             text-align: right;
         }
+
         .cancelSale {
             background-color: orangered;
             color: yellow;
@@ -22,6 +25,9 @@
             width: 190px;
             text-align: center;
             padding-top: 10px;
+        }
+        .saleClass {
+            {SaleTableStyle}
         }
     </style>
 </head>
@@ -64,13 +70,14 @@
         <div style="text-align-last: right; font-size: smaller;">
             FAVOR DE VERIFICAR ENTREGA COMPLETA DE PRODUCTOS Y CANTIDADES
         </div>
-        <div style="border: double; background-color: lightgray; text-align-last: center;">
-            <strong>Venta</strong>
-        </div>
-        <div style="width: 100%; margin-top: 5px; margin-bottom: 5px; margin-left: 51%;">
-            <strong>{PaymentMethod}</strong>
-        </div>
-        <div>
+        <div class="saleClass">
+            <div style="border: double; background-color: lightgray; text-align-last: center;">
+                <strong>Venta</strong>
+            </div>
+            <div style="width: 100%; margin-top: 5px; margin-bottom: 5px; margin-left: 51%;">
+                <strong>{PaymentMethod}</strong>
+            </div>
+            <div>
 
             <table style="margin-left: 10px;margin-top: 10px;margin-bottom: 10px; width: 100%;">
                 <tr>
@@ -121,7 +128,7 @@
             </div>
             <div style="width: 65%; margin-left: 10px; margin-top: 10px; margin-bottom: 10px;">
                 <table style="width: 100%">
-                    <tr>
+                    <tr class="saleClass">
                         <td>Total de productos vendidos:</td>
                         <td class="right">{TotalProductsSold}</td>
                     </tr>
@@ -163,11 +170,12 @@
             Tu código es: {cutomerReferenceCode}<br><br>
             Este mes llévate puntos extras al ...<br><br>
         </div>
+        {OrderTableTamplate}
         <div style="text-align-last: center; margin-bottom: 5px;">
             ¡Gracias por tu preferencia!
         </div>
         <div style="text-align-last: center; margin-bottom: 5px;">
-            <a href="{CancelTicketLink}">Cancelar Ticket Digital</a>
+            <a href="{CancelTicketLink}">No quiero recibir tickets en mi cuenta de correo electrónico</a>
         </div>
         <div style="text-align-last: center; margin-bottom: 5px;">
             Visitanos en: <a href="http://www.bepensaentuhogar.com/">http://www.bepensaentuhogar.com/</a>
@@ -178,8 +186,8 @@
     <div style="text-align-last: center;">
         Quieres felicitar a alguien, tienes alguna queja o comentario,
     </div>-->
-        <div style="text-align-last: center;">
-            ¿Necesitas la factura? Comunícate al 800 xxx xxx
+        <div style="text-align: center;">
+            Quieres felicitar a alguien, tienes alguna queja o comentario, llámanos al 800 CIC
         </div>
     </div>
 </body>

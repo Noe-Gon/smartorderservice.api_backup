@@ -74,6 +74,12 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.IdentityModel.Clients.ActiveDirectory, Version=5.2.9.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.IdentityModel.Clients.ActiveDirectory.5.2.9\lib\net45\Microsoft.IdentityModel.Clients.ActiveDirectory.dll</HintPath>
+    </Reference>
+    <Reference Include="microsoft.xrm.sdk, Version=5.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Xrm.Sdk.2011.5.0.18\lib\net40\microsoft.xrm.sdk.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -86,11 +92,13 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IdentityModel" />
     <Reference Include="System.Net.Http.Formatting, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.7\lib\net45\System.Net.Http.Formatting.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
     <Reference Include="System.Security" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Threading.Tasks.Dataflow, Version=4.5.24.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Tpl.Dataflow.4.5.24\lib\portable-net45+win8+wpa81\System.Threading.Tasks.Dataflow.dll</HintPath>
       <Private>True</Private>
@@ -109,8 +117,11 @@
       <HintPath>..\packages\Microsoft.AspNet.WebApi.WebHost.5.2.7\lib\net45\System.Web.Http.WebHost.dll</HintPath>
     </Reference>
     <Reference Include="System.Web.Routing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="System.Configuration" />
+    <Reference Include="System.Configuration">
+      <HintPath>..\..\..\..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Configuration.dll</HintPath>
+    </Reference>
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <Private>True</Private>
@@ -247,6 +258,7 @@
     <Compile Include="Controllers\ApiVersionController.cs" />
     <Compile Include="Controllers\ApplicationController.cs" />
     <Compile Include="Controllers\BillingDataController.cs" />
+    <Compile Include="Controllers\BillPocketController.cs" />
     <Compile Include="Controllers\BinnacleVisitController.cs" />
     <Compile Include="Controllers\BranchController.cs" />
     <Compile Include="Controllers\CategoryController.cs" />
@@ -265,6 +277,7 @@
     <Compile Include="Controllers\InventoryController.cs" />
     <Compile Include="Controllers\InventoryRevisionController.cs" />
     <Compile Include="Controllers\InvoiceController.cs" />
+    <Compile Include="Controllers\LiquidationController.cs" />
     <Compile Include="Controllers\PriceController.cs" />
     <Compile Include="Controllers\ProductController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
@@ -285,17 +298,21 @@
     <Compile Include="Controllers\SalesController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
     <Compile Include="Controllers\WorkdayController.cs" />
+    <Compile Include="CustomExceptions\ApiPreventaException.cs" />
     <Compile Include="CustomExceptions\BadPropiertiesException.cs" />
     <Compile Include="CustomExceptions\BadRequestException.cs" />
     <Compile Include="CustomExceptions\BillingDataException.cs" />
+    <Compile Include="CustomExceptions\ConfigurationValueNotFoundException.cs" />
     <Compile Include="CustomExceptions\CustomerBillingDataNotFoundException.cs" />
     <Compile Include="CustomExceptions\CustomerException.cs" />
     <Compile Include="CustomExceptions\CustomerNotFoundException.cs" />
     <Compile Include="CustomExceptions\DeliveryNotFoundException.cs" />
     <Compile Include="CustomExceptions\DeviceNotFoundException.cs" />
     <Compile Include="CustomExceptions\DuplicateEntityException.cs" />
+    <Compile Include="CustomExceptions\EmptySaleException.cs" />
     <Compile Include="CustomExceptions\EntityNotFoundException.cs" />
     <Compile Include="CustomExceptions\ExternalAPIException.cs" />
+    <Compile Include="CustomExceptions\InternalServerException.cs" />
     <Compile Include="CustomExceptions\InventoryEmptyException.cs" />
     <Compile Include="CustomExceptions\InventoryInProgressException.cs" />
     <Compile Include="CustomExceptions\InventoryNotClosedException.cs" />
@@ -303,6 +320,7 @@
     <Compile Include="CustomExceptions\InvoiceException.cs" />
     <Compile Include="CustomExceptions\LeaderCodeExceptions.cs" />
     <Compile Include="CustomExceptions\NoCustomerVisitException.cs" />
+    <Compile Include="CustomExceptions\NoRouteConfigTripulacsException.cs" />
     <Compile Include="CustomExceptions\NotEnoughProductAmountException.cs" />
     <Compile Include="CustomExceptions\NotFoundUsersConfigException.cs" />
     <Compile Include="CustomExceptions\NoUserFoundException.cs" />
@@ -314,8 +332,11 @@
     <Compile Include="CustomExceptions\SaleNotFoundException.cs" />
     <Compile Include="CustomExceptions\ServerErrorException.cs" />
     <Compile Include="CustomExceptions\InventoryNotOpenException.cs" />
+    <Compile Include="CustomExceptions\UnauthorisedException.cs" />
+    <Compile Include="CustomExceptions\UserInUseException.cs" />
     <Compile Include="CustomExceptions\WorkdayNotFoundException.cs" />
     <Compile Include="CustomExceptions\WorkdayStartedException.cs" />
+    <Compile Include="DB\Configuracion_WorkByCloud.cs" />
     <Compile Include="DB\DEVOLUTIONS_VIEW.cs" />
     <Compile Include="DB\factdet.cs" />
     <Compile Include="DB\factura.cs" />
@@ -333,6 +354,7 @@
     <Compile Include="DB\so_api_version.cs" />
     <Compile Include="DB\so_application.cs" />
     <Compile Include="DB\so_article.cs" />
+    <Compile Include="DB\so_article_promotional_route.cs" />
     <Compile Include="DB\so_authentication_log.cs" />
     <Compile Include="DB\so_autoventa_View.cs" />
     <Compile Include="DB\so_billing_data.cs" />
@@ -374,6 +396,7 @@
     <Compile Include="DB\so_data_input.cs" />
     <Compile Include="DB\so_data_out.cs" />
     <Compile Include="DB\so_delivery.cs" />
+    <Compile Include="DB\so_delivery_additional_data.cs" />
     <Compile Include="DB\so_delivery_detail.cs" />
     <Compile Include="DB\so_delivery_devolution.cs" />
     <Compile Include="DB\so_delivery_promotion.cs" />
@@ -382,6 +405,7 @@
     <Compile Include="DB\so_delivery_references.cs" />
     <Compile Include="DB\so_delivery_replacement.cs" />
     <Compile Include="DB\so_delivery_sale.cs" />
+    <Compile Include="DB\so_delivery_status.cs" />
     <Compile Include="DB\so_device.cs" />
     <Compile Include="DB\so_equivalence_article.cs" />
     <Compile Include="DB\so_equivalence_product.cs" />
@@ -396,11 +420,15 @@
     <Compile Include="DB\so_inventory_replacement_detail.cs" />
     <Compile Include="DB\so_inventory_summary.cs" />
     <Compile Include="DB\so_invoice_opefactura.cs" />
+    <Compile Include="DB\so_liquidation_log.cs" />
+    <Compile Include="DB\so_liquidation_log_status.cs" />
     <Compile Include="DB\so_leader_authorization_code.cs" />
     <Compile Include="DB\so_loan_order.cs" />
     <Compile Include="DB\so_loan_sale.cs" />
     <Compile Include="DB\so_log_errors.cs" />
     <Compile Include="DB\so_loyalty_links_log.cs" />
+    <Compile Include="DB\so_order.cs" />
+    <Compile Include="DB\so_order_detail.cs" />
     <Compile Include="DB\so_portal_links_log.cs" />
     <Compile Include="DB\so_preventa_View.cs" />
     <Compile Include="DB\so_price_list_products_detail.cs" />
@@ -417,9 +445,11 @@
     <Compile Include="DB\so_product_company.cs" />
     <Compile Include="DB\so_product_tax.cs" />
     <Compile Include="DB\so_promotion.cs" />
+    <Compile Include="DB\so_promotion_article_movement.cs" />
     <Compile Include="DB\so_promotion_detail_article.cs" />
     <Compile Include="DB\so_promotion_detail_product.cs" />
     <Compile Include="DB\so_promotion_discount_list.cs" />
+    <Compile Include="DB\so_promotion_type_catalog.cs" />
     <Compile Include="DB\so_reason_devolution.cs" />
     <Compile Include="DB\so_reason_failed_transaction.cs" />
     <Compile Include="DB\so_reason_replacement.cs" />
@@ -434,6 +464,7 @@
     <Compile Include="DB\so_route_category.cs" />
     <Compile Include="DB\so_route_customer.cs" />
     <Compile Include="DB\so_inventory_revisions.cs" />
+    <Compile Include="DB\so_route_customer_vario.cs" />
     <Compile Include="DB\so_route_team.cs" />
     <Compile Include="DB\so_route_team_inventory_available.cs" />
     <Compile Include="DB\so_route_team_travels.cs" />
@@ -444,6 +475,7 @@
     <Compile Include="DB\so_salev2.cs" />
     <Compile Include="DB\so_sale_aditional_data.cs" />
     <Compile Include="DB\so_sale_detail.cs" />
+    <Compile Include="DB\so_sale_detail_article.cs" />
     <Compile Include="DB\so_sale_inventory.cs" />
     <Compile Include="DB\so_sale_promotion.cs" />
     <Compile Include="DB\so_sale_promotion_detail.cs" />
@@ -453,6 +485,8 @@
     <Compile Include="DB\so_site.cs" />
     <Compile Include="DB\so_summary.cs" />
     <Compile Include="DB\so_survey_customer.cs" />
+    <Compile Include="DB\so_synchronized_consumer.cs" />
+    <Compile Include="DB\so_synchronized_consumer_detail.cs" />
     <Compile Include="DB\so_tag.cs" />
     <Compile Include="DB\so_tracking.cs" />
     <Compile Include="DB\so_tracking_configuration.cs" />
@@ -484,6 +518,7 @@
     <Compile Include="Mappers\SaleReplacementMapper.cs" />
     <Compile Include="Mappers\SaleTeamMapper.cs" />
     <Compile Include="Mappers\SaleTeamWithPointsMapper.cs" />
+    <Compile Include="Mappers\SaleTeamv3Mapper.cs" />
     <Compile Include="Mappers\TrackingConfigurationMapper.cs" />
     <Compile Include="Models\AccountBindingModels.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -503,6 +538,7 @@
     <Compile Include="Models\DTO\Invoice\InvoiceLineOpeFacturaDto.cs" />
     <Compile Include="Models\DTO\Invoice\InvoiceOpeFacturaDto.cs" />
     <Compile Include="Models\DTO\Invoice\SimpleInvoiceLineOpeFactura.cs" />
+    <Compile Include="Models\DTO\OrderDTO.cs" />
     <Compile Include="Models\DTO\Product.cs" />
     <Compile Include="Models\DTO\PromocionData.cs" />
     <Compile Include="Models\DTO\PromotionCatalog.cs" />
@@ -571,15 +607,24 @@
     <Compile Include="Models\Email\EmailAPIRequests.cs" />
     <Compile Include="Models\Enum\Consumer.cs" />
     <Compile Include="Models\Enum\ConsumerRemovalRequest.cs" />
+    <Compile Include="Models\Enum\DeliveryStatus.cs" />
     <Compile Include="Models\Enum\EInventoryTeamStatus.cs" />
     <Compile Include="Models\Enum\ERolTeam.cs" />
+    <Compile Include="Models\Enum\PaymentMethod.cs" />
     <Compile Include="Models\Enum\PortalLinksStatus.cs" />
+    <Compile Include="Models\Enum\HelperLiquidationLogStatus.cs" />
+    <Compile Include="Models\Generic\AuditDate.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\DTO\PriceDto.cs" />
     <Compile Include="Models\DTO\PriceList.cs" />
     <Compile Include="Models\DTO\ProductDto.cs" />
     <Compile Include="Models\DTO\ProductArticle.cs" />
     <Compile Include="Models\DTO\Promotion.cs" />
+    <Compile Include="Models\Message\SaleModels.cs" />
+    <Compile Include="Models\Message\ApiDigitalizacionMessage.cs" />
+    <Compile Include="Models\Message\LiquidationMessage.cs" />
+    <Compile Include="Models\Responses\BillPocketTokensResponse.cs" />
+    <Compile Include="Models\Message\SaleTeamMessage.cs" />
     <Compile Include="Models\Requests\CRMRequests.cs" />
     <Compile Include="Models\Message\StaffingComplianceMessage.cs" />
     <Compile Include="Models\Message\WsEmployeeDataMessage.cs" />
@@ -612,12 +657,15 @@
     <Compile Include="Models\Requests\UserRequest.cs" />
     <Compile Include="Models\Requests\VisitRequest.cs" />
     <Compile Include="Models\Requests\WorkDayRequest.cs" />
+    <Compile Include="Models\Responses\BillPocketTokensResponse.cs" />
     <Compile Include="Models\Responses\CodePlaceResponses.cs" />
     <Compile Include="Models\Responses\ConsumerResponses.cs" />
     <Compile Include="Models\Responses\CountConfigurationResponse.cs" />
     <Compile Include="Models\Responses\CustomerBlockedResponses.cs" />
     <Compile Include="Models\Responses\CustomerResponse.cs" />
     <Compile Include="Models\Responses\EmailResponse.cs" />
+    <Compile Include="Models\Responses\GetCustomerAllInfoResponse.cs" />
+    <Compile Include="Models\Responses\InventoryOpenResponse.cs" />
     <Compile Include="Models\Responses\InvoiceOpeFacturaResponse.cs" />
     <Compile Include="Models\Responses\LoyaltyGetCustomerList.cs" />
     <Compile Include="Models\Responses\LoyaltyGetPointsResponse.cs" />
@@ -646,13 +694,16 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\ApplicationOAuthProvider.cs" />
     <Compile Include="Results\ChallengeResult.cs" />
+    <Compile Include="Services\ApiDigitalizacionService.cs" />
     <Compile Include="Services\ApiVersionService.cs" />
     <Compile Include="Services\ApplicationService.cs" />
+    <Compile Include="Services\BillPocketService.cs" />
     <Compile Include="Services\CodePlaceService.cs" />
     <Compile Include="Services\ConsumerService.cs" />
     <Compile Include="Services\CRMService.cs" />
     <Compile Include="Services\CustomerBlockedService.cs" />
     <Compile Include="Services\EmailService.cs" />
+    <Compile Include="Services\LiquidationService.cs" />
     <Compile Include="Services\LoyaltyEnsitechService.cs" />
     <Compile Include="Services\RoleTeamService.cs" />
     <Compile Include="Services\RouteTeamInventoryAvailableService.cs" />
@@ -685,6 +736,7 @@
     <Compile Include="Controllers\RouteTeamController.cs" />
     <Compile Include="Services\RouteTeamTravelsService.cs" />
     <Compile Include="Services\SaleDetailResultService.cs" />
+    <Compile Include="Services\DeliveryStatusService.cs" />
     <Compile Include="Services\StaffingComplianceService.cs" />
     <Compile Include="Services\SurveyCustomerService.cs" />
     <Compile Include="Services\TrackingService.cs" />
@@ -695,9 +747,6 @@
     <Compile Include="Services\SaleService.cs" />
     <Compile Include="Services\WorkdayService.cs" />
     <Compile Include="Startup.cs" />
-    <Compile Include="DB\so_article_promotional_route.cs" />
-    <Compile Include="DB\so_promotion_article_movement.cs" />
-    <Compile Include="DB\so_sale_detail_article.cs" />
     <Compile Include="Templates\InsertCliente.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -730,10 +779,112 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Areas\HelpPage\HelpPage.css" />
+    <Content Include="bin\Algoritmos.Data.dll" />
+    <Content Include="bin\Algoritmos.Data.dll.config" />
+    <Content Include="bin\Algoritmos.Data.pdb" />
+    <Content Include="bin\Antlr3.Runtime.dll" />
+    <Content Include="bin\Antlr3.Runtime.pdb" />
+    <Content Include="bin\AutoMapper.dll" />
+    <Content Include="bin\AutoMapper.xml" />
+    <Content Include="bin\CRM.Data.dll" />
+    <Content Include="bin\CRM.Data.dll.config" />
+    <Content Include="bin\CRM.Data.pdb" />
+    <Content Include="bin\EntityFramework.dll" />
+    <Content Include="bin\EntityFramework.SqlServer.dll" />
+    <Content Include="bin\EntityFramework.SqlServer.xml" />
+    <Content Include="bin\EntityFramework.xml" />
+    <Content Include="bin\es\System.Net.Http.Formatting.resources.dll" />
+    <Content Include="bin\es\System.Web.Http.resources.dll" />
+    <Content Include="bin\es\System.Web.Http.WebHost.resources.dll" />
+    <Content Include="bin\FluentValidation.dll" />
+    <Content Include="bin\FluentValidation.ValidatorAttribute.dll" />
+    <Content Include="bin\FluentValidation.WebApi.dll" />
+    <Content Include="bin\FluentValidation.WebApi.xml" />
+    <Content Include="bin\FluentValidation.xml" />
+    <Content Include="bin\HtmlRenderer.dll" />
+    <Content Include="bin\HtmlRenderer.WinForms.dll" />
+    <Content Include="bin\LibreriaCFDI.dll" />
+    <Content Include="bin\Microsoft.AspNet.Identity.Core.dll" />
+    <Content Include="bin\Microsoft.AspNet.Identity.Core.xml" />
+    <Content Include="bin\Microsoft.AspNet.Identity.EntityFramework.dll" />
+    <Content Include="bin\Microsoft.AspNet.Identity.EntityFramework.xml" />
+    <Content Include="bin\Microsoft.AspNet.Identity.Owin.dll" />
+    <Content Include="bin\Microsoft.AspNet.Identity.Owin.xml" />
+    <Content Include="bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll" />
+    <Content Include="bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.xml" />
+    <Content Include="bin\Microsoft.Owin.dll" />
+    <Content Include="bin\Microsoft.Owin.Host.SystemWeb.dll" />
+    <Content Include="bin\Microsoft.Owin.Host.SystemWeb.xml" />
+    <Content Include="bin\Microsoft.Owin.Security.Cookies.dll" />
+    <Content Include="bin\Microsoft.Owin.Security.Cookies.xml" />
+    <Content Include="bin\Microsoft.Owin.Security.dll" />
+    <Content Include="bin\Microsoft.Owin.Security.Facebook.dll" />
+    <Content Include="bin\Microsoft.Owin.Security.Facebook.xml" />
+    <Content Include="bin\Microsoft.Owin.Security.Google.dll" />
+    <Content Include="bin\Microsoft.Owin.Security.Google.xml" />
+    <Content Include="bin\Microsoft.Owin.Security.MicrosoftAccount.dll" />
+    <Content Include="bin\Microsoft.Owin.Security.MicrosoftAccount.xml" />
+    <Content Include="bin\Microsoft.Owin.Security.OAuth.dll" />
+    <Content Include="bin\Microsoft.Owin.Security.OAuth.xml" />
+    <Content Include="bin\Microsoft.Owin.Security.Twitter.dll" />
+    <Content Include="bin\Microsoft.Owin.Security.Twitter.xml" />
+    <Content Include="bin\Microsoft.Owin.Security.xml" />
+    <Content Include="bin\Microsoft.Owin.xml" />
+    <Content Include="bin\Microsoft.Web.Infrastructure.dll" />
+    <Content Include="bin\Newtonsoft.Json.dll" />
+    <Content Include="bin\Newtonsoft.Json.xml" />
+    <Content Include="bin\OpeCDLib.dll" />
+    <Content Include="bin\OpeCDLib.pdb" />
+    <Content Include="bin\Owin.dll" />
+    <Content Include="bin\RestSharp.dll" />
+    <Content Include="bin\RestSharp.xml" />
+    <Content Include="bin\roslyn\csc.exe" />
+    <Content Include="bin\roslyn\Microsoft.Build.Tasks.CodeAnalysis.dll" />
+    <Content Include="bin\roslyn\Microsoft.CodeAnalysis.CSharp.dll" />
+    <Content Include="bin\roslyn\Microsoft.CodeAnalysis.dll" />
+    <Content Include="bin\roslyn\Microsoft.CodeAnalysis.VisualBasic.dll" />
+    <Content Include="bin\roslyn\Microsoft.CSharp.Core.targets" />
+    <Content Include="bin\roslyn\Microsoft.VisualBasic.Core.targets" />
+    <Content Include="bin\roslyn\System.Collections.Immutable.dll" />
+    <Content Include="bin\roslyn\System.Reflection.Metadata.dll" />
+    <Content Include="bin\roslyn\vbc.exe" />
+    <Content Include="bin\roslyn\VBCSCompiler.exe" />
+    <Content Include="bin\roslyn\VBCSCompiler.exe.config" />
+    <Content Include="bin\SmartOrderService.dll" />
+    <Content Include="bin\SmartOrderService.dll.config" />
+    <Content Include="bin\SmartOrderService.pdb" />
+    <Content Include="bin\System.Net.Http.Formatting.dll" />
+    <Content Include="bin\System.Net.Http.Formatting.xml" />
+    <Content Include="bin\System.Threading.Tasks.Dataflow.dll" />
+    <Content Include="bin\System.Threading.Tasks.Dataflow.xml" />
+    <Content Include="bin\System.Web.Helpers.dll" />
+    <Content Include="bin\System.Web.Helpers.xml" />
+    <Content Include="bin\System.Web.Http.dll" />
+    <Content Include="bin\System.Web.Http.Owin.dll" />
+    <Content Include="bin\System.Web.Http.Owin.xml" />
+    <Content Include="bin\System.Web.Http.WebHost.dll" />
+    <Content Include="bin\System.Web.Http.WebHost.xml" />
+    <Content Include="bin\System.Web.Http.xml" />
+    <Content Include="bin\System.Web.Mvc.dll" />
+    <Content Include="bin\System.Web.Mvc.xml" />
+    <Content Include="bin\System.Web.Optimization.dll" />
+    <Content Include="bin\System.Web.Optimization.xml" />
+    <Content Include="bin\System.Web.Razor.dll" />
+    <Content Include="bin\System.Web.Razor.xml" />
+    <Content Include="bin\System.Web.WebPages.Deployment.dll" />
+    <Content Include="bin\System.Web.WebPages.Deployment.xml" />
+    <Content Include="bin\System.Web.WebPages.dll" />
+    <Content Include="bin\System.Web.WebPages.Razor.dll" />
+    <Content Include="bin\System.Web.WebPages.Razor.xml" />
+    <Content Include="bin\System.Web.WebPages.xml" />
+    <Content Include="bin\WebGrease.dll" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\Template\CancelOrderTicket.html" />
     <Content Include="Content\Template\CancelTicketDigitalEmail.html" />
     <Content Include="Content\Template\LoyaltyEmail.html" />
+    <Content Include="Content\Template\OrderTableTemplate.html" />
+    <Content Include="Content\Template\OrderTicket.html" />
     <Content Include="Content\Template\ReactivationTicketDigitalEmail.html" />
     <Content Include="Content\Template\RemovalRequestEmail.html" />
     <Content Include="Content\Template\TicketDigitalEmail.html" />
@@ -789,11 +940,18 @@
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Web.config" />
+    <None Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+    <None Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="fonts\" />
     <Folder Include="Views\Assistant\" />
+    <Folder Include="Views\BillPocket\" />
     <Folder Include="Views\RouteTeamInventoryAvailable\" />
     <Folder Include="Views\VersionApi\" />
   </ItemGroup>

@@ -29,6 +29,7 @@ namespace SmartOrderService.Mappers
                     .ForMember(dest => dest.DiscountPercentValue, opt => opt.MapFrom(src => src.discount_percent));
 
                     cfg.CreateMap<so_customer, CustomerDto>();
+                    cfg.CreateMap<so_customer, CustomerWithVarioDto>();
                     cfg.CreateMap<so_customer, CustomerDtoV2>();
 
 

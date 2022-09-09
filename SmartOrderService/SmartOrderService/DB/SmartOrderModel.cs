@@ -4,6 +4,7 @@ namespace SmartOrderService.DB
     using System.Data.Entity;
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Linq;
+    using SmartOrderService.Controllers;
 
     public partial class SmartOrderModel : DbContext
     {
@@ -167,6 +168,14 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_promotion_article_movement> so_promotion_article_movement { get; set; }
 
         public virtual DbSet<so_article_promotional_route> so_article_promotional_route { get; set; }
+        public virtual DbSet<so_delivery_status> so_delivery_status { get; set; }
+        public virtual DbSet<so_order> so_order { get; set; }
+        public virtual DbSet<so_order_detail> so_order_detail { get; set; }
+        public virtual DbSet<so_delivery_additional_data> so_delivery_additional_data { get; set; }
+        public virtual DbSet<so_synchronized_consumer> so_synchronized_consumer { get; set; }
+        public virtual DbSet<so_synchronized_consumer_detail> so_synchronized_consumer_detail { get; set; }
+        public virtual DbSet<Configuracion_WorkByCloud> Configuracion_WorkByCloud { get; set; }
+        public virtual DbSet<so_promotion_type_catalog> so_promotion_type_catalog { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -356,9 +365,9 @@ namespace SmartOrderService.DB
                 .WillCascadeOnDelete(false);
 
             /*modelBuilder.Entity<so_article>()
-                .HasMany(e => e.so_sale_promotion_detail_article)
-                .WithRequired(e => e.so_article)
-                .WillCascadeOnDelete(false);*/
+               .HasMany(e => e.so_sale_promotion_detail_article)
+               .WithRequired(e => e.so_article)
+               .WillCascadeOnDelete(false);*/
 
             modelBuilder.Entity<so_article_promotional_route>()
                 .HasMany(e => e.so_promotion_article_movement)
@@ -1836,6 +1845,54 @@ namespace SmartOrderService.DB
                 .WithMany(x => x.AuthenticationLogs)
                 .HasForeignKey(x => x.LeaderAuthenticationCodeId);
 
+            var routeCustomerVario = modelBuilder.Entity<so_route_customer_vario>();
+            routeCustomerVario.HasKey(x => x.Id);
+            routeCustomerVario.Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            routeCustomerVario.HasRequired(x => x.Customer)
+                .WithMany(x => x.RouteCustomerVario)
+                .HasForeignKey(x => x.CustomerId);
+            routeCustomerVario.HasRequired(x => x.Route)
+                .WithMany(x => x.RouteCustomerVario)
+                .HasForeignKey(x => x.RouteId);
+
+            var saleAdditionalData = modelBuilder.Entity<so_sale_aditional_data>();
+            saleAdditionalData.HasKey(x => x.saleAdicionalDataId);
+            saleAdditionalData.Property(x => x.saleAdicionalDataId).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            saleAdditionalData.HasRequired(x => x.so_sale)
+                .WithMany(x => x.so_sale_aditional_data)
+                .HasForeignKey(x => x.saleId);
+
+            var deliveryStatus = modelBuilder.Entity<so_delivery_status>();
+            deliveryStatus.HasKey(x => x.deliveryStatusId);
+            deliveryStatus.Property(x => x.deliveryStatusId).IsRequired().HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+
+            modelBuilder.Entity<so_delivery>()
+                .HasOptional(x => x.so_delivery_additional_data)
+                .WithRequired(x => x.Delivery);
+
+            var deliveryAdditionalData = modelBuilder.Entity<so_delivery_additional_data>();
+            deliveryAdditionalData.HasKey(x => x.deliveryId);
+
+            var liquidationLogStatus = modelBuilder.Entity<so_liquidation_log_status>();
+            liquidationLogStatus.HasKey(x => x.Id);
+            liquidationLogStatus.Property(x => x.Id).IsRequired().HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+
+            var liquidationLog = modelBuilder.Entity<so_liquidation_log>();
+            liquidationLog.HasKey(x => x.Id);
+            liquidationLog.Property(x => x.Id).IsRequired().HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            liquidationLog.HasRequired(x => x.LiquidationStatus)
+                .WithMany(x => x.LiquidationLogs)
+                .HasForeignKey(x => x.LiquidationStatusId);
+
+            modelBuilder.Entity<so_delivery>()
+                .HasOptional(x => x.so_delivery_additional_data)
+                .WithRequired(x => x.Delivery);
+
+            modelBuilder.Entity<Configuracion_WorkByCloud>()
+                .HasKey(x => x.wbcConfId);
+
+            modelBuilder.Entity<so_promotion_type_catalog>()
+                .HasKey(x => x.id);
         }
     }
 }

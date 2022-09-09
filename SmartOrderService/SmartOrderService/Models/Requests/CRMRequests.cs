@@ -8,7 +8,7 @@ namespace SmartOrderService.Models.Requests
     public class CRMBase
     {
         public string entityName { get; set; }
-        public Guid? entityId { get; set; }
+        public string entityId { get; set; }
         public Object referenceId { get; set; }
         public List<AttributeCrm> attributes { get; set; }
 
@@ -23,6 +23,15 @@ namespace SmartOrderService.Models.Requests
         public object value { get; set; }
 
         public static AttributeCrm Create(string name, string value) => new AttributeCrm
+        {
+            isDateTime = false,
+            isOptionSet = false,
+            entityReferenceName = null,
+            name = name,
+            value = value
+        };
+
+        public static AttributeCrm CreateInteger(string name, int value) => new AttributeCrm
         {
             isDateTime = false,
             isOptionSet = false,
@@ -57,5 +66,13 @@ namespace SmartOrderService.Models.Requests
             name = name,
             value = value
         };
+
+        public static void CreateEntityReferenceValidation(List<AttributeCrm> list, string entityReferenceName, string name, string value)
+        {
+            if (value != null && value != "")
+            {
+                list.Add(CreateEntityReference(entityReferenceName, name, value));
+            }
+        }
     }
 }

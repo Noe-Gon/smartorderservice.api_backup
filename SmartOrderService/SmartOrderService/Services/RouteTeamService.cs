@@ -1,6 +1,7 @@
 ﻿using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
 using SmartOrderService.Models.Enum;
+using SmartOrderService.Models.Responses;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -101,6 +102,7 @@ namespace SmartOrderService.Services
 
             throw new InventoryNotClosedException();
         }
+
         public void CallLoadInventoryProcess(int userId)
         {
             var inventoryService = new InventoryService();
@@ -165,12 +167,12 @@ namespace SmartOrderService.Services
             int impulsorId = SearchDrivingId(userId);
             var routeTeam = db.so_route_team.Where(x => x.userId == impulsorId).First();
             var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
-
+            var inventory = db.so_inventory.Where(x => x.inventoryId == inventoryId).FirstOrDefault();
             inventoryService.CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
             //End Load Inventory Process
 
             //Si es de Viaje no sincronizado devolver true
-            var workDay = GetWorkdayByUserAndDate(impulsorId, DateTime.Today);
+            var workDay = GetWorkdayByUserAndDate(impulsorId, inventory.date);
             var isInTravelsemployees = db.so_route_team_travels_employees
                 .Where(x => x.userId == userId && x.inventoryId == inventoryId && x.work_dayId == workDay.work_dayId)
                 .FirstOrDefault() != null;
@@ -312,5 +314,22 @@ namespace SmartOrderService.Services
             return routeTeam;
         }
 
+        public ResponseBase<List<GetRouteTeamResponse>> GetRouteTeam(int routeId)
+        {
+            var routeTeams = db.so_route_team
+                .Where(x => x.routeId == routeId)
+                .Select(x => new GetRouteTeamResponse
+                {
+                    RoleId = x.roleTeamId,
+                    UserId = x.userId,
+                    RoleName = x.roleTeamId == (int)ERolTeam.Impulsor ? "Impulsor" : "Ayudante",
+                    UserName = db.so_user.Where(u => u.userId == x.userId).Select(u => u.name).FirstOrDefault()
+                }).ToList();
+
+            if (routeTeams.Count == 0)
+                throw new EntityNotFoundException("No se encontró equipo para esa ruta");
+
+            return ResponseBase<List<GetRouteTeamResponse>>.Create(routeTeams);
+        }
     }
 }

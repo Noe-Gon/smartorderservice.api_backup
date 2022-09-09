@@ -1,5 +1,6 @@
 namespace SmartOrderService.DB
 {
+    using SmartOrderService.Models.Generic;
     using System;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
@@ -21,6 +22,8 @@ namespace SmartOrderService.DB
         public DateTime createOn { get; set; }
 
         public int Available_Amount { get; set; }
+
+        public DateTime? modifiedon { get; set; }
 
         public object Clone()
         {
