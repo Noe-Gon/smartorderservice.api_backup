@@ -147,4 +147,5 @@ namespace SmartOrderService.Models.Requests
     {
         public int CustomerId { get; set; }
     }
+
 }

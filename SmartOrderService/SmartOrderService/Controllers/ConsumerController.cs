@@ -320,5 +320,42 @@ namespace SmartOrderService.Controllers
                 return InternalServerError(e);
             }
         }
+
+        [HttpGet]
+        [Route("~/api/consumer")]
+        public IHttpActionResult GetConsumer([FromUri] int customerId)
+        {
+            try
+            {
+                using (var service = GetService())
+                {
+                    var response = service.GetConsumer(customerId);
+
+                    if (response.Status)
+                        return Ok(response);
+
+                    return Content(HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (EntityNotFoundException e)
+            {
+                var response = ResponseBase<GetConsumersResponse>.Create(new List<string>()
+                {
+                    e.Message
+                });
+
+                return Content(HttpStatusCode.NotFound, response);
+            }
+            catch (Exception e)
+            {
+                var response = ResponseBase<GetConsumersResponse>.Create(new List<string>()
+                {
+                    e.Message
+                });
+
+                return Content(HttpStatusCode.InternalServerError, response);
+            }
+            
+        }
     }
 }

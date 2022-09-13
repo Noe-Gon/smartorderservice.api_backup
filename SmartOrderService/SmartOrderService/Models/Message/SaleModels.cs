@@ -10,6 +10,7 @@ namespace SmartOrderService.Models.Message
     public class SendTicketDigitalRequest
     {
         public int SaleId { get; set; }
+        public string Email { get; set; }
     }
 
     #endregion
