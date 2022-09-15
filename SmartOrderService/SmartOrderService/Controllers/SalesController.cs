@@ -247,6 +247,12 @@ namespace SmartOrderService.Controllers
                 lock (serviceLock)
                 {
                     saleResult = serviceLock.SaleTeamTransaction(sale);
+                    if(sale.EmailDeliveryTicket ?? false)
+                        serviceLock.SenTicketDigital(new SendTicketDigitalRequest()
+                        {
+                            SaleId = saleResult.SaleId,
+                            Email = sale.Email
+                        });
                 }
             }
             catch (ProductNotFoundBillingException e)
@@ -363,7 +369,12 @@ namespace SmartOrderService.Controllers
             try
             {
                 var service = new SaleService();
-                var sale = service.Cancel_v2(id, PaymentMethod);
+                var sale = service.Cancel(id, PaymentMethod);
+                service.SenTicketDigital(new SendTicketDigitalRequest()
+                {
+                    SaleId = sale.SaleId,
+                    Email = null
+                });
                 response = Request.CreateResponse(HttpStatusCode.OK, sale);
             }
             catch (DeviceNotFoundException e)

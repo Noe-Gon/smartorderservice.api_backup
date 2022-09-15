@@ -34,7 +34,7 @@ namespace SmartOrderService.Mappers
                 price_without_taxes = model.price_without_taxes,
                 vat_tax = model.vat,
                 vat_tax_rate = model.vat_rate,
-                sale_price = model.price
+                sale_price = (float?)model.PriceValue
             };
         }
 
@@ -60,7 +60,8 @@ namespace SmartOrderService.Mappers
                 price_without_taxes = entity.price_without_taxes,
                 vat = entity.vat_tax,
                 vat_rate = entity.vat_tax_rate,
-                price = entity.sale_price
+                price = (float?)entity.price,
+                PriceValue = (decimal)entity.sale_price
             };
         }
     }

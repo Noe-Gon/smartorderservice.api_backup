@@ -1693,6 +1693,88 @@ namespace SmartOrderService.Services
             return null;
         }
 
+        public ResponseBase<GetConsumerResponse> GetConsumer(int customerId)
+        {
+            var defualtGuid = new Guid("00000000-0000-0000-0000-000000000000");
+
+            var customer = UoWConsumer.CustomerRepository.Get(x => x.customerId == customerId).FirstOrDefault();
+
+            if (customer == null)
+                throw new EntityNotFoundException("No se encontró al cliente");
+
+            var routeVisit = UoWConsumer.RouteCustomerRepository
+            .Get(
+                x => x.customerId == customer.customerId
+            ).FirstOrDefault();
+            int order = routeVisit.order;
+
+            var customerAdditionalDataAux = UoWConsumer.CustomerRepository
+                .Get(x => x.customerId == customer.customerId)
+                .Select(x => x.CustomerAdditionalData)
+                .FirstOrDefault();
+
+            var customerAdditionalData = customerAdditionalDataAux.FirstOrDefault();
+            var customerData = customer.so_customer_data.FirstOrDefault();
+
+
+            List<int> daysInRoute = UoWConsumer.RouteCustomerRepository
+                .Get(x => x.routeId == routeVisit.routeId && x.status && x.customerId == customer.customerId)
+                .Select(x => x.day)
+                .ToList();
+
+            GetConsumerResponse dto = new GetConsumerResponse()
+            {
+                CustomerId = customer.customerId,
+                Name = customer.name,
+                CFECode = customer.code,
+                CodePlace = customerAdditionalData == null ? null : customerAdditionalData.CodePlaceId,
+                Crossroads = customerData != null ? customerData.address_number_cross1 : string.Empty,
+                Crossroads_2 = customerData != null ? customerData.address_number_cross2 : string.Empty,
+                Email = customer.email,
+                Email_2 = customerAdditionalData == null ? string.Empty : customerAdditionalData.Email_2,
+                ExternalNumber = customerData != null ? customerData.address_number : string.Empty,
+                InteriorNumber = customerAdditionalData == null ? string.Empty : customerAdditionalData.InteriorNumber,
+                Latitude = customer.latitude,
+                Longitude = customer.longitude,
+                Neighborhood = customerAdditionalData == null ? null : customerAdditionalData.NeighborhoodId,
+                Phone = customerAdditionalData == null ? string.Empty : customerAdditionalData.Phone,
+                Phone_2 = customerAdditionalData == null ? string.Empty : customerAdditionalData.Phone_2,
+                ReferenceCode = customerAdditionalData == null ? string.Empty : customerAdditionalData.ReferenceCode,
+                RouteId = routeVisit.routeId,
+                Street = customerData != null ? customerData.address_street : string.Empty,
+                Days = daysInRoute,
+                address = customer.address,
+                Status = Convert.ToInt32(customer.status),
+                UserId = customer.createdby ?? 0
+            };
+
+            if (customerAdditionalData == null ? false : customerAdditionalData.NeighborhoodId != null)
+            {
+                var ubication = UoWCRM.ColoniasRepository
+                    .Get(x => x.Ope_coloniaId == customerAdditionalData.NeighborhoodId)
+                    .Select(x => new
+                    {
+                        CountryId = x.ope_PaisId,
+                        StateId = x.ope_EstadoId,
+                        TownId = x.Ope_MunicipioId
+                    }).FirstOrDefault();
+
+                dto.StateId = ubication.StateId;
+                dto.CountryId = ubication.CountryId;
+                dto.MunicipalityId = ubication.TownId;
+            }
+            //Asignar valores default a las colonias
+            if (customerAdditionalData == null ? false : customerAdditionalData.NeighborhoodId == null)
+            {
+                dto.Neighborhood = defualtGuid;
+                dto.StateId = defualtGuid;
+                dto.CountryId = defualtGuid;
+                dto.MunicipalityId = defualtGuid;
+            }
+
+            return ResponseBase<GetConsumerResponse>.Create(dto);
+        }
+
         public void Dispose()
         {
             this.UoWConsumer.Dispose();
