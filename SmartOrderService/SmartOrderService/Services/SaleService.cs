@@ -1944,7 +1944,7 @@ namespace SmartOrderService.Services
                             "No se puede enviar el email", "No cuenta con datos suficientes (Datos adicionales.)"
                         });
 
-                    if (customer.CustomerAdditionalData.FirstOrDefault().IsMailingActive)
+                    if (!customer.CustomerAdditionalData.FirstOrDefault().IsMailingActive)
                         return ResponseBase<MsgResponseBase>.Create(new List<string>()
                         {
                             "No se puede enviar el email", "El cliente no tiene activado el envio de Emails"

@@ -135,6 +135,7 @@ namespace SmartOrderService.Services
 
                     int totalProductsSold = 0;
                     int totalBoxesSold = 0;
+                    int totalCountProductSold = 0;
                     double total = 0.0;
                     //Make Table
                     foreach (var row in request.Sales)
@@ -145,6 +146,7 @@ namespace SmartOrderService.Services
                         tdBody += "<td>" + "$" + String.Format("{0:0.00}", row.UnitPrice) + "</td>";
                         tdBody += "<td>" + "$" + String.Format("{0:0.00}", row.TotalPrice) + "</td></tr>";
                         totalBoxesSold += row.Amount;
+                        totalCountProductSold += row.Amount;
                         total += row.TotalPrice;
                     }
 
@@ -167,7 +169,7 @@ namespace SmartOrderService.Services
                     }
 
                     body = body.Replace("{TdBody}", tdBody);
-                    body = body.Replace("{TotalProductsSold}", totalProductsSold.ToString());
+                    body = body.Replace("{TotalProductsSold}", totalCountProductSold.ToString());
                     body = body.Replace("{TotalBoxesSold}", totalBoxesSold.ToString());
                     body = body.Replace("{TotalPrice}", String.Format("{0:0.00}", total));
 
@@ -277,6 +279,7 @@ namespace SmartOrderService.Services
 
                     string tdBody = "";
                     int totalProductsSold = 0;
+                    int totalCountProductSold = 0;
                     int totalBoxesSold = 0;
                     double total = 0.0;
                     //Make Table
@@ -288,6 +291,7 @@ namespace SmartOrderService.Services
                         tdBody += "<td>" + String.Format("{0:0.00}", row.UnitPrice) + "</td>";
                         tdBody += "<td>" + String.Format("{0:0.00}", row.TotalPrice) + "</td></tr>";
                         totalBoxesSold += row.Amount;
+                        totalCountProductSold += row.Amount;
                         total += row.TotalPrice;
                     }
 
@@ -311,7 +315,7 @@ namespace SmartOrderService.Services
                     }
 
                     body = body.Replace("{TdBody}", tdBody);
-                    body = body.Replace("{TotalProductsSold}", totalProductsSold.ToString());
+                    body = body.Replace("{TotalProductsSold}", totalCountProductSold.ToString());
                     body = body.Replace("{TotalBoxesSold}", totalBoxesSold.ToString());
                     body = body.Replace("{TotalPrice}", String.Format("{0:0.00}", total));
 
