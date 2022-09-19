@@ -485,6 +485,17 @@ namespace SmartOrderService.Services
             .Get(x => x.userId == request.UserId)
             .FirstOrDefault();
 
+            if (user == null)
+                throw new EntityNotFoundException("No se encuentró al usuario en WByC");
+
+            var routeBranch = UoWConsumer.RouteRepository
+                .Get(x => x.routeId == request.RouteId)
+                .Select(x => new { Route = x, Code = x.so_branch.so_company.code, Branch = x.so_branch })
+                .FirstOrDefault();
+
+            if (routeBranch == null)
+                throw new EntityNotFoundException("No se encuentró el branch o la ruta");
+
             var log = Getlog(request.EmployeeCode, DateTime.Now);
             if (log != null)
                 if (log.UserId != request.UserId)
@@ -502,38 +513,31 @@ namespace SmartOrderService.Services
                         throw new UserInUseException("El usuario inicio sesión con otro codigo de empleado");
                 }
 
-            if (user != null)
+            var employee = SingleEmployee(routeBranch.Code, request.EmployeeCode);
+
+            var newAuthenticationLog = new so_authentication_log
             {
-                var newAuthenticationLog = new so_authentication_log
-                {
-                    LeaderAuthenticationCodeId = leaderCode.Id,
-                    Status = true,
-                    WasLeaderCodeAuthorization = true,
-                    CreatedDate = DateTime.Now,
-                    UserCode = request.EmployeeCode,
-                    UserId = user.userId,
-                    RouteId = request.RouteId,
-                    LeaderCode = leaderCode.Code,
-                    UserName = null,
-                    IsSynchronized = false
-                };
+                LeaderAuthenticationCodeId = leaderCode.Id,
+                Status = true,
+                WasLeaderCodeAuthorization = true,
+                CreatedDate = DateTime.Now,
+                UserCode = request.EmployeeCode,
+                UserId = user.userId,
+                RouteId = request.RouteId,
+                LeaderCode = leaderCode.Code,
+                UserName = employee == null ? null : employee.name + " " + employee.lastname,
+                IsSynchronized = false
+            };
 
-                UoWConsumer.AuthentificationLogRepository.Insert(newAuthenticationLog);
-                UoWConsumer.Save();
+            UoWConsumer.AuthentificationLogRepository.Insert(newAuthenticationLog);
+            UoWConsumer.Save();
 
-
-                return new ResponseBase<AuthenticateLeaderCodeResponse>()
-                {
-                    Data = null,
-                    Errors = null,
-                    Status = true
-                };
-            }
-            else
+            return new ResponseBase<AuthenticateLeaderCodeResponse>()
             {
-                throw new EntityNotFoundException("No se encuentró al usuario en WByC");
-            }
-
+                Data = null,
+                Errors = null,
+                Status = true
+            };
         }
 
         private string GetTokenAWSEmployee()
