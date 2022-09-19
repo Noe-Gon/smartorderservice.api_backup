@@ -139,6 +139,26 @@ namespace SmartOrderService.Services
             }
         }
 
+        public LoyaltyGetRulesResponse GetRules(string branchCode, string routeCode)
+        {
+            var endpoint = url + "beneficiary/branch/" + branchCode + "/route/" + routeCode + "/rules";
+            try
+            {
+                var client = new RestClient(endpoint);
+                var restRequest = new RestRequest(Method.GET);
+                restRequest.AddHeader("content-type", "application/json");
+                restRequest.AddHeader("x-api-key", autorizacion);
+                IRestResponse response = client.Execute(restRequest);
+                var jsonFormat = "{\"RulesConfig\": " + response.Content + "}";
+                var responseRefined = JsonConvert.DeserializeObject<LoyaltyGetRulesResponse>(jsonFormat);
+                return responseRefined;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("El beneficiario no cuenta con reglas de canje configurados o no existe");
+            }
+        }
+
         public LoyaltyPostBeneficiaryResponse PostBeneficiary(LoyaltyPostBenficiaryRequest request)
         {
             var endpoint = url + "beneficiary";

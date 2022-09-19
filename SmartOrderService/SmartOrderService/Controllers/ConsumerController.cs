@@ -151,6 +151,25 @@ namespace SmartOrderService.Controllers
         }
 
         [HttpGet]
+        [Route("~/api/Loyalty/Rules")]
+        public HttpResponseMessage GetRules([FromUri] string branchCode, string routeCode)
+        {
+            HttpResponseMessage response;
+            try
+            {
+
+                var products = new LoyaltyEnsitechService().GetRules(branchCode, routeCode);
+                response = Request.CreateResponse(HttpStatusCode.OK, products);
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, "Error: " + e.Message);
+            }
+
+            return response;
+        }
+
+        [HttpGet]
         [Route("~/api/consumer/GetPoints")]
         public IHttpActionResult GetConsumerPoints([FromUri] string uuid)
         {

@@ -671,6 +671,7 @@
     <Compile Include="Models\Responses\LoyaltyGetPointsResponse.cs" />
     <Compile Include="Models\Requests\LoyaltyPointsRequest.cs" />
     <Compile Include="Models\Responses\LoyaltyGetProductsResponse.cs" />
+    <Compile Include="Models\Responses\LoyaltyGetRulesResponse.cs" />
     <Compile Include="Models\Responses\LoyaltyPostBeneficiaryResponse.cs" />
     <Compile Include="Models\Responses\LoyaltyRedemptionRefundResponse.cs" />
     <Compile Include="Models\Responses\LoyaltyUuidResponse.cs" />
