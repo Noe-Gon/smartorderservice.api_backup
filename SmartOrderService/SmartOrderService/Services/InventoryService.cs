@@ -462,7 +462,9 @@ namespace SmartOrderService.Services
 
                             var newDeliveryAdditionalData = new so_delivery_additional_data()
                             {
-                                deliveryStatusId = deliveriStatus == null ? null : (int?)deliveriStatus.deliveryStatusId
+                                deliveryStatusId = deliveriStatus == null ? null : (int?)deliveriStatus.deliveryStatusId,
+                                originSystem = delivery.originSystem,
+                                originSystemDescription = delivery.originSystemDescription
                             };
 
                             newDelivery.so_delivery_additional_data = newDeliveryAdditionalData;

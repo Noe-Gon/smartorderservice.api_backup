@@ -14,6 +14,10 @@ namespace SmartOrderService.DB
 
         public virtual so_delivery_status DeliveryStatus { get; set; }
 
+        public virtual string originSystem { get; set; }
+
+        public virtual string originSystemDescription { get; set; }
+
         public int deliveryId { get; set; }
         public so_delivery Delivery { get; set; }
 
