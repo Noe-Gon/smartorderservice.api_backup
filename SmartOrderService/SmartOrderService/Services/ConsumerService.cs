@@ -548,10 +548,6 @@ namespace SmartOrderService.Services
                     .Get(x => x.customerId == request.CustomerId && x.routeId == request.RouteId)
                     .ToList();
 
-                var deleteDaysInRoute = daysInRoute
-                    .Where(x => !request.Days.Contains(x.day))
-                    .ToList();
-
                 var newDaysInRoute = new List<so_route_customer>();
 
                 foreach (var day in request.Days)
@@ -569,8 +565,26 @@ namespace SmartOrderService.Services
                             visit_type = 1
                         });
                 }
+                foreach (var day in daysInRoute)
+                {
+                    if (request.Days.Contains(day.day))
+                    {
+                        if (!day.status)
+                        {
+                            day.modifiedon = DateTime.Now;
+                            day.modifiedby = request.UserId;
+                            day.status = true;
+                        }
+                    }
+                    else
+                    {
+                        day.modifiedon = DateTime.Now;
+                        day.modifiedby = request.UserId;
+                        day.status = false;
+                    }
+                }
                 UoWConsumer.RouteCustomerRepository.InsertByRange(newDaysInRoute);
-                UoWConsumer.RouteCustomerRepository.DeleteByRange(deleteDaysInRoute);
+                UoWConsumer.RouteCustomerRepository.UpdateByRange(daysInRoute);
                 UoWConsumer.CustomerRepository.Update(updateCustomer);
 
                 UoWConsumer.Save();
