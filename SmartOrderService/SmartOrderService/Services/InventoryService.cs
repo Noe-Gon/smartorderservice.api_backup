@@ -84,7 +84,8 @@ namespace SmartOrderService.Services
             }
 
             int driverId = SearchDrivingId(userId);
-            var workDay = routeTeamService.GetWorkdayByUserAndDate(driverId, DateTime.Today);
+            var inventory = db.so_inventory.Where(x => x.inventoryId == inventoryId).FirstOrDefault();
+            var workDay = routeTeamService.GetWorkdayByUserAndDate(driverId, inventory.date);
 
             //Verificar que los demas ya hayan finalizado para cerrar el viaje
             var travelInProgress = db.so_route_team_travels_employees

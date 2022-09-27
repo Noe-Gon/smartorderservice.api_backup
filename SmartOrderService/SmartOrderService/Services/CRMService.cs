@@ -68,7 +68,8 @@ namespace SmartOrderService.Services
                 entity.attributes.Add(AttributeCrm.CreateBoolean("ope_sabado", consumer.Days.Contains(7)));
 
                 //Price List
-                entity.attributes.Add(AttributeCrm.CreateInteger("ope_listprec", consumer.PriceListId));
+                if(consumer.PriceListId != null)
+                    entity.attributes.Add(AttributeCrm.CreateInteger("ope_listprec", consumer.PriceListId.Value));
 
 
                 entity.attributes.Add(AttributeCrm.CreateDateTime("ope_fechaalta", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")));

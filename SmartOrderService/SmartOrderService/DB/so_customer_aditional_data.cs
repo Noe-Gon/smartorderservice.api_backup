@@ -48,7 +48,7 @@ namespace SmartOrderService.DB
         [Column("accepted_terms_and_conditions")]
         public bool AcceptedTermsAndConditions { get; set; }
 
-        [Column("code")]
+        [Column("crmId")]
         public Guid? Code { get; set; }
 
         #region Relationship

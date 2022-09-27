@@ -187,7 +187,7 @@ namespace SmartOrderService.Services
 
                     db.SaveChanges();
                     //Enviar Ticket
-                    SendCancelTicket(sale);
+                    //SendCancelTicket(sale);
 
                     if (!lInventarioAfectado)
                     {
@@ -206,124 +206,6 @@ namespace SmartOrderService.Services
             var SaleDto = new SaleMapper().toModel(sale);
 
             return SaleDto;
-        }
-
-        public void SendCancelTicket(so_sale sale)
-        {
-            try
-            {
-                var customer = db.so_customer.Where(x => x.customerId == sale.customerId).FirstOrDefault();
-
-                if (customer.CustomerAdditionalData != null)
-                {
-                    if (customer.CustomerAdditionalData.Count() != 0)
-                        if (customer.CustomerAdditionalData.FirstOrDefault().IsMailingActive)
-                        {
-                            var saleAD = db.so_sale_aditional_data.Where(x => x.saleId == sale.saleId).FirstOrDefault();
-                            string PaymentMethod = saleAD == null ? null : saleAD.paymentMethod;
-                            //Se prepara la información
-                            var route = db.so_route_customer.Where(x => x.customerId == sale.customerId).Select(x => x.so_route.code).FirstOrDefault();
-                            var user = db.so_user.Where(x => x.userId == sale.userId).FirstOrDefault();
-                            //DataTable dtTicket = GetPromotionsTicketDigital(db, sale.saleId);
-
-                            var sendTicketDigitalEmail = new SendCancelTicketDigitalEmailRequest
-                            {
-                                CustomerName = customer.name,
-                                RouteAddress = route,
-                                CustomerEmail = customer.email,
-                                CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
-                                Date = DateTime.Now,
-                                PaymentMethod = PaymentMethod,
-                                SellerName = user.code + " - " + user.name,
-                                //dtTicket = dtTicket,
-                                ReferenceCode = customer.customerId.ToString()
-                            };
-
-                            //Preparar Order
-                            List<so_delivery_detail> delivery = null;
-                            if (sale.deliveryId == 0)
-                                sendTicketDigitalEmail.Order = null;
-                            else
-                            {
-                                delivery = db.so_delivery_detail
-                                    .Where(x => x.deliveryId == sale.deliveryId)
-                                    .ToList();
-
-                                sendTicketDigitalEmail.Order = new SendCancelTicketDigitalEmailOrder()
-                                {
-                                    OrderDetail = new List<SendCancelTicketDigitalEmailOrderDetail>(),
-                                    DeliveryDate = sale.date
-                                };
-                            }
-
-                            var sales = new List<SendTicketDigitalEmailSales>();
-                            foreach (var detail in sale.so_sale_detail)
-                            {
-                                var product = db.so_product.Where(x => x.productId == detail.productId).FirstOrDefault();
-                                if (product == null)
-                                    continue;
-
-                                if (sendTicketDigitalEmail.Order != null)
-                                {
-                                    var productOrder = delivery.Where(x => x.productId == detail.productId).FirstOrDefault();
-                                    //Si el producto esta dentro de la preventa
-                                    if (productOrder != null)
-                                    {
-                                        //Verificar si la cantidad es menor o igual a la preventa
-                                        if (detail.amount <= productOrder.amount)
-                                        {
-                                            //Si lo que se esta vendiendo es menor o igual a lo solicitado Agregar en Order y pasar al siguiente
-                                            sendTicketDigitalEmail.Order.OrderDetail.Add(new SendCancelTicketDigitalEmailOrderDetail
-                                            {
-                                                Amount = detail.amount, //Se usa el detail porque el amount puede ser menor
-                                                ProductName = product.code + " - " + product.name,
-                                                TotalPrice = (double)detail.amount * productOrder.price.Value,
-                                                UnitPrice = productOrder.price.Value
-                                            });
-                                        }
-                                        else
-                                        {
-                                            //Si es mayor hacer la resta y agregar a sale y preventa
-                                            sendTicketDigitalEmail.Order.OrderDetail.Add(new SendCancelTicketDigitalEmailOrderDetail
-                                            {
-                                                Amount = productOrder.amount,
-                                                ProductName = product.code + " - " + product.name,
-                                                TotalPrice = (double)productOrder.amount * productOrder.price.Value,
-                                                UnitPrice = productOrder.price.Value
-                                            });
-
-                                            sales.Add(new SendTicketDigitalEmailSales
-                                            {
-                                                Amount = detail.amount - productOrder.amount,
-                                                ProductName = product.code + " - " + product.name,
-                                                TotalPrice = Convert.ToDouble(detail.amount - productOrder.amount) * Convert.ToDouble(detail.price),
-                                                UnitPrice = Convert.ToDouble(detail.price)
-                                            });
-
-                                        }
-                                        continue;
-                                    }
-                                }
-
-                                sales.Add(new SendTicketDigitalEmailSales
-                                {
-                                    Amount = detail.amount,
-                                    ProductName = product.code + " - " + product.name,
-                                    TotalPrice = Convert.ToDouble(detail.amount) * Convert.ToDouble(detail.price),
-                                    UnitPrice = Convert.ToDouble(detail.price)
-                                });
-                            }
-                            sendTicketDigitalEmail.Sales = sales;
-
-                            //Se envia el ticket
-                            var emailService = new EmailService();
-                            var response = emailService.SendCancelTicketDigitalEmail(sendTicketDigitalEmail);
-                        }
-                }
-            }
-            catch (Exception)
-            {
-            }
         }
 
         public Sale create(Sale sale) {
@@ -683,7 +565,8 @@ namespace SmartOrderService.Services
                     modifiedby = userId,
                     createdby = userId,
                     createdon = DateTime.Now,
-                    modifiedon = DateTime.Now
+                    modifiedon = DateTime.Now,
+                    
                 };
 
                 promotions.Add(entityPromotion);
@@ -1425,12 +1308,8 @@ namespace SmartOrderService.Services
                             if(!string.IsNullOrEmpty(saleResult.PaymentMethod))
                                 CreatePaymentMethod(saleResult);
                             if (saleResult.SaleId == 0)
-                            {
                                 throw new BadRequestException();
-                            }
-
-                            if (!string.IsNullOrEmpty(saleResult.PaymentMethod))
-                                PrepareTicketDigital(saleResult);
+                            
                         }
 
                         transaction.Commit();
@@ -1454,151 +1333,6 @@ namespace SmartOrderService.Services
                     throw exception;
                 }
                 return saleResult;
-            }
-        }
-
-        public void PrepareTicketDigital(SaleTeam sale)
-        {
-            var updateCustomerAdditionalData = db.so_customerr_additional_data
-                                .Where(x => x.CustomerId == sale.CustomerId)
-                                .FirstOrDefault();
-
-            if (updateCustomerAdditionalData != null || !string.IsNullOrEmpty(sale.Email))
-            {
-                #region Consumidores logica
-                //Actualizar contador
-                if (updateCustomerAdditionalData != null)
-                {
-                    updateCustomerAdditionalData.CounterVisitsWithoutSales = 0;
-                    db.SaveChanges();
-                }
-
-                if (sale.EmailDeliveryTicket == null)
-                    sale.EmailDeliveryTicket = false;
-
-                //Envio de Ticket
-                if (sale.EmailDeliveryTicket == true)
-                {
-                    var customer = db.so_customer.Where(x => x.customerId == sale.CustomerId).FirstOrDefault();
-
-                    if (customer.CustomerAdditionalData != null || !string.IsNullOrEmpty(sale.Email))
-                    {
-                        var customerAux = customer.CustomerAdditionalData.FirstOrDefault();
-                        if (customerAux == null)
-                            customerAux = new so_customer_additional_data { IsMailingActive = false };
-
-                        if (!string.IsNullOrEmpty(sale.Email))
-                            customer.email = sale.Email;
-
-                        if (customerAux.IsMailingActive || !string.IsNullOrEmpty(sale.Email))
-                        {
-                            //Se prepara la información
-                            var route = db.so_route_customer.Where(x => x.customerId == sale.CustomerId).Select(x => x.so_route.code).FirstOrDefault();
-                            var user = db.so_user.Where(x => x.userId == sale.UserId).FirstOrDefault();
-                            //DataTable dtTicket = GetPromotionsTicketDigital(db, sale.SaleId);
-
-                            var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
-                            {
-                                CustomerName = customer.name,
-                                RouteAddress = route,
-                                CustomerEmail = customer.email,
-                                CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
-                                Date = DateTime.Now,
-                                PaymentMethod = sale.PaymentMethod,
-                                SellerName = user.code + " - " + user.name,
-                                //dtTicket = dtTicket,
-                                ReferenceCode = customer.customerId.ToString()
-                            };
-
-                            //Preparar Order
-                            List<so_delivery_detail> delivery = null;
-                            if (sale.DeliveryId == 0)
-                                sendTicketDigitalEmail.Order = null;
-                            else
-                            {
-                                delivery = db.so_delivery_detail
-                                    .Where(x => x.deliveryId == sale.DeliveryId)
-                                    .ToList();
-
-                                sendTicketDigitalEmail.Order = new SendTicketDigitalEmailOrder()
-                                {
-                                    OrderDetail = new List<SendTicketDigitalEmailOrderDetail>(),
-                                    DeliveryDate = Convert.ToDateTime(sale.Date)
-                                };
-                            }
-
-                            var sales = new List<SendTicketDigitalEmailSales>();
-                            foreach (var detail in sale.SaleDetails)
-                            {
-                                var product = db.so_product.Where(x => x.productId == detail.ProductId).FirstOrDefault();
-                                if (product == null)
-                                    continue;
-
-                                if(sendTicketDigitalEmail.Order != null)
-                                {
-                                    var productOrder = delivery.Where(x => x.productId == detail.ProductId).FirstOrDefault();
-                                    //Si el producto esta dentro de la preventa
-                                    if(productOrder != null)
-                                    {
-                                        //Verificar si la cantidad es menor o igual a la preventa
-                                        if (detail.Amount <= productOrder.amount)
-                                        {
-                                            //Si lo que se esta vendiendo es menor o igual a lo solicitado Agregar en Order y pasar al siguiente
-                                            sendTicketDigitalEmail.Order.OrderDetail.Add(new SendTicketDigitalEmailOrderDetail
-                                            {
-                                                Amount = detail.Amount, //Se usa el detail porque el amount puede ser menor
-                                                ProductName = product.code + " - " + product.name,
-                                                TotalPrice = (double)detail.Amount * Convert.ToDouble(productOrder.price.Value),
-                                                UnitPrice = Convert.ToDouble(productOrder.price.Value)
-                                            });
-                                        }
-                                        else
-                                        {
-                                            //Si es mayor hacer la resta y agregar a sale y preventa
-                                            sendTicketDigitalEmail.Order.OrderDetail.Add(new SendTicketDigitalEmailOrderDetail
-                                            {
-                                                Amount = productOrder.amount,
-                                                ProductName = product.code + " - " + product.name,
-                                                TotalPrice = (double)productOrder.amount * Convert.ToDouble(productOrder.price.Value),
-                                                UnitPrice = Convert.ToDouble(productOrder.price.Value)
-                                            });
-
-                                            sales.Add(new SendTicketDigitalEmailSales
-                                            {
-                                                Amount = detail.Amount - productOrder.amount,
-                                                ProductName = product.code + " - " + product.name,
-                                                TotalPrice = Convert.ToDouble(detail.Amount - productOrder.amount) * Convert.ToDouble(detail.price),
-                                                UnitPrice = Convert.ToDouble(detail.price)
-                                            });
-
-                                        }
-                                        continue;
-                                    }
-                                }
-
-                                sales.Add(new SendTicketDigitalEmailSales
-                                {
-                                    Amount = detail.Amount,
-                                    ProductName = product.code + " - " + product.name,
-                                    TotalPrice = Convert.ToDouble(detail.Amount) * Convert.ToDouble(detail.PriceValue),
-                                    UnitPrice = Convert.ToDouble(detail.PriceValue)
-                                });
-                            }
-
-                            sendTicketDigitalEmail.CancelTicketLink = GetCancelLinkByCustomerId(customer.customerId);
-                            sendTicketDigitalEmail.Sales = sales;
-
-                            //Se envia el ticket
-                            if (sales != null)
-                            {
-                                var emailService = new EmailService();
-                                var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);
-                            }
-                        }
-                    }
-                }
-
-                #endregion
             }
         }
 
@@ -1652,10 +1386,16 @@ namespace SmartOrderService.Services
                     .FirstOrDefault();
 
                 if (aux == null)
+                {
+                    status = DeliveryStatus.PARTIALLY_DELIVERED;
                     continue;
+                }
 
                 if (aux.Amount == 0)
+                {
+                    status = DeliveryStatus.PARTIALLY_DELIVERED;
                     continue;
+                }
 
                 isUndelivered = false;
                 if (aux.Amount >= product.amount)
@@ -1700,26 +1440,26 @@ namespace SmartOrderService.Services
             }
         }
 
-        //public DataTable GetPromotionsTicketDigital(DbContext db, int SaleId)
-        //{
-        //    DataTable dt = new DataTable();
-        //    DbDataAdapter adapter;
-        //    DataSet dataset = new DataSet();
+        public DataTable GetPromotionsTicketDigital(DbContext db, int SaleId)
+        {
+            DataTable dt = new DataTable();
+            DbDataAdapter adapter;
+            DataSet dataset = new DataSet();
 
-        //    DbCommand command = db.Database.Connection.CreateCommand();
-        //    command.Transaction = db.Database.CurrentTransaction.UnderlyingTransaction;
-        //    command.CommandText = "sp_getPromotionsTicketDigital";
-        //    command.CommandType = CommandType.StoredProcedure;
+            DbCommand command = db.Database.Connection.CreateCommand();
+            command.Transaction = db.Database.CurrentTransaction.UnderlyingTransaction;
+            command.CommandText = "sp_getPromotionsTicketDigital";
+            command.CommandType = CommandType.StoredProcedure;
 
-        //    SqlParameter pSaleId = new SqlParameter("@SaleId", SaleId);
-        //    command.Parameters.Add(pSaleId);
-    
-        //    adapter = new System.Data.SqlClient.SqlDataAdapter();
-        //    adapter.SelectCommand = command;
-        //    adapter.Fill(dataset);
+            SqlParameter pSaleId = new SqlParameter("@SaleId", SaleId);
+            command.Parameters.Add(pSaleId);
 
-        //    return dataset.Tables[0]; 
-        //}
+            adapter = new System.Data.SqlClient.SqlDataAdapter();
+            adapter.SelectCommand = command;
+            adapter.Fill(dataset);
+
+            return dataset.Tables[0];
+        }
 
         public string GetCancelLinkByCustomerId(int customerId)
         {
@@ -2191,247 +1931,268 @@ namespace SmartOrderService.Services
 
         public ResponseBase<MsgResponseBase> SenTicketDigital(SendTicketDigitalRequest request)
         {
-            var sale = db.so_sale.Where(s => s.saleId.Equals(request.SaleId)).FirstOrDefault();
+            if(request.SaleId == 0)
+                return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                        {
+                            "No se puede enviar el email", "No cuenta con datos suficientes"
+                        });
 
-            if (sale == null)
-                throw new EntityNotFoundException("No se encontró la venta");
-
-            var customer = db.so_customer.Where(x => x.customerId == sale.customerId).FirstOrDefault();
-
-            if (customer.CustomerAdditionalData != null)
+            using (var transaction = db.Database.BeginTransaction())
             {
-                if (customer.CustomerAdditionalData.Count() != 0)
-                    if (customer.CustomerAdditionalData.FirstOrDefault().IsMailingActive)
-                    {
-                        if(sale.state == 2)
+                var sale = db.so_sale.Where(s => s.saleId.Equals(request.SaleId)).FirstOrDefault();
+
+                if (sale == null)
+                    throw new EntityNotFoundException("No se encontró la venta");
+
+                var customer = db.so_customer.Where(x => x.customerId == sale.customerId).FirstOrDefault();
+
+                if (request.Email == null)
+                {
+                    if (customer.CustomerAdditionalData == null)
+                        return ResponseBase<MsgResponseBase>.Create(new List<string>()
                         {
-                            var saleAD = db.so_sale_aditional_data.Where(x => x.saleId == sale.saleId).FirstOrDefault();
-                            string PaymentMethod = saleAD == null ? null : saleAD.paymentMethod;
-                            //Se prepara la información
-                            var route = db.so_route_customer.Where(x => x.customerId == sale.customerId).Select(x => x.so_route.code).FirstOrDefault();
-                            var user = db.so_user.Where(x => x.userId == sale.userId).FirstOrDefault();
-                            //DataTable dtTicket = GetPromotionsTicketDigital(db, sale.saleId);
+                            "No se puede enviar el email", "No cuenta con datos suficientes (Datos adicionales.)"
+                        });
 
-                            var sendTicketDigitalEmail = new SendCancelTicketDigitalEmailRequest
-                            {
-                                CustomerName = customer.name,
-                                RouteAddress = route,
-                                CustomerEmail = customer.email,
-                                CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
-                                Date = sale.date,
-                                PaymentMethod = PaymentMethod,
-                                SellerName = user.code + " - " + user.name,
-                                //dtTicket = dtTicket,
-                                ReferenceCode = customer.customerId.ToString()
-                            };
-
-                            //Preparar Order
-                            List<so_delivery_detail> delivery = null;
-                            if (sale.deliveryId == 0)
-                                sendTicketDigitalEmail.Order = null;
-                            else
-                            {
-                                delivery = db.so_delivery_detail
-                                    .Where(x => x.deliveryId == sale.deliveryId)
-                                    .ToList();
-
-                                sendTicketDigitalEmail.Order = new SendCancelTicketDigitalEmailOrder()
-                                {
-                                    OrderDetail = new List<SendCancelTicketDigitalEmailOrderDetail>(),
-                                    DeliveryDate = sale.date
-                                };
-                            }
-
-                            var sales = new List<SendTicketDigitalEmailSales>();
-                            foreach (var detail in sale.so_sale_detail)
-                            {
-                                var product = db.so_product.Where(x => x.productId == detail.productId).FirstOrDefault();
-                                if (product == null)
-                                    continue;
-
-                                if (sendTicketDigitalEmail.Order != null)
-                                {
-                                    var productOrder = delivery.Where(x => x.productId == detail.productId).FirstOrDefault();
-                                    //Si el producto esta dentro de la preventa
-                                    if (productOrder != null)
-                                    {
-                                        //Verificar si la cantidad es menor o igual a la preventa
-                                        if (detail.amount <= productOrder.amount)
-                                        {
-                                            //Si lo que se esta vendiendo es menor o igual a lo solicitado Agregar en Order y pasar al siguiente
-                                            sendTicketDigitalEmail.Order.OrderDetail.Add(new SendCancelTicketDigitalEmailOrderDetail
-                                            {
-                                                Amount = detail.amount, //Se usa el detail porque el amount puede ser menor
-                                                ProductName = product.code + " - " + product.name,
-                                                TotalPrice = (double)detail.amount * productOrder.price.Value,
-                                                UnitPrice = productOrder.price.Value
-                                            });
-                                        }
-                                        else
-                                        {
-                                            //Si es mayor hacer la resta y agregar a sale y preventa
-                                            sendTicketDigitalEmail.Order.OrderDetail.Add(new SendCancelTicketDigitalEmailOrderDetail
-                                            {
-                                                Amount = productOrder.amount,
-                                                ProductName = product.code + " - " + product.name,
-                                                TotalPrice = (double)productOrder.amount * productOrder.price.Value,
-                                                UnitPrice = productOrder.price.Value
-                                            });
-
-                                            sales.Add(new SendTicketDigitalEmailSales
-                                            {
-                                                Amount = detail.amount - productOrder.amount,
-                                                ProductName = product.code + " - " + product.name,
-                                                TotalPrice = Convert.ToDouble(detail.amount - productOrder.amount) * Convert.ToDouble(detail.price),
-                                                UnitPrice = Convert.ToDouble(detail.price)
-                                            });
-
-                                        }
-                                        continue;
-                                    }
-                                }
-
-                                sales.Add(new SendTicketDigitalEmailSales
-                                {
-                                    Amount = detail.amount,
-                                    ProductName = product.code + " - " + product.name,
-                                    TotalPrice = Convert.ToDouble(detail.amount) * Convert.ToDouble(detail.price),
-                                    UnitPrice = Convert.ToDouble(detail.price)
-                                });
-                            }
-                            sendTicketDigitalEmail.Sales = sales;
-
-                            //Se envia el ticket
-                            var emailService = new EmailService();
-                            var response = emailService.SendCancelTicketDigitalEmail(sendTicketDigitalEmail);
-                        }
-                        else
+                    if (customer.CustomerAdditionalData.Count() == 0)
+                        return ResponseBase<MsgResponseBase>.Create(new List<string>()
                         {
-                            var saleAD = db.so_sale_aditional_data.Where(x => x.saleId == sale.saleId).FirstOrDefault();
-                            string PaymentMethod = saleAD == null ? null : saleAD.paymentMethod;
-                            //Se prepara la información
-                            var route = db.so_route_customer.Where(x => x.customerId == sale.customerId).Select(x => x.so_route.code).FirstOrDefault();
-                            var user = db.so_user.Where(x => x.userId == sale.userId).FirstOrDefault();
-                            //DataTable dtTicket = GetPromotionsTicketDigital(db, sale.saleId);
+                            "No se puede enviar el email", "No cuenta con datos suficientes (Datos adicionales.)"
+                        });
 
-                            var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
-                            {
-                                CustomerName = customer.name,
-                                RouteAddress = route,
-                                CustomerEmail = customer.email,
-                                CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
-                                Date = sale.date,
-                                PaymentMethod = PaymentMethod,
-                                SellerName = user.code + " - " + user.name,
-                                //dtTicket = dtTicket,
-                                ReferenceCode = customer.customerId.ToString()
-                            };
-
-                            //Preparar Order
-                            List<so_delivery_detail> delivery = null;
-                            if (sale.deliveryId == 0)
-                                sendTicketDigitalEmail.Order = null;
-                            else
-                            {
-                                delivery = db.so_delivery_detail
-                                    .Where(x => x.deliveryId == sale.deliveryId)
-                                    .ToList();
-
-                                sendTicketDigitalEmail.Order = new SendTicketDigitalEmailOrder()
-                                {
-                                    OrderDetail = new List<SendTicketDigitalEmailOrderDetail>(),
-                                    DeliveryDate = sale.date
-                                };
-                            }
-
-                            var sales = new List<SendTicketDigitalEmailSales>();
-                            foreach (var detail in sale.so_sale_detail)
-                            {
-                                var product = db.so_product.Where(x => x.productId == detail.productId).FirstOrDefault();
-                                if (product == null)
-                                    continue;
-
-                                if (sendTicketDigitalEmail.Order != null)
-                                {
-                                    var productOrder = delivery.Where(x => x.productId == detail.productId).FirstOrDefault();
-                                    //Si el producto esta dentro de la preventa
-                                    if (productOrder != null)
-                                    {
-                                        //Verificar si la cantidad es menor o igual a la preventa
-                                        if (detail.amount <= productOrder.amount)
-                                        {
-                                            //Si lo que se esta vendiendo es menor o igual a lo solicitado Agregar en Order y pasar al siguiente
-                                            sendTicketDigitalEmail.Order.OrderDetail.Add(new SendTicketDigitalEmailOrderDetail
-                                            {
-                                                Amount = detail.amount, //Se usa el detail porque el amount puede ser menor
-                                                ProductName = product.code + " - " + product.name,
-                                                TotalPrice = (double)detail.amount * productOrder.price.Value,
-                                                UnitPrice = productOrder.price.Value
-                                            });
-                                        }
-                                        else
-                                        {
-                                            //Si es mayor hacer la resta y agregar a sale y preventa
-                                            sendTicketDigitalEmail.Order.OrderDetail.Add(new SendTicketDigitalEmailOrderDetail
-                                            {
-                                                Amount = productOrder.amount,
-                                                ProductName = product.code + " - " + product.name,
-                                                TotalPrice = (double)productOrder.amount * productOrder.price.Value,
-                                                UnitPrice = productOrder.price.Value
-                                            });
-
-                                            sales.Add(new SendTicketDigitalEmailSales
-                                            {
-                                                Amount = detail.amount - productOrder.amount,
-                                                ProductName = product.code + " - " + product.name,
-                                                TotalPrice = Convert.ToDouble(detail.amount - productOrder.amount) * Convert.ToDouble(detail.price),
-                                                UnitPrice = Convert.ToDouble(detail.price)
-                                            });
-
-                                        }
-                                        continue;
-                                    }
-                                }
-
-                                sales.Add(new SendTicketDigitalEmailSales
-                                {
-                                    Amount = detail.amount,
-                                    ProductName = product.code + " - " + product.name,
-                                    TotalPrice = Convert.ToDouble(detail.amount) * Convert.ToDouble(detail.price),
-                                    UnitPrice = Convert.ToDouble(detail.price)
-                                });
-                            }
-                            sendTicketDigitalEmail.Sales = sales;
-
-                            //Se envia el ticket
-                            var emailService = new EmailService();
-                            var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);
-                        }
-                        
-                    }
-                    else
+                    if (!customer.CustomerAdditionalData.FirstOrDefault().IsMailingActive)
                         return ResponseBase<MsgResponseBase>.Create(new List<string>()
                         {
                             "No se puede enviar el email", "El cliente no tiene activado el envio de Emails"
                         });
-                else
-                    return ResponseBase<MsgResponseBase>.Create(new List<string>()
-                    {
-                        "No se puede enviar el email", "No cuenta con datos suficientes (Datos adicionales.)"
-                    });
-            }
-            else
-            {
-                return ResponseBase<MsgResponseBase>.Create(new List<string>()
+
+                    request.Email = customer.email;
+                }
+
+                if (sale.state == 2)
                 {
-                    "No se puede enviar el email", "No cuenta con datos suficientes (Datos adicionales.)"
+                    var saleAD = db.so_sale_aditional_data.Where(x => x.saleId == sale.saleId).FirstOrDefault();
+                    string PaymentMethod = saleAD == null ? null : saleAD.paymentMethod;
+                    //Se prepara la información
+                    var route = db.so_route_customer.Where(x => x.customerId == sale.customerId).Select(x => x.so_route.code).FirstOrDefault();
+                    var user = db.so_user.Where(x => x.userId == sale.userId).FirstOrDefault();
+                    DataTable dtTicket = GetPromotionsTicketDigital(db, sale.saleId);
+
+                    var sendTicketDigitalEmail = new SendCancelTicketDigitalEmailRequest
+                    {
+                        CustomerName = customer.name,
+                        RouteAddress = route,
+                        CustomerEmail = request.Email,
+                        CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
+                        Date = sale.date,
+                        PaymentMethod = PaymentMethod,
+                        SellerName = user.code + " - " + user.name,
+                        dtTicket = dtTicket,
+                        ReferenceCode = customer.customerId.ToString()
+                    };
+
+                    //Preparar Order
+                    List<so_delivery_detail> delivery = null;
+                    if (sale.deliveryId == 0)
+                        sendTicketDigitalEmail.Order = null;
+                    else
+                    {
+                        delivery = db.so_delivery_detail
+                            .Where(x => x.deliveryId == sale.deliveryId)
+                            .ToList();
+
+                        sendTicketDigitalEmail.Order = new SendCancelTicketDigitalEmailOrder()
+                        {
+                            OrderDetail = new List<SendCancelTicketDigitalEmailOrderDetail>(),
+                            DeliveryDate = sale.date
+                        };
+                    }
+
+                    var sales = new List<SendTicketDigitalEmailSales>();
+                    foreach (var detail in sale.so_sale_detail)
+                    {
+                        var product = db.so_product.Where(x => x.productId == detail.productId).FirstOrDefault();
+                        if (product == null)
+                            continue;
+
+                        if (sendTicketDigitalEmail.Order != null)
+                        {
+                            var productOrder = delivery.Where(x => x.productId == detail.productId).FirstOrDefault();
+                            //Si el producto esta dentro de la preventa
+                            if (productOrder != null)
+                            {
+                                //Verificar si la cantidad es menor o igual a la preventa
+                                if (detail.amount <= productOrder.amount)
+                                {
+                                    //Si lo que se esta vendiendo es menor o igual a lo solicitado Agregar en Order y pasar al siguiente
+                                    sendTicketDigitalEmail.Order.OrderDetail.Add(new SendCancelTicketDigitalEmailOrderDetail
+                                    {
+                                        Amount = detail.amount, //Se usa el detail porque el amount puede ser menor
+                                        ProductName = product.code + " - " + product.name,
+                                        //TotalPrice = (double)detail.amount * productOrder.price.Value,
+                                        //UnitPrice = productOrder.price.Value,
+                                        TotalPrice = (double)detail.amount * detail.price,
+                                        UnitPrice = detail.price
+                                    });
+                                }
+                                else
+                                {
+                                    //Si es mayor hacer la resta y agregar a sale y preventa
+                                    sendTicketDigitalEmail.Order.OrderDetail.Add(new SendCancelTicketDigitalEmailOrderDetail
+                                    {
+                                        Amount = productOrder.amount,
+                                        ProductName = product.code + " - " + product.name,
+                                        //TotalPrice = (double)productOrder.amount * productOrder.price.Value,
+                                        //UnitPrice = productOrder.price.Value,
+                                        TotalPrice = (double)productOrder.amount * detail.price,
+                                        UnitPrice = detail.price
+                                    });
+
+                                    sales.Add(new SendTicketDigitalEmailSales
+                                    {
+                                        Amount = detail.amount - productOrder.amount,
+                                        ProductName = product.code + " - " + product.name,
+                                        TotalPrice = Convert.ToDouble(detail.amount - productOrder.amount) * Convert.ToDouble(detail.price),
+                                        UnitPrice = Convert.ToDouble(detail.price)
+                                    });
+
+                                }
+                                continue;
+                            }
+                        }
+
+                        sales.Add(new SendTicketDigitalEmailSales
+                        {
+                            Amount = detail.amount,
+                            ProductName = product.code + " - " + product.name,
+                            TotalPrice = Convert.ToDouble(detail.amount) * Convert.ToDouble(detail.price),
+                            UnitPrice = Convert.ToDouble(detail.price)
+                        });
+                    }
+                    sendTicketDigitalEmail.Sales = sales;
+
+                    //Se envia el ticket
+                    var emailService = new EmailService();
+                    var response = emailService.SendCancelTicketDigitalEmail(sendTicketDigitalEmail);
+                    if (!response.Status)
+                        return ResponseBase<MsgResponseBase>.Create(new List<string>(response.Errors));
+                }
+                else
+                {
+                    var saleAD = db.so_sale_aditional_data.Where(x => x.saleId == sale.saleId).FirstOrDefault();
+                    string PaymentMethod = saleAD == null ? null : saleAD.paymentMethod;
+                    //Se prepara la información
+                    var route = db.so_route_customer.Where(x => x.customerId == sale.customerId).Select(x => x.so_route.code).FirstOrDefault();
+                    var user = db.so_user.Where(x => x.userId == sale.userId).FirstOrDefault();
+                    DataTable dtTicket = GetPromotionsTicketDigital(db, sale.saleId);
+
+                    var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
+                    {
+                        CustomerName = customer.name,
+                        RouteAddress = route,
+                        CustomerEmail = request.Email,
+                        CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
+                        Date = sale.date,
+                        PaymentMethod = PaymentMethod,
+                        SellerName = user.code + " - " + user.name,
+                        dtTicket = dtTicket,
+                        ReferenceCode = customer.customerId.ToString()
+                    };
+
+                    //Preparar Order
+                    List<so_delivery_detail> delivery = null;
+                    if (sale.deliveryId == 0)
+                        sendTicketDigitalEmail.Order = null;
+                    else
+                    {
+                        delivery = db.so_delivery_detail
+                            .Where(x => x.deliveryId == sale.deliveryId)
+                            .ToList();
+
+                        sendTicketDigitalEmail.Order = new SendTicketDigitalEmailOrder()
+                        {
+                            OrderDetail = new List<SendTicketDigitalEmailOrderDetail>(),
+                            DeliveryDate = sale.date
+                        };
+                    }
+
+                    var sales = new List<SendTicketDigitalEmailSales>();
+                    foreach (var detail in sale.so_sale_detail)
+                    {
+                        var product = db.so_product.Where(x => x.productId == detail.productId).FirstOrDefault();
+                        if (product == null)
+                            continue;
+
+                        if (sendTicketDigitalEmail.Order != null)
+                        {
+                            var productOrder = delivery.Where(x => x.productId == detail.productId).FirstOrDefault();
+                            //Si el producto esta dentro de la preventa
+                            if (productOrder != null)
+                            {
+                                //Verificar si la cantidad es menor o igual a la preventa
+                                if (detail.amount <= productOrder.amount)
+                                {
+                                    //Si lo que se esta vendiendo es menor o igual a lo solicitado Agregar en Order y pasar al siguiente
+                                    sendTicketDigitalEmail.Order.OrderDetail.Add(new SendTicketDigitalEmailOrderDetail
+                                    {
+                                        Amount = detail.amount, //Se usa el detail porque el amount puede ser menor
+                                        ProductName = product.code + " - " + product.name,
+                                        //TotalPrice = (double)detail.amount * productOrder.price.Value,
+                                        //UnitPrice = productOrder.price.Value,
+                                        TotalPrice = (double)detail.amount * detail.price,
+                                        UnitPrice = detail.price
+                                    });
+                                }
+                                else
+                                {
+                                    //Si es mayor hacer la resta y agregar a sale y preventa
+                                    sendTicketDigitalEmail.Order.OrderDetail.Add(new SendTicketDigitalEmailOrderDetail
+                                    {
+                                        Amount = productOrder.amount,
+                                        ProductName = product.code + " - " + product.name,
+                                        //TotalPrice = (double)productOrder.amount * productOrder.price.Value,
+                                        //UnitPrice = productOrder.price.Value,
+                                        TotalPrice = (double)productOrder.amount * detail.price,
+                                        UnitPrice = detail.price
+                                    });
+
+                                    sales.Add(new SendTicketDigitalEmailSales
+                                    {
+                                        Amount = detail.amount - productOrder.amount,
+                                        ProductName = product.code + " - " + product.name,
+                                        TotalPrice = Convert.ToDouble(detail.amount - productOrder.amount) * Convert.ToDouble(detail.price),
+                                        UnitPrice = Convert.ToDouble(detail.price)
+                                    });
+
+                                }
+                                continue;
+                            }
+                        }
+
+                        sales.Add(new SendTicketDigitalEmailSales
+                        {
+                            Amount = detail.amount,
+                            ProductName = product.code + " - " + product.name,
+                            TotalPrice = Convert.ToDouble(detail.amount) * Convert.ToDouble(detail.price),
+                            UnitPrice = Convert.ToDouble(detail.price)
+                        });
+                    }
+
+                    sendTicketDigitalEmail.CancelTicketLink = GetCancelLinkByCustomerId(customer.customerId);
+                    sendTicketDigitalEmail.Sales = sales;
+
+                    //Se envia el ticket
+                    var emailService = new EmailService();
+                    var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);
+                    if (!response.Status)
+                        return ResponseBase<MsgResponseBase>.Create(new List<string>(response.Errors));
+                }
+
+                return ResponseBase<MsgResponseBase>.Create(new MsgResponseBase()
+                {
+                    Msg = "Se ha enviadó con éxito"
                 });
             }
-
-            return ResponseBase<MsgResponseBase>.Create(new MsgResponseBase()
-            {
-                Msg = "Se ha enviadó con éxito"
-            });
         }
     }
 }

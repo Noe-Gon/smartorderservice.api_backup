@@ -25,7 +25,7 @@ namespace SmartOrderService.Models.Requests
         public string PaymentMethod { get; set; }
         public string CancelTicketLink { get; set; }
         public List<SendTicketDigitalEmailSales> Sales { get; set; }
-        //public DataTable dtTicket { get; set; }
+        public DataTable dtTicket { get; set; }
         public SendTicketDigitalEmailOrder Order { get; set; }
         public string ReferenceCode { get; set; }
     }
@@ -58,7 +58,7 @@ namespace SmartOrderService.Models.Requests
         public string PaymentMethod { get; set; }
         public string ReferenceCode { get; set; }
         public List<SendTicketDigitalEmailSales> Sales { get; set; }
-        //public DataTable dtTicket { get; set; }
+        public DataTable dtTicket { get; set; }
         public SendCancelTicketDigitalEmailOrder Order { get; set; }
     }
 

@@ -717,6 +717,13 @@ namespace SmartOrderService.Services
 
             //var orderToCancel = db.so_order.Where(x => x.orderId == orderId && x.status).FirstOrDefault();
             var orderToCancel = db.so_order.SingleOrDefault(x => x.orderId == orderId);
+
+            if (orderToCancel == null)
+                return ResponseBase<SendOrderResponse>.Create(new List<string>()
+                {
+                    "No se encontró el predido"
+                });
+
             orderToCancel.modifiedon = DateTime.Now;
             orderToCancel.modifiedby = userId;
             orderToCancel.status = false;
@@ -727,14 +734,31 @@ namespace SmartOrderService.Services
                 .Select(x => x.routeId)
                 .FirstOrDefault();
 
-            SendOrderEmail(orderToCancel, routeId);
-
             db.SaveChanges();
 
-            return ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
+            try
             {
-                Msg = "Orden cancelada con exitó"
-            });
+                string mailRespnse = SendOrderEmail(orderToCancel, routeId);
+
+                return ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
+                {
+                    Msg = "Orden cancelada con exitó - Email: " + mailRespnse
+                });
+            }
+            catch (Exception e)
+            {
+                var response = ResponseBase<SendOrderResponse>.Create(new SendOrderResponse
+                {
+                    Msg = "Orden cancelada con exitó"
+                });
+
+                response.Errors = new List<string>()
+                {
+                    "No se envió el email", e.Message
+                };
+
+                return response;
+            }  
         }
 
         public List<so_delivery_devolution> getDevolutionsByPeriod(int UserId,DateTime Begin,DateTime End)
