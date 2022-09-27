@@ -47,6 +47,10 @@ namespace SmartOrderService.Models.DTO
 
         public string StatusCode { get; set; }
 
+        public string originSystem { get; set; }
+
+        public string originSystemDescription { get; set; }
+
         public List<DeliveryDetailDto> DeliveryDetail { get; set; }
 
         public List<DeliveryReplacementDto> DeliveryReplacements { get; set; }

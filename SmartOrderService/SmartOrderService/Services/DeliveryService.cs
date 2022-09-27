@@ -254,6 +254,7 @@ namespace SmartOrderService.Services
                 .FirstOrDefault();
 
             var deliveryStatus = db.so_delivery_additional_data.Where(x => x.deliveryId == delivery.deliveryId).Select(x => x.DeliveryStatus).FirstOrDefault();
+            var deliveryAD = db.so_delivery_additional_data.Where(x => x.deliveryId == delivery.deliveryId).FirstOrDefault();
 
             if (deliveryStatus == null)
                 deliveryStatus = deliveryStatusUndifined ?? new so_delivery_status
@@ -271,7 +272,9 @@ namespace SmartOrderService.Services
                 DeliveryCode = delivery.code,
                 StatusId = deliveryStatus.deliveryStatusId,
                 StatusName = deliveryStatus.Description,
-                StatusCode = deliveryStatus.Code
+                StatusCode = deliveryStatus.Code,
+                originSystem = deliveryAD == null ? "Unidentified" : (deliveryAD.originSystem == null ? "Unidentified" : deliveryAD.originSystem),
+                originSystemDescription = deliveryAD == null ? "No identificado" : (deliveryAD.originSystemDescription == null ? "No identificado" : deliveryAD.originSystemDescription),
             };
 
             var details = delivery.so_delivery_detail.Where(d => d.status);
