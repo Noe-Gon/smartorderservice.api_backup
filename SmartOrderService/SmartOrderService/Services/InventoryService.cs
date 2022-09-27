@@ -364,7 +364,7 @@ namespace SmartOrderService.Services
                         foreach (var delivery in responsePreventaAPI.data)
                         {
                             //Buscar si existe esa preventa con CODE
-                            var deliveryExist = db.so_delivery.Where(x => x.code == delivery.code).FirstOrDefault();
+                            var deliveryExist = db.so_delivery.Where(x => x.code == delivery.code && x.inventoryId == inventoryId).FirstOrDefault();
                             //Si esta registrada ignorar y pasar al siguiente
                             if (deliveryExist != null)
                             {
