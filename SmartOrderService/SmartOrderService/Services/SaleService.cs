@@ -356,7 +356,7 @@ namespace SmartOrderService.Services
             if (deliveryId != 0)
                 registeredSale = db.so_sale.
                      Where(
-                    s => (DateTime.Compare(s.date, date) == 0 || deliveryId.Equals(s.deliveryId.Value))
+                    s => deliveryId.Equals(s.deliveryId.Value)
                      && s.userId.Equals(userId)
                      && s.customerId.Equals(customerId)
                      && s.status
