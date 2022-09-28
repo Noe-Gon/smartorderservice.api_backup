@@ -155,26 +155,8 @@ namespace SmartOrderService.Services
 
                 UoWConsumer.CustomerRepository.Insert(newCustomer);
 
-                //Agregar el Price List
-                var customerIds = UoWConsumer.RouteCustomerRepository
-                    .Get(x => x.routeId == request.RouteId && x.so_customer.code.Length > 10)
-                    .Select(x => x.customerId);
-
-                if (customerIds.Count() == 0)
-                    return ResponseBase<InsertConsumerResponse>.Create(new List<string>()
-                    {
-                        "No hay usuarios para esa ruta"
-                    });
-
-                int productPriceListId = UoWConsumer.CustomerProductPriceListRepository
-                    .Get(x => customerIds.Contains(x.customerId) && !x.so_products_price_list.is_master)
-                    .Select(x => x.products_price_listId)
-                    .FirstOrDefault();
-
-                string productPriceListCode = UoWConsumer.ProductPriceListRepository
-                    .Get(x => x.products_price_listId == productPriceListId)
-                    .Select(x => x.code)
-                    .FirstOrDefault();
+                //Buscar si existe un Cliente Vario
+                var productPriceList = GetProductPriceList(route);
 
                 var newCustomerProductPriceList = new so_customer_products_price_list
                 {
@@ -183,7 +165,7 @@ namespace SmartOrderService.Services
                     customerId = newCustomer.customerId,
                     modifiedby = 2777,
                     modifiedon = DateTime.Now,
-                    products_price_listId = productPriceListId,
+                    products_price_listId = productPriceList.products_price_listId,
                     status = true
                 };
 
@@ -240,7 +222,7 @@ namespace SmartOrderService.Services
                     Longitude = newCustomer.longitude,
                     Address = address,
                     Days = request.Days,
-                    PriceListId = Convert.ToInt32(productPriceListCode),
+                    PriceListId = Convert.ToInt32(productPriceList.code),
                     EntityId = null,
                     CountryIdName = request.CountryName,
                     MunicipalityIdName = request.MunicipalityName,
@@ -1667,6 +1649,43 @@ namespace SmartOrderService.Services
             }
 
             return ResponseBase<GetConsumerResponse>.Create(dto);
+        }
+
+        public so_products_price_list GetProductPriceList(so_route route)
+        {
+            so_products_price_list response = null;
+
+            var customerVario = UoWConsumer.RouteCustomerVarioRepository
+                    .Get(x => x.RouteId == route.routeId)
+                    .FirstOrDefault();
+
+            //So hay cliente vario obtener su lista
+            if (customerVario != null)
+                response = UoWConsumer.CustomerProductPriceListRepository
+                    .Get(x => x.customerId == customerVario.CustomerId)
+                    .Select(x => x.so_products_price_list)
+                    .FirstOrDefault();
+
+            //Si ni hay lista Buscar la lista maestra
+            if(response == null)
+                response = UoWConsumer.ProductPriceListRepository
+                    .Get(x => x.is_master && x.branchId == route.branchId && x.status)
+                    .FirstOrDefault();
+
+            //Si no hay lista maestra buscar la lista del primer cliente de la ruta
+            if(response == null)
+            {
+                var customerIds = UoWConsumer.RouteCustomerRepository
+                    .Get(x => x.routeId == route.routeId && x.so_customer.code.Length > 10)
+                    .Select(x => x.customerId);
+
+                response = UoWConsumer.CustomerProductPriceListRepository
+                   .Get(x => customerIds.Contains(x.customerId) && !x.so_products_price_list.is_master)
+                   .Select(x => x.so_products_price_list)
+                   .FirstOrDefault();
+            }
+
+            return response;
         }
 
         public void Dispose()
