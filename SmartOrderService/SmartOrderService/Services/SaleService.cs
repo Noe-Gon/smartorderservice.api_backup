@@ -285,14 +285,25 @@ namespace SmartOrderService.Services
             DateTime date = DateTime.Parse(sale.Date);
             int customerId = sale.CustomerId;
             int deliveryId = sale.DeliveryId;
-            var registeredSale = db.so_sale.
+
+            so_sale registeredSale = null;
+
+            if (deliveryId != 0)
+                registeredSale = db.so_sale.
                      Where(
-                    s => (DateTime.Compare(s.date, date) == 0 || deliveryId.Equals(s.deliveryId.Value))
+                    s => deliveryId.Equals(s.deliveryId.Value)
                      && s.userId.Equals(userId)
                      && s.customerId.Equals(customerId)
                      && s.status
                      ).FirstOrDefault();
-
+            else
+                registeredSale = db.so_sale.
+                     Where(
+                    s => (DateTime.Compare(s.date, date) == 0)
+                     && s.userId.Equals(userId)
+                     && s.customerId.Equals(customerId)
+                     && s.status
+                     ).FirstOrDefault();
 
             if (registeredSale == null)
             {
