@@ -160,8 +160,9 @@ namespace SmartOrderService.Services
                             tdBodyPromociones += "<tr><td style='width:400px'>" + row["id"] + ") " + row["name_product"].ToString() + "</td>";
                             tdBodyPromociones += "<td style='width:100px'>" + row["amount"].ToString() + "</td>";
                             tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", row["sale_price"]) + "</td>";
-                            tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", 0) + "</td></tr>";
+                            tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", row["total_price"]) + "</td></tr>";
                             totalPromos += (int)row["amount"];
+                            total += Convert.ToDouble(row["total_price"]);
                         }
 
                         body = body.Replace("{TdBodyPromociones}", tdBodyPromociones);
@@ -305,9 +306,10 @@ namespace SmartOrderService.Services
                         {
                             tdBodyPromociones += "<tr><td style='width:400px'>" + row["id"] + ") " + row["name_product"].ToString() + "</td>";
                             tdBodyPromociones += "<td style='width:100px'>" + row["amount"].ToString() + "</td>";
-                            tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", 0) + "</td>";
-                            tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", 0) + "</td></tr>";
+                            tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", row["sale_price"]) + "</td>";
+                            tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", row["total_price"]) + "</td></tr>";
                             totalPromos += (int)row["amount"];
+                            total += Convert.ToDouble(row["total_price"]);
                         }
 
                         body = body.Replace("{TdBodyPromociones}", tdBodyPromociones);
