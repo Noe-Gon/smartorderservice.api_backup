@@ -222,7 +222,7 @@ namespace SmartOrderService.Services
                     Longitude = newCustomer.longitude,
                     Address = address,
                     Days = request.Days,
-                    PriceListId = Convert.ToInt32(productPriceList.code),
+                    PriceListId = productPriceList.is_master ? (int?)null : Convert.ToInt32(productPriceList.code),
                     EntityId = null,
                     CountryIdName = request.CountryName,
                     MunicipalityIdName = request.MunicipalityName,
