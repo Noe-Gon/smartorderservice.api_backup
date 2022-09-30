@@ -176,6 +176,7 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_synchronized_consumer_detail> so_synchronized_consumer_detail { get; set; }
         public virtual DbSet<Configuracion_WorkByCloud> Configuracion_WorkByCloud { get; set; }
         public virtual DbSet<so_promotion_type_catalog> so_promotion_type_catalog { get; set; }
+        public virtual DbSet<so_route_customer_vario> so_route_customer_vario { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

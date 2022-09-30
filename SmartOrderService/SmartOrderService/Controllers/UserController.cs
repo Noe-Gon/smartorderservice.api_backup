@@ -185,6 +185,13 @@ namespace SmartOrderService.Controllers
                     e.Message
                 }));
             }
+            catch (UserInUseException e)
+            {
+                return Content(HttpStatusCode.Conflict, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
             catch (Exception e)
             {
                 return Content(HttpStatusCode.InternalServerError, ResponseBase<AuthenticateLeaderCodeResponse>.Create(new List<string>()
@@ -192,7 +199,6 @@ namespace SmartOrderService.Controllers
                     e.Message
                 }));
             }
-
         }
 
         [HttpPost]
@@ -242,6 +248,13 @@ namespace SmartOrderService.Controllers
             catch (WorkdayNotFoundException e)
             {
                 return Content(HttpStatusCode.NotFound, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (UserInUseException e)
+            {
+                return Content(HttpStatusCode.Conflict, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
                 {
                     e.Message
                 }));

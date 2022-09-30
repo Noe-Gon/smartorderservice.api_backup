@@ -3016,6 +3016,12 @@ namespace SmartOrderService.Services
 
         public ResponseBase<MsgResponseBase> SenTicketDigital(SendTicketDigitalRequest request)
         {
+            if(request.SaleId == 0)
+                return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                        {
+                            "No se puede enviar el email", "No cuenta con datos suficientes"
+                        });
+
             using (var transaction = db.Database.BeginTransaction())
             {
                 var sale = db.so_sale.Where(s => s.saleId.Equals(request.SaleId)).FirstOrDefault();

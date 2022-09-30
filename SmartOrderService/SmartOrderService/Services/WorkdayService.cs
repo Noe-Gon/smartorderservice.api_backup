@@ -191,9 +191,12 @@ namespace SmartOrderService.Services
         public Workday FinishWorkday(Workday workday)
         {
             ERolTeam userRol = roleTeamService.GetUserRole(workday.UserId);
-            if (userRol == ERolTeam.SinAsignar || userRol == ERolTeam.Impulsor)
+            if(userRol == ERolTeam.SinAsignar)
+                FinishWorkdayProcess(workday);
+
+            if (userRol == ERolTeam.Impulsor)
             {
-                var workDayUpdated = FinishWorkdayProcess(workday);
+                var workDayUpdated = FinishTeamWorkdayProcess(workday);
                 //new RouteTeamTravelsService().SetClosingStatusRoutTeamTravels(workday.WorkdayId);
                 if (userRol == ERolTeam.Impulsor)
                 {
@@ -333,6 +336,81 @@ namespace SmartOrderService.Services
                         TemporalCloseInventory(finishWorkDay.so_user);
                         sRespuestaSp = UpdateArticleMovement(workday, db, dbContextTransaction);
                         if(sRespuestaSp != string.Empty)
+                        {
+                            throw new Exception("Ocurrio un problema: " + sRespuestaSp);
+                        }
+
+                        db.SaveChanges();
+                        workday.IsOpen = false;
+
+                        dbContextTransaction.Commit();
+                    }
+                    catch (Exception e)
+                    {
+                        dbContextTransaction.Rollback();
+                        throw new Exception(e.Message);
+                    }
+                }
+                //}
+            }
+            return workday;
+        }
+
+        public Workday FinishTeamWorkdayProcess(Workday workday)
+        {
+            int UserId = workday.UserId;
+            Guid WorkdayId = workday.WorkdayId;
+            String sRespuestaSp = string.Empty;
+
+            var currentWorkDay = db.so_work_day.Where(w =>
+                w.userId == UserId &&
+                w.work_dayId == WorkdayId
+            );
+
+            if (!currentWorkDay.Any())
+                throw new WorkdayNotFoundException();
+
+            var start = currentWorkDay.FirstOrDefault().date_start.Value;
+
+            if (currentWorkDay.FirstOrDefault().date_end.HasValue)
+            {
+                workday.IsOpen = false;
+                workday.DateEnd = currentWorkDay.FirstOrDefault().date_end.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+            }
+
+            else
+            {
+                //checamos que se tenga visita para todos los clientes
+                var today = DateTime.Today;
+
+                var visits = db.so_binnacle_visit.Where(
+                    b => b.userId.Equals(UserId)
+                    && DbFunctions.TruncateTime(b.createdon) >= DbFunctions.TruncateTime(start)
+                    && DbFunctions.TruncateTime(b.createdon) <= DbFunctions.TruncateTime(today)
+                ).Select(c => c.customerId).ToList();
+
+                var count = db.so_venta_View.Where(v => v.id_user == UserId
+                    && !visits.Contains(v.id_customer)
+                    && DbFunctions.TruncateTime(v.inventory_date) >= DbFunctions.TruncateTime(start)
+                    && DbFunctions.TruncateTime(v.inventory_date) <= DbFunctions.TruncateTime(today)
+                    ).Count();
+
+                if (count > 0)
+                    throw new NoCustomerVisitException("clientes pendientes en este viaje");
+
+                var finishWorkDay = currentWorkDay.FirstOrDefault();
+
+                using (var dbContextTransaction = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        finishWorkDay.closedby_device = UserId;
+                        finishWorkDay.date_end = DateTime.Now;
+                        finishWorkDay.modifiedon = DateTime.Now;
+                        workday.DateEnd = finishWorkDay.date_end.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+                        TemporalCloseInventory(finishWorkDay.so_user);
+                        sRespuestaSp = UpdateArticleMovement(workday, db, dbContextTransaction);
+                        if (sRespuestaSp != string.Empty)
                         {
                             throw new Exception("Ocurrio un problema: " + sRespuestaSp);
                         }
