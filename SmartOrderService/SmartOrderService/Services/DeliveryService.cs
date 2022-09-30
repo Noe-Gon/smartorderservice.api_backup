@@ -856,6 +856,29 @@ namespace SmartOrderService.Services
                     }).ToList()
                 }).ToList();
 
+            var deliveriesinSales = response.Select(x => x.DeliveryId).ToList();
+
+            var deliveries = db.so_delivery
+                .Where(x => inventoryIds.Contains(x.inventoryId) && !deliveriesinSales.Contains(x.deliveryId)
+                    && x.so_delivery_additional_data.DeliveryStatus.Code == DeliveryStatus.CANCELED)
+                .Select(x => new GetDeliveriesResponse()
+                {
+                    SaleId = 0,
+                    Address = x.so_customer.address,
+                    CustomerCode = x.so_customer.code,
+                    CustomerId = x.customerId,
+                    CustomerName = x.so_customer.name,
+                    DeliveryId = x.deliveryId,
+                    State = 0,
+                    UserId = 0,
+                    StatusId = x.so_delivery_additional_data == null ? deliveryStatusUndifined.deliveryStatusId : (x.so_delivery_additional_data.DeliveryStatus == null ? deliveryStatusUndifined.deliveryStatusId : x.so_delivery_additional_data.DeliveryStatus.deliveryStatusId),
+                    StatusCode = x.so_delivery_additional_data == null ? deliveryStatusUndifined.Code : (x.so_delivery_additional_data.DeliveryStatus == null ? deliveryStatusUndifined.Code : x.so_delivery_additional_data.DeliveryStatus.Code),
+                    StatusName = x.so_delivery_additional_data == null ? deliveryStatusUndifined.Description : (x.so_delivery_additional_data.DeliveryStatus == null ? deliveryStatusUndifined.Description : x.so_delivery_additional_data.DeliveryStatus.Description),
+                    //Products =  new List<GetDeliveriesProduct>()
+                }).ToList();
+
+            response.AddRange(deliveries);
+
             return ResponseBase<List<GetDeliveriesResponse>>.Create(response);
         }
 
