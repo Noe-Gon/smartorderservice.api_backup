@@ -1654,19 +1654,24 @@ namespace SmartOrderService.Services
         {
             so_products_price_list response = null;
 
-            var customerVario = UoWConsumer.RouteCustomerVarioRepository
-                    .Get(x => x.RouteId == route.routeId)
+            var customerVario = UoWConsumer.RouteCustomerRepository
+                    .Get(x => x.routeId == route.routeId && x.so_customer.name == "cliente_vario")
                     .FirstOrDefault();
+
+            //Logica que será para la siguiente iniciativa
+            //var customerVario = UoWConsumer.RouteCustomerVarioRepository
+            //        .Get(x => x.RouteId == route.routeId)
+            //        .FirstOrDefault();
 
             //So hay cliente vario obtener su lista
             if (customerVario != null)
                 response = UoWConsumer.CustomerProductPriceListRepository
-                    .Get(x => x.customerId == customerVario.CustomerId)
+                    .Get(x => x.customerId == customerVario.customerId)
                     .Select(x => x.so_products_price_list)
                     .FirstOrDefault();
 
             //Si ni hay lista Buscar la lista maestra
-            if(response == null)
+            if (response == null)
                 response = UoWConsumer.ProductPriceListRepository
                     .Get(x => x.is_master && x.branchId == route.branchId && x.status)
                     .FirstOrDefault();

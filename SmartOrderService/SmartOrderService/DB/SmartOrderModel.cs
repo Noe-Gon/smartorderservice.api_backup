@@ -171,7 +171,7 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_synchronized_consumer> so_synchronized_consumer { get; set; }
         public virtual DbSet<so_synchronized_consumer_detail> so_synchronized_consumer_detail { get; set; }
         public virtual DbSet<Configuracion_WorkByCloud> Configuracion_WorkByCloud { get; set; }
-        public virtual DbSet<so_route_customer_vario> so_route_customer_vario { get; set; }
+        //public virtual DbSet<so_route_customer_vario> so_route_customer_vario { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -1862,15 +1862,15 @@ namespace SmartOrderService.DB
             modelBuilder.Entity<Configuracion_WorkByCloud>()
                 .HasKey(x => x.wbcConfId);
 
-            var routeCustomerVario = modelBuilder.Entity<so_route_customer_vario>();
-            routeCustomerVario.HasKey(x => x.Id);
-            routeCustomerVario.Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
-            routeCustomerVario.HasRequired(x => x.Customer)
-                .WithMany(x => x.RouteCustomerVario)
-                .HasForeignKey(x => x.CustomerId);
-            routeCustomerVario.HasRequired(x => x.Route)
-                .WithMany(x => x.RouteCustomerVario)
-                .HasForeignKey(x => x.RouteId);
+            //var routeCustomerVario = modelBuilder.Entity<so_route_customer_vario>();
+            //routeCustomerVario.HasKey(x => x.Id);
+            //routeCustomerVario.Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            //routeCustomerVario.HasRequired(x => x.Customer)
+            //    .WithMany(x => x.RouteCustomerVario)
+            //    .HasForeignKey(x => x.CustomerId);
+            //routeCustomerVario.HasRequired(x => x.Route)
+            //    .WithMany(x => x.RouteCustomerVario)
+            //    .HasForeignKey(x => x.RouteId);
         }
     }
 }
