@@ -292,7 +292,6 @@ namespace SmartOrderService.Services
                 if (currentInventory == null)
                     throw new InventoryEmptyException();
 
-                LoadDeliveries(currentInventory.inventoryId);
                 Inventories.Add(MapInventory(currentInventory));
 
             }
@@ -309,14 +308,12 @@ namespace SmartOrderService.Services
 
                 foreach (var UserInventory in UserInventories)
                 {
-                    LoadDeliveries(UserInventory.inventoryId);
                     Inventories.Add(MapInventory(UserInventory));
                 }
 
             }
 
             var inventoryService = new InventoryService();
-            var response = inventoryService.LoadDeliveries(Inventories.FirstOrDefault().InventoryId);
 
             return Inventories;
 
