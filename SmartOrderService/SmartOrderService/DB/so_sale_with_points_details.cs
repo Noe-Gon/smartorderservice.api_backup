@@ -14,7 +14,7 @@ namespace SmartOrderService.DB
         public int saleWithPointDetailId { get; set; }
         //[ForeignKey("saleWithPointsId")]
         public int saleWithPointsId { get; set; }
-        //[ForeignKey("productIdproductId")]
+        //[ForeignKey("productId")]
         public int productId { get; set; }
         public int Amount { get; set; }
         public int pointsPerUnit { get; set; }

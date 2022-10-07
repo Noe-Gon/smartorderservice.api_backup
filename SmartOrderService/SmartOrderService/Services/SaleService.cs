@@ -1780,7 +1780,7 @@ namespace SmartOrderService.Services
             entitySale.modifiedon = DateTime.Now;
             entitySale.createdon = DateTime.Now;
             entitySale.status = true;
-
+          
             return entitySale;
         }
 
