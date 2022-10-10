@@ -1474,11 +1474,21 @@ namespace SmartOrderService.Services
 
         public string GetCancelLinkByCustomerId(int customerId)
         {
-            var portalLinkLogs = db.so_portal_links_logs
-                .Where(x => x.CustomerId == customerId && x.Status == (int)PortalLinks.STATUS.PENDING && x.Type == (int)PortalLinks.TYPE.EMAIL_DEACTIVATION)
-                .FirstOrDefault();
+            //Ver si al usuario Tiene activado la recepción del ticket
+            bool ticketIsActive = db.so_customerr_additional_data
+                .Where(x => x.CustomerId == customerId && x.Status == 1).FirstOrDefault().IsMailingActive;
 
-            if(portalLinkLogs == null)
+            so_portal_links_log portalLinkLogs; 
+            if(ticketIsActive)
+                portalLinkLogs = db.so_portal_links_logs
+                    .Where(x => x.CustomerId == customerId && x.Status == (int)PortalLinks.STATUS.PENDING && x.Type == (int)PortalLinks.TYPE.EMAIL_DEACTIVATION)
+                    .FirstOrDefault();
+            else
+                portalLinkLogs = db.so_portal_links_logs
+                        .Where(x => x.CustomerId == customerId && x.Status == (int)PortalLinks.STATUS.PENDING || x.Status == (int)PortalLinks.STATUS.ACTIVATED || x.Status == (int)PortalLinks.STATUS.CANCELED && x.Type == (int)PortalLinks.TYPE.EMAIL_DEACTIVATION)
+                        .FirstOrDefault();
+
+            if (portalLinkLogs == null)
             {
                 //Generar el link para cancelar el envio de correo
                 Guid id = Guid.NewGuid();
@@ -2197,6 +2207,8 @@ namespace SmartOrderService.Services
                     var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);
                     if (!response.Status)
                         return ResponseBase<MsgResponseBase>.Create(new List<string>(response.Errors));
+
+                    transaction.Commit();
                 }
 
                 return ResponseBase<MsgResponseBase>.Create(new MsgResponseBase()
