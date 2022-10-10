@@ -9,11 +9,14 @@ using SmartOrderService.Services;
 using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.Utils;
+using SmartOrderService.Models.Locks;
 
 namespace SmartOrderService.Controllers
 {
     public class WorkdayController : ApiController
     {
+        private static Dictionary<string, WorkdayLock> mapObjectService = new Dictionary<string, WorkdayLock>();
+
         // GET: api/Workday
         public HttpResponseMessage Get([FromUri]WorkDayRequest request)
         {
@@ -66,10 +69,36 @@ namespace SmartOrderService.Controllers
         // POST: api/Workday
         public HttpResponseMessage Post([FromBody]Workday workday)
         {
-            WorkdayService service = new WorkdayService();
+            
             HttpResponseMessage response;
-            try { 
-                workday = service.createWorkday(workday.UserId);
+            try {
+                WorkdayLock serviceLock = new WorkdayLock();
+                RouteTeamService servce = new RouteTeamService();
+                var routeId = servce.searchRouteId(workday.UserId);
+
+                if (mapObjectService.ContainsKey(routeId.ToString()))
+                {
+                    serviceLock = mapObjectService[routeId.ToString()];
+                    serviceLock.LastUser = workday.UserId;
+                }
+                else
+                {
+                    serviceLock = new WorkdayLock
+                    {
+                        LastUser = workday.UserId,
+                        WorkdayService = new WorkdayService()
+                    };
+                    mapObjectService.Add(routeId.ToString(), serviceLock);
+                }
+
+                lock (serviceLock.WorkdayService)
+                {
+                    workday = serviceLock.WorkdayService.createWorkday(workday.UserId);
+
+                    if (serviceLock.LastUser == workday.UserId)
+                        mapObjectService.Remove(routeId.ToString());
+                }
+               
                 response = Request.CreateResponse(HttpStatusCode.Created, workday);
             }
             catch (NotSupportedException e)
@@ -80,7 +109,10 @@ namespace SmartOrderService.Controllers
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict, "Usuario no registrado");
             }
-          
+            catch (ArgumentException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Forbidden, "Error: " + e.Message);
+            }
             catch (Exception e)
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict, "Error: "+e.Message);

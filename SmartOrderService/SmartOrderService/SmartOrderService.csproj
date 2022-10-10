@@ -602,6 +602,7 @@
     <Compile Include="Models\DTO\ProductDto.cs" />
     <Compile Include="Models\DTO\ProductArticle.cs" />
     <Compile Include="Models\DTO\Promotion.cs" />
+    <Compile Include="Models\Locks\WorkdayLock.cs" />
     <Compile Include="Models\Message\SaleModels.cs" />
     <Compile Include="Models\Message\SaleTeamMessage.cs" />
     <Compile Include="Models\Requests\CRMRequests.cs" />
