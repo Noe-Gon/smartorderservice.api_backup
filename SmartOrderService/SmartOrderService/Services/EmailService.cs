@@ -158,6 +158,7 @@ namespace SmartOrderService.Services
                         foreach (DataRow row in request.dtTicket.Rows)
                         {
                             tdBodyPromociones += "<tr><td style='width:400px'>" + row["id"] + ") " + row["name_product"].ToString() + "</td>";
+                            tdBodyPromociones += "<td style='width:100px'>" + row["name"] + "</td>";
                             tdBodyPromociones += "<td style='width:100px'>" + row["amount"].ToString() + "</td>";
                             tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", row["sale_price"]) + "</td>";
                             tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", row["total_price"]) + "</td></tr>";
@@ -230,6 +231,8 @@ namespace SmartOrderService.Services
 
                     //Orders
                     if (request.Order == null)
+                        body = body.Replace("{OrderTableTamplate}", "");
+                    else if (request.Order.OrderDetail.Count() == 0)
                         body = body.Replace("{OrderTableTamplate}", "");
                     else
                     {
@@ -305,6 +308,7 @@ namespace SmartOrderService.Services
                         foreach (DataRow row in request.dtTicket.Rows)
                         {
                             tdBodyPromociones += "<tr><td style='width:400px'>" + row["id"] + ") " + row["name_product"].ToString() + "</td>";
+                            tdBodyPromociones += "<td style='width:100px'>" + row["name"] + "</td>";
                             tdBodyPromociones += "<td style='width:100px'>" + row["amount"].ToString() + "</td>";
                             tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", row["sale_price"]) + "</td>";
                             tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", row["total_price"]) + "</td></tr>";
