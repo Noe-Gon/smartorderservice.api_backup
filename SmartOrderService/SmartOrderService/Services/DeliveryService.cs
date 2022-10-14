@@ -254,6 +254,7 @@ namespace SmartOrderService.Services
                 .FirstOrDefault();
 
             var deliveryStatus = db.so_delivery_additional_data.Where(x => x.deliveryId == delivery.deliveryId).Select(x => x.DeliveryStatus).FirstOrDefault();
+            var deliveryAD = db.so_delivery_additional_data.Where(x => x.deliveryId == delivery.deliveryId).FirstOrDefault();
 
             if (deliveryStatus == null)
                 deliveryStatus = deliveryStatusUndifined ?? new so_delivery_status
@@ -271,7 +272,9 @@ namespace SmartOrderService.Services
                 DeliveryCode = delivery.code,
                 StatusId = deliveryStatus.deliveryStatusId,
                 StatusName = deliveryStatus.Description,
-                StatusCode = deliveryStatus.Code
+                StatusCode = deliveryStatus.Code,
+                originSystem = deliveryAD == null ? "Unidentified" : (deliveryAD.originSystem == null ? "Unidentified" : deliveryAD.originSystem),
+                originSystemDescription = deliveryAD == null ? "No identificado" : (deliveryAD.originSystemDescription == null ? "No identificado" : deliveryAD.originSystemDescription),
             };
 
             var details = delivery.so_delivery_detail.Where(d => d.status);
@@ -853,6 +856,29 @@ namespace SmartOrderService.Services
                     }).ToList()
                 }).ToList();
 
+            var deliveriesinSales = response.Select(x => x.DeliveryId).ToList();
+
+            var deliveries = db.so_delivery
+                .Where(x => inventoryIds.Contains(x.inventoryId) && !deliveriesinSales.Contains(x.deliveryId)
+                    && x.so_delivery_additional_data.DeliveryStatus.Code == DeliveryStatus.CANCELED)
+                .Select(x => new GetDeliveriesResponse()
+                {
+                    SaleId = 0,
+                    Address = x.so_customer.address,
+                    CustomerCode = x.so_customer.code,
+                    CustomerId = x.customerId,
+                    CustomerName = x.so_customer.name,
+                    DeliveryId = x.deliveryId,
+                    State = 0,
+                    UserId = 0,
+                    StatusId = x.so_delivery_additional_data == null ? deliveryStatusUndifined.deliveryStatusId : (x.so_delivery_additional_data.DeliveryStatus == null ? deliveryStatusUndifined.deliveryStatusId : x.so_delivery_additional_data.DeliveryStatus.deliveryStatusId),
+                    StatusCode = x.so_delivery_additional_data == null ? deliveryStatusUndifined.Code : (x.so_delivery_additional_data.DeliveryStatus == null ? deliveryStatusUndifined.Code : x.so_delivery_additional_data.DeliveryStatus.Code),
+                    StatusName = x.so_delivery_additional_data == null ? deliveryStatusUndifined.Description : (x.so_delivery_additional_data.DeliveryStatus == null ? deliveryStatusUndifined.Description : x.so_delivery_additional_data.DeliveryStatus.Description),
+                    //Products =  new List<GetDeliveriesProduct>()
+                }).ToList();
+
+            response.AddRange(deliveries);
+
             return ResponseBase<List<GetDeliveriesResponse>>.Create(response);
         }
 
@@ -949,6 +975,10 @@ namespace SmartOrderService.Services
                 //Actualizar el status
                 else
                 {
+                    if (delivery.so_delivery_additional_data.DeliveryStatus != null)
+                        if (delivery.so_delivery_additional_data.DeliveryStatus.Code == DeliveryStatus.DELIVERED || delivery.so_delivery_additional_data.DeliveryStatus.Code == DeliveryStatus.PARTIALLY_DELIVERED)
+                            throw new BadRequestException("La entrega ya fue entregada");
+
                     delivery.modifiedon = DateTime.Now;
                     delivery.so_delivery_additional_data.deliveryStatusId = statusDelivery.deliveryStatusId;
                     db.so_delivery.Attach(delivery);

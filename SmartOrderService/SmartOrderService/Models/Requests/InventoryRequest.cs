@@ -38,6 +38,8 @@ namespace SmartOrderService.Models.Requests
         public int inventoryId { get; set; }
         public string code { get; set; }
         public int customerId { get; set; }
+        public string originSystem { get; set; }
+        public string originSystemDescription { get; set; }
         public DateTime deliveryDate { get; set; }
         public List<DeliveriesPreventaAPIProduct> products { get; set; }
     }

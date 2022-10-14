@@ -285,14 +285,26 @@ namespace SmartOrderService.Services
             DateTime date = DateTime.Parse(sale.Date);
             int customerId = sale.CustomerId;
             int deliveryId = sale.DeliveryId;
-            var registeredSale = db.so_sale.
+
+            so_sale registeredSale = null;
+
+            if (deliveryId != 0)
+                registeredSale = db.so_sale.
                      Where(
-                    s => (DateTime.Compare(s.date, date) == 0 || deliveryId.Equals(s.deliveryId.Value))
+                    s => deliveryId.Equals(s.deliveryId.Value)
                      && s.userId.Equals(userId)
                      && s.customerId.Equals(customerId)
                      && s.status
                      ).FirstOrDefault();
-
+            else
+                registeredSale = db.so_sale.
+                     Where(
+                    s => (DateTime.Compare(s.date, date) == 0)
+                     && s.userId.Equals(userId)
+                     && s.customerId.Equals(customerId)
+                     && s.status
+                     && s.inventoryId == sale.InventoryId
+                     ).FirstOrDefault();
 
             if (registeredSale == null)
             {
@@ -351,14 +363,24 @@ namespace SmartOrderService.Services
             int customerId = sale.CustomerId;
 
             int deliveryId = sale.DeliveryId;
+            so_sale registeredSale = null;
 
-            var registeredSale = db.so_sale.
-                 Where(
-                s => (DateTime.Compare(s.date, date) == 0 || deliveryId.Equals(s.deliveryId.Value))
-                 && s.userId.Equals(userId)
-                 && s.customerId.Equals(customerId)
-                 && s.status
-                 ).FirstOrDefault();
+            if (deliveryId != 0)
+                registeredSale = db.so_sale.
+                     Where(
+                    s => deliveryId.Equals(s.deliveryId.Value)
+                     && s.userId.Equals(userId)
+                     && s.customerId.Equals(customerId)
+                     && s.status
+                     ).FirstOrDefault();
+            else
+                registeredSale = db.so_sale.
+                     Where(
+                    s => (DateTime.Compare(s.date, date) == 0)
+                     && s.userId.Equals(userId)
+                     && s.customerId.Equals(customerId)
+                     && s.status
+                     ).FirstOrDefault();
 
             if (registeredSale == null)
             {
@@ -1453,11 +1475,22 @@ namespace SmartOrderService.Services
 
         public string GetCancelLinkByCustomerId(int customerId)
         {
-            var portalLinkLogs = db.so_portal_links_logs
-                .Where(x => x.CustomerId == customerId && x.Status == (int)PortalLinks.STATUS.PENDING && x.Type == (int)PortalLinks.TYPE.EMAIL_DEACTIVATION)
-                .FirstOrDefault();
+            //Ver si al usuario Tiene activado la recepción del ticket
+            bool ticketIsActive = db.so_customerr_additional_data
+                .Where(x => x.CustomerId == customerId && x.Status == 1).FirstOrDefault() != null ? db.so_customerr_additional_data
+                .Where(x => x.CustomerId == customerId && x.Status == 1).FirstOrDefault().IsMailingActive : false;
 
-            if(portalLinkLogs == null)
+            so_portal_links_log portalLinkLogs; 
+            if(ticketIsActive)
+                portalLinkLogs = db.so_portal_links_logs
+                    .Where(x => x.CustomerId == customerId && x.Status == (int)PortalLinks.STATUS.PENDING && x.Type == (int)PortalLinks.TYPE.EMAIL_DEACTIVATION)
+                    .FirstOrDefault();
+            else
+                portalLinkLogs = db.so_portal_links_logs
+                        .Where(x => x.CustomerId == customerId && x.Status == (int)PortalLinks.STATUS.PENDING || x.Status == (int)PortalLinks.STATUS.ACTIVATED || x.Status == (int)PortalLinks.STATUS.CANCELED && x.Type == (int)PortalLinks.TYPE.EMAIL_DEACTIVATION)
+                        .FirstOrDefault();
+
+            if (portalLinkLogs == null)
             {
                 //Generar el link para cancelar el envio de correo
                 Guid id = Guid.NewGuid();
@@ -2176,6 +2209,8 @@ namespace SmartOrderService.Services
                     var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);
                     if (!response.Status)
                         return ResponseBase<MsgResponseBase>.Create(new List<string>(response.Errors));
+
+                    transaction.Commit();
                 }
 
                 return ResponseBase<MsgResponseBase>.Create(new MsgResponseBase()

@@ -11,5 +11,10 @@ namespace SmartOrderService.CustomExceptions
         {
 
         }
+
+        public RelatedDriverNotFoundException(string msg) : base(msg)
+        {
+
+        }
     }
 }

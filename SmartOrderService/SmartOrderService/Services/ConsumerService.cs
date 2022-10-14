@@ -234,6 +234,9 @@ namespace SmartOrderService.Services
 
                 newCustomerAdditionalData.Code = CRMService.ConsumerToCRM(crmRequest, CRMService.TypeCreate, Method.POST);
 
+                if (newCustomerAdditionalData.Code == null)
+                    throw new CRMException("No se logró registrar en CRM");
+
                 UoWConsumer.CustomerAdditionalDataRepository.Insert(newCustomerAdditionalData);
                 UoWConsumer.CustomerDataRepository.Insert(newCustomerData);
                 UoWConsumer.RouteCustomerRepository.InsertByRange(newListRouteCustomer);
@@ -283,7 +286,6 @@ namespace SmartOrderService.Services
                     ReferenceCode = request.ReferenceCode,
                     RouteId = request.RouteId,
                     StateId = request.StateId,
-                    Status = request.Status,
                     Street = request.Street,
                     UserId = request.UserId
                 };
@@ -1621,7 +1623,8 @@ namespace SmartOrderService.Services
                 Days = daysInRoute,
                 address = customer.address,
                 Status = Convert.ToInt32(customer.status),
-                UserId = customer.createdby ?? 0
+                UserId = customer.createdby ?? 0,
+                CounterVisitsWithoutSales = customerAdditionalData == null ? 0 : customerAdditionalData.CounterVisitsWithoutSales
             };
 
             if (customerAdditionalData == null ? false : customerAdditionalData.NeighborhoodId != null)
