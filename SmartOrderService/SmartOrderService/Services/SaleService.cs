@@ -303,6 +303,7 @@ namespace SmartOrderService.Services
                      && s.userId.Equals(userId)
                      && s.customerId.Equals(customerId)
                      && s.status
+                     && s.inventoryId == sale.InventoryId
                      ).FirstOrDefault();
 
             if (registeredSale == null)
@@ -1476,7 +1477,8 @@ namespace SmartOrderService.Services
         {
             //Ver si al usuario Tiene activado la recepción del ticket
             bool ticketIsActive = db.so_customerr_additional_data
-                .Where(x => x.CustomerId == customerId && x.Status == 1).FirstOrDefault().IsMailingActive;
+                .Where(x => x.CustomerId == customerId && x.Status == 1).FirstOrDefault() != null ? db.so_customerr_additional_data
+                .Where(x => x.CustomerId == customerId && x.Status == 1).FirstOrDefault().IsMailingActive : false;
 
             so_portal_links_log portalLinkLogs; 
             if(ticketIsActive)

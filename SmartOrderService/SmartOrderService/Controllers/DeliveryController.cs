@@ -274,6 +274,13 @@ namespace SmartOrderService.Controllers
                     e.Message
                 }));
             }
+            catch (BadRequestException e)
+            {
+                return Content((HttpStatusCode)422, ResponseBase<DeliveredResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
             catch (Exception e)
             {
                 return Content(HttpStatusCode.InternalServerError, ResponseBase<DeliveredResponse>.Create(new List<string>()

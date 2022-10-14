@@ -157,8 +157,7 @@ namespace SmartOrderService.Services
                         body = body.Replace("id='lblpromociones' style='display:none'", "id='lblpromociones' style='display:'");
                         foreach (DataRow row in request.dtTicket.Rows)
                         {
-                            tdBodyPromociones += "<tr><td style='width:400px'>" + row["id"] + ") " + row["name_product"].ToString() + "</td>";
-                            tdBodyPromociones += "<td style='width:100px'>" + row["name"] + "</td>";
+                            tdBodyPromociones += "<tr><td style='width:400px'>" + row["id"] + ") " + row["name_product"].ToString() + " - (" + row["name"] + ")</td>";
                             tdBodyPromociones += "<td style='width:100px'>" + row["amount"].ToString() + "</td>";
                             tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", row["sale_price"]) + "</td>";
                             tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", row["total_price"]) + "</td></tr>";
@@ -307,8 +306,7 @@ namespace SmartOrderService.Services
                         body = body.Replace("id='lblpromociones' style='display:none'", "id='lblpromociones' style='display:'");
                         foreach (DataRow row in request.dtTicket.Rows)
                         {
-                            tdBodyPromociones += "<tr><td style='width:400px'>" + row["id"] + ") " + row["name_product"].ToString() + "</td>";
-                            tdBodyPromociones += "<td style='width:100px'>" + row["name"] + "</td>";
+                            tdBodyPromociones += "<tr><td style='width:400px'>" + row["id"] + ") " + row["name_product"].ToString() + " - (" + row["name"] + ")</td>";
                             tdBodyPromociones += "<td style='width:100px'>" + row["amount"].ToString() + "</td>";
                             tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", row["sale_price"]) + "</td>";
                             tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", row["total_price"]) + "</td></tr>";

@@ -301,6 +301,7 @@
     <Compile Include="CustomExceptions\BadPropiertiesException.cs" />
     <Compile Include="CustomExceptions\BadRequestException.cs" />
     <Compile Include="CustomExceptions\BillingDataException.cs" />
+    <Compile Include="CustomExceptions\CRMException.cs" />
     <Compile Include="CustomExceptions\CustomerBillingDataNotFoundException.cs" />
     <Compile Include="CustomExceptions\CustomerException.cs" />
     <Compile Include="CustomExceptions\CustomerNotFoundException.cs" />

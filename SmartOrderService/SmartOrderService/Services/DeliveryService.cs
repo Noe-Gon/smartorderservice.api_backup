@@ -975,6 +975,10 @@ namespace SmartOrderService.Services
                 //Actualizar el status
                 else
                 {
+                    if (delivery.so_delivery_additional_data.DeliveryStatus != null)
+                        if (delivery.so_delivery_additional_data.DeliveryStatus.Code == DeliveryStatus.DELIVERED || delivery.so_delivery_additional_data.DeliveryStatus.Code == DeliveryStatus.PARTIALLY_DELIVERED)
+                            throw new BadRequestException("La entrega ya fue entregada");
+
                     delivery.modifiedon = DateTime.Now;
                     delivery.so_delivery_additional_data.deliveryStatusId = statusDelivery.deliveryStatusId;
                     db.so_delivery.Attach(delivery);
