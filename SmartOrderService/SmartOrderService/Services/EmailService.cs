@@ -222,6 +222,7 @@ namespace SmartOrderService.Services
                     body = body.Replace("{RouteAddress}", request.RouteAddress);
                     body = body.Replace("{SellerName}", request.SellerName);
                     body = body.Replace("{CancelDate}", request.Date.ToString("dd/MMM/yy"));
+                    body = body.Replace("{CancelTicketLink}", request.CancelTicketLink);
 
                     if (request.PaymentMethod == null || !string.IsNullOrEmpty(request.PaymentMethod))
                         body = body.Replace("{PaymentMethod}", "");

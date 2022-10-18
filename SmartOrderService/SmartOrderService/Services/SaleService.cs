@@ -1487,7 +1487,7 @@ namespace SmartOrderService.Services
                     .FirstOrDefault();
             else
                 portalLinkLogs = db.so_portal_links_logs
-                        .Where(x => x.CustomerId == customerId && x.Status == (int)PortalLinks.STATUS.PENDING || x.Status == (int)PortalLinks.STATUS.ACTIVATED || x.Status == (int)PortalLinks.STATUS.CANCELED && x.Type == (int)PortalLinks.TYPE.EMAIL_DEACTIVATION)
+                        .Where(x => x.CustomerId == customerId && (x.Status == (int)PortalLinks.STATUS.PENDING || x.Status == (int)PortalLinks.STATUS.ACTIVATED || x.Status == (int)PortalLinks.STATUS.CANCELED) && x.Type == (int)PortalLinks.TYPE.EMAIL_DEACTIVATION)
                         .FirstOrDefault();
 
             if (portalLinkLogs == null)
@@ -1992,15 +1992,15 @@ namespace SmartOrderService.Services
                     request.Email = customer.email;
                 }
 
+                var saleAD = db.so_sale_aditional_data.Where(x => x.saleId == sale.saleId).FirstOrDefault();
+                string PaymentMethod = saleAD == null ? null : saleAD.paymentMethod;
+                //Se prepara la información
+                string route = db.so_user_route.Where(x => x.userId == sale.userId).Select(x => x.so_route.code).FirstOrDefault(); //db.so_route_customer.Where(x => x.customerId == sale.customerId).Select(x => x.so_route.code).FirstOrDefault();
+                so_user user = db.so_user.Where(x => x.userId == sale.userId).FirstOrDefault();
+                DataTable dtTicket = GetPromotionsTicketDigital(db, sale.saleId);
+
                 if (sale.state == 2)
                 {
-                    var saleAD = db.so_sale_aditional_data.Where(x => x.saleId == sale.saleId).FirstOrDefault();
-                    string PaymentMethod = saleAD == null ? null : saleAD.paymentMethod;
-                    //Se prepara la información
-                    var route = db.so_route_customer.Where(x => x.customerId == sale.customerId).Select(x => x.so_route.code).FirstOrDefault();
-                    var user = db.so_user.Where(x => x.userId == sale.userId).FirstOrDefault();
-                    DataTable dtTicket = GetPromotionsTicketDigital(db, sale.saleId);
-
                     var sendTicketDigitalEmail = new SendCancelTicketDigitalEmailRequest
                     {
                         CustomerName = customer.name,
@@ -2092,6 +2092,7 @@ namespace SmartOrderService.Services
                             UnitPrice = Convert.ToDouble(detail.price)
                         });
                     }
+                    sendTicketDigitalEmail.CancelTicketLink = GetCancelLinkByCustomerId(customer.customerId);
                     sendTicketDigitalEmail.Sales = sales;
 
                     //Se envia el ticket
@@ -2102,13 +2103,7 @@ namespace SmartOrderService.Services
                 }
                 else
                 {
-                    var saleAD = db.so_sale_aditional_data.Where(x => x.saleId == sale.saleId).FirstOrDefault();
-                    string PaymentMethod = saleAD == null ? null : saleAD.paymentMethod;
-                    //Se prepara la información
-                    var route = db.so_route_customer.Where(x => x.customerId == sale.customerId).Select(x => x.so_route.code).FirstOrDefault();
-                    var user = db.so_user.Where(x => x.userId == sale.userId).FirstOrDefault();
-                    DataTable dtTicket = GetPromotionsTicketDigital(db, sale.saleId);
-
+                    
                     var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
                     {
                         CustomerName = customer.name,
@@ -2209,9 +2204,9 @@ namespace SmartOrderService.Services
                     var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);
                     if (!response.Status)
                         return ResponseBase<MsgResponseBase>.Create(new List<string>(response.Errors));
-
-                    transaction.Commit();
                 }
+
+                transaction.Commit();
 
                 return ResponseBase<MsgResponseBase>.Create(new MsgResponseBase()
                 {
