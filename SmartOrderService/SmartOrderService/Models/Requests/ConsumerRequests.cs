@@ -14,7 +14,6 @@ namespace SmartOrderService.Models.Requests
         public string Email_2 { get; set; }
         public string Phone { get; set; }
         public string Phone_2 { get; set; }
-        public int Status { get; set; }
         public double? Longitude { get; set; }
         public double? Latitude { get; set; }
         public string CFECode { get; set; }
@@ -47,7 +46,6 @@ namespace SmartOrderService.Models.Requests
         public string Email_2 { get; set; }
         public string Phone { get; set; }
         public string Phone_2 { get; set; }
-        public int Status { get; set; }
         public double? Longitude { get; set; }
         public double? Latitude { get; set; }
         public string CFECode { get; set; }

@@ -319,6 +319,13 @@ namespace SmartOrderService.Controllers
                     e.Message
                 }));
             }
+            catch (RelatedDriverNotFoundException e)
+            {
+                return Content(HttpStatusCode.Forbidden, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
             catch (UserInUseException e)
             {
                 return Content(HttpStatusCode.Conflict, ResponseBase<AuthenticateEmployeeCodeResponse>.Create(new List<string>()

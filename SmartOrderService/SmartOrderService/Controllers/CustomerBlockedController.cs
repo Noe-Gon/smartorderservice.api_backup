@@ -1,4 +1,5 @@
 
+using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;
 using SmartOrderService.Services;
@@ -58,6 +59,13 @@ namespace SmartOrderService.Controllers
 
                     return Content(System.Net.HttpStatusCode.BadRequest, reponse);
                 }
+            }
+            catch (WorkdayNotFoundException e)
+            {
+                return Content(System.Net.HttpStatusCode.NotFound, ResponseBase<BlockCustomerResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
             }
             catch (Exception e)
             {

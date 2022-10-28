@@ -95,6 +95,10 @@ namespace SmartOrderService.Models.Requests
 
     public class GetDeliveriesResponse
     {
+        public GetDeliveriesResponse()
+        {
+            Products = new List<GetDeliveriesProduct>();
+        }
         public int UserId { get; set; }
         public int SaleId { get; set; }
         public int DeliveryId { get; set; }

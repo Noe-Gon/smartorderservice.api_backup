@@ -199,6 +199,8 @@ namespace SmartOrderService.Models.Responses
     public class GetConsumerResponse : InsertConsumerResponse
     {
         public string address { get; set; }
+
+        public int CounterVisitsWithoutSales { get; set; }
     }
 
 }

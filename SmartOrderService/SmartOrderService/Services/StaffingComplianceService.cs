@@ -423,9 +423,13 @@ namespace SmartOrderService.Services
                     }
                     else
                     {
-                        exceptionMessages.Add("El impulsor no se ha autenticado");
+                        throw new RelatedDriverNotFoundException("El impulsor no se ha autenticado");
                     }
                 }
+            }
+            catch (RelatedDriverNotFoundException e)
+            {
+                throw e;
             }
             catch (UserInUseException e)
             {

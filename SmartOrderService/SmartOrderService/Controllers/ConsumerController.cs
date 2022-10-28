@@ -43,6 +43,13 @@ namespace SmartOrderService.Controllers
                     e.Message
                 }));
             }
+            catch (CRMException e)
+            {
+                return Content(HttpStatusCode.Conflict, ResponseBase<InsertConsumerResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
             catch (Exception e)
             {
                 return Content(HttpStatusCode.InternalServerError, ResponseBase<InsertConsumerResponse>.Create(new List<string>()
