@@ -260,8 +260,6 @@ namespace SmartOrderService.Controllers
                 }
                 catch (Exception){}
                
-
-            }
             }
             catch (ProductNotFoundBillingException e)
             {
@@ -301,9 +299,24 @@ namespace SmartOrderService.Controllers
             SaleTeamWithPoints saleResult = new SaleTeamWithPoints();
             try
             {
-                lock (objectService)
+                SaleService serviceLock = null;
+                RouteTeamService servce = new RouteTeamService();
+                var routeId = servce.searchRouteId(sale.UserId);
+                if (mapObjectService.ContainsKey(routeId.ToString()))
                 {
-                    saleResult = objectService.SaleTeamTransactionWithPoints(sale);
+                    serviceLock = mapObjectService[routeId.ToString()];
+                }
+                else
+                {
+                    serviceLock = new SaleService();
+                    mapObjectService.Add(routeId.ToString(), serviceLock);
+                }
+                if (serviceLock == null)
+                    serviceLock = objectService;
+
+                lock (serviceLock)
+                {
+                    saleResult = serviceLock.SaleTeamTransactionWithPoints(sale);
                 }
             }
             catch (ProductNotFoundBillingException e)

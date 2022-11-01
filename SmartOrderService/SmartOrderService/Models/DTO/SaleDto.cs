@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace SmartOrderService.Models.DTO
 {
@@ -17,8 +18,32 @@ namespace SmartOrderService.Models.DTO
         public bool Status { get; set; }
         public string PaymentMethod { get; set; }
         public string CreateDate { get; set; }
+
+        [JsonProperty("location")]
+        public string Location { get; set; }
+
+        [JsonProperty("IsSignature")]
+        public bool IsSignature { get; set; }
+
+        [JsonProperty("cause_no_signature")]
+        public string CauseNoSignature { get; set; }
+
         public List<SaleDetailResponse> SaleDetails { get; set; }
+        public List<SaleDetailsArticles> SaleDetailsArticles { get; set; }
         public List<SaleReplacement> SaleReplacements { get; set; }
         public List<SalePromotionResponse> SalePromotion { get; set; }
+        public List<SalePromotionCatalog> SalePromotionCatalog { get; set; }
+    }
+
+    public class SalePromotionCatalog
+    {
+        [JsonProperty("promotion_catalogId")]
+        public int PromotionCatalogId { get; set; }
+
+        [JsonProperty("amountSale")]
+        public double AmountSale { get; set; }
+
+        [JsonProperty("article_promotionalId")]
+        public int ArticlePromotionalId { get; set; }
     }
 }

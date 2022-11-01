@@ -20,5 +20,15 @@ namespace SmartOrderService.Controllers
             response = Request.CreateResponse(HttpStatusCode.OK,inventoryResult);
             return response;
         }
+
+        [HttpGet, Route("api/v2/routeteaminventory")]
+        public HttpResponseMessage GetRouteTeamInventoryv2(int inventoryId)
+        {
+            HttpResponseMessage response;
+            RouteTeamInventoryAvailableService service = new RouteTeamInventoryAvailableService();
+            var inventoryResult = service.GetRouteTeamInventoriesv2(inventoryId);
+            response = Request.CreateResponse(HttpStatusCode.OK, inventoryResult);
+            return response;
+        }
     }
 }

@@ -20,5 +20,7 @@ namespace SmartOrderService.DB
         public decimal price { get; set; }
 
         public decimal import { get; set; }
+
+        public virtual so_sale so_sale { get; set; }
     }
 }

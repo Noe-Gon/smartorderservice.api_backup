@@ -20,5 +20,13 @@ namespace SmartOrderService.DB
         public so_sale so_sale { get; set; }
         public string paymentMethod { get; set; }
 
+        [Column("cause_no_signature")]
+        public string CauseNoSignature { get; set; }
+
+        [Column("signature")]
+        public string Signature { get; set; }
+
+        [Column("location")]
+        public string Location { get; set; }
     }
 }

@@ -177,6 +177,8 @@ namespace SmartOrderService.DB
         public virtual DbSet<Configuracion_WorkByCloud> Configuracion_WorkByCloud { get; set; }
         public virtual DbSet<so_promotion_type_catalog> so_promotion_type_catalog { get; set; }
         public virtual DbSet<so_route_customer_vario> so_route_customer_vario { get; set; }
+        public virtual DbSet<so_article_promotional> so_article_promotional { get; set; }
+        public virtual DbSet<so_promotion_article> so_promotion_article { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -1417,6 +1419,11 @@ namespace SmartOrderService.DB
                 .WillCascadeOnDelete(false);
 
             modelBuilder.Entity<so_sale>()
+               .HasMany(e => e.so_sale_detail_article)
+               .WithRequired(e => e.so_sale)
+               .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<so_sale>()
                 .HasMany(e => e.so_sale_promotion)
                 .WithRequired(e => e.so_sale)
                 .WillCascadeOnDelete(false);
@@ -1894,6 +1901,20 @@ namespace SmartOrderService.DB
 
             modelBuilder.Entity<so_promotion_type_catalog>()
                 .HasKey(x => x.id);
+
+            modelBuilder.Entity<so_article_promotional>()
+               .Property(e => e.price)
+               .HasPrecision(10, 4);
+
+            modelBuilder.Entity<so_article_promotional>()
+                .HasMany(e => e.so_promotion_article)
+                .WithRequired(e => e.so_article_promotional)
+                .HasForeignKey(e => e.article_promotionalId)
+                .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<so_promotion_article>()
+                .Property(e => e.price)
+                .HasPrecision(10, 4);
         }
     }
 }

@@ -355,6 +355,7 @@
     <Compile Include="DB\so_api_version.cs" />
     <Compile Include="DB\so_application.cs" />
     <Compile Include="DB\so_article.cs" />
+    <Compile Include="DB\so_article_promotional.cs" />
     <Compile Include="DB\so_article_promotional_route.cs" />
     <Compile Include="DB\so_authentication_log.cs" />
     <Compile Include="DB\so_autoventa_View.cs" />
@@ -446,6 +447,7 @@
     <Compile Include="DB\so_product_company.cs" />
     <Compile Include="DB\so_product_tax.cs" />
     <Compile Include="DB\so_promotion.cs" />
+    <Compile Include="DB\so_promotion_article.cs" />
     <Compile Include="DB\so_promotion_article_movement.cs" />
     <Compile Include="DB\so_promotion_detail_article.cs" />
     <Compile Include="DB\so_promotion_detail_product.cs" />

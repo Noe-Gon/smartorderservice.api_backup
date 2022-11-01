@@ -35,6 +35,26 @@ namespace SmartOrderService.Services
             return routeTeamInventories;
         }
 
+        public GetRouteTeamInventory GetRouteTeamInventoriesv2(int inventoryId)
+        {
+            var response = new GetRouteTeamInventory();
+            var teamInventoryList = GetInventoryTeamByInventoryId(inventoryId);
+            List<RouteTeamInventoryDto> routeTeamInventories = new List<RouteTeamInventoryDto>();
+            foreach (var inventory in teamInventoryList)
+            {
+                routeTeamInventories.Add(Mapper.Map<RouteTeamInventoryDto>(inventory));
+            }
+            int routeId = (from g in db.so_inventory
+                           join i in db.so_route_team
+                           on g.userId equals i.userId
+                           where g.inventoryId == inventoryId
+                           select i.routeId).FirstOrDefault();
+
+            response.Products = routeTeamInventories;
+            response.Articles = GetArticlesByRouteId(routeId);
+            return response;
+        }
+
         public void UpdateRouteTeamInventory(Sale sale)
         {
             List<SaleDetail> salesDetail = sale.SaleDetails;
@@ -293,6 +313,21 @@ namespace SmartOrderService.Services
         public List<so_route_team_inventory_available> GetInventoryTeamByInventoryId(int inventoryId)
         {
             return db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(inventoryId)).ToList();
+        }
+
+        public List<RouteTeamInventoryArticle> GetArticlesByRouteId(int routeId)
+        {
+            var response = (from g in db.so_article_promotional_route
+                            join sap in db.so_article_promotional
+                            on g.article_promotionalId equals sap.id
+                            where g.routeId == routeId
+                            select new RouteTeamInventoryArticle
+                            {
+                                ArticleId = sap.id,
+                                AvailableAmount = g.amount
+                            }).ToList();
+
+            return response;
         }
 
         public List<so_route_team_inventory_available> GetRemainingInventory(int inventoryId)
