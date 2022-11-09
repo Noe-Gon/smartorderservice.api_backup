@@ -20,6 +20,7 @@ using SmartOrderService.Models.DTO;
 using Newtonsoft.Json;
 using System.Text;
 using SmartOrderService.Models.Message;
+using SmartOrderService.Models.Locks;
 
 namespace SmartOrderService.Controllers
 {
@@ -28,7 +29,7 @@ namespace SmartOrderService.Controllers
         private SmartOrderModel db = new SmartOrderModel();
 
         private static SaleService objectService = new SaleService();
-        private static Dictionary<string, SaleService> mapObjectService = new Dictionary<string, SaleService>();
+        private static Dictionary<string, SaleTeamLock> mapObjectService = new Dictionary<string, SaleTeamLock>();
         SaleService service;
 
         [HttpGet,Route("api/sales/{SaleId}/Lines")]
@@ -230,37 +231,60 @@ namespace SmartOrderService.Controllers
             SaleTeam saleResult = new SaleTeam();
             try
             {
-                SaleService serviceLock = null;
+                SaleTeamLock serviceLock = null;
                 RouteTeamService servce = new RouteTeamService();
                 var routeId = servce.searchRouteId(sale.UserId);
+
                 if (mapObjectService.ContainsKey(routeId.ToString()))
                 {
                     serviceLock = mapObjectService[routeId.ToString()];
+                    serviceLock.SaleDate = sale.Date;
+                    serviceLock.LastUser = sale.UserId;
+                    serviceLock.CustomerId = sale.CustomerId;
+                    serviceLock.DeliveryId = sale.DeliveryId;
                 }
                 else
                 {
-                    serviceLock = new SaleService();
+                    serviceLock = new SaleTeamLock()
+                    {
+                        SaleService = new SaleService(),
+                        SaleDate = sale.Date,
+                        LastUser = sale.UserId,
+                        CustomerId = sale.CustomerId,
+                        DeliveryId = sale.DeliveryId,
+                    };
+
                     mapObjectService.Add(routeId.ToString(), serviceLock);
                 }
                 if (serviceLock == null)
-                    serviceLock = objectService;
+                    serviceLock = new SaleTeamLock()
+                    {
+                        SaleService = objectService,
+                        SaleDate = sale.Date,
+                        LastUser = sale.UserId,
+                        CustomerId = sale.CustomerId,
+                        DeliveryId = sale.DeliveryId,
+                    };
 
                 lock (serviceLock)
                 {
-                    saleResult = serviceLock.SaleTeamTransaction(sale);
-                    
+                    saleResult = serviceLock.SaleService.SaleTeamTransaction(sale);
+
+                    try
+                    {
+                        if (sale.EmailDeliveryTicket ?? false)
+                            serviceLock.SaleService.SenTicketDigital(new SendTicketDigitalRequest()
+                            {
+                                SaleId = saleResult.SaleId,
+                                Email = sale.Email
+                            });
+                    }
+                    catch (Exception) { }
+
+                    if(serviceLock.CustomerId == sale.CustomerId && serviceLock.LastUser == sale.UserId 
+                        && serviceLock.SaleDate == sale.Date && serviceLock.DeliveryId == sale.DeliveryId)
+                        mapObjectService.Remove(routeId.ToString());
                 }
-                try
-                {
-                    if (sale.EmailDeliveryTicket ?? false)
-                        serviceLock.SenTicketDigital(new SendTicketDigitalRequest()
-                        {
-                            SaleId = saleResult.SaleId,
-                            Email = sale.Email
-                        });
-                }
-                catch (Exception){}
-               
 
             }
             catch (ProductNotFoundBillingException e)

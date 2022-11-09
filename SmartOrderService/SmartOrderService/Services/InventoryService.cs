@@ -214,10 +214,23 @@ namespace SmartOrderService.Services
             {
                 using (var dbContextTransaction = db.Database.BeginTransaction())
                 {
-                    OpenInventory(inventoryId);
-                    RecordRouteTeamTravelStatus(userId, inventoryId);
-                    RecordRouteTeamInventory(inventoryId);
-                    dbContextTransaction.Commit();
+                    try
+                    {
+                        var inventoryOpen = isInventoryOpen(inventoryId, userId);
+                        if (inventoryOpen.IsOpen)
+                            return;
+
+                        OpenInventory(inventoryId);
+                        RecordRouteTeamTravelStatus(userId, inventoryId);
+                        RecordRouteTeamInventory(inventoryId);
+                        dbContextTransaction.Commit();
+                    }
+                    catch (Exception)
+                    {
+                        dbContextTransaction.Rollback();
+                        throw;
+                    }
+                    
                 }
                 return;
             }

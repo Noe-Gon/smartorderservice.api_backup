@@ -86,9 +86,16 @@ namespace SmartOrderService.Services
 
             foreach (var productInventory in salesDetail)
             {
+                var asux = db.so_route_team_inventory_available
+                    .Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productInventory.ProductId))
+                    .FirstOrDefault().Available_Amount;
                 db.so_route_team_inventory_available
                     .Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productInventory.ProductId))
                     .FirstOrDefault().Available_Amount -= productInventory.Amount;
+                db.so_route_team_inventory_available
+                    .Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productInventory.ProductId))
+                    .FirstOrDefault().modifiedon = DateTime.Now;
+
                 isEmptySale = false;
             }
             db.SaveChanges();
