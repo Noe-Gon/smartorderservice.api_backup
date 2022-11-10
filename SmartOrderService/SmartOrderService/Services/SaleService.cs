@@ -1304,6 +1304,26 @@ namespace SmartOrderService.Services
             }
         }
 
+        public void CustomerCheck(SaleTeam sale)
+        {
+            if (sale.DeliveryId == 0)
+                return;
+
+            so_customer customer = db.so_delivery.Where(x => x.deliveryId == sale.DeliveryId).Select(x => x.so_customer).FirstOrDefault();
+
+            if (customer.customerId == sale.CustomerId && !customer.code.Contains("TEMP"))
+                return;
+
+            foreach (var customerRoute in customer.so_route_customer)
+            {
+                customerRoute.status = false;
+                customerRoute.modifiedby = sale.UserId;
+                customerRoute.modifiedon = DateTime.Now;
+            }
+
+            db.SaveChanges();
+        }
+
         public SaleTeam SaleTeamTransaction(SaleTeam sale)
         {
             using (var transaction = db.Database.BeginTransaction())
@@ -1317,7 +1337,8 @@ namespace SmartOrderService.Services
                         {
                             UpdateRouteTeamInventory(saleResult, db);
                             UnlockCreate(saleResult);
-                            if(!string.IsNullOrEmpty(saleResult.PaymentMethod))
+                            CustomerCheck(sale);
+                            if (!string.IsNullOrEmpty(saleResult.PaymentMethod))
                                 CreatePaymentMethod(saleResult);
                             if (saleResult.SaleId == 0)
                                 throw new BadRequestException();

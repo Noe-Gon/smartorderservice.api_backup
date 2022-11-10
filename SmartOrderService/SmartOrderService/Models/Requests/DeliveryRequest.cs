@@ -139,6 +139,7 @@ namespace SmartOrderService.Models.Requests
     public class CancelDeliveryRequest
     {
         public int deliveryId { get; set; }
+        public int? userId { get; set; }
     }
 
     public class CancelDeliveryResponse

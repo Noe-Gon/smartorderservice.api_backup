@@ -210,14 +210,14 @@ namespace SmartOrderService.Services
                 return;
             }
 
+            so_inventory inventory = db.so_inventory.Where(x => x.inventoryId == inventoryId).FirstOrDefault();
             if (userTeamRole == ERolTeam.Impulsor)
             {
                 using (var dbContextTransaction = db.Database.BeginTransaction())
                 {
                     try
                     {
-                        var inventoryOpen = isInventoryOpen(inventoryId, userId);
-                        if (inventoryOpen.IsOpen)
+                        if (inventory.state == 1)
                             return;
 
                         OpenInventory(inventoryId);
@@ -535,7 +535,7 @@ namespace SmartOrderService.Services
             {
                 return ResponseBase<MsgResponseBase>.Create(new List<string>()
                 {
-                    "Error en API preventa"
+                    "Error en API preventa", e.Message
                 });
             }
             

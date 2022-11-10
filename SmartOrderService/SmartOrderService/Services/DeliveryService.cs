@@ -986,6 +986,8 @@ namespace SmartOrderService.Services
                     db.SaveChanges();
                 }
 
+                LowLogicTemporalCustomer(delivery.customerId, request.userId);
+
                 var clientPreventaApi = new RestClient();
                 clientPreventaApi.BaseUrl = new Uri(ConfigurationManager.AppSettings["PreventaAPI"]);
                 var requestPreventaApiConfig = new RestRequest("api/v1/preOrder", Method.PATCH);
@@ -1030,6 +1032,23 @@ namespace SmartOrderService.Services
                         errorMsg
                     });
             }
+        }
+
+        public void LowLogicTemporalCustomer(int customerId, int? modifiedBy)
+        {
+            var customer = db.so_customer.Where(x => x.customerId == customerId).FirstOrDefault();
+
+            if (!customer.code.Contains("TEMP"))
+                return;
+
+            foreach (var customerRoute in customer.so_route_customer)
+            {
+                customerRoute.status = false;
+                customerRoute.modifiedby = modifiedBy ?? 2777;
+                customerRoute.modifiedon = DateTime.Now;
+            }
+
+            db.SaveChanges();
         }
     }
 }
