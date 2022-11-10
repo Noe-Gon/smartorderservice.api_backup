@@ -58,7 +58,6 @@ namespace SmartOrderService.Services
 
             var so_user = db.so_inventory.Where(i => i.inventoryId == InventoryId && i.status).FirstOrDefault().so_user;
 
-
             if ((!InventoryDeliveries.Any() || InventoryDeliveries.Count() == 0) && so_user.type != so_user.CCEH_TYPE && so_user.type != so_user.POAC_TYPE)
 
                 throw new InventoryEmptyException();
@@ -832,7 +831,7 @@ namespace SmartOrderService.Services
                 };
 
             var response = db.so_sale
-                .Where(x => inventoryIds.Contains(x.inventoryId.Value) && x.deliveryId.HasValue)
+                .Where(x => inventoryIds.Contains(x.inventoryId.Value) && x.deliveryId.HasValue && x.state != 2)
                 .Select(x => new GetDeliveriesResponse
                 {
                     SaleId = x.saleId,
