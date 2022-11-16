@@ -173,6 +173,8 @@ namespace SmartOrderService.DB
         public virtual DbSet<Configuracion_WorkByCloud> Configuracion_WorkByCloud { get; set; }
         //public virtual DbSet<so_route_customer_vario> so_route_customer_vario { get; set; }
 
+        public virtual DbSet<so_billpocket_report_log> so_billpocket_report_logs { get; set; }
+
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<so_role_team>()
@@ -1861,6 +1863,19 @@ namespace SmartOrderService.DB
 
             modelBuilder.Entity<Configuracion_WorkByCloud>()
                 .HasKey(x => x.wbcConfId);
+
+            var billpocketReportLog = modelBuilder.Entity<so_billpocket_report_log>();
+            billpocketReportLog.HasKey(x => x.Id);
+            billpocketReportLog.Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            billpocketReportLog.HasOptional(x => x.User)
+                .WithMany(x => x.BillpocketReportLogs)
+                .HasForeignKey(x => x.UserId);
+            billpocketReportLog.HasRequired(x => x.Route)
+                .WithMany(x => x.BillpocketReportLogs)
+                .HasForeignKey(x => x.RouteId);
+            billpocketReportLog.HasRequired(x => x.WorkDay)
+                .WithMany(x => x.BillpocketReportLogs)
+                .HasForeignKey(x => x.WorkDayId);
 
             //var routeCustomerVario = modelBuilder.Entity<so_route_customer_vario>();
             //routeCustomerVario.HasKey(x => x.Id);

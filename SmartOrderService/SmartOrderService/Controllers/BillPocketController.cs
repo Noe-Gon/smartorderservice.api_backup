@@ -1,4 +1,5 @@
-﻿using SmartOrderService.Models.DTO;
+﻿using SmartOrderService.CustomExceptions;
+using SmartOrderService.Models.DTO;
 using SmartOrderService.Models.Message;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;
@@ -20,15 +21,110 @@ namespace SmartOrderService.Controllers
             HttpResponseMessage response;
             try
             {
-                var billPocket = new BillPocketService().GetTokensByUserId(routeId);
-                response = Request.CreateResponse(HttpStatusCode.OK, billPocket);
+                using (var service = BillPocketService.Create())
+                {
+                    var billPocket = service.GetTokensByUserId(routeId);
+                    response = Request.CreateResponse(HttpStatusCode.OK, billPocket);
+                }
             }
             catch (Exception e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict, "Uppsss...");
+                response = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
             }
 
             return response;
+        }
+
+        [HttpGet]
+        [Route("api/BillPocket/Check")]
+        public IHttpActionResult CheckBillPocketSales([FromUri]CheckBillPocketSalesRequest request)
+        {
+            try
+            {
+                using (var service = BillPocketService.Create())
+                {
+                    var response = service.CheckBillPocketSales(request);
+
+                    if (response.Status)
+                        return Content(HttpStatusCode.OK, response);
+
+                    return Content(HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (InventoryInProgressException e)
+            {
+                return Content(HttpStatusCode.Conflict, ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (EntityNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (ArgumentNullException e)
+            {
+                return Content(HttpStatusCode.Forbidden, ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    "Error no controlado", e.Message
+                }));
+            }
+        }
+
+        [HttpPost]
+        [Route("api/BillPocket/SendReport")]
+        public IHttpActionResult SendBillPocketReport(SendBillPocketReportRequest request)
+        {
+            try
+            {
+                using (var service = BillPocketService.Create())
+                {
+                    var response = service.SendBillPocketReport(request);
+
+                    if (response.Status)
+                        return Content(HttpStatusCode.OK, response);
+
+                    return Content(HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (InventoryInProgressException e)
+            {
+                return Content(HttpStatusCode.Conflict, ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (EntityNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (ArgumentNullException e)
+            {
+                return Content(HttpStatusCode.Forbidden, ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    "Error no controlado", e.Message
+                }));
+            }
         }
     }
 }
