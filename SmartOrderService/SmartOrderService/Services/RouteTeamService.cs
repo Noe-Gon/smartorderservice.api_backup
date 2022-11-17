@@ -2,10 +2,12 @@
 using SmartOrderService.DB;
 using SmartOrderService.Models.DTO;
 using SmartOrderService.Models.Enum;
+using SmartOrderService.Utils;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Web;
 
 namespace SmartOrderService.Services
@@ -294,6 +296,34 @@ namespace SmartOrderService.Services
             {
                 return false;
             }
+
+            return CheckBillPocketReport(workDay.WorkdayId, workDay.UserId);
+        }
+
+        public bool CheckBillPocketReport(Guid workdayId, int userId)
+        {
+            //Si no hay ventas de Billpocket no omitir
+            List<int> inventories = db.so_route_team_travels_employees.Where(x => x.work_dayId == workdayId)
+               .Select(x => x.inventoryId)
+               .Distinct()
+               .ToList();
+
+            Expression<Func<so_sale, bool>> filter = x => x.status && x.total_credit > 0 && inventories.Contains(x.inventoryId.Value);
+
+            filter.And(x => x.userId == userId);
+
+            var sales = db.so_sale.Where(filter).ToList();
+
+            if (sales.Count() == 0)
+                return true;
+
+            //Si hay almenos una venta con billpocket
+            var report = db.so_billpocket_report_logs.Where(x => x.WorkDayId == workdayId && userId == x.UserId)
+                .OrderByDescending(x => x.SendDate).FirstOrDefault();
+
+            if (report == null)
+                return false;
+
             return true;
         }
 
