@@ -185,7 +185,7 @@ namespace SmartOrderService.Services
             var impulsor = inventoryService.SearchDrivingId(userId);
 
             if (inventoryId == null || inventoryId == 0)
-                inventoryId = inventoryService.GetCurrentInventory(userId, null).inventoryId;
+                inventoryId = inventoryService.GetCurrentInventory(impulsor, null).inventoryId;
 
             var soUser = db.so_user.Where(u => u.userId == userId).FirstOrDefault();
             var date = DateTime.Today; 

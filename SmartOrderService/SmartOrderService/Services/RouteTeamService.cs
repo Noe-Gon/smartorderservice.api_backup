@@ -293,11 +293,12 @@ namespace SmartOrderService.Services
                 .Count();
 
             if (userTravel > 0)
-            {
                 return false;
-            }
+            
+            if(workDay.CheckBillpocket)
+                return CheckBillPocketReport(workDay.WorkdayId, workDay.UserId);
 
-            return CheckBillPocketReport(workDay.WorkdayId, workDay.UserId);
+            return true;
         }
 
         public bool CheckBillPocketReport(Guid workdayId, int userId)

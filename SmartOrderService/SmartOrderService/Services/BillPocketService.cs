@@ -100,8 +100,8 @@ namespace SmartOrderService.Services
                 .Get(x => x.work_dayId == workDayId && x.active)
                 .FirstOrDefault();
 
-            if (cargas != null)
-                throw new InventoryInProgressException("Existe una carga abierta");
+            //if (cargas != null)
+            //    throw new InventoryInProgressException("Existe una carga abierta");
         }
 
 
@@ -112,7 +112,7 @@ namespace SmartOrderService.Services
 
             CheckOngoinTravels(request.WorkDayId);
 
-            so_work_day workDay = UoWConsumer.WorkDayRepository.Get(x => x.work_dayId == request.WorkDayId && x.date_end != null).FirstOrDefault();
+            so_work_day workDay = UoWConsumer.WorkDayRepository.Get(x => x.work_dayId == request.WorkDayId && x.date_end == null).FirstOrDefault();
 
             if (workDay == null)
                 throw new WorkdayNotFoundException("Jornada finalizada.");
