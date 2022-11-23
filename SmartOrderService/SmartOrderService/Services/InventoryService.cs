@@ -210,14 +210,27 @@ namespace SmartOrderService.Services
                 return;
             }
 
+            so_inventory inventory = db.so_inventory.Where(x => x.inventoryId == inventoryId).FirstOrDefault();
             if (userTeamRole == ERolTeam.Impulsor)
             {
                 using (var dbContextTransaction = db.Database.BeginTransaction())
                 {
-                    OpenInventory(inventoryId);
-                    RecordRouteTeamTravelStatus(userId, inventoryId);
-                    RecordRouteTeamInventory(inventoryId);
-                    dbContextTransaction.Commit();
+                    try
+                    {
+                        if (inventory.state == 1)
+                            return;
+
+                        OpenInventory(inventoryId);
+                        RecordRouteTeamTravelStatus(userId, inventoryId);
+                        RecordRouteTeamInventory(inventoryId);
+                        dbContextTransaction.Commit();
+                    }
+                    catch (Exception)
+                    {
+                        dbContextTransaction.Rollback();
+                        throw;
+                    }
+                    
                 }
                 return;
             }
@@ -419,7 +432,7 @@ namespace SmartOrderService.Services
                                         .Where(x => x.routeId == route.routeId && existCustomer.customerId == x.customerId && x.day == day)
                                         .FirstOrDefault();
 
-                                    if(existRouteCustomer == null)
+                                    if (existRouteCustomer == null)
                                     {
                                         so_route_customer newRouteCustomer = new so_route_customer
                                         {
@@ -436,6 +449,17 @@ namespace SmartOrderService.Services
 
                                         db.so_route_customer.Add(newRouteCustomer);
                                         db.SaveChanges();
+                                    }
+                                    else
+                                    {
+                                        if (!existCustomer.status)
+                                        {
+                                            existCustomer.status = true;
+                                            existCustomer.modifiedby = 2777;
+                                            existCustomer.modifiedon = DateTime.Now;
+
+                                            db.SaveChanges();
+                                        }
                                     }
                                 }
                             }
@@ -522,7 +546,7 @@ namespace SmartOrderService.Services
             {
                 return ResponseBase<MsgResponseBase>.Create(new List<string>()
                 {
-                    "Error en API preventa"
+                    "Error en API preventa", e.Message
                 });
             }
             

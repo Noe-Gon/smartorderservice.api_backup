@@ -344,292 +344,301 @@ namespace SmartOrderService.Services
 
         public ResponseBase<UpdateConsumerResponse> UpdateConsumer(UpdateConsumerRequest request)
         {
-            try
+            using (var trans = UoWConsumer.Context.Database.BeginTransaction())
             {
-                var defaultGuid = new Guid("00000000-0000-0000-0000-000000000000");
-                
-                so_customer updateCustomer;
 
-                if (request.OriginalCustomerId == null || request.OriginalCustomerId == 0)
-                    updateCustomer = UoWConsumer.CustomerRepository
-                        .Get(x => x.customerId == request.CustomerId && x.status)
-                        .FirstOrDefault();
-                else
+                try
                 {
-                    updateCustomer = UoWConsumer.CustomerRepository
-                        .Get(x => x.customerId == request.OriginalCustomerId && x.status)
-                        .FirstOrDefault();
+                    var defaultGuid = new Guid("00000000-0000-0000-0000-000000000000");
 
-                    if (updateCustomer == null)
-                        return ResponseBase<UpdateConsumerResponse>
-                        .Create(new List<string>() { "No se encontró al cliente: " + request.OriginalCustomerId });
+                    so_customer updateCustomer;
 
-                    so_customer deleteCustomer = UoWConsumer.CustomerRepository
-                        .Get(x => x.customerId == x.customerId)
-                        .FirstOrDefault();
-
-                    if (deleteCustomer == null)
-                        return ResponseBase<UpdateConsumerResponse>
-                        .Create(new List<string>() { "No se encontró al cliente: " + request.CustomerId });
-
-                    //Se actualiza los deliveries
-                    var deliveries = UoWConsumer.DeliveryRepository
-                        .Get(x => x.customerId == deleteCustomer.customerId);
-
-                    foreach (var delivery in deliveries)
+                    if (request.OriginalCustomerId == null || request.OriginalCustomerId == 0)
+                        updateCustomer = UoWConsumer.CustomerRepository
+                            .Get(x => x.customerId == request.CustomerId && x.status)
+                            .FirstOrDefault();
+                    else
                     {
-                        delivery.customerId = updateCustomer.customerId;
+                        updateCustomer = UoWConsumer.CustomerRepository
+                            .Get(x => x.customerId == request.OriginalCustomerId && x.status)
+                            .FirstOrDefault();
+
+                        if (updateCustomer == null)
+                            return ResponseBase<UpdateConsumerResponse>
+                            .Create(new List<string>() { "No se encontró al cliente: " + request.OriginalCustomerId });
+
+                        so_customer deleteCustomer = UoWConsumer.CustomerRepository
+                            .Get(x => x.customerId == request.OriginalCustomerId)
+                            .FirstOrDefault();
+
+                        if (deleteCustomer == null)
+                            return ResponseBase<UpdateConsumerResponse>
+                            .Create(new List<string>() { "No se encontró al cliente: " + request.CustomerId });
+
+                        //Se actualiza los deliveries
+                        var deliveries = UoWConsumer.DeliveryRepository
+                            .Get(x => x.customerId == deleteCustomer.customerId);
+
+                        foreach (var delivery in deliveries)
+                        {
+                            delivery.customerId = updateCustomer.customerId;
+                        }
+
+                        UoWConsumer.DeliveryRepository.UpdateByRange(deliveries);
+                        UoWConsumer.CustomerRepository.Delete(deleteCustomer);
                     }
 
-                    UoWConsumer.DeliveryRepository.UpdateByRange(deliveries);
-                    UoWConsumer.CustomerRepository.Delete(deleteCustomer);
-                }
-
-                if (updateCustomer == null)
-                    return ResponseBase<UpdateConsumerResponse>.Create(new List<string>()
+                    if (updateCustomer == null)
+                        return ResponseBase<UpdateConsumerResponse>.Create(new List<string>()
                     {
                         "No se encontró al cliente"
                     });
 
-                var existCustomer = UoWConsumer.CustomerRepository
-                   .Get(x => x.code == request.CFECode && x.status)
-                   .FirstOrDefault();
+                    var existCustomer = UoWConsumer.CustomerRepository
+                       .Get(x => x.code == request.CFECode && x.status)
+                       .FirstOrDefault();
 
-                if (existCustomer != null)
-                    if(existCustomer.customerId != request.CustomerId)
-                        throw new DuplicateEntityException("Ya existe un consumidor con ese CFE");
+                    if (existCustomer != null)
+                        if (existCustomer.customerId != request.CustomerId)
+                            throw new DuplicateEntityException("Ya existe un consumidor con ese CFE");
 
-                var route = UoWConsumer.RouteRepository
-                    .GetByID(request.RouteId);
+                    var route = UoWConsumer.RouteRepository
+                        .GetByID(request.RouteId);
 
-                if (route == null)
-                    return ResponseBase<UpdateConsumerResponse>
-                    .Create(new List<string>() { "No se encontró la ruta" });
-
-                if (request.CodePlace == 0)
-                    request.CodePlace = null;
-
-                if (request.CodePlace != null)
-                {
-                    var codePlace = UoWConsumer.CodePlaceRepository
-                        .Get(x => x.Id == request.CodePlace && x.Status)
-                        .FirstOrDefault();
-
-                    if (codePlace == null)
+                    if (route == null)
                         return ResponseBase<UpdateConsumerResponse>
-                        .Create(new List<string>() { "No se encontró la ubicación del código" });
-                }
+                        .Create(new List<string>() { "No se encontró la ruta" });
 
-                updateCustomer.name = request.Name ?? updateCustomer.name;
-                updateCustomer.email = request.Email ?? updateCustomer.email;
-                updateCustomer.latitude = request.Latitude ?? updateCustomer.latitude;
-                updateCustomer.longitude = request.Longitude ?? updateCustomer.longitude;
-                updateCustomer.modifiedon = DateTime.Now;
-                updateCustomer.modifiedby = request.UserId;
-                updateCustomer.code = request.CFECode ?? updateCustomer.code;
-                updateCustomer.contact = request.Name ?? updateCustomer.name;
+                    if (request.CodePlace == 0)
+                        request.CodePlace = null;
 
-                var updateCustomerAdditionalData = updateCustomer.CustomerAdditionalData
-                    .FirstOrDefault();
-                var customerAdditionalDateAux = updateCustomerAdditionalData;
-
-                if (updateCustomerAdditionalData == null)
-                {
-                    var newCustomerAdditionalData = new so_customer_additional_data()
+                    if (request.CodePlace != null)
                     {
-                        Customer = updateCustomer,
-                        Phone = request.Phone,
-                        Phone_2 = request.Phone_2,
-                        Email_2 = request.Email_2,
-                        Status = (int)Consumer.STATUS.CONSUMER,
-                        AcceptedTermsAndConditions = false,
-                        IsMailingActive = false,
-                        IsSMSActive = false,
-                        CodePlaceId = request.CodePlace,
-                        CounterVisitsWithoutSales = 0,
-                        InteriorNumber = request.InteriorNumber,
-                        NeighborhoodId = request.Neighborhood == null || request.Neighborhood == defaultGuid ? null : request.Neighborhood,
-                        ReferenceCode = request.ReferenceCode,
-                        Code = null
-                    };
+                        var codePlace = UoWConsumer.CodePlaceRepository
+                            .Get(x => x.Id == request.CodePlace && x.Status)
+                            .FirstOrDefault();
 
-                    if (!request.IsActive)
-                        newCustomerAdditionalData.Status = (int)Consumer.STATUS.DEACTIVATED;
+                        if (codePlace == null)
+                            return ResponseBase<UpdateConsumerResponse>
+                            .Create(new List<string>() { "No se encontró la ubicación del código" });
+                    }
 
-                    customerAdditionalDateAux = newCustomerAdditionalData;
+                    updateCustomer.name = request.Name ?? updateCustomer.name;
+                    updateCustomer.email = request.Email ?? updateCustomer.email;
+                    updateCustomer.latitude = request.Latitude ?? updateCustomer.latitude;
+                    updateCustomer.longitude = request.Longitude ?? updateCustomer.longitude;
+                    updateCustomer.modifiedon = DateTime.Now;
+                    updateCustomer.modifiedby = request.UserId;
+                    updateCustomer.code = request.CFECode ?? updateCustomer.code;
+                    updateCustomer.contact = request.Name ?? updateCustomer.name;
 
-                    UoWConsumer.CustomerAdditionalDataRepository.Insert(newCustomerAdditionalData);
-                }
-                else
-                {
-                    if (IsCFEInCRM(request.CFECode, updateCustomerAdditionalData.Code == null ? null : updateCustomerAdditionalData.Code.ToString()))
-                        throw new DuplicateEntityException("Ya existe un consumidor con ese CFE en CRM");
+                    var updateCustomerAdditionalData = updateCustomer.CustomerAdditionalData
+                        .FirstOrDefault();
+                    var customerAdditionalDateAux = updateCustomerAdditionalData;
 
-                    updateCustomerAdditionalData.NeighborhoodId = request.Neighborhood == defaultGuid ? null : request.Neighborhood;
-                    updateCustomerAdditionalData.Email_2 = request.Email_2 ?? updateCustomerAdditionalData.Email_2;
-                    updateCustomerAdditionalData.Phone = request.Phone ?? updateCustomerAdditionalData.Phone;
-                    updateCustomerAdditionalData.Phone_2 = request.Phone_2 ?? updateCustomerAdditionalData.Phone_2;
-                    updateCustomerAdditionalData.CodePlaceId = request.CodePlace ?? updateCustomerAdditionalData.CodePlaceId;
-                    updateCustomerAdditionalData.ReferenceCode = request.ReferenceCode ?? updateCustomerAdditionalData.ReferenceCode;
-                    updateCustomerAdditionalData.InteriorNumber = request.InteriorNumber ?? updateCustomerAdditionalData.InteriorNumber;
-                    updateCustomerAdditionalData.modifiedon = DateTime.Now;
-
-                    if (!request.IsActive)
-                        updateCustomerAdditionalData.Status = (int)Consumer.STATUS.DEACTIVATED;
-
-                    UoWConsumer.CustomerAdditionalDataRepository.Update(updateCustomerAdditionalData);
-                }
-                
-                var updateCustomerData = updateCustomer.so_customer_data
-                    .Where(x => x.status)
-                    .FirstOrDefault();
-
-                if(updateCustomerData == null)
-                {
-                    var newCustomerDate = new so_customer_data()
+                    if (updateCustomerAdditionalData == null)
                     {
-                        so_customer = updateCustomer,
-                        route_code = Convert.ToInt32(route.code),
-                        branch_code = Convert.ToInt32(route.so_branch.code),
-                        address_number = request.ExternalNumber,
-                        address_number_cross1 = request.Crossroads,
-                        address_number_cross2 = request.Crossroads_2,
-                        address_street = request.Street,
-                        status = true,
-                        createdon = DateTime.Now,
-                        createdby = request.UserId
-                    };
-                    updateCustomerData = newCustomerDate;
-                    UoWConsumer.CustomerDataRepository.Insert(newCustomerDate);
-                }
-                else
-                {
-                    updateCustomerData.address_number = request.ExternalNumber ?? updateCustomerData.address_number;
-                    updateCustomerData.address_number_cross1 = request.Crossroads ?? updateCustomerData.address_number_cross1;
-                    updateCustomerData.address_number_cross2 = request.Crossroads_2 ?? updateCustomerData.address_number_cross2;
-                    updateCustomerData.address_street = request.Street ?? updateCustomerData.address_street;
-                    updateCustomerData.modifiedon = DateTime.Now;
-                    UoWConsumer.CustomerDataRepository.Update(updateCustomerData);
-                }
-
-                var stringColonia = "";
-                if (request.Neighborhood.HasValue)
-                    stringColonia = ", " + UoWCRM.ColoniasRepository
-                        .Get(x => x.Ope_coloniaId == request.Neighborhood)
-                        .Select(x => x.Ope_name).FirstOrDefault();
-
-                var stringMunicipio = "";
-                if (request.MunicipalityId.HasValue)
-                    stringMunicipio = ", " + UoWCRM.MunicipiosRepository
-                        .Get(x => x.Ope_municipioId == request.MunicipalityId)
-                        .Select(x => x.Ope_name).FirstOrDefault();
-
-                string address = "";
-                address += string.IsNullOrEmpty(request.Street) ? updateCustomerData.address_street : "C." + request.Street;
-                address += string.IsNullOrEmpty(request.ExternalNumber) ? updateCustomerData.address_number : " #" + request.ExternalNumber;
-                address += string.IsNullOrEmpty(request.Crossroads) ? updateCustomerData.address_number_cross1 : " X " + request.Crossroads;
-                address += string.IsNullOrEmpty(request.Crossroads_2) ? updateCustomerData.address_number_cross2 : " Y " + request.Crossroads_2;
-                address += stringColonia + stringMunicipio;
-                updateCustomer.address = address;
-
-                //Ágregar y eliminar dias
-                var daysInRoute = UoWConsumer.RouteCustomerRepository
-                    .Get(x => x.customerId == request.CustomerId && x.routeId == request.RouteId)
-                    .ToList();
-
-                var newDaysInRoute = new List<so_route_customer>();
-
-                foreach (var day in request.Days)
-                {
-                    if (daysInRoute.Where(x => x.day == day).FirstOrDefault() == null)
-                        newDaysInRoute.Add(new so_route_customer
+                        var newCustomerAdditionalData = new so_customer_additional_data()
                         {
-                            routeId = request.RouteId,
-                            createdby = request.UserId,
-                            createdon = DateTime.Now,
-                            day = day,
-                            order = 0,
-                            customerId = request.CustomerId,
-                            status = true,
-                            visit_type = 1
-                        });
-                }
-                foreach (var day in daysInRoute)
-                {
-                    if (request.Days.Contains(day.day))
-                    {
-                        if (!day.status)
-                        {
-                            day.modifiedon = DateTime.Now;
-                            day.modifiedby = request.UserId;
-                            day.status = true;
-                        }
+                            Customer = updateCustomer,
+                            Phone = request.Phone,
+                            Phone_2 = request.Phone_2,
+                            Email_2 = request.Email_2,
+                            Status = (int)Consumer.STATUS.CONSUMER,
+                            AcceptedTermsAndConditions = false,
+                            IsMailingActive = false,
+                            IsSMSActive = false,
+                            CodePlaceId = request.CodePlace,
+                            CounterVisitsWithoutSales = 0,
+                            InteriorNumber = request.InteriorNumber,
+                            NeighborhoodId = request.Neighborhood == null || request.Neighborhood == defaultGuid ? null : request.Neighborhood,
+                            ReferenceCode = request.ReferenceCode,
+                            Code = null
+                        };
+
+                        if (!request.IsActive)
+                            newCustomerAdditionalData.Status = (int)Consumer.STATUS.DEACTIVATED;
+
+                        customerAdditionalDateAux = newCustomerAdditionalData;
+
+                        UoWConsumer.CustomerAdditionalDataRepository.Insert(newCustomerAdditionalData);
                     }
                     else
                     {
-                        day.modifiedon = DateTime.Now;
-                        day.modifiedby = request.UserId;
-                        day.status = false;
+                        if (IsCFEInCRM(request.CFECode, updateCustomerAdditionalData.Code == null ? null : updateCustomerAdditionalData.Code.ToString()))
+                            throw new DuplicateEntityException("Ya existe un consumidor con ese CFE en CRM");
+
+                        updateCustomerAdditionalData.NeighborhoodId = request.Neighborhood == defaultGuid ? null : request.Neighborhood;
+                        updateCustomerAdditionalData.Email_2 = request.Email_2 ?? updateCustomerAdditionalData.Email_2;
+                        updateCustomerAdditionalData.Phone = request.Phone ?? updateCustomerAdditionalData.Phone;
+                        updateCustomerAdditionalData.Phone_2 = request.Phone_2 ?? updateCustomerAdditionalData.Phone_2;
+                        updateCustomerAdditionalData.CodePlaceId = request.CodePlace ?? updateCustomerAdditionalData.CodePlaceId;
+                        updateCustomerAdditionalData.ReferenceCode = request.ReferenceCode ?? updateCustomerAdditionalData.ReferenceCode;
+                        updateCustomerAdditionalData.InteriorNumber = request.InteriorNumber ?? updateCustomerAdditionalData.InteriorNumber;
+                        updateCustomerAdditionalData.modifiedon = DateTime.Now;
+
+                        if (!request.IsActive)
+                            updateCustomerAdditionalData.Status = (int)Consumer.STATUS.DEACTIVATED;
+
+                        UoWConsumer.CustomerAdditionalDataRepository.Update(updateCustomerAdditionalData);
                     }
+
+                    var updateCustomerData = updateCustomer.so_customer_data
+                        .Where(x => x.status)
+                        .FirstOrDefault();
+
+                    if (updateCustomerData == null)
+                    {
+                        var newCustomerDate = new so_customer_data()
+                        {
+                            so_customer = updateCustomer,
+                            route_code = Convert.ToInt32(route.code),
+                            branch_code = Convert.ToInt32(route.so_branch.code),
+                            address_number = request.ExternalNumber,
+                            address_number_cross1 = request.Crossroads,
+                            address_number_cross2 = request.Crossroads_2,
+                            address_street = request.Street,
+                            status = true,
+                            createdon = DateTime.Now,
+                            createdby = request.UserId
+                        };
+                        updateCustomerData = newCustomerDate;
+                        UoWConsumer.CustomerDataRepository.Insert(newCustomerDate);
+                    }
+                    else
+                    {
+                        updateCustomerData.address_number = request.ExternalNumber ?? updateCustomerData.address_number;
+                        updateCustomerData.address_number_cross1 = request.Crossroads ?? updateCustomerData.address_number_cross1;
+                        updateCustomerData.address_number_cross2 = request.Crossroads_2 ?? updateCustomerData.address_number_cross2;
+                        updateCustomerData.address_street = request.Street ?? updateCustomerData.address_street;
+                        updateCustomerData.modifiedon = DateTime.Now;
+                        UoWConsumer.CustomerDataRepository.Update(updateCustomerData);
+                    }
+
+                    var stringColonia = "";
+                    if (request.Neighborhood.HasValue)
+                        stringColonia = ", " + UoWCRM.ColoniasRepository
+                            .Get(x => x.Ope_coloniaId == request.Neighborhood)
+                            .Select(x => x.Ope_name).FirstOrDefault();
+
+                    var stringMunicipio = "";
+                    if (request.MunicipalityId.HasValue)
+                        stringMunicipio = ", " + UoWCRM.MunicipiosRepository
+                            .Get(x => x.Ope_municipioId == request.MunicipalityId)
+                            .Select(x => x.Ope_name).FirstOrDefault();
+
+                    string address = "";
+                    address += string.IsNullOrEmpty(request.Street) ? updateCustomerData.address_street : "C." + request.Street;
+                    address += string.IsNullOrEmpty(request.ExternalNumber) ? updateCustomerData.address_number : " #" + request.ExternalNumber;
+                    address += string.IsNullOrEmpty(request.Crossroads) ? updateCustomerData.address_number_cross1 : " X " + request.Crossroads;
+                    address += string.IsNullOrEmpty(request.Crossroads_2) ? updateCustomerData.address_number_cross2 : " Y " + request.Crossroads_2;
+                    address += stringColonia + stringMunicipio;
+                    updateCustomer.address = address;
+
+                    //Ágregar y eliminar dias
+                    var daysInRoute = UoWConsumer.RouteCustomerRepository
+                        .Get(x => x.customerId == request.CustomerId && x.routeId == request.RouteId)
+                        .ToList();
+
+                    var newDaysInRoute = new List<so_route_customer>();
+
+                    foreach (var day in request.Days)
+                    {
+                        if (daysInRoute.Where(x => x.day == day).FirstOrDefault() == null)
+                            newDaysInRoute.Add(new so_route_customer
+                            {
+                                routeId = request.RouteId,
+                                createdby = request.UserId,
+                                createdon = DateTime.Now,
+                                day = day,
+                                order = 0,
+                                customerId = request.CustomerId,
+                                status = true,
+                                visit_type = 1
+                            });
+                    }
+                    foreach (var day in daysInRoute)
+                    {
+                        if (request.Days.Contains(day.day))
+                        {
+                            if (!day.status)
+                            {
+                                day.modifiedon = DateTime.Now;
+                                day.modifiedby = request.UserId;
+                                day.status = true;
+                            }
+                        }
+                        else
+                        {
+                            day.modifiedon = DateTime.Now;
+                            day.modifiedby = request.UserId;
+                            day.status = false;
+                        }
+                    }
+
+                    var routeId = GetIdRoute(route.code, route.so_branch.code);
+                    var figuraId = GetFiguraCRM();
+
+                    //Notificar al CRM
+                    var CRMService = new CRMService();
+                    var crmRequest = new CRMConsumerRequest
+                    {
+                        Name = updateCustomer.name,
+                        Email = updateCustomer.email,
+                        Phone = customerAdditionalDateAux.Phone,
+                        CFECode = updateCustomer.code,
+                        CountryId = request.CountryId == null || request.CountryId == defaultGuid ? null : request.CountryId,
+                        StateId = request.StateId == null || request.StateId == defaultGuid ? null : request.StateId,
+                        MunicipalityId = request.MunicipalityId == null || request.MunicipalityId == defaultGuid ? null : request.MunicipalityId,
+                        Neighborhood = customerAdditionalDateAux.NeighborhoodId == null || customerAdditionalDateAux.NeighborhoodId == defaultGuid ? null : customerAdditionalDateAux.NeighborhoodId,
+                        InteriorNumber = customerAdditionalDateAux.InteriorNumber,
+                        ExternalNumber = updateCustomerData.address_number,
+                        Crossroads = updateCustomerData.address_number_cross1,
+                        Crossroads_2 = updateCustomerData.address_number_cross2,
+                        Street = updateCustomerData.address_street,
+                        Latitude = updateCustomer.latitude,
+                        Longitude = updateCustomer.longitude,
+                        Address = address,
+                        Days = request.Days,
+                        EntityId = customerAdditionalDateAux.Code,
+                        CountryIdName = request.CountryName,
+                        MunicipalityIdName = request.MunicipalityName,
+                        RouteCRMId = routeId,
+                        StateIdName = request.StateName,
+                        NeighborhoodIdName = request.NeighborhoodName,
+                        FiguraId = figuraId,
+                        PriceListId = null
+                    };
+
+                    if (customerAdditionalDateAux.Code != null)
+                        CRMService.ConsumerToCRM(crmRequest, CRMService.TypeUpdate, Method.POST);
+                    else
+                        customerAdditionalDateAux.Code = CRMService.ConsumerToCRM(crmRequest, CRMService.TypeCreate, Method.POST);
+
+                    UoWConsumer.RouteCustomerRepository.InsertByRange(newDaysInRoute);
+                    UoWConsumer.RouteCustomerRepository.UpdateByRange(daysInRoute);
+                    UoWConsumer.CustomerRepository.Update(updateCustomer);
+
+                    UoWConsumer.Save();
+
+                    trans.Commit();
+                    return ResponseBase<UpdateConsumerResponse>.Create(new UpdateConsumerResponse()
+                    {
+                        Msg = "Se ha actualizado con exito"
+                    });
                 }
-                UoWConsumer.RouteCustomerRepository.InsertByRange(newDaysInRoute);
-                UoWConsumer.RouteCustomerRepository.UpdateByRange(daysInRoute);
-                UoWConsumer.CustomerRepository.Update(updateCustomer);
-
-                UoWConsumer.Save();
-
-                var routeId = GetIdRoute(route.code, route.so_branch.code);
-                var figuraId = GetFiguraCRM();
-
-                //Notificar al CRM
-                var CRMService = new CRMService();
-                var crmRequest = new CRMConsumerRequest
+                catch (DuplicateEntityException e)
                 {
-                    Name = updateCustomer.name,
-                    Email = updateCustomer.email,
-                    Phone = customerAdditionalDateAux.Phone,
-                    CFECode = updateCustomer.code,
-                    CountryId = request.CountryId == null || request.CountryId == defaultGuid ? null : request.CountryId,
-                    StateId = request.StateId == null || request.StateId == defaultGuid ? null : request.StateId,
-                    MunicipalityId = request.MunicipalityId == null || request.MunicipalityId == defaultGuid ? null : request.MunicipalityId,
-                    Neighborhood = customerAdditionalDateAux.NeighborhoodId == null || customerAdditionalDateAux.NeighborhoodId == defaultGuid ? null : customerAdditionalDateAux.NeighborhoodId,
-                    InteriorNumber = customerAdditionalDateAux.InteriorNumber,
-                    ExternalNumber = updateCustomerData.address_number,
-                    Crossroads = updateCustomerData.address_number_cross1,
-                    Crossroads_2 = updateCustomerData.address_number_cross2,
-                    Street = updateCustomerData.address_street,
-                    Latitude = updateCustomer.latitude,
-                    Longitude = updateCustomer.longitude,
-                    Address = address,
-                    Days = request.Days,
-                    EntityId = customerAdditionalDateAux.Code,
-                    CountryIdName = request.CountryName,
-                    MunicipalityIdName = request.MunicipalityName,
-                    RouteCRMId = routeId,
-                    StateIdName = request.StateName,
-                    NeighborhoodIdName = request.NeighborhoodName,
-                    FiguraId = figuraId,
-                    PriceListId = null
-                };
-
-                if(customerAdditionalDateAux.Code != null)
-                    CRMService.ConsumerToCRM(crmRequest, CRMService.TypeUpdate, Method.POST);
-
-                return ResponseBase<UpdateConsumerResponse>.Create(new UpdateConsumerResponse()
+                    throw new DuplicateEntityException(e.Message);
+                }
+                catch (Exception e)
                 {
-                    Msg = "Se ha actualizado con exito"
-                });
-            }
-            catch (DuplicateEntityException e)
-            {
-                throw new DuplicateEntityException(e.Message);
-            }
-            catch (Exception e)
-            {
-                return ResponseBase<UpdateConsumerResponse>.Create(new List<string>()
+                    trans.Rollback();
+                    return ResponseBase<UpdateConsumerResponse>.Create(new List<string>()
                 {
                     e.Message
                 });
+                }
             }
         }
 
@@ -653,9 +662,9 @@ namespace SmartOrderService.Services
                     .FirstOrDefault();
 
                 if (previousRequestExist != null)
-                    return ResponseBase<ConsumerRemovalResponse>.Create(new List<string>()
+                    return ResponseBase<ConsumerRemovalResponse>.Create(new ConsumerRemovalResponse()
                     {
-                        "Ya existe una petición para ese usuario"
+                        Msg = "Ya existe una petición para ese usuario"
                     });
 
                 var id = Guid.NewGuid();
@@ -1820,6 +1829,10 @@ namespace SmartOrderService.Services
         {
             this.UoWConsumer.Dispose();
             this.UoWConsumer = null;
+            this.UoWCRM.Dispose();
+            this.UoWCRM = null;
+            this.UoWEmBeAlgoritmo.Dispose();
+            this.UoWEmBeAlgoritmo = null;
         }
     }
 

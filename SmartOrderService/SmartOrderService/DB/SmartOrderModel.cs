@@ -180,6 +180,8 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_article_promotional> so_article_promotional { get; set; }
         public virtual DbSet<so_promotion_article> so_promotion_article { get; set; }
 
+        public virtual DbSet<so_billpocket_report_log> so_billpocket_report_logs { get; set; }
+
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<so_role_team>()
@@ -1915,6 +1917,28 @@ namespace SmartOrderService.DB
             modelBuilder.Entity<so_promotion_article>()
                 .Property(e => e.price)
                 .HasPrecision(10, 4);
+            var billpocketReportLog = modelBuilder.Entity<so_billpocket_report_log>();
+            billpocketReportLog.HasKey(x => x.Id);
+            billpocketReportLog.Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            billpocketReportLog.HasOptional(x => x.User)
+                .WithMany(x => x.BillpocketReportLogs)
+                .HasForeignKey(x => x.UserId);
+            billpocketReportLog.HasRequired(x => x.Route)
+                .WithMany(x => x.BillpocketReportLogs)
+                .HasForeignKey(x => x.RouteId);
+            billpocketReportLog.HasRequired(x => x.WorkDay)
+                .WithMany(x => x.BillpocketReportLogs)
+                .HasForeignKey(x => x.WorkDayId);
+
+            //var routeCustomerVario = modelBuilder.Entity<so_route_customer_vario>();
+            //routeCustomerVario.HasKey(x => x.Id);
+            //routeCustomerVario.Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            //routeCustomerVario.HasRequired(x => x.Customer)
+            //    .WithMany(x => x.RouteCustomerVario)
+            //    .HasForeignKey(x => x.CustomerId);
+            //routeCustomerVario.HasRequired(x => x.Route)
+            //    .WithMany(x => x.RouteCustomerVario)
+            //    .HasForeignKey(x => x.RouteId);
         }
     }
 }

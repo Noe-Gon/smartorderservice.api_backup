@@ -569,6 +569,35 @@ namespace SmartOrderService.Services
             }
         }
 
+        public ResponseBase<MsgResponseBase> SendBillPocketReportEmail(SendBillPocketReportEmailRequest request)
+        {
+            string template = "~/Content/Template/BillpocketReportEmail.html";
+
+            using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath(template)))
+            {
+                string body = reader.ReadToEnd();
+
+                body = body.Replace("{BranchName}", request.BranchName);
+                body = body.Replace("{RouteName}", request.RouteName);
+                body = body.Replace("{UserRole}", request.UserRole);
+                body = body.Replace("{WorkDayDate}", request.WorkDayDate.ToString("dd-MM-yyyy"));
+                body = body.Replace("{SendDate}", request.SendDate.ToString("dd-MM-yyyy"));
+                body = body.Replace("{TotalAmount}", request.TotalAmount.ToString("0.00"));
+                body = body.Replace("{TotalSales}", request.TotalSales.ToString());
+
+                APIEmailSendEmail(new APIEmailSendEmailRequest
+                {
+                    Body = body,
+                    Subject = "Reporte de Operaciones – BillPocket",
+                    To = request.Email
+                });
+            }
+
+            return ResponseBase<MsgResponseBase>.Create(new MsgResponseBase()
+            {
+                Msg = "Se ha enviadó con exito"
+            });
+        }
 
         public void APIEmailSendEmail(APIEmailSendEmailRequest request)
         {

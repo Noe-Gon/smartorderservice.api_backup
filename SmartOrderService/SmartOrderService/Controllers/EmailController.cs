@@ -109,5 +109,30 @@ namespace SmartOrderService.Controllers
                 return Content(HttpStatusCode.InternalServerError, response);
             }
         }
+
+        [HttpPost]
+        [Route("~/api/SendBillpocketReport")]
+        public IHttpActionResult SendBillpocketReportEmail(SendBillPocketReportEmailRequest request)
+        {
+            try
+            {
+                var service = new EmailService();
+                var response = service.SendBillPocketReportEmail(request);
+
+                if (response.Status)
+                    return Ok(response);
+
+                return Content(HttpStatusCode.BadRequest, response);
+            }
+            catch (Exception e)
+            {
+                var response = ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                });
+
+                return Content(HttpStatusCode.InternalServerError, response);
+            }
+        }
     }
 }

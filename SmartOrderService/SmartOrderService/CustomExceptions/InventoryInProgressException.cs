@@ -7,5 +7,12 @@ namespace SmartOrderService.CustomExceptions
 {
     public class InventoryInProgressException : Exception
     {
+        public InventoryInProgressException() : base()
+        {
+        }
+
+        public InventoryInProgressException(string message) : base(message)
+        {
+        }
     }
 }

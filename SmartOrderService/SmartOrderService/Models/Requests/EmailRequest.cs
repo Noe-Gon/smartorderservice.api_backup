@@ -46,6 +46,7 @@ namespace SmartOrderService.Models.Requests
         public double TotalPrice { get; set; }
     }
     #endregion
+
     #region Send Cancel Ticket Digital Email
 
     
@@ -141,6 +142,27 @@ namespace SmartOrderService.Models.Requests
         public double TotalPrice { get; set; }
 
     }
+
+    #region Send BillPocket Report
+    public class SendBillPocketReportEmailRequest
+    {
+        public string Email { get; set; }
+
+        public string BranchName { get; set; }
+
+        public string RouteName { get; set; }
+
+        public string UserRole { get; set; }
+
+        public DateTime WorkDayDate { get; set; }
+
+        public DateTime SendDate { get; set; }
+
+        public double TotalAmount { get; set; }
+
+        public int TotalSales { get; set; }
+    }
+    #endregion
 
     #region API EMAIL
     public class APIEmailSendEmailRequest

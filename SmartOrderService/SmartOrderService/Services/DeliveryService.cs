@@ -58,7 +58,6 @@ namespace SmartOrderService.Services
 
             var so_user = db.so_inventory.Where(i => i.inventoryId == InventoryId && i.status).FirstOrDefault().so_user;
 
-
             if ((!InventoryDeliveries.Any() || InventoryDeliveries.Count() == 0) && so_user.type != so_user.CCEH_TYPE && so_user.type != so_user.POAC_TYPE)
 
                 throw new InventoryEmptyException();
@@ -831,7 +830,7 @@ namespace SmartOrderService.Services
                 };
 
             var response = db.so_sale
-                .Where(x => inventoryIds.Contains(x.inventoryId.Value) && x.deliveryId.HasValue)
+                .Where(x => inventoryIds.Contains(x.inventoryId.Value) && x.deliveryId.HasValue && x.state != 2)
                 .Select(x => new GetDeliveriesResponse
                 {
                     SaleId = x.saleId,
@@ -985,6 +984,8 @@ namespace SmartOrderService.Services
                     db.SaveChanges();
                 }
 
+                LowLogicTemporalCustomer(delivery.customerId, request.userId);
+
                 var clientPreventaApi = new RestClient();
                 clientPreventaApi.BaseUrl = new Uri(ConfigurationManager.AppSettings["PreventaAPI"]);
                 var requestPreventaApiConfig = new RestRequest("api/v1/preOrder", Method.PATCH);
@@ -1029,6 +1030,23 @@ namespace SmartOrderService.Services
                         errorMsg
                     });
             }
+        }
+
+        public void LowLogicTemporalCustomer(int customerId, int? modifiedBy)
+        {
+            var customer = db.so_customer.Where(x => x.customerId == customerId).FirstOrDefault();
+
+            if (!customer.code.Contains("TEMP"))
+                return;
+
+            foreach (var customerRoute in customer.so_route_customer)
+            {
+                customerRoute.status = false;
+                customerRoute.modifiedby = modifiedBy ?? 2777;
+                customerRoute.modifiedon = DateTime.Now;
+            }
+
+            db.SaveChanges();
         }
     }
 }

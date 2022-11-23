@@ -197,6 +197,7 @@ namespace SmartOrderService.Services
             if (userRol == ERolTeam.Impulsor)
             {
                 var workDayUpdated = FinishTeamWorkdayProcess(workday);
+                ClaerTemporalCustomer(workday.WorkdayId, workday.UserId);
                 //new RouteTeamTravelsService().SetClosingStatusRoutTeamTravels(workday.WorkdayId);
                 if (userRol == ERolTeam.Impulsor)
                 {
@@ -525,6 +526,21 @@ namespace SmartOrderService.Services
                 return "No insertado. Ya existe un registro con los mismos datos";
             }
             return "OPCD Falló en notificación";
+        }
+
+        public void ClaerTemporalCustomer(Guid workdayId, int? modifiedBy)
+        {
+            int routeId = db.so_route_team_travels_employees.Where(x => x.work_dayId == workdayId).Select(x => x.routeId).FirstOrDefault();
+
+            var routeCustomers = db.so_route_customer.Where(x => x.routeId == routeId && x.so_customer.code.Contains("TEMP") && x.status);
+
+            foreach (var routeCustomer in routeCustomers)
+            {
+                routeCustomer.status = false;
+                routeCustomer.modifiedby = modifiedBy ?? 2777;
+                routeCustomer.modifiedon = DateTime.Now;
+            }
+            db.SaveChanges();
         }
     }
 }

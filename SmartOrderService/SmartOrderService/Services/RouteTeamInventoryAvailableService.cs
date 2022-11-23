@@ -163,71 +163,15 @@ namespace SmartOrderService.Services
             {
                 var availableProduct = db.so_route_team_inventory_available
                     .Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productInventory.ProductId))
-                    .FirstOrDefault().Available_Amount;
-                if (availableProduct >= productInventory.Amount)
-                {
-                    var product = db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productInventory.ProductId)).FirstOrDefault();
-                    product.Available_Amount -= productInventory.Amount;
-                    amountSaled += productInventory.Amount;
-                    //verificar si el producto generá un envase vacio
-                    var bottle = db.so_product_bottle.Where(x => productInventory.ProductId == x.productId).Select(x => x.so_product1).FirstOrDefault();
-                    //Si es así verificar si existe en el inventario
-                    if (bottle != null)
-                    {
-                        var exisbottle = db.so_route_team_inventory_available.Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(bottle.productId)).FirstOrDefault();
-                        if (exisbottle == null) //Si no existe agregarlo
-                        {
-                            var newbottle = new so_route_team_inventory_available()
-                            {
-                                Available_Amount = productInventory.Amount,
-                                createOn = DateTime.Now,
-                                inventoryId = sale.InventoryId,
-                                productId = bottle.productId
-                            };
-                            db.so_route_team_inventory_available.Add(newbottle);
-                        }
-                        else //Si existe aumentar su cantidad
-                        {
-                            exisbottle.Available_Amount += productInventory.Amount;
-                        }
-                    }
-                }
-                
-                db.SaveChanges();
-            }
-            if (amountSaled == 0)
-            {
-                throw new EmptySaleException("La venta no se ha podido realizar porque no hay productos disponibles");
-            }
+                    .FirstOrDefault().Available_Amount -= productInventory.Amount;
+                db.so_route_team_inventory_available
+                    .Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productInventory.ProductId))
+                    .FirstOrDefault().modifiedon = DateTime.Now;
 
+                isEmptySale = false;
+            }
+            db.SaveChanges();
             var promotionIndex = 0;
-            var totalPromotion = 0;
-            foreach (var Promotion in salePromotion)
-            {
-                var amountPromotionsSaled = 0;
-                foreach (var productPromotion in Promotion.DetailProduct)
-                {
-                    var availableProduct = db.so_route_team_inventory_available
-                        .Where(s => s.inventoryId.Equals(sale.InventoryId) && s.productId.Equals(productPromotion.ProductId))
-                        .FirstOrDefault();
-                    if (productPromotion.Amount != 0 && availableProduct.Available_Amount >= productPromotion.Amount)
-                    {
-                        availableProduct.Available_Amount -= productPromotion.Amount;
-                        amountPromotionsSaled += productPromotion.Amount;
-                    }
-                    else
-                    {
-                        productPromotion.Amount = 0;
-                    }
-                }
-                sale.SalePromotions[promotionIndex].Amount = amountPromotionsSaled;
-                totalPromotion += amountPromotionsSaled;
-            }
-            if (totalPromotion > 0)
-            {
-                db.SaveChanges();
-            }
-            
             foreach (var Promotion in salePromotion)
             {
                 var amountPromotionsSaled = 0;

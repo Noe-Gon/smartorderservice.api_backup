@@ -360,6 +360,7 @@
     <Compile Include="DB\so_authentication_log.cs" />
     <Compile Include="DB\so_autoventa_View.cs" />
     <Compile Include="DB\so_billing_data.cs" />
+    <Compile Include="DB\so_billpocket_report_log.cs" />
     <Compile Include="DB\so_binnacle_reason_failed.cs" />
     <Compile Include="DB\so_binnacle_visit.cs" />
     <Compile Include="DB\so_bottle.cs" />
@@ -616,6 +617,7 @@
     <Compile Include="Models\Enum\PaymentMethod.cs" />
     <Compile Include="Models\Enum\PortalLinksStatus.cs" />
     <Compile Include="Models\Enum\HelperLiquidationLogStatus.cs" />
+    <Compile Include="Models\Generic\AuditData.cs" />
     <Compile Include="Models\Generic\AuditDate.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\DTO\PriceDto.cs" />
@@ -623,7 +625,9 @@
     <Compile Include="Models\DTO\ProductDto.cs" />
     <Compile Include="Models\DTO\ProductArticle.cs" />
     <Compile Include="Models\DTO\Promotion.cs" />
+    <Compile Include="Models\Locks\SaleTeamLock.cs" />
     <Compile Include="Models\Locks\WorkdayLock.cs" />
+    <Compile Include="Models\Message\BillPocketMessage.cs" />
     <Compile Include="Models\Message\SaleModels.cs" />
     <Compile Include="Models\Message\ApiDigitalizacionMessage.cs" />
     <Compile Include="Models\Message\LiquidationMessage.cs" />
@@ -781,6 +785,7 @@
     <Compile Include="Utils\HttpUtil.cs" />
     <Compile Include="Utils\InvoiceData.cs" />
     <Compile Include="Utils\NumberUtil.cs" />
+    <Compile Include="Utils\PredicateBuilder.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Areas\HelpPage\HelpPage.css" />
@@ -854,6 +859,7 @@
     <Content Include="bin\WebGrease.dll" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\Template\BillpocketReportEmail.html" />
     <Content Include="Content\Template\CancelOrderTicket.html" />
     <Content Include="Content\Template\CancelTicketDigitalEmail.html" />
     <Content Include="Content\Template\LoyaltyEmail.html" />

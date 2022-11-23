@@ -17,7 +17,10 @@ namespace SmartOrderService.UnitOfWork
         public UoWConsumer()
         {
             Context = new SmartOrderModel();
+            ConfigurationWorkByCloudRepository = new GenericRepository<Configuracion_WorkByCloud>(Context);
             CustomerAdditionalDataRepository = new GenericRepository<so_customer_additional_data>(Context);
+            BillPocketReportLogReporitory = new GenericRepository<so_billpocket_report_log>(Context);
+            RouteTeamTravelsEmployeesRepository = new GenericRepository<so_route_team_travels_employees>(Context);
             CustomerRepository = new GenericRepository<so_customer>(Context);
             CustomerRemovalRequestRepository = new GenericRepository<so_customer_removal_request>(Context);
             CustomerDataRepository = new GenericRepository<so_customer_data>(Context);
@@ -60,6 +63,9 @@ namespace SmartOrderService.UnitOfWork
         }
 
         public SmartOrderModel Context { get; set; }
+        public GenericRepository<Configuracion_WorkByCloud> ConfigurationWorkByCloudRepository { get; set; }
+        public GenericRepository<so_billpocket_report_log> BillPocketReportLogReporitory { get; set; }
+        public GenericRepository<so_route_team_travels_employees> RouteTeamTravelsEmployeesRepository { get; set; }
         public GenericRepository<so_customer_additional_data> CustomerAdditionalDataRepository { get; set; }
         public GenericRepository<so_customer> CustomerRepository { get; set; }
         public GenericRepository<so_customer_removal_request> CustomerRemovalRequestRepository { get; set; }
