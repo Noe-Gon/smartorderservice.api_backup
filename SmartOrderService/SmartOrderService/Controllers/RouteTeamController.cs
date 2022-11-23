@@ -47,7 +47,7 @@ namespace SmartOrderService.Services
             {
                 response = Request.CreateResponse((HttpStatusCode)213, false);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 response = Request.CreateResponse(HttpStatusCode.InternalServerError, false);
             }
@@ -137,6 +137,10 @@ namespace SmartOrderService.Services
             {
                 RouteTeamService routeTeamService = new RouteTeamService();
                 response = Request.CreateResponse(HttpStatusCode.Accepted, routeTeamService.CheckWorkDayClosingStatusByWorkDay(workday));
+            }
+            catch (EntityNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Forbidden, false);
             }
             catch (WorkdayNotFoundException e)
             {

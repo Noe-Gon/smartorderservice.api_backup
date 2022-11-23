@@ -27,13 +27,15 @@ namespace SmartOrderService.Services
                 {
                     return true;
                 }
-                
-
-                int inventoryState = GetInventoryState(userId, DateTime.Today);
+                 var inventory = GetCurrentInventory(userId, DateTime.Today);
+                int inventoryState = inventory.state;
 
                 //Start Load Inventory Process OPCD
                 CallLoadInventoryProcess(userId);
                 //End Load Inventory Process
+
+                if (IsActualOpened(userId, inventory.inventoryId))
+                    return true;
 
                 if ((inventoryState == 0 && userRole == ERolTeam.Impulsor))
                 {
@@ -71,6 +73,12 @@ namespace SmartOrderService.Services
                 throw new InventoryEmptyException();
             }
 
+        }
+
+        private bool IsActualOpened(int userId, int inventoryId)
+        {
+            var routeTeam = db.so_route_team_travels_employees.Where(x => x.userId == userId && x.inventoryId == inventoryId).FirstOrDefault();
+            return routeTeam == null ? false : routeTeam.active;
         }
 
         public void CheckIfCurrentTravelsIsNewByUser(int userId)
@@ -235,6 +243,18 @@ namespace SmartOrderService.Services
             return inventory.state;
         }
 
+        public so_inventory GetCurrentInventory(int userId, DateTime date)
+        {
+            InventoryService inventoryService = new InventoryService();
+            if (date == null)
+            {
+                date = DateTime.Today;
+            }
+            userId = SearchDrivingId(userId);
+            var inventory = inventoryService.GetCurrentInventory(userId, date);
+            return inventory;
+        }
+
         public bool CheckWorkDayClosingStatus(int userId)
         {
             
@@ -323,7 +343,7 @@ namespace SmartOrderService.Services
                 .OrderByDescending(x => x.SendDate).FirstOrDefault();
 
             if (report == null)
-                return false;
+                throw new EntityNotFoundException("No se ha enviado el reporte.");
 
             return true;
         }
