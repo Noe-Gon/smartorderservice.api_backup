@@ -16,7 +16,7 @@ namespace SmartOrderService.Models.DTO
     public class PromotionTypeCatalog
     {
         public int id { get; set; }
-        public int code { get; set; }
+        public string code { get; set; }
         public string name { get; set; }
 
     }

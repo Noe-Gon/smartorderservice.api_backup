@@ -671,14 +671,26 @@ namespace SmartOrderService.Services
             DateTime date = DateTime.Parse(sale.Date);
             int customerId = sale.CustomerId;
             int deliveryId = sale.DeliveryId;
-            var registeredSale = db.so_sale.
+
+            so_sale registeredSale = null;
+
+            if (deliveryId != 0)
+                registeredSale = db.so_sale.
                      Where(
-                    s => (DateTime.Compare(s.date, date) == 0 || deliveryId.Equals(s.deliveryId.Value))
+                    s => deliveryId.Equals(s.deliveryId.Value)
                      && s.userId.Equals(userId)
                      && s.customerId.Equals(customerId)
                      && s.status
                      ).FirstOrDefault();
-
+            else
+                registeredSale = db.so_sale.
+                     Where(
+                    s => (DateTime.Compare(s.date, date) == 0)
+                     && s.userId.Equals(userId)
+                     && s.customerId.Equals(customerId)
+                     && s.status
+                     && s.inventoryId == sale.InventoryId
+                     ).FirstOrDefault();
 
             if (registeredSale == null)
             {
@@ -686,7 +698,15 @@ namespace SmartOrderService.Services
                 entitySale.so_sale_detail = createDetails(sale.SaleDetails, userId);
                 entitySale.so_sale_replacement = createReplacements(sale.SaleReplacements, userId);
                 entitySale.so_sale_detail_article = CreateDetailArticles(sale.SaleDetailsArticles, userId);
-                //entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
+                var totalPromotion = 0;
+                foreach (var promotion in sale.SalePromotions)
+                {
+                    totalPromotion += promotion.Amount;
+                }
+                if (totalPromotion > 0)
+                {
+                    entitySale.so_sale_promotion = createPromotions(sale.SalePromotions, userId);
+                }
                 SetTaxesv2(entitySale);
                 sale.SaleId = UntransactionalSaveSalev2(entitySale);
             }
@@ -956,31 +976,31 @@ namespace SmartOrderService.Services
                 saleDetailResult.AmountSold = amountSaled;
             }
             //saleResult.SalePromotions = sale.SalePromotions;
-            //saleResult.SalePromotions = new List<SalePromotion>();
-            //for (int i = 0; i < sale.SalePromotions.Count(); i++)
-            //{
-            //    int amountSaled = 0;
-            //    SalePromotion salePromotionResult = new SalePromotion(sale.SalePromotions[i]);
+            saleResult.SalePromotions = new List<SalePromotion>();
+            for (int i = 0; i < sale.SalePromotions.Count(); i++)
+            {
+                int amountSaled = 0;
+                SalePromotion salePromotionResult = new SalePromotion(sale.SalePromotions[i]);
 
-            //    List<SalePromotionDetailProduct> promotionProducts = salePromotionResult.DetailProduct;
+                List<SalePromotionDetailProduct> promotionProducts = salePromotionResult.DetailProduct;
 
-            //    for (int j = 0; j < sale.SalePromotions[i].DetailProduct.Count(); j++)
-            //    {
-            //        if (inventoryService.CheckInventoryAvailability(sale.InventoryId, promotionProducts[j].ProductId, promotionProducts[j].Amount))
-            //        {
-            //            amountSaled += promotionProducts[j].Amount;
-            //        }
-            //        else
-            //        {
-            //            salePromotionResult.DetailProduct[j].Amount = 0;
-            //            sale.TotalCash -= Decimal.ToDouble(promotionProducts[j].Import);
-            //            sale.SalePromotions[i].DetailProduct.RemoveAt(j);
-            //            j--;
-            //        }
-            //    }
-            //    salePromotionResult.Amount = amountSaled;
-            //    saleResult.SalePromotions.Add(salePromotionResult);
-            //}
+                for (int j = 0; j < sale.SalePromotions[i].DetailProduct.Count(); j++)
+                {
+                    if (inventoryService.CheckInventoryAvailability(sale.InventoryId, promotionProducts[j].ProductId, promotionProducts[j].Amount))
+                    {
+                        amountSaled += promotionProducts[j].Amount;
+                    }
+                    else
+                    {
+                        salePromotionResult.DetailProduct[j].Amount = 0;
+                        sale.TotalCash -= Decimal.ToDouble(promotionProducts[j].Import);
+                        sale.SalePromotions[i].DetailProduct.RemoveAt(j);
+                        j--;
+                    }
+                }
+                salePromotionResult.Amount = amountSaled;
+                saleResult.SalePromotions.Add(salePromotionResult);
+            }
             int routeId = db.so_route_team_travels_employees
                 .Where(x => x.userId == sale.UserId && x.inventoryId == sale.InventoryId)
                 .Select(x => x.routeId).FirstOrDefault();
@@ -2172,6 +2192,26 @@ namespace SmartOrderService.Services
             db.SaveChanges();
         }
 
+        public void CustomerCheck(SaleTeamWithPoints sale)
+        {
+            if (sale.DeliveryId == 0)
+                return;
+
+            so_customer customer = db.so_delivery.Where(x => x.deliveryId == sale.DeliveryId).Select(x => x.so_customer).FirstOrDefault();
+
+            if (customer.customerId == sale.CustomerId && !customer.code.Contains("TEMP"))
+                return;
+
+            foreach (var customerRoute in customer.so_route_customer)
+            {
+                customerRoute.status = false;
+                customerRoute.modifiedby = sale.UserId;
+                customerRoute.modifiedon = DateTime.Now;
+            }
+
+            db.SaveChanges();
+        }
+
         public SaleTeam SaleTeamTransaction(SaleTeam sale)
         {
             using (var transaction = db.Database.BeginTransaction())
@@ -2568,6 +2608,7 @@ namespace SmartOrderService.Services
                         if (!checkIfSaleExist(sale))
                         {
                             UnlockCreatev2(sale);
+                            CustomerCheck(sale);
                             if (sale.SaleId == 0)
                             {
                                 throw new BadRequestException();
