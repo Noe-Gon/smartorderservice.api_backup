@@ -89,11 +89,14 @@ namespace SmartOrderService.Services
                 List<int> users = UoWConsumer.RouteTeamRepository.Get(x => x.routeId == routeId)
                     .Select(x => x.userId)
                     .ToList();
-
-                filter.And(x => users.Contains(x.userId));
+                Expression<Func<so_sale, bool>> filterAux = x => users.Contains(x.userId);
+                filter = filter.And(filterAux);
             }
             else
-                filter.And(x => x.userId == userId);
+            {
+                Expression<Func<so_sale, bool>> filterAux = x => x.userId == userId;
+                filter = filter.And(filterAux);
+            }  
 
             var sales = UoWConsumer.SaleRepository.Get(filter).ToList();
             List<int> salesIds = sales.Select(x => x.saleId).ToList();
