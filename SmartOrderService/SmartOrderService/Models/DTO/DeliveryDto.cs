@@ -66,4 +66,9 @@ namespace SmartOrderService.Models.DTO
             DeliveryPromotions = new List<DeliveryPromotionDto>();
         }
     }
+
+    public class GetDeliveriesByWorkDay : GetDeliveriesByInventoryResponse
+    {
+
+    }
 }

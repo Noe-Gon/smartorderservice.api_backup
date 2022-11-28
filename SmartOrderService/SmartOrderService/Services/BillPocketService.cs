@@ -77,7 +77,12 @@ namespace SmartOrderService.Services
             if (inventories.Count == 0)
                 throw new EntityNotFoundException("No se encontraron viajes para la jornada " + workdayId.ToString());
 
-            Expression<Func<so_sale, bool>> filter = x => x.status && x.total_credit > 0 && inventories.Contains(x.inventoryId.Value);
+            so_work_day workDay = UoWConsumer.WorkDayRepository.Get(x => x.work_dayId == workdayId).FirstOrDefault();
+
+            if(workDay == null)
+                throw new EntityNotFoundException("No se encontraró la jornada " + workdayId.ToString());
+
+            Expression<Func<so_sale, bool>> filter = x => x.status && inventories.Contains(x.inventoryId.Value) && workDay.date_start <= x.date;
 
             if (userId == null)
             {
@@ -90,7 +95,14 @@ namespace SmartOrderService.Services
             else
                 filter.And(x => x.userId == userId);
 
-            return UoWConsumer.SaleRepository.Get(filter).ToList();
+            var sales = UoWConsumer.SaleRepository.Get(filter).ToList();
+            List<int> salesIds = sales.Select(x => x.saleId).ToList();
+            //Se busca las de billpocket
+            var billSales = UoWConsumer.SaleAdditionalDataRepository.Get(x => salesIds.Contains(x.saleId) && x.paymentMethod == "tarjeta").Select(x => x.saleId).ToList();
+
+            filter.And(x => billSales.Contains(x.saleId));
+
+            return sales.Where(x => billSales.Contains(x.saleId)).ToList();
         }
 
         public void CheckOngoinTravels(Guid workDayId)
@@ -131,7 +143,7 @@ namespace SmartOrderService.Services
 
             so_billpocket_report_log reportData = new so_billpocket_report_log()
             {
-                TotalAmount = sales.Sum(x => x.total_credit),
+                TotalAmount = sales.Sum(x => x.total_cash),
                 RouteId = request.RouteId,
                 SendDate = DateTime.Now,
                 TotalSales = sales.Count(),

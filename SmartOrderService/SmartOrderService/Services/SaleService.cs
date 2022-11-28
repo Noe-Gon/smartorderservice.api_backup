@@ -8,6 +8,7 @@ using SmartOrderService.Models.Enum;
 using SmartOrderService.Models.Message;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;
+using SmartOrderService.UnitOfWork;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -192,6 +193,18 @@ namespace SmartOrderService.Services
                     if (!lInventarioAfectado)
                     {
                         RestoreInventoryAvailability_v2(saleId);
+                    }
+
+                    if (sale.deliveryId != null && sale.deliveryId != 0)
+                    {
+                        var service = new DeliveryService();
+
+                        var response = service.CancelDeliveryApiPreventa(new CancelDeliveryRequest()
+                        {
+                            deliveryId = sale.deliveryId.Value,
+                            userId = sale.userId,
+                            force = true
+                        });
                     }
 
                     dbContextTransaction.Commit();
