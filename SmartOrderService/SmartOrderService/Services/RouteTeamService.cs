@@ -325,19 +325,33 @@ namespace SmartOrderService.Services
 
         public bool CheckBillPocketReport(Guid workdayId, int userId)
         {
-            //Si no hay ventas de Billpocket no omitir
+            //Se buscan las ventas
             List<int> inventories = db.so_route_team_travels_employees.Where(x => x.work_dayId == workdayId)
                .Select(x => x.inventoryId)
                .Distinct()
                .ToList();
 
-            Expression<Func<so_sale, bool>> filter = x => x.status && x.total_credit > 0 && inventories.Contains(x.inventoryId.Value);
+            if (inventories.Count == 0)
+                throw new EntityNotFoundException("No se encontraron viajes para la jornada " + workdayId.ToString());
+
+            so_work_day workDay = db.so_work_day.Where(x => x.work_dayId == workdayId).FirstOrDefault();
+
+            if (workDay == null)
+                throw new EntityNotFoundException("No se encontraró la jornada " + workdayId.ToString());
+
+            Expression<Func<so_sale, bool>> filter = x => x.status && inventories.Contains(x.inventoryId.Value) && workDay.date_start <= x.date;
 
             filter.And(x => x.userId == userId);
 
-            var sales = db.so_sale.Where(filter).ToList();
+            List<int> sales = db.so_sale.Where(filter).Select(x => x.saleId).ToList();
 
             if (sales.Count() == 0)
+                return true;
+
+            //Se busca las de billpocket
+            var billSales = db.so_sale_aditional_data.Where(x => sales.Contains(x.saleId) && x.paymentMethod == "tarjeta").ToList();
+
+            if (billSales.Count() == 0)
                 return true;
 
             //Si hay almenos una venta con billpocket

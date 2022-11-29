@@ -73,6 +73,58 @@ namespace SmartOrderService.Services
 
         }
 
+        public List<GetDeliveriesByInventoryResponse> GetDeliveriesByWorkDay(int inventoryId, Guid workDayId)
+        {
+
+            List<GetDeliveriesByInventoryResponse> Deliveries = new List<GetDeliveriesByInventoryResponse>();
+            //Buscar LAs cargas de la jornada
+            List<int> inventories = db.so_route_team_travels_employees
+                .Where(x => x.work_dayId == workDayId)
+                .GroupBy(x => x.inventoryId)
+                .Select(x => x.Key)
+                .ToList();
+
+            inventories.Add(inventoryId);
+
+            //Cambiar el filtro para todas las Jornadas
+            var InventoryDeliveries = db.so_delivery.Where(d => inventories.Contains(d.inventoryId) && d.status && d.so_customer.status);
+
+            var so_user = db.so_inventory.Where(i => inventories.Contains(i.inventoryId) && i.status).FirstOrDefault().so_user;
+
+            if ((!InventoryDeliveries.Any() || InventoryDeliveries.Count() == 0) && so_user.type != so_user.CCEH_TYPE && so_user.type != so_user.POAC_TYPE)
+                throw new InventoryEmptyException();
+
+            List<int> deliveriesId = InventoryDeliveries.Select(x => x.deliveryId).ToList();
+            var sales = db.so_sale.Where(x => deliveriesId.Contains(x.deliveryId ?? 0) && (x.deliveryId != null || x.deliveryId != 0)).ToList();
+
+            foreach (var delivery in InventoryDeliveries)
+            {
+                if (delivery.inventoryId != inventoryId && delivery.so_delivery_additional_data.DeliveryStatus.Code == DeliveryStatus.UNDELIVERED)
+                    continue;
+
+                var deliveryMap = MapGetDeliveriesResponse(delivery);
+
+                var sale = sales.Where(x => x.deliveryId == deliveryMap.DeliveryId).OrderByDescending(x => x.createdon).Select(x => x.so_sale_detail).FirstOrDefault();
+                if (sale == null)
+                {
+                    Deliveries.Add(deliveryMap);
+                    continue;
+                }
+                    
+                foreach (var item in deliveryMap.DeliveryDetail)
+                {
+                    var product = sale.Where(x => x.productId == item.ProductId).FirstOrDefault();
+
+                    item.AmountDelivered = product == null ? 0 : product.amount;
+                }
+
+                Deliveries.Add(deliveryMap);
+            }
+
+            return Deliveries;
+
+        }
+
         [Obsolete]
         public OrderDTO GetNewDeliveriesByCustomerId(int customerId)
         {
@@ -973,7 +1025,7 @@ namespace SmartOrderService.Services
                 //Actualizar el status
                 else
                 {
-                    if (delivery.so_delivery_additional_data.DeliveryStatus != null)
+                    if (delivery.so_delivery_additional_data.DeliveryStatus != null && !request.force)
                         if (delivery.so_delivery_additional_data.DeliveryStatus.Code == DeliveryStatus.DELIVERED || delivery.so_delivery_additional_data.DeliveryStatus.Code == DeliveryStatus.PARTIALLY_DELIVERED)
                             throw new BadRequestException("La entrega ya fue entregada");
 

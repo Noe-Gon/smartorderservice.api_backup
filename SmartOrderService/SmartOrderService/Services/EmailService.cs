@@ -581,7 +581,7 @@ namespace SmartOrderService.Services
                 body = body.Replace("{RouteName}", request.RouteName);
                 body = body.Replace("{UserRole}", request.UserRole);
                 body = body.Replace("{WorkDayDate}", request.WorkDayDate.ToString("dd-MM-yyyy"));
-                body = body.Replace("{SendDate}", request.SendDate.ToString("dd-MM-yyyy"));
+                body = body.Replace("{SendDate}", request.SendDate.ToString("dd-MM-yyyy HH:mm"));
                 body = body.Replace("{TotalAmount}", request.TotalAmount.ToString("0.00"));
                 body = body.Replace("{TotalSales}", request.TotalSales.ToString());
 

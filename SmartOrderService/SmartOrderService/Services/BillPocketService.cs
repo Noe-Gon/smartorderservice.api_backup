@@ -77,20 +77,35 @@ namespace SmartOrderService.Services
             if (inventories.Count == 0)
                 throw new EntityNotFoundException("No se encontraron viajes para la jornada " + workdayId.ToString());
 
-            Expression<Func<so_sale, bool>> filter = x => x.status && x.total_credit > 0 && inventories.Contains(x.inventoryId.Value);
+            so_work_day workDay = UoWConsumer.WorkDayRepository.Get(x => x.work_dayId == workdayId).FirstOrDefault();
+
+            if(workDay == null)
+                throw new EntityNotFoundException("No se encontraró la jornada " + workdayId.ToString());
+
+            Expression<Func<so_sale, bool>> filter = x => x.status && inventories.Contains(x.inventoryId.Value) && workDay.date_start <= x.date;
 
             if (userId == null)
             {
                 List<int> users = UoWConsumer.RouteTeamRepository.Get(x => x.routeId == routeId)
                     .Select(x => x.userId)
                     .ToList();
-
-                filter.And(x => users.Contains(x.userId));
+                Expression<Func<so_sale, bool>> filterAux = x => users.Contains(x.userId);
+                filter = filter.And(filterAux);
             }
             else
-                filter.And(x => x.userId == userId);
+            {
+                Expression<Func<so_sale, bool>> filterAux = x => x.userId == userId;
+                filter = filter.And(filterAux);
+            }  
 
-            return UoWConsumer.SaleRepository.Get(filter).ToList();
+            var sales = UoWConsumer.SaleRepository.Get(filter).ToList();
+            List<int> salesIds = sales.Select(x => x.saleId).ToList();
+            //Se busca las de billpocket
+            var billSales = UoWConsumer.SaleAdditionalDataRepository.Get(x => salesIds.Contains(x.saleId) && x.paymentMethod == "tarjeta").Select(x => x.saleId).ToList();
+
+            filter.And(x => billSales.Contains(x.saleId));
+
+            return sales.Where(x => billSales.Contains(x.saleId)).ToList();
         }
 
         public void CheckOngoinTravels(Guid workDayId)
@@ -131,7 +146,7 @@ namespace SmartOrderService.Services
 
             so_billpocket_report_log reportData = new so_billpocket_report_log()
             {
-                TotalAmount = sales.Sum(x => x.total_credit),
+                TotalAmount = sales.Sum(x => x.total_cash),
                 RouteId = request.RouteId,
                 SendDate = DateTime.Now,
                 TotalSales = sales.Count(),

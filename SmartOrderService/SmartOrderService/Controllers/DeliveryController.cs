@@ -71,6 +71,30 @@ namespace SmartOrderService.Controllers
         }
 
         [HttpGet]
+        [Route("~/api/v2/deliveries")]
+        public HttpResponseMessage GetDeliveriesV2([FromUri]int InventoryId, Guid WorkDayId)
+        {
+            HttpResponseMessage response;
+
+            try
+            {
+                List<GetDeliveriesByInventoryResponse> deliveries = new DeliveryService().GetDeliveriesByWorkDay(InventoryId, WorkDayId);
+
+                response = Request.CreateResponse(HttpStatusCode.OK, deliveries);
+            }
+            catch (InventoryEmptyException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, "No hay entregas para ese inventario");
+
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message);
+            }
+            return response;
+        }
+
+        [HttpGet]
         [Route("~/api/NewDeliveries")]
         public HttpResponseMessage GetNewDeliveries([FromUri] int customerId)
         {
@@ -174,6 +198,11 @@ namespace SmartOrderService.Controllers
             }
         }
 
+        /// <summary>
+        /// Regresa los deliveries relacionados a la venta
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("~/api/registeredeliveries")]
         public IHttpActionResult GetDeliveriesStatus(GetDeliveriesRequest request)
@@ -251,7 +280,7 @@ namespace SmartOrderService.Controllers
             try
             {
                 var service = new DeliveryService();
-
+                request.force = false;
                 var response = service.CancelDeliveryApiPreventa(request);
 
                 if (response.Status)
