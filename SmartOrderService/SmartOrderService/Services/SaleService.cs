@@ -3285,7 +3285,14 @@ namespace SmartOrderService.Services
                                                          ProductId = g.productId,
                                                          AmountSold = g.amount
                                                         }).ToList(),
-                                         SalePromotionCatalog = GetSalePromotionCatalog(item.so_sale_promotion.ToList()),
+                                         SalePromotionCatalog = (from g in item.so_sale_promotion
+                                                                 where g.status == true && g.promotion_catalogId != null
+                                                                 orderby g.createdon descending
+                                                                 select new SalePromotionCatalog
+                                                                 {
+                                                                    PromotionCatalogId = g.promotion_catalogId.Value,
+                                                                    AmountSale = g.amount
+                                                                 }).ToList(),
                                          SaleDetailsArticles = item.so_sale_detail_article.Select(x => new SaleDetailsArticles()
                                                                                                          {
                                                                                                                 amount = x.amount,
@@ -3301,7 +3308,7 @@ namespace SmartOrderService.Services
                                                                  Amount = g.amount
                                                              }).ToList(),
                                          SalePromotion = (from g in item.so_sale_promotion
-                                                          where g.status == true
+                                                          where g.status == true && g.promotion_catalogId == null
                                                           orderby g.createdon descending
                                                          select new SalePromotionResponse 
                                                          {
@@ -3325,27 +3332,6 @@ namespace SmartOrderService.Services
             }
             
             return saleDto;
-        }
-
-        public List<SalePromotionCatalog> GetSalePromotionCatalog(List<so_sale_promotion> promotions)
-        {
-            var response = new List<SalePromotionCatalog>();
-
-            foreach (var item in promotions)
-            {
-                foreach (var arti in item.so_sale_promotion_detail_article)
-                {
-                    response.Add(new SalePromotionCatalog()
-                    {
-                        AmountSale = arti.amount,
-                        ArticlePromotionalId = arti.article_promotionalId,
-                        PromotionCatalogId = db.so_promotion_article.Where(x => x.article_promotionalId == arti.article_promotionalId)
-                        .Select(x => x.promotion_catalogId).FirstOrDefault()
-                    });
-                }
-            }
-
-            return response;
         }
 
         public ResponseBase<MsgResponseBase> SenTicketDigital(SendTicketDigitalRequest request)

@@ -34,6 +34,10 @@ namespace SmartOrderService.DB
 
         public bool status { get; set; }
 
+        public decimal? additional_cost { get; set; }
+
+        public int? promotion_catalogId { get; set; }
+
         public virtual so_promotion so_promotion { get; set; }
 
         public virtual so_sale so_sale { get; set; }

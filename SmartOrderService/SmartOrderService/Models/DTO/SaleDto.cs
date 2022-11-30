@@ -41,9 +41,7 @@ namespace SmartOrderService.Models.DTO
         public int PromotionCatalogId { get; set; }
 
         [JsonProperty("amountSale")]
-        public double AmountSale { get; set; }
+        public int AmountSale { get; set; }
 
-        [JsonProperty("article_promotionalId")]
-        public int ArticlePromotionalId { get; set; }
     }
 }

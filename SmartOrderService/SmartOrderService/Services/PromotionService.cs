@@ -71,8 +71,10 @@ namespace SmartOrderService.Services
                 optionId = new SqlParameter("@OptionId5", 5);
                 lstpromotionpromotionGiftArticleDto = context.Database.SqlQuery<PromotionGiftArticleDto>("sp_getPromotions @UserId5, @InventaryId5, @OptionId5", userId, inventaryId, optionId).ToList();
 
+                var promotionTypeIds = lstpromotionCatalogDto.Select(x => x.type_promotionId).ToList();
+
                 //Recuperando el catalogo de tipos de promociones
-                lstPromotionTypeCatalogDto = db.so_promotion.Where(x => x.status).Select(x => new PromotionTypeCatalog()
+                lstPromotionTypeCatalogDto = db.so_promotion.Where(x => x.status && promotionTypeIds.Contains(x.promotionId)).Select(x => new PromotionTypeCatalog()
                 {
                     code = x.code,
                     id = x.promotionId,
