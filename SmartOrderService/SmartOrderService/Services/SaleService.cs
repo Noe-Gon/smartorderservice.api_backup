@@ -406,29 +406,29 @@ namespace SmartOrderService.Services
                                      amount = g.Sum(a => a.amount)
                                  }).ToList();
 
-            //var amountArticle = (from it in (from promo in db.so_sale_promotion
-            //                                 join art in db.so_sale_promotion_detail_article
-            //                                 on promo.sale_promotionId equals art.sale_promotionId
-            //                                 where promo.saleId == saleId
-            //                                 select new
-            //                                 {
-            //                                     art.article_promotionalId,
-            //                                     amount = art.amount * promo.amount
-            //                                 }).ToList().Union((from art in db.so_sale_detail_article
-            //                                                    where art.saleId == saleId
-            //                                                    select new
-            //                                                    {
-            //                                                        art.article_promotionalId,
-            //                                                        art.amount
-            //                                                    }
-            //                                       ).ToList())
-            //                     group it by it.article_promotionalId
-            //                     into g
-            //                     select new
-            //                     {
-            //                         article_promotionalId = g.Key,
-            //                         amount = g.Sum(a => a.amount)
-            //                     }).ToList();
+            var amountArticle = (from it in (from promo in db.so_sale_promotion
+                                             join art in db.so_sale_promotion_detail_article
+                                             on promo.sale_promotionId equals art.sale_promotionId
+                                             where promo.saleId == saleId
+                                             select new
+                                             {
+                                                 art.article_promotionalId,
+                                                 amount = art.amount * promo.amount
+                                             }).ToList().Union((from art in db.so_sale_detail_article
+                                                                where art.saleId == saleId
+                                                                select new
+                                                                {
+                                                                    art.article_promotionalId,
+                                                                    art.amount
+                                                                }
+                                                   ).ToList())
+                                 group it by it.article_promotionalId
+                                 into g
+                                 select new
+                                 {
+                                     article_promotionalId = g.Key,
+                                     amount = g.Sum(a => a.amount)
+                                 }).ToList();
 
             foreach (var product in amountProduct)
             {
@@ -445,23 +445,23 @@ namespace SmartOrderService.Services
                 }
             }
 
-            //foreach (var article in amountArticle)
-            //{
-            //    var inventarioArt = db.so_article_promotional_route
-            //        .Where(e => e.branchId.Equals(branchId) && e.routeId.Equals(routeId) && e.article_promotionalId.Equals(article.article_promotionalId) && e.status == true).FirstOrDefault();
+            foreach (var article in amountArticle)
+            {
+                var inventarioArt = db.so_article_promotional_route
+                    .Where(e => e.branchId.Equals(branchId) && e.routeId.Equals(routeId) && e.article_promotionalId.Equals(article.article_promotionalId) && e.status == true).FirstOrDefault();
 
-            //    if(inventarioArt != null)
-            //    {
-            //        inventarioArt.amount += article.amount;
-            //        inventarioArt.modifiedon = DateTime.Now;
-            //    }
-            //    else
-            //    {
-            //        throw new Exception("No se encontró el Articulo con ID: " + article.article_promotionalId + " por lo tanto no se pudo incrementar el inventario");
-            //    }
+                if (inventarioArt != null)
+                {
+                    inventarioArt.amount += article.amount;
+                    inventarioArt.modifiedon = DateTime.Now;
+                }
+                else
+                {
+                    throw new Exception("No se encontró el Articulo con ID: " + article.article_promotionalId + " por lo tanto no se pudo incrementar el inventario");
+                }
 
-            //    db.SaveChanges();
-            //}
+                db.SaveChanges();
+            }
         }
 
         public Sale Cancel_v3(int saleId, string PaymentMethod)
@@ -494,6 +494,8 @@ namespace SmartOrderService.Services
                     {
                         RestoreInventoryAvailability_v3(saleId);
                     }
+
+                    dbContextTransaction.Commit();
 
                     var SaleDto = new SaleMapper().toModel(sale);
 
@@ -2632,6 +2634,7 @@ namespace SmartOrderService.Services
                             sRespuesta = CreatePromotion(saleResult, db);
                             if (sRespuesta != string.Empty)
                                 throw new Exception(sRespuesta);
+                            UpdateRouteTeamInventoryPromotion(saleResult);
                         }
                         SendSaleEmailWithPoints(sale, saleResult);
                         transaction.Commit();
@@ -2662,6 +2665,65 @@ namespace SmartOrderService.Services
                 RedemptionPoints(saleResult);
                 return saleResult;
             }
+        }
+
+        public void UpdateRouteTeamInventoryPromotion(SaleTeamWithPoints sale)
+        {
+            int routeId = db.so_route_team_travels_employees
+               .Where(x => x.userId == sale.UserId && x.inventoryId == sale.InventoryId)
+               .Select(x => x.routeId).FirstOrDefault();
+
+            foreach (var item in sale.SaleDetailsArticles)
+            {
+                var routeArticleAmount = db.so_article_promotional_route
+                            .Where(x => x.routeId == routeId && x.article_promotionalId == item.article_promotionalId)
+                            .FirstOrDefault();
+
+                routeArticleAmount.amount = routeArticleAmount.amount - item.amount;
+            }
+
+            foreach (var promocion in sale.PromotionCatalog)
+            {
+                for (int i = 0; i < promocion.amountSale; i++)
+                {
+
+                    //Validar la cantidad de articulos de regalo
+                    var promotionGiftArticleaux = sale.PromotionGiftArticleDto.Where(x => x.promotion_catalogId == promocion.promotion_catalogId).ToList();
+
+                    foreach (var item in promotionGiftArticleaux)
+                    {
+
+                        var routeArticle = db.so_article_promotional_route
+                            .Where(x => x.routeId == routeId && x.article_promotionalId == item.article_promotionalId)
+                            .FirstOrDefault();
+
+                        routeArticle.amount = routeArticle.amount - item.amount;
+                    }
+
+                    //Validar cantidad productos a vender
+                    var promotionProductAux = sale.PromotionProductDto.Where(x => x.promotion_catalogId == promocion.promotion_catalogId).ToList();
+                    foreach (var item in promotionProductAux)
+                    {
+                        var inventoryProduct = db.so_route_team_inventory_available
+                            .Where(x => x.inventoryId == sale.InventoryId && x.productId == item.productId)
+                            .FirstOrDefault();
+
+                        inventoryProduct.Available_Amount = inventoryProduct.Available_Amount - item.amount;
+                    }
+
+                    //Validar cantidad de productos de regalo
+                    var promotionGiftProductaux = sale.PromotionGiftProductDto.Where(x => x.promotion_catalogId == promocion.promotion_catalogId).ToList();
+                    foreach (var item in promotionGiftProductaux)
+                    {
+                        var inventoryProduct = db.so_route_team_inventory_available
+                            .Where(x => x.inventoryId == sale.InventoryId && x.productId == item.productId)
+                            .FirstOrDefault();
+
+                        inventoryProduct.Available_Amount = inventoryProduct.Available_Amount - item.amount;
+                    }
+                }
+            }
+            db.SaveChanges();
         }
 
         public DataTable GetPromotionsTicketDigital(DbContext db, int SaleId)
