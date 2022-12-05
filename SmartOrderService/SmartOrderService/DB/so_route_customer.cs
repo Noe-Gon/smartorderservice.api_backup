@@ -40,8 +40,6 @@ namespace SmartOrderService.DB
 
         public bool status { get; set; }
 
-        //public bool venta_alcohol { get; set; }
-
         public virtual so_customer so_customer { get; set; }
 
         public virtual so_route so_route { get; set; }

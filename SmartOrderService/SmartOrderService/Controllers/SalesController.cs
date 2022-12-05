@@ -25,8 +25,9 @@ namespace SmartOrderService.Controllers
     public class SalesController : ApiController
     {
         private SmartOrderModel db = new SmartOrderModel();
-        private static Dictionary<string, SaleService> mapObjectService = new Dictionary<string, SaleService>();
+
         private static SaleService objectService = new SaleService();
+        private static Dictionary<string, SaleService> mapObjectService = new Dictionary<string, SaleService>();
         SaleService service;
 
         [HttpGet,Route("api/sales/{SaleId}/Lines")]
@@ -231,7 +232,7 @@ namespace SmartOrderService.Controllers
                 SaleService serviceLock = null;
                 RouteTeamService servce = new RouteTeamService();
                 var routeId = servce.searchRouteId(sale.UserId);
-                if (mapObjectService.ContainsKey(routeId.ToString()))
+                if(mapObjectService.ContainsKey(routeId.ToString()))
                 {
                     serviceLock = mapObjectService[routeId.ToString()];
                 }

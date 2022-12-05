@@ -28,8 +28,8 @@ namespace SmartOrderService.Mappers
                     .ForMember(dest => dest.PriceBaseValue, opt => opt.MapFrom(src => src.base_price))
                     .ForMember(dest => dest.DiscountPercentValue, opt => opt.MapFrom(src => src.discount_percent));
 
-                    cfg.CreateMap<so_customer, CustomerDto>();
-                    //.ForMember(dest => dest.VentaAlcohol, opt=> opt.MapFrom(src => src.venta_alcohol));
+                    cfg.CreateMap<so_customer, CustomerDto>()
+                    .ForMember(dest => dest.VentaAlcohol, opt=> opt.MapFrom(src => src.venta_alcohol));
 
 
                     cfg.CreateMap<so_reason_devolution, ReasonDevolutionDto>();
