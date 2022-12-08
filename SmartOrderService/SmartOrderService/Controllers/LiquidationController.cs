@@ -179,12 +179,18 @@ namespace SmartOrderService.Controllers
                     return Content(System.Net.HttpStatusCode.BadRequest, response);
                 }
             }
-
+            catch (EntityNotFoundException e)
+            {
+                return Content(System.Net.HttpStatusCode.NotFound, ResponseBase<GetLiquidationStatusResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
             catch (Exception e)
             {
                 return Content(System.Net.HttpStatusCode.InternalServerError, ResponseBase<GetLiquidationStatusResponse>.Create(new List<string>()
                 {
-                    "Error interno del servidor", e.Message
+                    e.Message
                 }));
             }
         }

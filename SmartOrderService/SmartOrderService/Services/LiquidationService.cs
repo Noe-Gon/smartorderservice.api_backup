@@ -746,6 +746,10 @@ namespace SmartOrderService.Services
                     "Error con la api digitalización"
                 });
             }
+            catch (EntityNotFoundException e)
+            {
+                throw e;
+            }
             catch (Exception e)
             {
                 return ResponseBase<GetLiquidationStatusResponse>.Create(new List<string>()

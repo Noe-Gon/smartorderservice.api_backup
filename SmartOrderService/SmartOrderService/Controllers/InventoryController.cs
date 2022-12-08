@@ -251,5 +251,36 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
+        /// <summary>
+        /// De vuelve la información de los invantarios
+        /// </summary>
+        [HttpGet, Route("api/inventory/status")]
+        public IHttpActionResult GetInventoriesStatus([FromUri] Guid workDayId, [FromUri]int userId)
+        {
+            try
+            {
+                var inventoryService = new InventoryService();
+                var response = inventoryService.GetInventoryStatus(workDayId, userId);
+
+                if (response.Status)
+                    return Content(HttpStatusCode.OK, response);
+
+                return Content(HttpStatusCode.BadRequest, response);
+            }
+            catch (EntityNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+        }
     }
 }
