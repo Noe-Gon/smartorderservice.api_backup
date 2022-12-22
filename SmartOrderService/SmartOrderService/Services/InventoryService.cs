@@ -936,6 +936,55 @@ namespace SmartOrderService.Services
             }
         }
 
+        public InventoryOpenResponsev2 isInventoryOpenv2(int inventoryId, int userId)
+        {
+            ERolTeam userTeamRole = roleTeamService.GetUserRole(userId);
+            RouteTeamInventoryAvailableService routeTeamInventoryAvailable = new RouteTeamInventoryAvailableService();
+            var inventory = db.so_inventory.Where(x => x.inventoryId == inventoryId).FirstOrDefault();
+
+            if (inventory == null)
+                throw new EntityNotFoundException("No se encontró el inventario");
+
+            if (userTeamRole == ERolTeam.Impulsor)
+            {
+                
+
+                if (inventory.state == INVENTORY_OPEN || inventory.state == INVENTORY_AVAILABLE)
+                {
+                    return new InventoryOpenResponsev2
+                    {
+                        InventoryId = inventoryId,
+                        IsOpen = true,
+                        order = inventory.order
+                    };
+                }
+                return new InventoryOpenResponsev2
+                {
+                    InventoryId = inventoryId,
+                    IsOpen = false,
+                    order = inventory.order
+                };
+            }
+            else//Rol de ayudante
+            {
+                if (inventory.state == INVENTORY_OPEN)
+                {
+                    return new InventoryOpenResponsev2
+                    {
+                        InventoryId = inventoryId,
+                        IsOpen = true,
+                        order = inventory.order
+                    };
+                }
+                return new InventoryOpenResponsev2
+                {
+                    InventoryId = inventoryId,
+                    IsOpen = false,
+                    order = inventory.order
+                };
+            }
+        }
+
         private so_inventory GetCurrentInventory(int userId)
         {
             var currentInventory = db.so_inventory.Where(i => i.userId.Equals(userId)

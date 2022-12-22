@@ -251,5 +251,21 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
+        [HttpGet, Route("api/v2/inventory/isInventoryOpen")]
+        public HttpResponseMessage isInventoryOpenv2([FromUri] int inventoryId, [FromUri] int userId)
+        {
+            HttpResponseMessage response;
+            try
+            {
+                var inventoryService = new InventoryService();
+                var inventoryOpen = inventoryService.isInventoryOpenv2(inventoryId, userId);
+                response = Request.CreateResponse(HttpStatusCode.OK, inventoryOpen);
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, e);
+            }
+            return response;
+        }
     }
 }
