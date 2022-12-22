@@ -2,6 +2,7 @@
 using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
 using SmartOrderService.Models;
+using SmartOrderService.Models.Responses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,6 +38,16 @@ namespace SmartOrderService.Services
                 throw new KeyNotFoundException("No se encontraron cedis");
 
             return branches;
+        }
+
+        public ResponseBase<TimeSpan> GetLimitTime(int branchId)
+        {
+            var Limit = db.so_branch_limit_time.Where(x => x.branchId == branchId).FirstOrDefault();
+
+            if (Limit == null)
+                throw new EntityNotFoundException("No esta configurado una hora para el branch " + branchId);
+
+            return ResponseBase<TimeSpan>.Create(Limit.limit_time);
         }
 
     }

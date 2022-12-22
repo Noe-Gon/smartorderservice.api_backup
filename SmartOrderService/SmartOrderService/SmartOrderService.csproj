@@ -360,6 +360,7 @@
     <Compile Include="DB\so_branch.cs" />
     <Compile Include="DB\so_branch_articles.cs" />
     <Compile Include="DB\so_branch_config.cs" />
+    <Compile Include="DB\so_branch_limit_time.cs" />
     <Compile Include="DB\so_branch_products_discount_list.cs" />
     <Compile Include="DB\so_branch_reason_devolution.cs" />
     <Compile Include="DB\so_branch_reason_failed_transaction.cs" />
@@ -773,7 +774,6 @@
     <Content Include="bin\Microsoft.AspNet.Identity.Owin.dll" />
     <Content Include="bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll" />
     <Content Include="bin\Microsoft.IdentityModel.Clients.ActiveDirectory.dll" />
-    <Content Include="bin\Microsoft.IdentityModel.Clients.ActiveDirectory.xml" />
     <Content Include="bin\Microsoft.Owin.dll" />
     <Content Include="bin\Microsoft.Owin.Host.SystemWeb.dll" />
     <Content Include="bin\Microsoft.Owin.Security.Cookies.dll" />
@@ -805,10 +805,14 @@
     <Content Include="bin\SmartOrderService.dll" />
     <Content Include="bin\SmartOrderService.dll.config" />
     <Content Include="bin\SmartOrderService.pdb" />
+    <Content Include="bin\System.ComponentModel.Primitives.dll" />
     <Content Include="bin\System.Net.Http.dll" />
+    <Content Include="bin\System.Net.Http.Extensions.dll" />
     <Content Include="bin\System.Net.Http.Formatting.dll" />
+    <Content Include="bin\System.Net.Http.Primitives.dll" />
     <Content Include="bin\System.Net.Http.WebRequest.dll" />
     <Content Include="bin\System.Threading.Tasks.Dataflow.dll" />
+    <Content Include="bin\System.ValueTuple.dll" />
     <Content Include="bin\System.Web.Helpers.dll" />
     <Content Include="bin\System.Web.Http.dll" />
     <Content Include="bin\System.Web.Http.Owin.dll" />

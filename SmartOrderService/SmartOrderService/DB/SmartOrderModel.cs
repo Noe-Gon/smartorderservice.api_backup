@@ -175,6 +175,7 @@ namespace SmartOrderService.DB
 
         public virtual DbSet<so_billpocket_report_log> so_billpocket_report_logs { get; set; }
 
+        public virtual DbSet<so_branch_limit_time> so_branch_limit_time { get; set; }
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<so_role_team>()
