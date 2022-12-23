@@ -272,7 +272,7 @@ namespace SmartOrderService.Controllers
                     try
                     {
                         if (sale.EmailDeliveryTicket ?? false)
-                            serviceLock.SaleService.SenTicketDigital(new SendTicketDigitalRequest()
+                            serviceLock.SaleService.SendTicketDigital(new SendTicketDigitalRequest()
                             {
                                 SaleId = saleResult.SaleId,
                                 Email = sale.Email
@@ -439,7 +439,7 @@ namespace SmartOrderService.Controllers
                 var sale = service.Cancel(id, PaymentMethod);
                 try
                 {
-                    service.SenTicketDigital(new SendTicketDigitalRequest()
+                    service.SendTicketDigital(new SendTicketDigitalRequest()
                     {
                         SaleId = sale.SaleId,
                         Email = null
@@ -621,7 +621,7 @@ namespace SmartOrderService.Controllers
             try
             {
                 var service = new SaleService();
-                var response = service.SenTicketDigital(request);
+                var response = service.SendTicketDigital(request);
 
                 if (response.Status)
                     return Content(HttpStatusCode.OK, response);
@@ -647,5 +647,6 @@ namespace SmartOrderService.Controllers
                 return Content(HttpStatusCode.InternalServerError, response); 
             }
         }
+
     }
 }

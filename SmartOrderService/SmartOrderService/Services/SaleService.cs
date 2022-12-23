@@ -3396,9 +3396,10 @@ namespace SmartOrderService.Services
             return saleDto;
         }
 
-        public ResponseBase<MsgResponseBase> SenTicketDigital(SendTicketDigitalRequest request)
+
+        public ResponseBase<MsgResponseBase> SendTicketDigital(SendTicketDigitalRequest request)
         {
-            if(request.SaleId == 0)
+            if (request.SaleId == 0)
                 return ResponseBase<MsgResponseBase>.Create(new List<string>()
                         {
                             "No se puede enviar el email", "No cuenta con datos suficientes"
@@ -3538,7 +3539,8 @@ namespace SmartOrderService.Services
                                 TotalPrice = Convert.ToDouble(detail.amount) * Convert.ToDouble(detail.price),
                                 UnitPrice = Convert.ToDouble(detail.price)
                             });
-                        }
+                        }  
+
                         sendTicketDigitalEmail.CancelTicketLink = GetCancelLinkByCustomerId(customer.customerId);
                         sendTicketDigitalEmail.Sales = sales;
 
@@ -3643,9 +3645,28 @@ namespace SmartOrderService.Services
                             });
                         }
 
+                        var salesLoyalty = new List<SendTicketDigitalEmailSalesWithPoints>();
+                        var SaleDetailsLoyalty = db.so_sale_with_points_details.Where(x => x.so_sale_with_points.saleId == sale.saleId).ToList();
+                        foreach (var detailLoyalty in SaleDetailsLoyalty)
+                        {
+                            var product = db.so_product.Where(x => x.code == detailLoyalty.so_product.code).FirstOrDefault();
+                            if (product == null)
+                            {
+                                continue;
+                            }
+
+                            salesLoyalty.Add(new SendTicketDigitalEmailSalesWithPoints
+                            {
+                                ProductName = product.productId + " - " + detailLoyalty.so_product.name,
+                                Amount = detailLoyalty.Amount,
+                                UnitPrice = detailLoyalty.pointsPerUnit,
+                                TotalPrice = detailLoyalty.pointsPerUnit * detailLoyalty.Amount
+                            });
+                        }
+
                         sendTicketDigitalEmail.CancelTicketLink = GetCancelLinkByCustomerId(customer.customerId);
                         sendTicketDigitalEmail.Sales = sales;
-
+                        
                         //Se envia el ticket
                         var emailService = new EmailService();
                         var response = emailService.SendTicketDigitalEmail(sendTicketDigitalEmail);
