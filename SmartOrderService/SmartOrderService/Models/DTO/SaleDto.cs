@@ -33,6 +33,7 @@ namespace SmartOrderService.Models.DTO
         public List<SaleReplacement> SaleReplacements { get; set; }
         public List<SalePromotionResponse> SalePromotion { get; set; }
         public List<SalePromotionCatalog> SalePromotionCatalog { get; set; }
+        public List<SaleDetailsLoyalty> SaleDetailsLoyalty { get; set; }
     }
 
     public class SalePromotionCatalog
@@ -43,5 +44,20 @@ namespace SmartOrderService.Models.DTO
         [JsonProperty("amountSale")]
         public int AmountSale { get; set; }
 
+    }
+
+    public class SaleDetailsLoyalty
+    {
+        [JsonProperty("code")]
+        public string Code;
+
+        [JsonProperty("name")]
+        public string Name;
+
+        [JsonProperty("Amount")]
+        public int Amount;
+
+        [JsonProperty("points")]
+        public int Points;
     }
 }

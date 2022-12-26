@@ -3313,7 +3313,8 @@ namespace SmartOrderService.Services
                                 result.paymentMethod,
                                 venta.createdon,
                                 venta.state,
-                                venta.status
+                                venta.status,
+                                venta.so_sale_with_points
                             }).ToList();
 
             var saleDto = (from item in qsaleDto
@@ -3369,6 +3370,14 @@ namespace SmartOrderService.Services
                                                                  ReplacementId = g.replacementId,
                                                                  Amount = g.amount
                                                              }).ToList(),
+                                         SaleDetailsLoyalty = item.so_sale_with_points.Count() == 0 ? new List<SaleDetailsLoyalty>() : (from g in item.so_sale_with_points.FirstOrDefault().so_sale_with_points_details
+                                                               select new SaleDetailsLoyalty()
+                                                               {
+                                                                   Amount = g.Amount,
+                                                                   Code = g.so_product.code,
+                                                                   Name = g.so_product.name,
+                                                                   Points = g.pointsPerUnit
+                                                               }).ToList(),
                                          SalePromotion = (from g in item.so_sale_promotion
                                                           where g.status == true && g.promotion_catalogId == null
                                                           orderby g.createdon descending
