@@ -5,6 +5,7 @@ using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Web;
 
@@ -13,8 +14,8 @@ namespace SmartOrderService.Services
     public class LoyaltyEnsitechService
     {
         private SmartOrderModel db = new SmartOrderModel();
-        private string url = "https://is68s2j0b1.execute-api.us-east-1.amazonaws.com/dev/";
-        private string autorizacion = "a9c332d2-ba38-405f-9cf7-57bcd787eba1";
+        private string url = ConfigurationManager.AppSettings["Loyalty_URL"];
+        private string autorizacion = ConfigurationManager.AppSettings["Loyalty_AUTH"];
 
         public List<LoyaltyGetCustomerList> GetCustomerUuid(string branchCode, string routeCode)
         {
@@ -43,7 +44,6 @@ namespace SmartOrderService.Services
         public ResponseBase<LoyaltyUuidResponse> GetConsumerUuidByCustomerCode(string request)
         {
             var endpoint = url + "beneficiary/customer?customerCode=" + request;
-            var autorizacion = "a9c332d2-ba38-405f-9cf7-57bcd787eba1";
             try
             {
                 var client = new RestClient(endpoint);
@@ -139,9 +139,13 @@ namespace SmartOrderService.Services
             }
         }
 
-        public LoyaltyGetRulesResponse GetRules(string branchCode, string routeCode)
+        public LoyaltyGetRulesResponse GetRules(int routeId)
         {
-            var endpoint = url + "beneficiary/branch/" + branchCode + "/route/" + routeCode + "/rules";
+            var data = db.so_route.Where(x => x.routeId == routeId)
+                .Select(x => new { RouteCode = x.code, BranchCode = x.so_branch.code})
+                .FirstOrDefault();
+
+            var endpoint = url + "beneficiary/branch/" + data.BranchCode + "/route/" + data.RouteCode + "/rules";
             try
             {
                 var client = new RestClient(endpoint);

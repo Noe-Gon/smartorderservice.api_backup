@@ -159,13 +159,13 @@ namespace SmartOrderService.Controllers
 
         [HttpGet]
         [Route("~/api/Loyalty/Rules")]
-        public HttpResponseMessage GetRules([FromUri] string branchCode, string routeCode)
+        public HttpResponseMessage GetRules([FromUri] int routeId)
         {
             HttpResponseMessage response;
             try
             {
 
-                var products = new LoyaltyEnsitechService().GetRules(branchCode, routeCode);
+                var products = new LoyaltyEnsitechService().GetRules(routeId);
                 response = Request.CreateResponse(HttpStatusCode.OK, products);
             }
             catch (Exception e)

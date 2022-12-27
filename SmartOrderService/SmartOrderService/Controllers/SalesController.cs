@@ -364,6 +364,17 @@ namespace SmartOrderService.Controllers
                         && serviceLock.SaleDate == sale.Date && serviceLock.DeliveryId == sale.DeliveryId)
                         mapObjectService.Remove(routeId.ToString());
                 }
+
+                try
+                {
+                    if (sale.EmailDeliveryTicket ?? false)
+                        serviceLock.SaleService.SendTicketDigital(new SendTicketDigitalRequest()
+                        {
+                            SaleId = saleResult.SaleId,
+                            Email = sale.Email
+                        });
+                }
+                catch (Exception) { }
             }
             catch (ProductNotFoundBillingException e)
             {

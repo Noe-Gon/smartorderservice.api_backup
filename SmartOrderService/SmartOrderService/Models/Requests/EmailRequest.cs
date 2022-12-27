@@ -30,6 +30,9 @@ namespace SmartOrderService.Models.Requests
         public DataTable dtTicket { get; set; }
         public SendTicketDigitalEmailOrder Order { get; set; }
         public string ReferenceCode { get; set; }
+        public int AccumulatedPoints { get; set; }
+        public int WonPoints { get; set; }
+        public string ValidityPointsDates { get; set; }
     }
 
     public class SendTicketDigitalEmailOrder
