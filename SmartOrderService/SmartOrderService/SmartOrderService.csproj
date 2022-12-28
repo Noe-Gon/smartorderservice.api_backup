@@ -628,6 +628,7 @@
     <Compile Include="Models\Locks\SaleTeamLock.cs" />
     <Compile Include="Models\Locks\WorkdayLock.cs" />
     <Compile Include="Models\Message\BillPocketMessage.cs" />
+    <Compile Include="Models\Message\InventoryMessage.cs" />
     <Compile Include="Models\Message\SaleModels.cs" />
     <Compile Include="Models\Message\ApiDigitalizacionMessage.cs" />
     <Compile Include="Models\Message\LiquidationMessage.cs" />
