@@ -361,6 +361,10 @@ namespace SmartOrderService.Services
             if (report == null)
                 throw new EntityNotFoundException("No se ha enviado el reporte.");
 
+            //Si las ventas no coinciden
+            if (report.TotalSales != billSales.Count())
+                throw new EntityNotFoundException("No se ha enviado el reporte final.");
+
             return true;
         }
 
