@@ -153,7 +153,7 @@ namespace SmartOrderService.Models.Message
     {
         public int UserId { get; set; }
         public int RouteId { get; set; }
-        public bool CloseInvetories { get; set; }
+       // public bool CloseInvetories { get; set; }
         public bool CloseSales { get; set; }
         public DateTime? Date { get; set; }
     }

@@ -411,51 +411,19 @@ namespace SmartOrderService.Services
                 });
             }
 
-            // Verificar si existe algun viaje abierto
-            var inventoriesOpen = UoWConsumer.InventoryRepository
-                .Get(x => x.state == 1 && x.status && x.userId == request.UserId && DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(request.Date))
+            //Verificar si tiene una venta activa
+            var customerBlockedService = new CustomerBlockedService(UoWConsumer);
+            var responseCB = customerBlockedService.GetCustomersBlockedByWorkday(workDay.work_dayId, null)
+                .Data.GroupBy(x => x.UserId)
+                .Select(x => x.Key)
                 .ToList();
 
-            if (inventoriesOpen.Count() > 0) //Hay inventarios abiertos
+            if (responseCB.Count() > 0 && !request.CloseSales)
+                throw new CustomerException("Clientes en proceso de venta");
+
+            foreach (var userId in responseCB)
             {
-                if (request.CloseInvetories)
-                {
-                    foreach (var inventoryOpen in inventoriesOpen)
-                    {
-                        //Verificar si tiene una venta activa
-                        var customerBlockedService = new CustomerBlockedService(UoWConsumer);
-                        var response = customerBlockedService.GetCustomersBlockedByWorkday(workDay.work_dayId, inventoryOpen.inventoryId)
-                            .Data.GroupBy(x => x.UserId)
-                            .Select(x => x.Key)
-                            .ToList();
-
-                        if (response.Count() > 0 && !request.CloseSales)
-                            throw new CustomerException("Clientes en proceso de venta");
-
-                        foreach (var userId in response)
-                        {
-                            customerBlockedService.ClearBlockedCustomer(new ClearBlockedCustomerRequest { UserId = userId });
-                        }
-
-                        var routeTeamsTravlesEmployees = UoWConsumer.RouteTeamTravlesEmployeesRepository
-                            .Get(x => x.inventoryId == inventoryOpen.inventoryId && x.work_dayId == workDay.work_dayId && x.active)
-                            .ToList();
-
-                        foreach (var rTE in routeTeamsTravlesEmployees)
-                        {
-                            rTE.active = false;
-                        }
-                        inventoryOpen.state = 2;
-                        UoWConsumer.RouteTeamTravlesEmployeesRepository.UpdateByRange(routeTeamsTravlesEmployees);
-                    }
-                    UoWConsumer.Save();
-                }
-                else
-                {
-                    throw new InventoryNotClosedException("No se ha finalizado el viaje");
-                }
-
-                UoWConsumer.InventoryRepository.UpdateByRange(inventoriesOpen);
+                customerBlockedService.ClearBlockedCustomer(new ClearBlockedCustomerRequest { UserId = userId });
             }
 
             logStatusId = HelperLiquidationLogStatus.GetLiquidationStatusId(UoWConsumer, HelperLiquidationLogStatus.WORK_DAY_NOT_FOUND);
