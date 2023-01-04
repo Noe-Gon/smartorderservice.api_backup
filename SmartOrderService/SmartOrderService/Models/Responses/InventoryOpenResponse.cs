@@ -10,4 +10,11 @@ namespace SmartOrderService.Models.Responses
         public int InventoryId { get; set; }
         public bool IsOpen { get; set; }
     }
+
+    public class InventoryOpenResponsev2
+    {
+        public int InventoryId { get; set; }
+        public bool IsOpen { get; set; }
+        public int order { get; set; }
+    }
 }
