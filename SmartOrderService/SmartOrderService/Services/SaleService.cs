@@ -443,6 +443,8 @@ namespace SmartOrderService.Services
                 {
                     throw new Exception("No se encontró el Producto con ID" + product.productId + " por lo tanto no se pudo incrementar el inventario");
                 }
+
+                db.SaveChanges();
             }
 
             foreach (var article in amountArticle)
