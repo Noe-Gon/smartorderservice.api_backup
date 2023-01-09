@@ -936,7 +936,7 @@ namespace SmartOrderService.Services
             }
             saleResult.TotalCash = Math.Round(sale.TotalCash, 3);
             saleResult.SaleReplacements = sale.SaleReplacements;
-            //saleResult.SalePromotions = sale.SalePromotions;
+            saleResult.SalePromotions = sale.SalePromotions;
             return saleResult;
         }
 
@@ -2618,19 +2618,18 @@ namespace SmartOrderService.Services
                 string sRespuesta = "";
                 try
                 {
-                    if (sale.SaleDetails.Count() > 0 || sale.SaleDetailsLoyalty.Count() > 0 || saleResult.SaleDetailsArticles.Count() > 0)
+                    if (saleResult.SaleDetails.Count() > 0 || saleResult.SaleDetailsLoyalty.Count() > 0 || saleResult.SaleDetailsArticles.Count() > 0)
                     {
-                        if (!checkIfSaleExist(sale))
+                        if (!checkIfSaleExist(saleResult))
                         {
-                            UnlockCreatev2(sale);
+                            UnlockCreatev2(saleResult);
                             CustomerCheck(sale);
-                            if (sale.SaleId == 0)
+                            if (saleResult.SaleId == 0)
                             {
                                 throw new BadRequestException();
                             }
-                            saleResult.SaleId = sale.SaleId;
-                            UpdateRouteTeamInventoryLoyalty(sale, db);
-                            CreatePaymentMethod(sale);
+                            UpdateRouteTeamInventoryLoyalty(saleResult, db);
+                            CreatePaymentMethod(saleResult);
                             sRespuesta = CreatePromotion(saleResult, db);
                             if (sRespuesta != string.Empty)
                                 throw new Exception(sRespuesta);
