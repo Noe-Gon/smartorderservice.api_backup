@@ -484,6 +484,7 @@
     <Compile Include="DB\so_sale_promotion.cs" />
     <Compile Include="DB\so_sale_promotion_detail.cs" />
     <Compile Include="DB\so_sale_promotion_detail_article.cs" />
+    <Compile Include="DB\so_sale_promotion_detail_product.cs" />
     <Compile Include="DB\so_sale_replacement.cs" />
     <Compile Include="DB\so_sale_send_mail.cs" />
     <Compile Include="DB\so_site.cs" />

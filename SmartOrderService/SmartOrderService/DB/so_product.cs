@@ -36,6 +36,7 @@ namespace SmartOrderService.DB
             so_promotion_detail_product = new HashSet<so_promotion_detail_product>();
             so_sale_detail = new HashSet<so_sale_detail>();
             so_sale_promotion_detail = new HashSet<so_sale_promotion_detail>();
+            so_sale_promotion_detail_product = new HashSet<so_sale_promotion_detail_product>();
             so_reception_bottle_detail = new HashSet<so_reception_bottle_detail>();
         }
 
@@ -159,5 +160,8 @@ namespace SmartOrderService.DB
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<so_reception_bottle_detail> so_reception_bottle_detail { get; set; }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<so_sale_promotion_detail_product> so_sale_promotion_detail_product { get; set; }
     }
 }

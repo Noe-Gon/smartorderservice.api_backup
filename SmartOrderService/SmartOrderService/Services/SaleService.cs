@@ -2838,10 +2838,9 @@ namespace SmartOrderService.Services
             List<DataTable> dataTables = createDataTableParameters(sale);
             DataTable dtPromotionCatalog = dataTables[0];
             DataTable dtPromotionProduct = dataTables[1];
-            DataTable dtPromotionGiftProduct = dataTables[2];
-            DataTable dtPromotionGiftArticle = dataTables[3];
-            DataTable dtPromotionSaleArticle = dataTables[4];
-            DataTable dtPromotionData = dataTables[5];
+            DataTable dtPromotionGiftArticle = dataTables[2];
+            DataTable dtPromotionSaleArticle = dataTables[3];
+            DataTable dtPromotionData = dataTables[4];
             string sRespuesta = "";
 
             var command = db.Database.Connection.CreateCommand();
@@ -2861,11 +2860,6 @@ namespace SmartOrderService.Services
             pPromotionProduct.TypeName = "dbo.PromotionProduct";
             pPromotionProduct.Value = dtPromotionProduct;
             command.Parameters.Add(pPromotionProduct);
-
-            SqlParameter pPromotionGiftProduct = new SqlParameter("@PromotionGiftProduct", SqlDbType.Structured);
-            pPromotionGiftProduct.TypeName = "dbo.PromotionProduct";
-            pPromotionGiftProduct.Value = dtPromotionGiftProduct;
-            command.Parameters.Add(pPromotionGiftProduct);
 
             SqlParameter pPromotionGiftArticle = new SqlParameter("@PromotionGiftArticle", SqlDbType.Structured);
             pPromotionGiftArticle.TypeName = "dbo.PromotionGiftArticle";
@@ -2901,7 +2895,6 @@ namespace SmartOrderService.Services
             //Crear DataTables a enviar
             DataTable dtPromotionCatalog = new DataTable();
             DataTable dtPromotionProduct = new DataTable();
-            DataTable dtPromotionGiftProduct = new DataTable();
             DataTable dtPromotionGiftArticle = new DataTable();
             DataTable dtPromotionData = new DataTable();
             DataTable dtPromotionSaleArticle = new DataTable();
@@ -2938,7 +2931,15 @@ namespace SmartOrderService.Services
             column.ColumnName = "amount";
             dtPromotionProduct.Columns.Add(column);
 
-            dtPromotionGiftProduct = dtPromotionProduct.Clone();
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Decimal");
+            column.ColumnName = "price";
+            dtPromotionProduct.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Decimal");
+            column.ColumnName = "import";
+            dtPromotionProduct.Columns.Add(column);
 
             column = new DataColumn();
             column.DataType = System.Type.GetType("System.Int32");
@@ -3010,16 +3011,20 @@ namespace SmartOrderService.Services
                 row["promotion_catalogId"] = item.promotion_catalogId;
                 row["productId"] = item.productId;
                 row["amount"] = item.amount;
+                row["price"] = item.price;
+                row["import"] = item.price * item.amount;
                 dtPromotionProduct.Rows.Add(row);
             }
 
             foreach (var item in sale.PromotionGiftProductDto)
             {
-                DataRow row = dtPromotionGiftProduct.NewRow();
+                DataRow row = dtPromotionProduct.NewRow();
                 row["promotion_catalogId"] = item.promotion_catalogId;
                 row["productId"] = item.productId;
                 row["amount"] = item.amount;
-                dtPromotionGiftProduct.Rows.Add(row);
+                row["price"] = 0;
+                row["import"] = 0;
+                dtPromotionProduct.Rows.Add(row);
             }
 
             foreach (var item in sale.PromotionGiftArticleDto)
@@ -3049,7 +3054,6 @@ namespace SmartOrderService.Services
 
             dataTables.Add(dtPromotionCatalog);
             dataTables.Add(dtPromotionProduct);
-            dataTables.Add(dtPromotionGiftProduct);
             dataTables.Add(dtPromotionGiftArticle);
             dataTables.Add(dtPromotionSaleArticle);
             dataTables.Add(dtPromotionData);

@@ -117,6 +117,7 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_sale_inventory> so_sale_inventory { get; set; }
         public virtual DbSet<so_sale_promotion> so_sale_promotion { get; set; }
         public virtual DbSet<so_sale_promotion_detail> so_sale_promotion_detail { get; set; }
+        public virtual DbSet<so_sale_promotion_detail_product> so_sale_promotion_detail_product { get; set; }
         public virtual DbSet<so_sale_promotion_detail_article> so_sale_promotion_detail_article { get; set; }
         public virtual DbSet<so_sale_replacement> so_sale_replacement { get; set; }
         public virtual DbSet<so_sale_send_mail> so_sale_send_mail { get; set; }
@@ -1109,6 +1110,11 @@ namespace SmartOrderService.DB
                 .WillCascadeOnDelete(false);
 
             modelBuilder.Entity<so_product>()
+                .HasMany(e => e.so_sale_promotion_detail_product)
+                .WithRequired(e => e.so_product)
+                .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<so_product>()
                 .HasOptional(e => e.so_product_tax)
                 .WithRequired(e => e.so_product);
 
@@ -1480,6 +1486,11 @@ namespace SmartOrderService.DB
 
             modelBuilder.Entity<so_sale_promotion>()
                 .HasMany(e => e.so_sale_promotion_detail_article)
+                .WithRequired(e => e.so_sale_promotion)
+                .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<so_sale_promotion>()
+                .HasMany(e => e.so_sale_promotion_detail_product)
                 .WithRequired(e => e.so_sale_promotion)
                 .WillCascadeOnDelete(false);
 
