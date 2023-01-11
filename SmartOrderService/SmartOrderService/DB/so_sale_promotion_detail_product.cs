@@ -12,7 +12,7 @@ namespace SmartOrderService.DB
         [Key]
         [Column(Order = 0)]
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
-        public int sale_promotion_detail_productId { get; set; }
+        public int sale_promotionId { get; set; }
 
         [Key]
         [Column(Order = 1)]
