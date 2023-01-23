@@ -146,4 +146,13 @@ namespace SmartOrderService.Models.Requests
         public int CustomerId { get; set; }
     }
 
+    #region UnifiedTempCustomer
+
+    public class UnifiedTempCustomerRequest
+    {
+        public int CustomerId { get; set; }
+        public int TempCustomerId { get; set; }
+    }
+
+    #endregion
 }

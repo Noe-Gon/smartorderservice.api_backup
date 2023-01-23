@@ -1705,6 +1705,62 @@ namespace SmartOrderService.Services
             return response;
         }
 
+        public ResponseBase<MsgResponseBase> UnifiedTempCustomer(UnifiedTempCustomerRequest request)
+        {
+            //Validar Si el customerId existe y esta activo
+            var customer = UoWConsumer.CustomerRepository.Get(x => x.customerId == request.CustomerId && x.status).FirstOrDefault();
+            if (customer == null)
+                throw new CustomerNotFoundException("Cliente no existe o fue dado de baja.");
+
+            //Validar el id del cliente temporar, si no temporar omitir función
+            var tempCustomer = UoWConsumer.CustomerRepository.Get(x => x.customerId == request.TempCustomerId && x.status).FirstOrDefault();
+            if (tempCustomer == null)
+                throw new CustomerNotFoundException("Cliente no existe o fue dado de baja.");
+
+            if (!tempCustomer.code.Contains("TEMP"))
+                throw new BadRequestException("No es un cliente temporal");
+
+            var clientPreventaApi = new RestClient();
+            clientPreventaApi.BaseUrl = new Uri(ConfigurationManager.AppSettings["PreventaAPI"]);
+            var requestPreventaApiConfig = new RestRequest("api/v1/temp-customer/" + request.CustomerId + "/unified-customer", Method.PATCH);
+            requestPreventaApiConfig.AddHeader("x-api-key", ConfigurationManager.AppSettings["x-api-key"]);
+            requestPreventaApiConfig.RequestFormat = DataFormat.Json;
+            requestPreventaApiConfig.AddBody(new UnifiedTempCustomerAPIPreventaRequest
+            {
+                customer_id_to_unified = request.TempCustomerId,
+                origen_id = ""
+            });
+
+            var apiResponse = clientPreventaApi.Execute(requestPreventaApiConfig);
+            string errorMsg = "Ocurrio un error al momento de procesar la información. API Preventa";
+
+            if (apiResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                return ResponseBase<MsgResponseBase>.Create(new MsgResponseBase()
+                {
+                    Msg = "Actualizado con éxito"
+                });
+
+            if (apiResponse.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                errorMsg = "No se encontraron pedido a actualizar. API Preventa";
+
+            if (apiResponse.StatusCode == (System.Net.HttpStatusCode)401)
+                errorMsg = "Petición no autorizada, se requiere enviar el token de autorización o no cuenta con permisos. API Preventa";
+
+            if (apiResponse.StatusCode == (System.Net.HttpStatusCode)403)
+                errorMsg = "No se encuentra el header Authorization del usuario. API Preventa";
+
+            if (apiResponse.StatusCode == (System.Net.HttpStatusCode)404)
+                errorMsg = "Recurso no encontrado. API Preventa";
+
+            if (apiResponse.StatusCode == (System.Net.HttpStatusCode)409)
+                errorMsg = "El objeto ya existe en la BD de Intermedia. API Preventa";
+
+            return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                    {
+                        errorMsg
+                    });
+        }
+
         public void Dispose()
         {
             this.UoWConsumer.Dispose();
