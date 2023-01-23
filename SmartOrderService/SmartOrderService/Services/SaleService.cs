@@ -380,9 +380,33 @@ namespace SmartOrderService.Services
                 throw new Exception("Debe existir un branch configurado para la ruta del viaje donde se realizó venta");
             }
 
-
             var amountProduct = (from it in (from promo in db.so_sale_promotion
                                              join detpromo in db.so_sale_promotion_detail
+                                              on promo.sale_promotionId equals detpromo.sale_promotionId
+                                             where promo.saleId == saleId
+                                             select new
+                                             {
+                                                 detpromo.productId,
+                                                 amount = detpromo.amount * promo.amount
+                                             }).ToList()
+                            .Union((from detsale in db.so_sale_detail
+                                    where detsale.saleId == saleId
+                                    select new
+                                    {
+                                        detsale.productId,
+                                        detsale.amount
+                                    }).ToList()
+                             ).ToList()
+                                 group it by it.productId
+                             into g
+                                 select new
+                                 {
+                                     productId = g.Key,
+                                     amount = g.Sum(a => a.amount)
+                                 }).ToList();
+
+            var amountGiftProduct = (from it in (from promo in db.so_sale_promotion
+                                             join detpromo in db.so_sale_promotion_detail_product
                                               on promo.sale_promotionId equals detpromo.sale_promotionId
                                              where promo.saleId == saleId
                                              select new
@@ -431,6 +455,23 @@ namespace SmartOrderService.Services
                                  }).ToList();
 
             foreach (var product in amountProduct)
+            {
+                var inventarioProduct = db.so_route_team_inventory_available
+                    .Where(e => e.inventoryId.Equals(inventoryId) && e.productId.Equals(product.productId)).FirstOrDefault();
+
+                if (inventarioProduct != null)
+                {
+                    inventarioProduct.Available_Amount += product.amount;
+                }
+                else
+                {
+                    throw new Exception("No se encontró el Producto con ID" + product.productId + " por lo tanto no se pudo incrementar el inventario");
+                }
+
+                db.SaveChanges();
+            }
+
+            foreach (var product in amountGiftProduct)
             {
                 var inventarioProduct = db.so_route_team_inventory_available
                     .Where(e => e.inventoryId.Equals(inventoryId) && e.productId.Equals(product.productId)).FirstOrDefault();
@@ -2863,8 +2904,8 @@ namespace SmartOrderService.Services
             command.Parameters.Add(pPromotionProduct);
 
             SqlParameter pPromotionGiftProduct = new SqlParameter("@PromotionGiftProduct", SqlDbType.Structured);
-            pPromotionProduct.TypeName = "dbo.PromotionProduct";
-            pPromotionProduct.Value = dtPromotionGiftProduct;
+            pPromotionGiftProduct.TypeName = "dbo.PromotionProduct";
+            pPromotionGiftProduct.Value = dtPromotionGiftProduct;
             command.Parameters.Add(pPromotionGiftProduct);
 
             SqlParameter pPromotionGiftArticle = new SqlParameter("@PromotionGiftArticle", SqlDbType.Structured);
@@ -2948,7 +2989,30 @@ namespace SmartOrderService.Services
             column.ColumnName = "import";
             dtPromotionProduct.Columns.Add(column);
 
-            dtPromotionGiftProduct = dtPromotionProduct.Clone();
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Int32");
+            column.ColumnName = "promotion_catalogId";
+            dtPromotionGiftProduct.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Int32");
+            column.ColumnName = "productId";
+            dtPromotionGiftProduct.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Int32");
+            column.ColumnName = "amount";
+            dtPromotionGiftProduct.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Decimal");
+            column.ColumnName = "price";
+            dtPromotionGiftProduct.Columns.Add(column);
+
+            column = new DataColumn();
+            column.DataType = System.Type.GetType("System.Decimal");
+            column.ColumnName = "import";
+            dtPromotionGiftProduct.Columns.Add(column);
 
             column = new DataColumn();
             column.DataType = System.Type.GetType("System.Int32");
@@ -3063,6 +3127,7 @@ namespace SmartOrderService.Services
 
             dataTables.Add(dtPromotionCatalog);
             dataTables.Add(dtPromotionProduct);
+            dataTables.Add(dtPromotionGiftProduct);
             dataTables.Add(dtPromotionGiftArticle);
             dataTables.Add(dtPromotionSaleArticle);
             dataTables.Add(dtPromotionData);
@@ -3284,7 +3349,7 @@ namespace SmartOrderService.Services
                                                          {
                                                              PromotionId = g.promotionId,
                                                              Amount = g.amount,
-                                                             DetailProduct = (from gg in g.so_sale_promotion_detail
+                                                             DetailProduct = ((from gg in g.so_sale_promotion_detail
                                                                               where gg.status == true
                                                                               orderby gg.createdon descending
                                                                              select new SalePromotionDetailProductResponse 
@@ -3293,7 +3358,16 @@ namespace SmartOrderService.Services
                                                                                  Amount = gg.amount,
                                                                                  PriceValue = gg.price_without_taxes ?? 0,
                                                                                  Import = gg.import
-                                                                             }).ToList()
+                                                                             }).Union(from gg in g.so_sale_promotion_detail_product
+                                                                                                where gg.status == true
+                                                                                                orderby gg.createdon descending
+                                                                                                select new SalePromotionDetailProductResponse
+                                                                                                {
+                                                                                                    ProductId = gg.productId,
+                                                                                                    Amount = gg.amount,
+                                                                                                    PriceValue = (decimal)gg.price,
+                                                                                                    Import = gg.import
+                                                                                                })).ToList()
                                                          }).ToList()
                                         }).ToList();
 
