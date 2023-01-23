@@ -489,5 +489,50 @@ namespace SmartOrderService.Controllers
             }
             
         }
+
+        [HttpPost]
+        [Route("~/api/Consumer/UnifiedTempCustomer")]
+        public IHttpActionResult UnifiedTempCustomer(UnifiedTempCustomerRequest request)
+        {
+            try
+            {
+                using (var service = GetService())
+                {
+                    var response = service.UnifiedTempCustomer(request);
+
+                    if (response.Status)
+                        return Ok(response);
+
+                    return Content(HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (BadRequestException e)
+            {
+                var response = ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                });
+
+                return Content(HttpStatusCode.Conflict, response);
+            }
+            catch (CustomerNotFoundException e)
+            {
+                var response = ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                });
+
+                return Content(HttpStatusCode.NotFound, response);
+            }
+            catch (Exception e)
+            {
+                var response = ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                });
+
+                return Content(HttpStatusCode.InternalServerError, response);
+            }
+        }
     }
 }

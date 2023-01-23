@@ -164,4 +164,12 @@ namespace SmartOrderService.Models.Requests
         public int SaleId { get; set; }
     }
     #endregion
+
+    #region Unified Temp Customer API Preventa
+    public class UnifiedTempCustomerAPIPreventaRequest
+    {
+        public int customer_id_to_unified { get; set; }
+        public string origen_id { get; set; }
+    }
+    #endregion
 }
