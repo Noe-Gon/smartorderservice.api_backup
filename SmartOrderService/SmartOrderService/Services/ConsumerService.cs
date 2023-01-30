@@ -576,6 +576,31 @@ namespace SmartOrderService.Services
                         }
                     }
 
+                    //Buscar si existe un Cliente Vario
+                    var productPriceList = UoWConsumer.CustomerProductPriceListRepository
+                        .Get(x => x.status && x.customerId == updateCustomer.customerId)
+                        .Select(x => x.so_products_price_list)
+                        .FirstOrDefault();
+
+                    if (productPriceList == null)
+                    {
+                        productPriceList = GetProductPriceList(route);
+
+                        var newCustomerProductPriceList = new so_customer_products_price_list
+                        {
+                            createdby = 2777,
+                            createdon = DateTime.Now,
+                            customerId = updateCustomer.customerId,
+                            modifiedby = 2777,
+                            modifiedon = DateTime.Now,
+                            products_price_listId = productPriceList.products_price_listId,
+                            status = true
+                        };
+
+                        UoWConsumer.CustomerProductPriceListRepository.Insert(newCustomerProductPriceList);
+                    }
+
+
                     var routeId = GetIdRoute(route.code, route.so_branch.code);
                     var figuraId = GetFiguraCRM();
 
@@ -607,7 +632,7 @@ namespace SmartOrderService.Services
                         StateIdName = request.StateName,
                         NeighborhoodIdName = request.NeighborhoodName,
                         FiguraId = figuraId,
-                        PriceListId = null
+                        PriceListId = productPriceList.is_master ? (int?)null : Convert.ToInt32(productPriceList.code),
                     };
 
                     if (customerAdditionalDateAux.Code != null)
@@ -1405,7 +1430,7 @@ namespace SmartOrderService.Services
             GetConsumerAllInfo response = new GetConsumerAllInfo(customer);
             PriceService service = new PriceService();
             DateTime time = Utils.DateUtils.getDateTime(request.LastUpdate);
-            var prices = service.getPricesByInventoryCustomer(request.InventoryId, request.BranchId, time, request.CustomerId);
+            var prices = service.getPricesByInventoryCustomerv2(request.InventoryId, request.BranchId, time, request.CustomerId);
             response.Pricelist = prices;
 
             return ResponseBase<GetConsumerAllInfo>.Create(response);

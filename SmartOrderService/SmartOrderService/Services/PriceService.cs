@@ -16,7 +16,6 @@ namespace SmartOrderService.Services
         private SmartOrderModel db = new SmartOrderModel();
         public List<PriceDto> getPricesByCustomerBranch(int CustomerId, int BranchId, DateTime updated, List<int> productsIds, List<PriceDto> MasterPrices, so_branch_tax branch_tax)
         {
-
             List<PriceDto> prices = new List<PriceDto>();
 
             var priceList = db.so_products_price_list
@@ -53,8 +52,70 @@ namespace SmartOrderService.Services
             prices = MergePrices(MasterPrices, prices, branch_tax);
 
             return prices;
+        }
 
+        public List<PriceDto> getPricesByCustomerBranchv2(int CustomerId, int routeId, int BranchId, DateTime updated, List<int> productsIds, List<PriceDto> MasterPrices, so_branch_tax branch_tax)
+        {
+            List<PriceDto> prices = new List<PriceDto>();
 
+            var priceList = db.so_products_price_list
+           .Join(db.so_customer_products_price_list,
+               pl => pl.products_price_listId,
+               plc => plc.products_price_listId,
+               (pl, plc) => new { pl, plc }
+          )
+           .Where(
+               x => x.pl.branchId.Equals(BranchId)
+               && x.pl.status
+               && x.plc.customerId.Equals(CustomerId)
+               && x.plc.status
+               && DbFunctions.TruncateTime(x.pl.validity_start) <= DbFunctions.TruncateTime(DateTime.Today)
+               && DbFunctions.TruncateTime(x.pl.validity_end) >= DbFunctions.TruncateTime(DateTime.Today)
+          )
+          .Select(p => new { PriceListId = p.pl.products_price_listId }).FirstOrDefault();
+
+            if (priceList == null)
+            {
+                var customerVario = db.so_route_customer
+                    .Where(x => x.routeId == routeId && x.so_customer.name == "cliente_vario")
+                    .FirstOrDefault();
+
+                if (customerVario != null)
+                    priceList = db.so_products_price_list
+                       .Join(db.so_customer_products_price_list,
+                           pl => pl.products_price_listId,
+                           plc => plc.products_price_listId,
+                           (pl, plc) => new { pl, plc }
+                      )
+                       .Where(
+                           x => x.pl.branchId.Equals(BranchId)
+                           && x.pl.status
+                           && x.plc.customerId.Equals(customerVario.customerId)
+                           && x.plc.status
+                           && DbFunctions.TruncateTime(x.pl.validity_start) <= DbFunctions.TruncateTime(DateTime.Today)
+                           && DbFunctions.TruncateTime(x.pl.validity_end) >= DbFunctions.TruncateTime(DateTime.Today)
+                      )
+                      .Select(p => new { PriceListId = p.pl.products_price_listId }).FirstOrDefault();
+            }
+
+            if (priceList != null)
+            {
+                var priceDetails = db.so_price_list_products_detail
+                   .Where(
+                        p => p.products_price_listId.Equals(priceList.PriceListId)
+                        && p.status
+                        && p.so_product.type == 1
+                        && p.so_product.status
+                        && productsIds.Contains(p.productId)
+                    ).
+                    ToArray();
+
+                prices.AddRange(Mapper.Map<so_price_list_products_detail[], List<PriceDto>>(priceDetails));
+            }
+
+            prices = MergePrices(MasterPrices, prices, branch_tax);
+
+            return prices;
         }
 
         public List<PriceList> getPricesByInventory(int InventoryId, int BranchId, DateTime updated)
@@ -119,6 +180,63 @@ namespace SmartOrderService.Services
 
         }
 
+        public List<PriceList> getPricesByInventoryv2(int InventoryId, int BranchId, DateTime updated)
+        {
+            List<PriceList> PriceList = new List<PriceList>();
+
+            var productsIds = new InventoryService().GetInventoryProductsIds(InventoryId);
+
+            so_branch_tax branch_tax = db.so_branch_tax.FirstOrDefault(x => x.branchId == BranchId && x.status);
+
+            var MasterPrices = getPricesByBranch(BranchId, updated, productsIds);
+
+            var CustomerList = db.so_delivery.Where(d => d.inventoryId.Equals(InventoryId) && d.status).Select(c => c.customerId).ToList();
+
+            var soUser = db.so_inventory.Where(i => i.inventoryId == InventoryId).FirstOrDefault().so_user;
+            var route = db.so_user_route.Where(ur => ur.userId == soUser.userId && ur.status).FirstOrDefault();
+
+            if (soUser.type == so_user.POAC_TYPE || soUser.type == so_user.CCEH_TYPE)
+            {
+                int day = (int)DateTime.Today.DayOfWeek;
+                day++;
+
+                var custo = db.so_route_customer.Where(rc => rc.routeId == route.routeId && rc.status && rc.day == day && !CustomerList.Contains(rc.customerId)).ToList();
+
+                var routeVisits = db.so_user_route
+                        .Join(db.so_route_customer,
+                            userRoute => userRoute.routeId,
+                            customerRoute => customerRoute.routeId,
+                            (userRoute, customerRoute) => new { userRoute.userId, customerRoute.customerId, customerRoute.day, customerRouteStatus = customerRoute.status, userRouteStatus = userRoute.status }
+                        )
+                        .Where(
+                            v => v.userId.Equals(soUser.userId)
+                            && !CustomerList.Contains(v.customerId)
+                            && day.Equals(v.day)
+                            && v.customerRouteStatus
+                            && v.userRouteStatus
+                        )
+                            .Select(c => c.customerId).ToList();
+
+                CustomerList.AddRange(routeVisits);
+            }
+
+            foreach (var Customer in CustomerList)
+            {
+
+                List<PriceDto> prices = getPricesByCustomerBranchv2(Customer, route.routeId, BranchId, updated, productsIds, MasterPrices, branch_tax);
+
+                PriceList.Add(new PriceList() { Prices = prices, CustomerId = Customer });
+
+            }
+
+            if (soUser.type == so_user.POAC_TYPE && soUser.type == so_user.CCEH_TYPE)
+            {
+                PriceList = PriceList.Select(pl => { pl.Prices = pl.Prices.Select(p => { p.HasDiscount = false; return p; }).ToList(); return pl; }).ToList();
+            }
+
+            return PriceList;
+
+        }
 
         public List<PriceDto> getPricesByInventoryCustomer(int InventoryId, int BranchId, DateTime updated, int CustomerId)
         {
@@ -136,6 +254,26 @@ namespace SmartOrderService.Services
 
             return prices;
 
+        }
+
+        public List<PriceDto> getPricesByInventoryCustomerv2(int InventoryId, int BranchId, DateTime updated, int CustomerId)
+        {
+            List<PriceList> PriceList = new List<PriceList>();
+
+            var productsIds = new InventoryService().GetInventoryProductsIds(InventoryId);
+
+            so_branch_tax branch_tax = db.so_branch_tax.FirstOrDefault(x => x.branchId == BranchId && x.status);
+
+            var MasterPrices = getPricesByBranch(BranchId, updated, productsIds);
+
+            var CustomerList = db.so_delivery.Where(d => d.inventoryId.Equals(InventoryId) && d.status).Select(c => c.customerId).ToList();
+
+            var soUser = db.so_inventory.Where(i => i.inventoryId == InventoryId).FirstOrDefault().so_user;
+            var route = db.so_user_route.Where(ur => ur.userId == soUser.userId && ur.status).FirstOrDefault();
+
+            List<PriceDto> prices = getPricesByCustomerBranchv2(CustomerId, route.routeId, BranchId, updated, productsIds, MasterPrices, branch_tax);
+
+            return prices;
         }
 
 
