@@ -339,7 +339,7 @@ namespace SmartOrderService.Services
 
             Expression<Func<so_sale, bool>> filter = x => x.status && inventories.Contains(x.inventoryId.Value) && workDay.date_start <= x.date;
 
-            filter.And(x => x.userId == userId);
+            filter = filter.And(x => x.userId == userId);
 
             List<int> sales = db.so_sale.Where(filter).Select(x => x.saleId).ToList();
 
