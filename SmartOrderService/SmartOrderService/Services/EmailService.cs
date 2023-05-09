@@ -13,6 +13,12 @@ namespace SmartOrderService.Services
 {
     public class EmailService
     {
+        DigitalTicketConfigurationService digitalTicketConfigurationService;
+
+        public EmailService()
+        {
+            digitalTicketConfigurationService = new DigitalTicketConfigurationService();
+        }
         public ResponseBase<SendWellcomeEmailResponse> SendWellcomeEmail(WellcomeEmailRequest request)
         {
             try
@@ -55,6 +61,7 @@ namespace SmartOrderService.Services
             {
                 bool lTienePromociones = false;
                 string sRutaPlantilla = "~/Content/Template/TicketDigitalEmail.html";
+                string urlAvisoPrivacidad = digitalTicketConfigurationService.GetPrivacityNotice();
 
                 if (request.dtTicket.Columns.Count > 0 && request.dtTicket.Rows.Count > 0)
                 {
@@ -71,6 +78,7 @@ namespace SmartOrderService.Services
                     body = body.Replace("{RouteAddress}", request.RouteAddress);
                     body = body.Replace("{SellerName}", request.SellerName);
                     body = body.Replace("{CancelTicketLink}", request.CancelTicketLink);
+                    body = body.Replace("{UrlAvisoPrivacidad}", urlAvisoPrivacidad == null ? urlAvisoPrivacidad : "<a href='" + urlAvisoPrivacidad + "'>Aviso de privacidad</a>");
 
                     if (request.PaymentMethod == null || !string.IsNullOrEmpty(request.PaymentMethod))
                         body = body.Replace("{PaymentMethod}", "");
@@ -206,6 +214,7 @@ namespace SmartOrderService.Services
             {
                 bool lTienePromociones = false;
                 string sRutaPlantilla = "~/Content/Template/CancelTicketDigitalEmail.html";
+                string urlAvisoPrivacidad = digitalTicketConfigurationService.GetPrivacityNotice();
 
                 if (request.dtTicket.Columns.Count > 0 && request.dtTicket.Rows.Count > 0)
                 {
@@ -223,6 +232,7 @@ namespace SmartOrderService.Services
                     body = body.Replace("{SellerName}", request.SellerName);
                     body = body.Replace("{CancelDate}", request.Date.ToString("dd/MMM/yy"));
                     body = body.Replace("{CancelTicketLink}", request.CancelTicketLink);
+                    body = body.Replace("{UrlAvisoPrivacidad}", urlAvisoPrivacidad == null ? urlAvisoPrivacidad : "<a href='" + urlAvisoPrivacidad + "'>Aviso de privacidad</a>");
 
                     if (request.PaymentMethod == null || !string.IsNullOrEmpty(request.PaymentMethod))
                         body = body.Replace("{PaymentMethod}", "");

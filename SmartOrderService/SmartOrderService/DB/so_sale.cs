@@ -18,6 +18,7 @@ namespace SmartOrderService.DB
             so_sale_replacement = new HashSet<so_sale_replacement>();
             so_sale_detail = new HashSet<so_sale_detail>();
             so_sale_promotion = new HashSet<so_sale_promotion>();
+            so_sale_combos = new HashSet<so_sale_combo>();
         }
 
         [Key]
@@ -74,6 +75,7 @@ namespace SmartOrderService.DB
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<so_sale_promotion> so_sale_promotion { get; set; }
+        public virtual ICollection<so_sale_combo> so_sale_combos { get; set; }
 
         public virtual so_user so_user { get; set; }
 

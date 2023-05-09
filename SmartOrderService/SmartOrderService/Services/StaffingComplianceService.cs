@@ -500,22 +500,20 @@ namespace SmartOrderService.Services
             if (routeBranch == null)
                 throw new EntityNotFoundException("No se encuentró el branch o la ruta");
 
-            //var log = Getlog(request.EmployeeCode, DateTime.Now);
-            //if (log != null)
-            //    if (log.UserId != request.UserId)
-            //        throw new UserInUseException("Este codigó ya ha sido usado");
-            //    else
-            //    {
-            //        if (log.UserCode == request.EmployeeCode)
-            //            return new ResponseBase<AuthenticateLeaderCodeResponse>()
-            //            {
-            //                Data = null,
-            //                Errors = null,
-            //                Status = true
-            //            };
-            //        else
-            //            throw new UserInUseException("El usuario inicio sesión con otro codigo de empleado");
-            //    }
+            var log = Getlog(request.EmployeeCode, DateTime.Now);
+            if (log != null)
+                if (log.UserId == request.UserId)
+                    if (log.UserCode == request.EmployeeCode)
+                        return new ResponseBase<AuthenticateLeaderCodeResponse>()
+                        {
+                            Data = null,
+                            Errors = null,
+                            Status = true
+                        };
+                    else
+                        throw new UserInUseException("El usuario inicio sesión con otro codigo de empleado");
+                //else
+                //    throw new UserInUseException("Este codigó ya ha sido usado");
 
             var employee = SingleEmployee(routeBranch.Code, request.EmployeeCode);
 

@@ -14,8 +14,10 @@ namespace SmartOrderService.Services
     public class PriceService
     {
         private SmartOrderModel db = new SmartOrderModel();
+
         public List<PriceDto> getPricesByCustomerBranch(int CustomerId, int BranchId, DateTime updated, List<int> productsIds, List<PriceDto> MasterPrices, so_branch_tax branch_tax)
         {
+
             List<PriceDto> prices = new List<PriceDto>();
 
             var priceList = db.so_products_price_list
@@ -74,13 +76,13 @@ namespace SmartOrderService.Services
           )
           .Select(p => new { PriceListId = p.pl.products_price_listId }).FirstOrDefault();
 
-            if (priceList == null)
+            if(priceList == null)
             {
                 var customerVario = db.so_route_customer
                     .Where(x => x.routeId == routeId && x.so_customer.name == "cliente_vario")
                     .FirstOrDefault();
 
-                if (customerVario != null)
+                if(customerVario != null)
                     priceList = db.so_products_price_list
                        .Join(db.so_customer_products_price_list,
                            pl => pl.products_price_listId,
@@ -253,7 +255,6 @@ namespace SmartOrderService.Services
             List<PriceDto> prices = getPricesByCustomerBranch(CustomerId, BranchId, updated, productsIds, MasterPrices, branch_tax);
 
             return prices;
-
         }
 
         public List<PriceDto> getPricesByInventoryCustomerv2(int InventoryId, int BranchId, DateTime updated, int CustomerId)
@@ -275,7 +276,6 @@ namespace SmartOrderService.Services
 
             return prices;
         }
-
 
         public List<PriceDto> MergePrices(List<PriceDto> Master, List<PriceDto> CustomerPrices, so_branch_tax BranchTax)
         {

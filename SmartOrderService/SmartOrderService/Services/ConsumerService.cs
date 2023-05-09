@@ -206,7 +206,7 @@ namespace SmartOrderService.Services
                 var crmRequest = new CRMConsumerRequest
                 {
                     Name = newCustomer.name,
-                    Email = newCustomer.email,
+                    Email = newCustomer.email ?? string.Empty,
                     Phone = newCustomerAdditionalData.Phone,
                     CFECode = newCustomer.code,
                     CountryId = request.CountryId == null || request.CountryId == defaultGuid ? null : request.CountryId,
@@ -252,16 +252,19 @@ namespace SmartOrderService.Services
                 //var user = UoWConsumer.UserRepository.Get(x => x.userId == request.UserId).FirstOrDefault();
                 //var prices = service.getPricesByInventoryCustomer(inventory.inventoryId, user.branchId, DateTime.Now, newCustomer.customerId);
 
-                //Se envia el Correo
-                var emailService = new EmailService();
-
-                emailService.SendWellcomeEmail(new WellcomeEmailRequest
+                if (!string.IsNullOrEmpty(request.Email))
                 {
-                    CustomerName = newCustomer.name,
-                    TermsAndConditionLink = termsEmailURL,
-                    CustomerEmail = newCustomer.email,
-                    CanceledLink = cancelEmailURL
-                });
+                    //Se envia el Correo
+                    var emailService = new EmailService();
+
+                    emailService.SendWellcomeEmail(new WellcomeEmailRequest
+                    {
+                        CustomerName = newCustomer.name,
+                        TermsAndConditionLink = termsEmailURL,
+                        CustomerEmail = newCustomer.email,
+                        CanceledLink = cancelEmailURL
+                    });
+                }
 
                 var response = new InsertConsumerResponse
                 {
@@ -528,7 +531,11 @@ namespace SmartOrderService.Services
                     address += string.IsNullOrEmpty(request.Crossroads) ? updateCustomerData.address_number_cross1 : " X " + request.Crossroads;
                     address += string.IsNullOrEmpty(request.Crossroads_2) ? updateCustomerData.address_number_cross2 : " Y " + request.Crossroads_2;
                     address += stringColonia + stringMunicipio;
-                    updateCustomer.address = address;
+                    updateCustomer.address = string.IsNullOrEmpty(request.Street) 
+                        && string.IsNullOrEmpty(request.ExternalNumber)
+                        && string.IsNullOrEmpty(request.Crossroads) 
+                        && string.IsNullOrEmpty(request.Crossroads_2) 
+                        ? updateCustomer.address : address;
 
                     //Ágregar y eliminar dias
                     var daysInRoute = UoWConsumer.RouteCustomerRepository
@@ -536,6 +543,9 @@ namespace SmartOrderService.Services
                         .ToList();
 
                     var newDaysInRoute = new List<so_route_customer>();
+
+                    if (request.Days == null)
+                        request.Days = daysInRoute.Select(x => x.day).ToList();
 
                     foreach (var day in request.Days)
                     {
@@ -552,6 +562,7 @@ namespace SmartOrderService.Services
                                 visit_type = 1
                             });
                     }
+
                     foreach (var day in daysInRoute)
                     {
                         if (request.Days.Contains(day.day))
@@ -595,7 +606,6 @@ namespace SmartOrderService.Services
                         UoWConsumer.CustomerProductPriceListRepository.Insert(newCustomerProductPriceList);
                     }
 
-
                     var routeId = GetIdRoute(route.code, route.so_branch.code);
                     var figuraId = GetFiguraCRM();
 
@@ -604,7 +614,7 @@ namespace SmartOrderService.Services
                     var crmRequest = new CRMConsumerRequest
                     {
                         Name = updateCustomer.name,
-                        Email = updateCustomer.email,
+                        Email = updateCustomer.email ?? string.Empty,
                         Phone = customerAdditionalDateAux.Phone,
                         CFECode = updateCustomer.code,
                         CountryId = request.CountryId == null || request.CountryId == defaultGuid ? null : request.CountryId,
@@ -631,9 +641,15 @@ namespace SmartOrderService.Services
                     };
 
                     if (customerAdditionalDateAux.Code != null)
-                        CRMService.ConsumerToCRM(crmRequest, CRMService.TypeUpdate, Method.POST);
+                    {
+                        if (CRMService.ConsumerToCRM(crmRequest, CRMService.TypeUpdate, Method.POST) == null)
+                            throw new CRMException("No se logró registrar en CRM");
+                    }
                     else
                         customerAdditionalDateAux.Code = CRMService.ConsumerToCRM(crmRequest, CRMService.TypeCreate, Method.POST);
+
+                    if (customerAdditionalDateAux.Code == null)
+                        throw new CRMException("No se logró registrar en CRM");
 
                     UoWConsumer.RouteCustomerRepository.InsertByRange(newDaysInRoute);
                     UoWConsumer.RouteCustomerRepository.UpdateByRange(daysInRoute);

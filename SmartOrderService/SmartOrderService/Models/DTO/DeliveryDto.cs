@@ -20,6 +20,7 @@ namespace SmartOrderService.Models.DTO
         public List<DeliveryReplacementDto> DeliveryReplacements { get; set; }
 
         public List<DeliveryPromotionDto> DeliveryPromotions { get; set; }
+        public IList<DeliveryComboDto> Combos { get; set; }
 
         public bool Status { get; set; }
 
@@ -28,6 +29,7 @@ namespace SmartOrderService.Models.DTO
             DeliveryDetail = new List<DeliveryDetailDto>();
             DeliveryReplacements = new List<DeliveryReplacementDto>();
             DeliveryPromotions = new List<DeliveryPromotionDto>();
+            Combos = new List<DeliveryComboDto>();
         }
     }
 

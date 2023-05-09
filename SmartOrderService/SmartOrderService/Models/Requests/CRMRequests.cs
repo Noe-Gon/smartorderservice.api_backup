@@ -74,5 +74,14 @@ namespace SmartOrderService.Models.Requests
                 list.Add(CreateEntityReference(entityReferenceName, name, value));
             }
         }
+
+        public static void CreateAttribute<T>(List<AttributeCrm> list, string name, T value)
+        {
+            if (value == null)
+                return;
+
+            if (value is string)
+                list.Add(Create(name, value.ToString()));
+        }
     }
 }

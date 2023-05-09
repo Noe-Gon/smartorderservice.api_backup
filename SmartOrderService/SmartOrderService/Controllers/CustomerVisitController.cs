@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 using System.Web.Http;
 
 namespace SmartOrderService.Controllers
@@ -89,6 +90,13 @@ namespace SmartOrderService.Controllers
             HttpResponseMessage response;
             try
             {
+                try
+                {
+                    BConnectService bservice = new BConnectService();
+                    Task.Run(() => bservice.POST_Customer_TeamVisit(CustomerVisitDto.CloneCustomerVisitDto(dto)));
+                }
+                catch (Exception) { }
+
                 var UserId = 0;
 
                 var user = new UserService().getUser((int)dto.UserId);

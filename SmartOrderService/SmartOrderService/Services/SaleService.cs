@@ -2028,6 +2028,13 @@ namespace SmartOrderService.Services
                         request.Email = customer.email;
                     }
 
+                    var customerAD = customer.CustomerAdditionalData.FirstOrDefault();
+                    if(customerAD != null)
+                    {
+                        customerAD.IsMailingActive = true;
+                        db.SaveChanges();
+                    }
+
                     var saleAD = db.so_sale_aditional_data.Where(x => x.saleId == sale.saleId).FirstOrDefault();
                     string PaymentMethod = saleAD == null ? null : saleAD.paymentMethod;
                     //Se prepara la información

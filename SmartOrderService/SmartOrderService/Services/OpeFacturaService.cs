@@ -178,10 +178,18 @@ namespace SmartOrderService.Services
 
         private string createOpeCdId(so_sale sale)
         {
+            if(sale.so_delivery == null)
+            {
+                return "WBC-DS." + sale.saleId; 
+            }
+            long code = 0;
+            string deliveryCode = sale.so_delivery.code;
+            if(Int64.TryParse(deliveryCode, out code))
+            {
+                return code.ToString();
+            }
+            return "WBC-" + sale.saleId;
 
-            string opecdid = "WBC-" + sale.saleId;
-
-            return opecdid;
         }
 
         private SimpleInvoiceLineOpeFactura createLine(so_sale_detail detail, int typePay)
