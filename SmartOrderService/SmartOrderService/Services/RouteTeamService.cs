@@ -219,6 +219,18 @@ namespace SmartOrderService.Services
             return routeTeam.routeId;
         }
 
+        public int GetRouteId(int userId)
+        {
+            so_user_route routeTeam = db.so_user_route.Where(
+                i => i.userId == userId && i.status == true
+                ).FirstOrDefault();
+            if (routeTeam == null)
+            {
+                return 0;
+            }
+            return routeTeam.routeId;
+        }
+
         public so_work_day GetWorkdayByUserAndDate(int userId, DateTime date)
         {
             so_work_day workday =  db.so_work_day.Where(
@@ -318,7 +330,32 @@ namespace SmartOrderService.Services
                 return false;
             
             if(workDay.CheckBillpocket)
-                return CheckBillPocketReport(workDay.WorkdayId, workDay.UserId);
+                return ChalBillPocketReportForAllUsers(workDay.WorkdayId, workDay.UserId);
+
+            return true;
+        }
+
+        public bool ChalBillPocketReportForAllUsers(Guid workdayId, int userId)
+        {
+            List<int> users = db.so_route_team_travels_employees.Where(x => x.work_dayId == workdayId)
+                .Select(x => x.userId)
+                .Distinct()
+                .ToList();
+
+            foreach (var user in users)
+            {
+                try
+                {
+                    CheckBillPocketReport(workdayId, user);
+                }
+                catch (EntityNotFoundException e)
+                {
+                    if (user == userId)
+                        throw new EntityNotFoundException();
+                    else
+                        throw new BillpocketReportException();
+                }
+            }
 
             return true;
         }
@@ -341,7 +378,7 @@ namespace SmartOrderService.Services
 
             Expression<Func<so_sale, bool>> filter = x => x.status && inventories.Contains(x.inventoryId.Value) && workDay.date_start <= x.date;
 
-            filter.And(x => x.userId == userId);
+            filter = filter.And(x => x.userId == userId);
 
             List<int> sales = db.so_sale.Where(filter).Select(x => x.saleId).ToList();
 

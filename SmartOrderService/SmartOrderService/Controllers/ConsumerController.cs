@@ -487,7 +487,6 @@ namespace SmartOrderService.Controllers
 
                 return Content(HttpStatusCode.InternalServerError, response);
             }
-            
         }
 
         [HttpPost]

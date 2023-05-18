@@ -406,6 +406,7 @@ namespace SmartOrderService.Services
                                         createdon = DateTime.Now,
                                         modifiedby = 2777,
                                         modifiedon = DateTime.Now,
+                                        status = true
                                     };
                                     
                                     so_route_customer newRouteCustomer = new so_route_customer
@@ -414,6 +415,7 @@ namespace SmartOrderService.Services
                                         so_customer = newCustomer,
                                         order = 0,
                                         day = day,
+                                        visit_type = 1,
                                         status = true,
                                         createdby = 2777,
                                         createdon = DateTime.Now,
@@ -440,6 +442,7 @@ namespace SmartOrderService.Services
                                             so_route = route,
                                             so_customer = existCustomer,
                                             order = 0,
+                                            visit_type = 1,
                                             day = day,
                                             status = true,
                                             createdby = 2777,
@@ -948,7 +951,7 @@ namespace SmartOrderService.Services
 
             if (userTeamRole == ERolTeam.Impulsor)
             {
-                
+
 
                 if (inventory.state == INVENTORY_OPEN || inventory.state == INVENTORY_AVAILABLE)
                 {
@@ -1114,8 +1117,6 @@ namespace SmartOrderService.Services
                 Status = inventory.status
 
             };
-
-
 
             var details = inventory.so_inventory_detail.Where(d => d.status);
 

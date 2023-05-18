@@ -1,5 +1,6 @@
 ﻿using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.DTO;
+using SmartOrderService.Models.Locks;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;
 using SmartOrderService.Services;
@@ -15,6 +16,7 @@ namespace SmartOrderService.Controllers
 {
     public class InventoryController : ApiController
     {
+        private static Dictionary<string, InventoryLock> mapObjectService = new Dictionary<string, InventoryLock>();
         // GET: api/Inventory
         public HttpResponseMessage Get([FromUri]InventoryRequest request)
         {
@@ -158,9 +160,28 @@ namespace SmartOrderService.Controllers
             }
             try
             {
-                using (var inventoryService = new InventoryService())
+                InventoryLock serviceLock = new InventoryLock(); 
+                RouteTeamService servce = new RouteTeamService();
+                var routeId = servce.GetRouteId(request.UserId);
+
+                if (mapObjectService.ContainsKey(routeId.ToString()))
                 {
-                    bool result = inventoryService.CloseInventory(request.InventoryId.Value, request.UserId);
+                    serviceLock = mapObjectService[routeId.ToString()];
+                    serviceLock.LastUser = request.UserId;
+                }
+                else
+                {
+                    serviceLock = new InventoryLock
+                    {
+                        LastUser = request.UserId,
+                        InventoryService = new InventoryService()
+                    };
+                    mapObjectService.Add(routeId.ToString(), serviceLock);
+                }
+
+                lock (serviceLock.InventoryService)
+                {
+                    bool result = serviceLock.InventoryService.CloseInventory(request.InventoryId.Value, request.UserId);
                     HttpStatusCode code = result ? HttpStatusCode.OK : HttpStatusCode.Conflict;
                     response = Request.CreateResponse(code);
                 }

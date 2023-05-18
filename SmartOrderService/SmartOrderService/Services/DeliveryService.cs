@@ -1,17 +1,18 @@
-﻿using RestSharp;
-using SmartOrderService.CustomExceptions;
+﻿using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
 using SmartOrderService.Models.DTO;
-using SmartOrderService.Models.Enum;
-using SmartOrderService.Models.Requests;
-using SmartOrderService.Models.Responses;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.Data.Entity;
-using System.Data.Entity.Core.Objects;
 using System.Linq;
 using System.Web;
+using System.Data.Entity;
+using SmartOrderService.Utils.Enums;
+using SmartOrderService.Models.Requests;
+using SmartOrderService.Models.Responses;
+using SmartOrderService.Models.Enum;
+using System.Data.Entity.Core.Objects;
+using RestSharp;
+using System.Configuration;
 
 namespace SmartOrderService.Services
 {
@@ -23,7 +24,10 @@ namespace SmartOrderService.Services
 
             List<DeliveryDto> Deliveries = new List<DeliveryDto>();
 
-            var InventoryDeliveries = db.so_delivery.Where(d => d.inventoryId == InventoryId && d.status);
+            var InventoryDeliveries = db.so_delivery
+                .Include(x=>x.so_delivery_combos)
+                .Include(x=>x.so_delivery_promotion)
+                .Where(d => d.inventoryId == InventoryId && d.status);
 
             var inventoryAvailable = db.so_inventory.Where(i => i.inventoryId == InventoryId && i.state != 2 && i.status).FirstOrDefault();
 
@@ -36,17 +40,16 @@ namespace SmartOrderService.Services
 
 
             if ((!InventoryDeliveries.Any() || InventoryDeliveries.Count() == 0) && so_user.type != so_user.CCEH_TYPE && so_user.type != so_user.POAC_TYPE)
-
+            {
                 throw new InventoryEmptyException();
-
-            foreach (var delivery in InventoryDeliveries) {
-
+            }
+            
+            foreach (var delivery in InventoryDeliveries)
+            {
                 Deliveries.Add(MapDelivery(delivery));
-
             }
 
             return Deliveries;
-
         }
 
         public List<GetDeliveriesByInventoryResponse> GetDeliveriesByInventory(int InventoryId)
@@ -110,7 +113,7 @@ namespace SmartOrderService.Services
                     Deliveries.Add(deliveryMap);
                     continue;
                 }
-                    
+
                 foreach (var item in deliveryMap.DeliveryDetail)
                 {
                     var product = sale.Where(x => x.productId == item.ProductId).FirstOrDefault();
@@ -130,8 +133,8 @@ namespace SmartOrderService.Services
         {
             List<OrderBodyDTO> body = new List<OrderBodyDTO>();
             var currentDate = DateTime.Now.Date;
-            var orders = db.so_order.Where(x => x.customerId == customerId 
-            && EntityFunctions.TruncateTime(x.createdon) == EntityFunctions.TruncateTime(currentDate) 
+            var orders = db.so_order.Where(x => x.customerId == customerId
+            && EntityFunctions.TruncateTime(x.createdon) == EntityFunctions.TruncateTime(currentDate)
             && x.status).ToList();
 
             foreach (var order in orders)
@@ -171,12 +174,12 @@ namespace SmartOrderService.Services
             var Deliveries = db.so_delivery.Where(d => d.inventoryId == InventoryId && d.status);
 
             var so_user = db.so_user.Where(u => u.userId == UserId && u.status).FirstOrDefault();
-            if (so_user != null && so_user.type != so_user.POAC_TYPE && so_user.type != so_user.CCEH_TYPE)
+            if(so_user != null && so_user.type != so_user.POAC_TYPE && so_user.type != so_user.CCEH_TYPE)
                 if (!Deliveries.Any())
 
                     throw new InventoryEmptyException();
 
-            var Customers = Deliveries.Select(d => d.so_customer).ToList();
+            var Customers = Deliveries.Select(d => d.so_customer).ToList() ;
 
             return Customers;
 
@@ -234,6 +237,65 @@ namespace SmartOrderService.Services
 
             }
 
+            dto.Combos = delivery.so_delivery_combos?.Where(p => p.status)
+            .Select(deliveryCombo => new DeliveryComboDto
+            {
+                Id = deliveryCombo.deliveryComboId,
+                Code = deliveryCombo.code,
+                Name = deliveryCombo.name,
+                Quantity = deliveryCombo.amount,
+                PromotionReferenceId = deliveryCombo.promotionReferenceId,
+                Items = deliveryCombo.so_delivery_combo_details?.Where(x => x.status)
+                .Select(x => {
+                    decimal price = Decimal.Zero;
+                    if(x.is_gift)
+                    {
+                        so_delivery_promotion_detail deliveryPromotion = delivery.so_delivery_promotion?
+                            .FirstOrDefault(dp => dp.so_delivery_promotion_detail != null && dp.so_delivery_promotion_detail.Any(dpd => dpd.productId == x.productId && dpd.is_gift))?
+                            .so_delivery_promotion_detail?.FirstOrDefault(dpd => dpd.productId == x.productId && dpd.is_gift);
+                        if (deliveryPromotion != null)
+                        {
+                            price = new Decimal(deliveryPromotion.price);
+                        }
+                    } 
+                    else
+                    {
+                        so_delivery_detail deliveryDetail = delivery.so_delivery_detail?
+                            .FirstOrDefault(d => d.productId == x.productId);
+                        if (deliveryDetail != null && deliveryDetail.price.HasValue)
+                        {
+                            price = new Decimal(deliveryDetail.price.Value);
+                        }
+                    }
+                    return new ComboItemDto
+                    {
+                        ProductId = x.productId,
+                        Id = x.deliveryComboDetailId,
+                        ItemFree = x.is_gift,
+                        Quantity = x.amount,
+                        BrandId = x.so_product.brandId,
+                        Price = price
+                    };
+                }).ToList()
+            }).ToList();
+            //Acumula los productos en los combos por id
+            IDictionary<int, decimal> comboProductAmount = dto.Combos?.Aggregate(new Dictionary<int, decimal>(),
+                (comboAccumulated, currentCombo) => {
+                    foreach (ComboItemDto item in currentCombo.Items.Where(x => x.ItemFree))
+                    {
+                        decimal totalProductQuantity = Decimal.Zero;
+                        if (comboAccumulated.TryGetValue(item.ProductId, out totalProductQuantity))
+                        {
+                            comboAccumulated[item.ProductId] = Decimal.Add(totalProductQuantity, item.Quantity);
+                        }
+                        else
+                        {
+                            comboAccumulated.Add(item.ProductId, item.Quantity);
+                        }
+                    }
+                    return comboAccumulated;
+                });
+
             var deliveryPromotions = delivery.so_delivery_promotion.Where(p => p.status);
 
             foreach (var promotion in deliveryPromotions)
@@ -245,12 +307,22 @@ namespace SmartOrderService.Services
                     DeliveryPromotionId = promotion.delivery_promotionId,
                     Status = promotion.status
                 };
+                so_promotion promotionData = promotion.so_promotion;
 
+                int giftType = (int)PromotionTypes.TYPES.GIFT;
+                bool isGiftPromotion = promotionData.code.Equals(giftType.ToString());
 
                 var promotiondetails = promotion.so_delivery_promotion_detail;
 
                 foreach (var promotiondetail in promotiondetails)
                 {
+                    decimal productComboAmount = Decimal.Zero;
+                    //Si es promocion de obsequio asignamos la cantidad de productos del combo
+                    if (isGiftPromotion && comboProductAmount != null)
+                    {
+                        comboProductAmount.TryGetValue(promotiondetail.productId, out productComboAmount);
+                    }
+
                     DeliveryPromotion.DeliveryPromotionDetailProduct.Add(
                         new DeliveryPromotionDetailDto() {
                             ProductId = promotiondetail.productId,
@@ -273,7 +345,8 @@ namespace SmartOrderService.Services
                             price_without_taxes = promotiondetail.price_without_taxes,
                             discount_without_taxes = promotiondetail.discount_without_taxes,
                             vat = promotiondetail.vat,
-                            vat_rate = promotiondetail.vat_rate
+                            vat_rate = promotiondetail.vat_rate,
+                            TotalProductComboAmount = productComboAmount
                         });
                 }
 
@@ -293,7 +366,6 @@ namespace SmartOrderService.Services
                 dto.DeliveryPromotions.Add(DeliveryPromotion);
 
             }
-
             return dto;
         }
 
@@ -314,7 +386,8 @@ namespace SmartOrderService.Services
                     deliveryStatusId = 0
                 };
 
-            GetDeliveriesByInventoryResponse dto = new GetDeliveriesByInventoryResponse() {
+            GetDeliveriesByInventoryResponse dto = new GetDeliveriesByInventoryResponse()
+            {
                 CustomerId = delivery.customerId,
                 InventoryId = delivery.inventoryId,
                 Status = delivery.status,
@@ -332,7 +405,8 @@ namespace SmartOrderService.Services
             foreach (var detail in details)
             {
 
-                dto.DeliveryDetail.Add(new DeliveryDetailDto() {
+                dto.DeliveryDetail.Add(new DeliveryDetailDto()
+                {
                     ProductId = detail.productId,
                     Amount = detail.amount,
                     CreditAmount = detail.credit_amount,
@@ -361,7 +435,8 @@ namespace SmartOrderService.Services
 
             foreach (var replacment in replacments)
             {
-                dto.DeliveryReplacements.Add(new DeliveryReplacementDto() {
+                dto.DeliveryReplacements.Add(new DeliveryReplacementDto()
+                {
                     ReplacementId = replacment.replacementId,
                     Amount = replacment.amount,
                     Status = replacment.status
@@ -387,7 +462,8 @@ namespace SmartOrderService.Services
                 foreach (var promotiondetail in promotiondetails)
                 {
                     DeliveryPromotion.DeliveryPromotionDetailProduct.Add(
-                        new DeliveryPromotionDetailDto() {
+                        new DeliveryPromotionDetailDto()
+                        {
                             ProductId = promotiondetail.productId,
                             Amount = promotiondetail.amount,
                             Gift = promotiondetail.is_gift,
@@ -435,7 +511,7 @@ namespace SmartOrderService.Services
 
         public so_delivery_devolution CreateDevolution(int? DeliveryId, int ReasonId, int? UserId)
         {
-            if (DeliveryId == null)
+            if(DeliveryId == null)
                 throw new DeliveryNotFoundException();
 
             var delivery = db.so_delivery.Where(d => d.deliveryId == DeliveryId).FirstOrDefault();
@@ -451,7 +527,7 @@ namespace SmartOrderService.Services
             so_delivery_devolution newDevolution = new so_delivery_devolution()
             {
 
-                deliveryId = (int)DeliveryId,
+                deliveryId = (int) DeliveryId,
                 reasonId = ReasonId,
                 createdby = UserId == null ? delivery.so_inventory.userId : UserId,
                 modifiedby = UserId == null ? delivery.so_inventory.userId : UserId,
@@ -491,7 +567,7 @@ namespace SmartOrderService.Services
 
         }
 
-        public so_delivery_devolution CreateDevolution(int DeliveryId, int ReasonId)
+        public so_delivery_devolution CreateDevolution(int DeliveryId,int ReasonId)
         {
 
             var delivery = db.so_delivery.Where(d => d.deliveryId == DeliveryId).FirstOrDefault();
@@ -500,7 +576,7 @@ namespace SmartOrderService.Services
             if (delivery == null) throw new DeliveryNotFoundException();
 
             var devolution = db.so_delivery_devolution.Where(d => d.deliveryId == DeliveryId).FirstOrDefault();
-
+            
 
             if (devolution != null) return devolution;
 
@@ -520,7 +596,7 @@ namespace SmartOrderService.Services
             {
                 try
                 {
-
+                 
 
                     db.so_delivery_devolution.Add(newDevolution);
 
@@ -541,7 +617,10 @@ namespace SmartOrderService.Services
                 }
 
             }
+
+
             return newDevolution;
+
         }
 
         public ResponseBase<SendOrderResponse> SendOrder(SendOrderRequest request)
@@ -561,7 +640,7 @@ namespace SmartOrderService.Services
                 .Where(x => x.customerId == request.CustomerId && x.status)
                 .FirstOrDefault();
 
-            if(customer == null)
+            if (customer == null)
                 return ResponseBase<SendOrderResponse>.Create(new List<string>()
                 {
                     "No se encontró al cliente con id: " + request.CustomerId + " o ha dado de baja"
@@ -808,7 +887,7 @@ namespace SmartOrderService.Services
                 };
 
                 return response;
-            }  
+            }
         }
 
         public List<so_delivery_devolution> getDevolutionsByPeriod(int UserId,DateTime Begin,DateTime End)
@@ -874,7 +953,7 @@ namespace SmartOrderService.Services
             }
 
             if (deliveryStatusUndifined == null)
-                deliveryStatusUndifined =  new so_delivery_status
+                deliveryStatusUndifined = new so_delivery_status
                 {
                     Code = "UNDEFINED",
                     Description = "Indefinido",
@@ -945,7 +1024,7 @@ namespace SmartOrderService.Services
             if (delivery.so_delivery_additional_data == null)
                 throw new EntityNotFoundException("No cuenta con datos adicionales");
 
-            if(delivery.so_delivery_additional_data.DeliveryStatus == null)
+            if (delivery.so_delivery_additional_data.DeliveryStatus == null)
                 throw new EntityNotFoundException("No cuenta con el estado del delivery");
 
             var clientPreventaApi = new RestClient();
@@ -1002,7 +1081,7 @@ namespace SmartOrderService.Services
                     .Where(x => x.Code == DeliveryStatus.CANCELED)
                     .FirstOrDefault();
 
-            if(statusDelivery == null)
+            if (statusDelivery == null)
             {
                 throw new EntityNotFoundException("No se encontró el delivery status");
             }

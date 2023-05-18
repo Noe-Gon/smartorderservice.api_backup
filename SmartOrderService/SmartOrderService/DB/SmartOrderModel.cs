@@ -182,7 +182,7 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_promotion_article> so_promotion_article { get; set; }
 
         public virtual DbSet<so_billpocket_report_log> so_billpocket_report_logs { get; set; }
-
+        public virtual DbSet<so_digital_ticket_configuration> so_digital_ticket_configuration { get; set; }
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<so_role_team>()
@@ -1950,6 +1950,10 @@ namespace SmartOrderService.DB
             //routeCustomerVario.HasRequired(x => x.Route)
             //    .WithMany(x => x.RouteCustomerVario)
             //    .HasForeignKey(x => x.RouteId);
+
+            var digitalTicketConfiguration = modelBuilder.Entity<so_digital_ticket_configuration>();
+            digitalTicketConfiguration.HasKey(x => x.digitalTicketConfigurationId);
+            digitalTicketConfiguration.Property(x => x.digitalTicketConfigurationId).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
         }
     }
 }

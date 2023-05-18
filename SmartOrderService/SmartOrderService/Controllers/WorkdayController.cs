@@ -74,7 +74,7 @@ namespace SmartOrderService.Controllers
             try {
                 WorkdayLock serviceLock = new WorkdayLock();
                 RouteTeamService servce = new RouteTeamService();
-                var routeId = servce.searchRouteId(workday.UserId);
+                var routeId = servce.GetRouteId(workday.UserId);
 
                 if (mapObjectService.ContainsKey(routeId.ToString()))
                 {

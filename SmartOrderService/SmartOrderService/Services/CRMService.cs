@@ -29,10 +29,10 @@ namespace SmartOrderService.Services
                     attributes = new List<AttributeCrm>()
                 };
                 //Basic
-                entity.attributes.Add(AttributeCrm.Create("ope_name", consumer.Name));
-                entity.attributes.Add(AttributeCrm.Create("ope_email", consumer.Email));
-                entity.attributes.Add(AttributeCrm.Create("ope_telephone", consumer.Phone));
-                entity.attributes.Add(AttributeCrm.Create("ope_cfe", consumer.CFECode));
+                AttributeCrm.CreateAttribute<string>(entity.attributes, "ope_name", consumer.Name);
+                AttributeCrm.CreateAttribute<string>(entity.attributes, "ope_email", consumer.Email);
+                AttributeCrm.CreateAttribute<string>(entity.attributes, "ope_telephone", consumer.Phone);
+                AttributeCrm.CreateAttribute<string>(entity.attributes, "ope_cfe", consumer.CFECode);
                 entity.attributes.Add(AttributeCrm.CreateBoolean("ope_tipocliente", true));
 
                 //Address
@@ -43,20 +43,20 @@ namespace SmartOrderService.Services
                 AttributeCrm.CreateEntityReferenceValidation(entity.attributes, "ope_rutas", "ope_rutasid", consumer.RouteCRMId.ToString());
                 AttributeCrm.CreateEntityReferenceValidation(entity.attributes, "ope_figura", "ope_figuras_clientes_cancunid", consumer.FiguraId.ToString());
 
-                entity.attributes.Add(AttributeCrm.Create("ope_estadoidname", consumer.StateIdName ?? ""));
-                entity.attributes.Add(AttributeCrm.Create("ope_paisidname", consumer.CountryIdName ?? ""));
-                entity.attributes.Add(AttributeCrm.Create("ope_municipioidname", consumer.MunicipalityIdName ?? ""));
-                entity.attributes.Add(AttributeCrm.Create("ope_coloniaidname", consumer.NeighborhoodIdName ?? ""));
+                AttributeCrm.CreateAttribute<string>(entity.attributes, "ope_estadoidname", consumer.StateIdName);
+                AttributeCrm.CreateAttribute<string>(entity.attributes, "ope_paisidname", consumer.CountryIdName);
+                AttributeCrm.CreateAttribute<string>(entity.attributes, "ope_municipioidname", consumer.MunicipalityIdName);
+                AttributeCrm.CreateAttribute<string>(entity.attributes, "ope_coloniaidname", consumer.NeighborhoodIdName);
 
 
-                entity.attributes.Add(AttributeCrm.Create("ope_numero_interior", consumer.InteriorNumber));
-                entity.attributes.Add(AttributeCrm.Create("ope_numeroexterior", consumer.ExternalNumber));
-                entity.attributes.Add(AttributeCrm.Create("ope_cruzamiento1", consumer.Crossroads));
-                entity.attributes.Add(AttributeCrm.Create("ope_cruzamiento2", consumer.Crossroads_2));
-                entity.attributes.Add(AttributeCrm.Create("ope_calle", consumer.Street));
-                entity.attributes.Add(AttributeCrm.Create("ope_latitude", consumer.Latitude.ToString()));
-                entity.attributes.Add(AttributeCrm.Create("ope_longitude", consumer.Longitude.ToString()));
-                entity.attributes.Add(AttributeCrm.Create("ope_direccion_fisica", consumer.Address));
+                AttributeCrm.CreateAttribute<string>(entity.attributes, "ope_numero_interior", consumer.InteriorNumber);
+                AttributeCrm.CreateAttribute<string>(entity.attributes, "ope_numeroexterior", consumer.ExternalNumber);
+                AttributeCrm.CreateAttribute<string>(entity.attributes, "ope_cruzamiento1", consumer.Crossroads);
+                AttributeCrm.CreateAttribute<string>(entity.attributes, "ope_cruzamiento2", consumer.Crossroads_2);
+                AttributeCrm.CreateAttribute<string>(entity.attributes, "ope_calle", consumer.Street);
+                AttributeCrm.CreateAttribute<string>(entity.attributes, "ope_latitude", consumer.Latitude.ToString());
+                AttributeCrm.CreateAttribute<string>(entity.attributes, "ope_longitude", consumer.Longitude.ToString());
+                AttributeCrm.CreateAttribute<string>(entity.attributes, "ope_direccion_fisica", consumer.Address);
 
                 //dias
                 entity.attributes.Add(AttributeCrm.CreateBoolean("ope_domingo", consumer.Days.Contains(1)));

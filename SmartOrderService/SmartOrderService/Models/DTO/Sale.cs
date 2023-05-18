@@ -31,6 +31,8 @@ namespace SmartOrderService.Models
 
         public List<SalePromotion> SalePromotions;
 
+        public IList<SaleCombo> SaleCombos { get; set; }
+
     }
 
     public class SaleAdjusmentResult

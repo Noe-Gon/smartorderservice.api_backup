@@ -11,4 +11,10 @@ namespace SmartOrderService.Models.Locks
         public int LastUser { get; set; }
         public WorkdayService WorkdayService { get; set; }
     }
+
+    public class InventoryLock
+    {
+        public int LastUser { get; set; }
+        public InventoryService InventoryService { get; set; }
+    }
 }
