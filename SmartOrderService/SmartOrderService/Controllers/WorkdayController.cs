@@ -75,6 +75,12 @@ namespace SmartOrderService.Controllers
                 WorkdayLock serviceLock = new WorkdayLock();
                 RouteTeamService servce = new RouteTeamService();
                 var routeId = servce.GetRouteId(workday.UserId);
+                if (routeId == 0)
+                {
+                    var WorkdayService = new WorkdayService();
+                    workday = WorkdayService.createWorkday(workday.UserId);
+                    return Request.CreateResponse(HttpStatusCode.Created, workday);
+                }
 
                 if (mapObjectService.ContainsKey(routeId.ToString()))
                 {
@@ -128,7 +134,38 @@ namespace SmartOrderService.Controllers
             HttpResponseMessage response;
             try
             {
-                workday = service.FinishWorkday(workday);
+                WorkdayLock serviceLock = new WorkdayLock();
+                RouteTeamService servce = new RouteTeamService();
+                var routeId = servce.GetRouteId(workday.UserId);
+                if (routeId == 0)
+                {
+                    workday = service.FinishWorkday(workday);
+                    return Request.CreateResponse(HttpStatusCode.Accepted, workday);
+                }
+
+                if (mapObjectService.ContainsKey(routeId.ToString()))
+                {
+                    serviceLock = mapObjectService[routeId.ToString()];
+                    serviceLock.LastUser = workday.UserId;
+                }
+                else
+                {
+                    serviceLock = new WorkdayLock
+                    {
+                        LastUser = workday.UserId,
+                        WorkdayService = new WorkdayService()
+                    };
+                    mapObjectService.Add(routeId.ToString(), serviceLock);
+                }
+
+                lock (serviceLock.WorkdayService)
+                {
+                    workday = service.FinishWorkday(workday);
+
+                    if (serviceLock.LastUser == workday.UserId)
+                        mapObjectService.Remove(routeId.ToString());
+                }
+                
                 response = Request.CreateResponse(HttpStatusCode.Accepted, workday);
             }
             catch (NoCustomerVisitException e)
