@@ -847,6 +847,7 @@
     <Content Include="bin\Microsoft.AspNet.Identity.EntityFramework.dll" />
     <Content Include="bin\Microsoft.AspNet.Identity.Owin.dll" />
     <Content Include="bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll" />
+    <Content Include="bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.xml" />
     <Content Include="bin\Microsoft.IdentityModel.Clients.ActiveDirectory.dll" />
     <Content Include="bin\Microsoft.Owin.dll" />
     <Content Include="bin\Microsoft.Owin.Host.SystemWeb.dll" />
@@ -879,14 +880,8 @@
     <Content Include="bin\SmartOrderService.dll" />
     <Content Include="bin\SmartOrderService.dll.config" />
     <Content Include="bin\SmartOrderService.pdb" />
-    <Content Include="bin\System.ComponentModel.Primitives.dll" />
-    <Content Include="bin\System.Net.Http.dll" />
-    <Content Include="bin\System.Net.Http.Extensions.dll" />
     <Content Include="bin\System.Net.Http.Formatting.dll" />
-    <Content Include="bin\System.Net.Http.Primitives.dll" />
-    <Content Include="bin\System.Net.Http.WebRequest.dll" />
     <Content Include="bin\System.Threading.Tasks.Dataflow.dll" />
-    <Content Include="bin\System.ValueTuple.dll" />
     <Content Include="bin\System.Web.Helpers.dll" />
     <Content Include="bin\System.Web.Http.dll" />
     <Content Include="bin\System.Web.Http.Owin.dll" />
@@ -1028,13 +1023,6 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>Este proyecto hace referencia a los paquetes NuGet que faltan en este equipo. Use la restauración de paquetes NuGet para descargarlos. Para obtener más información, consulte http://go.microsoft.com/fwlink/?LinkID=322105. El archivo que falta es {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
-  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
