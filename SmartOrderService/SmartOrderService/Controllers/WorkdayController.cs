@@ -75,6 +75,7 @@ namespace SmartOrderService.Controllers
                 WorkdayLock serviceLock = new WorkdayLock();
                 RouteTeamService servce = new RouteTeamService();
                 var routeId = servce.GetRouteId(workday.UserId);
+
                 if (routeId == 0)
                 {
                     var WorkdayService = new WorkdayService();
@@ -137,6 +138,7 @@ namespace SmartOrderService.Controllers
                 WorkdayLock serviceLock = new WorkdayLock();
                 RouteTeamService servce = new RouteTeamService();
                 var routeId = servce.GetRouteId(workday.UserId);
+
                 if (routeId == 0)
                 {
                     workday = service.FinishWorkday(workday);

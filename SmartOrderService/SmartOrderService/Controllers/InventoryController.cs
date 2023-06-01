@@ -164,16 +164,24 @@ namespace SmartOrderService.Controllers
                 RouteTeamService servce = new RouteTeamService();
                 var routeId = servce.GetRouteId(request.UserId);
 
+                if (routeId == 0)
+                {
+                    var InventoryService = new InventoryService();
+                    bool result = InventoryService.CloseInventory(request.InventoryId.Value, request.UserId);
+                    HttpStatusCode code = result ? HttpStatusCode.OK : HttpStatusCode.Conflict;
+                    return Request.CreateResponse(code);
+                }
+
                 if (mapObjectService.ContainsKey(routeId.ToString()))
                 {
                     serviceLock = mapObjectService[routeId.ToString()];
-                    serviceLock.LastUser = request.UserId;
+                    serviceLock.key = request.UserId;
                 }
                 else
                 {
                     serviceLock = new InventoryLock
                     {
-                        LastUser = request.UserId,
+                        key = request.UserId,
                         InventoryService = new InventoryService()
                     };
                     mapObjectService.Add(routeId.ToString(), serviceLock);
@@ -183,6 +191,10 @@ namespace SmartOrderService.Controllers
                 {
                     bool result = serviceLock.InventoryService.CloseInventory(request.InventoryId.Value, request.UserId);
                     HttpStatusCode code = result ? HttpStatusCode.OK : HttpStatusCode.Conflict;
+
+                    if (serviceLock.key == request.UserId)
+                        mapObjectService.Remove(routeId.ToString());
+
                     response = Request.CreateResponse(code);
                 }
             }
@@ -226,13 +238,38 @@ namespace SmartOrderService.Controllers
 
             try
             {
-                var inventoryService = new InventoryService();
-                 var response = inventoryService.LoadDeliveries(request.InventoryId);
+                InventoryLock serviceLock = new InventoryLock();
 
-                if(response.Status)
-                    return Content(HttpStatusCode.OK, response);
+                if (mapObjectService.ContainsKey(request.InventoryId.ToString()))
+                {
+                    serviceLock = mapObjectService[request.InventoryId.ToString()];
+                    serviceLock.key++;
+                    request.UserId = serviceLock.key;
+                }
+                else
+                {
+                    request.UserId = 1;
+                    serviceLock = new InventoryLock
+                    {
+                        key = request.UserId,
+                        InventoryService = new InventoryService()
+                    };
+                    mapObjectService.Add(request.InventoryId.ToString(), serviceLock);
+                }
 
-                return Content(HttpStatusCode.Conflict, response);
+                lock (serviceLock.InventoryService)
+                {
+                    var inventoryService = new InventoryService();
+                    var response = inventoryService.LoadDeliveries(request.InventoryId);
+
+                    if (serviceLock.key == request.UserId)
+                        mapObjectService.Remove(request.InventoryId.ToString());
+
+                    if (response.Status)
+                        return Content(HttpStatusCode.OK, response);
+
+                    return Content(HttpStatusCode.Conflict, response);
+                }
             }
             catch (EntityNotFoundException e)
             {

@@ -6,9 +6,9 @@ using System.Web;
 
 namespace SmartOrderService.Models.Locks
 {
-    public class WorkdayLock
+    public class InventoryLock
     {
-        public int LastUser { get; set; }
-        public WorkdayService WorkdayService { get; set; }
+        public int key { get; set; }
+        public InventoryService InventoryService { get; set; }
     }
 }

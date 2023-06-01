@@ -638,6 +638,7 @@
     <Compile Include="Models\DTO\ProductDto.cs" />
     <Compile Include="Models\DTO\ProductArticle.cs" />
     <Compile Include="Models\DTO\Promotion.cs" />
+    <Compile Include="Models\Locks\InventoryLock.cs" />
     <Compile Include="Models\Locks\SaleTeamLock.cs" />
     <Compile Include="Models\Locks\WorkdayLock.cs" />
     <Compile Include="Models\Message\BillPocketMessage.cs" />
