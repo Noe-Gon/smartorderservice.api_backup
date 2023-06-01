@@ -48,6 +48,10 @@ namespace SmartOrderService.Services
             {
                 response = Request.CreateResponse((HttpStatusCode)213, false);
             }
+            catch (SettlementSentException)
+            {
+                response = Request.CreateResponse((HttpStatusCode)422, false);
+            }
             catch (Exception e)
             {
                 response = Request.CreateResponse(HttpStatusCode.InternalServerError, false);

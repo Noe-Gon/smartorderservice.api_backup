@@ -357,6 +357,7 @@
     <Compile Include="CustomExceptions\SaleNotFoundException.cs" />
     <Compile Include="CustomExceptions\ServerErrorException.cs" />
     <Compile Include="CustomExceptions\InventoryNotOpenException.cs" />
+    <Compile Include="CustomExceptions\SettlementSentException.cs" />
     <Compile Include="CustomExceptions\UnauthorisedException.cs" />
     <Compile Include="CustomExceptions\UserInUseException.cs" />
     <Compile Include="CustomExceptions\WorkdayNotFoundException.cs" />

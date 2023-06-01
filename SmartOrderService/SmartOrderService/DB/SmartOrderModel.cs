@@ -183,6 +183,7 @@ namespace SmartOrderService.DB
 
         public virtual DbSet<so_billpocket_report_log> so_billpocket_report_logs { get; set; }
         public virtual DbSet<so_digital_ticket_configuration> so_digital_ticket_configuration { get; set; }
+        public virtual DbSet<so_liquidation_log> so_liquidation_logs { get; set; }
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<so_role_team>()

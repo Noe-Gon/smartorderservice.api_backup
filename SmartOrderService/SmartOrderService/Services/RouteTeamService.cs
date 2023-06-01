@@ -34,6 +34,10 @@ namespace SmartOrderService.Services
                 //Start Load Inventory Process OPCD
                 CallLoadInventoryProcess(userId);
                 //End Load Inventory Process
+                int impulsorId = SearchDrivingId(userId);
+
+                if (IsSettlementSent(GetWorkdayByUserAndDate(impulsorId, DateTime.Now).work_dayId))
+                    throw new SettlementSentException();
 
                 if (IsActualOpened(userId, inventory.inventoryId))
                     return true;
@@ -55,6 +59,7 @@ namespace SmartOrderService.Services
                 }
                 if (inventoryState == 0 && userRole == ERolTeam.Ayudante)
                     throw new InventoryNotOpenException();
+
                 return false;
             }
             catch (InventoryInProgressException)
@@ -74,6 +79,16 @@ namespace SmartOrderService.Services
                 throw new InventoryEmptyException();
             }
 
+        }
+
+        public bool IsSettlementSent(Guid workDayId)
+        {
+            var log = db.so_liquidation_logs
+                    .Where(x => x.WorkDayId == workDayId && x.ExecutionIdAws != null)
+                    .OrderByDescending(x => x.CreatedOn)
+                    .FirstOrDefault();
+
+            return log != null;
         }
 
         private bool IsActualOpened(int userId, int inventoryId)
