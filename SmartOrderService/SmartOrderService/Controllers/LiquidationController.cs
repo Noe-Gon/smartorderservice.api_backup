@@ -194,5 +194,37 @@ namespace SmartOrderService.Controllers
                 }));
             }
         }
+
+        [HttpPost]
+        [Route("~/api/liquidation/sent")]
+        public IHttpActionResult GetLiquidationSent(GetLiquidationStatusRequest request)
+        {
+            try
+            {
+                using (var service = GetService())
+                {
+                    var response = service.LiquidationSent(request);
+
+                    if (response.Status)
+                        return Ok(response);
+
+                    return Content(System.Net.HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (EntityNotFoundException e)
+            {
+                return Content(System.Net.HttpStatusCode.Accepted, ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (Exception e)
+            {
+                return Content(System.Net.HttpStatusCode.InternalServerError, ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+        }
     }
 }

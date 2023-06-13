@@ -728,6 +728,54 @@ namespace SmartOrderService.Services
             
         }
 
+        public ResponseBase<MsgResponseBase> LiquidationSent(GetLiquidationStatusRequest request)
+        {
+
+            if (request.Date == null)
+                request.Date = DateTime.Now;
+
+            so_work_day workDay;
+            try
+            {
+                workDay = UoWConsumer.GetWorkdayByUserAndDate(request.UserId, request.Date.Value);
+            }
+            catch (WorkdayNotFoundException e)
+            {
+                return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                });
+            }
+
+            try
+            {
+                var log = UoWConsumer.LiquidationLogRepository
+                    .Get(x => x.WorkDayId == workDay.work_dayId && x.ExecutionIdAws != null)
+                    .OrderByDescending(x => x.CreatedOn)
+                    .Select(x => new { Log = x, Code = x.LiquidationStatus.Code })
+                    .FirstOrDefault();
+
+                if (log == null)
+                    throw new EntityNotFoundException("No se encontró una ejecución para la Jornada");
+
+                return ResponseBase<MsgResponseBase>.Create(new MsgResponseBase()
+                {
+                    Msg = "Enviado"
+                });
+            }
+            catch (EntityNotFoundException e)
+            {
+                throw e;
+            }
+            catch (Exception e)
+            {
+                return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                });
+            }
+
+        }
 
         private List<so_route_team_inventory_available> GetUnsoldProducts(int inventoryId)
         {

@@ -176,4 +176,5 @@ namespace SmartOrderService.Models.Message
         public string Code { get; set; }
     }
     #endregion
+
 }
