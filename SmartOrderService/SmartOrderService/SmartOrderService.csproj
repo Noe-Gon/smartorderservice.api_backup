@@ -338,6 +338,7 @@
     <Compile Include="CustomExceptions\EntityNotFoundException.cs" />
     <Compile Include="CustomExceptions\ExternalAPIException.cs" />
     <Compile Include="CustomExceptions\InternalServerException.cs" />
+    <Compile Include="CustomExceptions\InvalidModelException.cs" />
     <Compile Include="CustomExceptions\InventoryEmptyException.cs" />
     <Compile Include="CustomExceptions\InventoryInProgressException.cs" />
     <Compile Include="CustomExceptions\InventoryNotClosedException.cs" />

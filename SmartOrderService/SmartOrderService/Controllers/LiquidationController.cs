@@ -226,5 +226,44 @@ namespace SmartOrderService.Controllers
                 }));
             }
         }
+
+        [HttpPost]
+        [Route("~/api/liquidation/article_movement")]
+        public IHttpActionResult RegisterArticleMovement(ResgisterArticleMovementRequest request)
+        {
+            try
+            {
+                using (var service = GetService())
+                {
+                    var response = service.RegisterArticleMovement(request);
+
+                    if (response.Status)
+                        return Ok(response);
+
+                    return Content(System.Net.HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (InvalidModelException e)
+            {
+                return Content(System.Net.HttpStatusCode.BadRequest, ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (EntityNotFoundException e)
+            {
+                return Content(System.Net.HttpStatusCode.Conflict, ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+            catch (Exception e)
+            {
+                return Content(System.Net.HttpStatusCode.InternalServerError, ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
+        }
     }
 }

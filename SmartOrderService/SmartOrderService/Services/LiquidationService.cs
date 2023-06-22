@@ -777,6 +777,44 @@ namespace SmartOrderService.Services
 
         }
 
+        public ResponseBase<MsgResponseBase> RegisterArticleMovement(ResgisterArticleMovementRequest request)
+        {
+            request.ValidModel();
+            List<so_promotion_article_movement> addArticleMovement = new List<so_promotion_article_movement>();
+            foreach (var item in request.Articles)
+            {
+                var articlePromotionalRoute = UoWConsumer.ArticlePromotionalRouteRepository
+                    .Get(x => x.article_promotionalId == item.ArticleId && x.routeId == request.RouteId && x.status)
+                    .FirstOrDefault();
+
+                if (articlePromotionalRoute == null)
+                    throw new EntityNotFoundException("No se encontró el articulo " + item.ArticleId + " En la Ruta " + request.RouteId);
+
+                so_promotion_article_movement articleMovement = new so_promotion_article_movement()
+                {
+                    amount = item.Amount,
+                    article_promotional_routeId = articlePromotionalRoute.id,
+                    stock = articlePromotionalRoute.amount,
+                    comment = "Cierre de Jornada del día " + DateTime.Now.ToString("dd/MM/yyyy") + ".",
+                    createdby = request.UserId.Value,
+                    createdon = DateTime.Now,
+                    type = 2,
+                    date = DateTime.Today,
+                    so_article_promotional_route = articlePromotionalRoute
+                };
+
+                addArticleMovement.Add(articleMovement);
+            }
+
+            UoWConsumer.PromotionArticleMovementRepository.InsertByRange(addArticleMovement);
+            UoWConsumer.Save();
+
+            return ResponseBase<MsgResponseBase>.Create(new MsgResponseBase()
+            {
+                Msg = "Se ha agregadó el Historial de movimientos de articulos correctamente."
+            });
+        }
+
         private List<so_route_team_inventory_available> GetUnsoldProducts(int inventoryId)
         {
             var inventoryAvailable = UoWConsumer.RouteTeamInventoryAvailableRepository.Get(s => s.inventoryId.Equals(inventoryId)).ToList();

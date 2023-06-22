@@ -1955,6 +1955,13 @@ namespace SmartOrderService.DB
             var digitalTicketConfiguration = modelBuilder.Entity<so_digital_ticket_configuration>();
             digitalTicketConfiguration.HasKey(x => x.digitalTicketConfigurationId);
             digitalTicketConfiguration.Property(x => x.digitalTicketConfigurationId).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+
+            var articleMovement = modelBuilder.Entity<so_promotion_article_movement>();
+            articleMovement.HasKey(x => x.id);
+            articleMovement.Property(x => x.id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            articleMovement.HasRequired(x => x.so_article_promotional_route)
+                .WithMany(x => x.so_promotion_article_movement)
+                .HasForeignKey(x => x.article_promotional_routeId);
         }
     }
 }

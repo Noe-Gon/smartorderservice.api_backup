@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SmartOrderService.CustomExceptions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -174,6 +175,37 @@ namespace SmartOrderService.Models.Message
     public class GetLiquidationStatusResponse
     {
         public string Code { get; set; }
+    }
+    #endregion
+
+    #region Resgiter Article Movement
+    public class ResgisterArticleMovementRequest
+    {
+        public ResgisterArticleMovementRequest()
+        {
+            Articles = new List<ArticleMovement>();
+        }
+
+        public int? UserId { get; set; }
+        public int? RouteId { get; set; }
+        public List<ArticleMovement> Articles { get; set; }
+
+        public void ValidModel()
+        {
+            if (UserId == 0 || UserId == null)
+                throw new InvalidModelException("UserId es requerido.");
+
+            if (Articles.Count() == 0)
+                throw new InvalidModelException("Articles es requerido.");
+
+            if(RouteId == 0 || RouteId == null)
+                throw new InvalidModelException("RouteId es requerido.");
+        }
+    }
+    public class ArticleMovement
+    {
+        public int ArticleId { get; set; }
+        public int Amount { get; set; }
     }
     #endregion
 

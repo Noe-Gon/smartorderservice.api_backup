@@ -36,8 +36,12 @@ namespace SmartOrderService.Services
                 //End Load Inventory Process
                 int impulsorId = SearchDrivingId(userId);
 
-                if (IsSettlementSent(GetWorkdayByUserAndDate(impulsorId, DateTime.Now).work_dayId))
-                    throw new SettlementSentException();
+                try
+                {
+                    if (IsSettlementSent(GetWorkdayByUserAndDate(impulsorId, DateTime.Now).work_dayId))
+                        throw new SettlementSentException();
+                }
+                catch(Exception e){}
 
                 if (IsActualOpened(userId, inventory.inventoryId))
                     return true;

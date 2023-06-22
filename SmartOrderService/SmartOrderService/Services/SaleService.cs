@@ -389,14 +389,6 @@ namespace SmartOrderService.Services
                                                  detpromo.productId,
                                                  amount = detpromo.amount * promo.amount
                                              }).ToList()
-                            .Union((from detsale in db.so_sale_detail
-                                    where detsale.saleId == saleId
-                                    select new
-                                    {
-                                        detsale.productId,
-                                        detsale.amount
-                                    }).ToList()
-                             ).ToList()
                                  group it by it.productId
                              into g
                                  select new
@@ -438,7 +430,8 @@ namespace SmartOrderService.Services
                                              {
                                                  art.article_promotionalId,
                                                  amount = art.amount * promo.amount
-                                             }).ToList().Union((from art in db.so_sale_detail_article
+                                             }).ToList()
+                                             .Union((from art in db.so_sale_detail_article
                                                                 where art.saleId == saleId
                                                                 select new
                                                                 {
@@ -2661,7 +2654,7 @@ namespace SmartOrderService.Services
                 string sRespuesta = "";
                 try
                 {
-                    if (saleResult.SaleDetails.Count() > 0 || saleResult.SaleDetailsLoyalty.Count() > 0 || saleResult.SaleDetailsArticles.Count() > 0)
+                    if (saleResult.SaleDetails.Count() > 0 || saleResult.SaleDetailsLoyalty.Count() > 0 || saleResult.SaleDetailsArticles.Count() > 0 || saleResult.PromotionCatalog.Count() > 0)
                     {
                         if (!checkIfSaleExist(saleResult))
                         {
