@@ -3521,7 +3521,22 @@ namespace SmartOrderService.Services
                                 TotalPrice = Convert.ToDouble(detail.amount) * Convert.ToDouble(detail.price),
                                 UnitPrice = Convert.ToDouble(detail.price)
                             });
-                        }  
+                        }
+
+                        foreach (var item in sale.so_sale_detail_article)
+                        {
+                            var article = db.so_article_promotional.Where(x => x.id == item.article_promotionalId).FirstOrDefault();
+                            if (article == null)
+                                continue;
+
+                            sales.Add(new SendTicketDigitalEmailSales
+                            {
+                                Amount = item.amount,
+                                ProductName = article.code + " - " + article.name,
+                                TotalPrice = Convert.ToDouble(item.amount) * Convert.ToDouble(item.price),
+                                UnitPrice = Convert.ToDouble(item.price)
+                            });
+                        }
 
                         sendTicketDigitalEmail.CancelTicketLink = GetCancelLinkByCustomerId(customer.customerId);
                         sendTicketDigitalEmail.Sales = sales;
@@ -3632,6 +3647,21 @@ namespace SmartOrderService.Services
                                 ProductName = product.code + " - " + product.name,
                                 TotalPrice = Convert.ToDouble(detail.amount) * Convert.ToDouble(detail.price),
                                 UnitPrice = Convert.ToDouble(detail.price)
+                            });
+                        }
+
+                        foreach (var item in sale.so_sale_detail_article)
+                        {
+                            var article = db.so_article_promotional.Where(x => x.id == item.article_promotionalId).FirstOrDefault();
+                            if (article == null)
+                                continue;
+
+                            sales.Add(new SendTicketDigitalEmailSales
+                            {
+                                Amount = item.amount,
+                                ProductName = article.code + " - " + article.name,
+                                TotalPrice = Convert.ToDouble(item.amount) * Convert.ToDouble(item.price),
+                                UnitPrice = Convert.ToDouble(item.price)
                             });
                         }
 

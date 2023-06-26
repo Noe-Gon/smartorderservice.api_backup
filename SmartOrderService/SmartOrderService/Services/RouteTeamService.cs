@@ -41,7 +41,11 @@ namespace SmartOrderService.Services
                     if (IsSettlementSent(GetWorkdayByUserAndDate(impulsorId, DateTime.Now).work_dayId))
                         throw new SettlementSentException();
                 }
-                catch(Exception e){}
+                catch (SettlementSentException e)
+                {
+                    throw e;
+                }
+                catch (Exception) { }
 
                 if (IsActualOpened(userId, inventory.inventoryId))
                     return true;
