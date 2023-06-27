@@ -642,6 +642,7 @@
     <Compile Include="Models\Locks\SaleTeamLock.cs" />
     <Compile Include="Models\Locks\WorkdayLock.cs" />
     <Compile Include="Models\Message\BillPocketMessage.cs" />
+    <Compile Include="Models\Message\Ope20Message.cs" />
     <Compile Include="Models\Message\SaleModels.cs" />
     <Compile Include="Models\Message\SaleTeamMessage.cs" />
     <Compile Include="Models\Requests\CRMRequests.cs" />
