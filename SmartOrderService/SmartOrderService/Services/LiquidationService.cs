@@ -777,6 +777,68 @@ namespace SmartOrderService.Services
 
         }
 
+        public ResponseBase<MsgResponseBase> LoadArticleMovement(LoadArticleMovementRequest request)
+        {
+            try
+            {
+                var inventories = UoWConsumer.RouteTeamTravelsEmployeesRepository
+                    .Get(x => x.work_dayId == request.WorkdayId)
+                    .Select(x => x.inventoryId)
+                    .GroupBy(x => x)
+                    .Select(x => x.Key)
+                    .ToList();
+
+                var articles = UoWConsumer.SaleRepository
+                    .Get(x => inventories.Contains(x.inventoryId.Value) && x.status)
+                    .SelectMany(sale => sale.so_sale_detail_article)
+                    .Select(x => new ArticleMovement()
+                    {
+                        Amount = x.amount,
+                        ArticleId = x.article_promotionalId
+                    }).ToList();
+
+                var articlePromotion = UoWConsumer.SaleRepository
+                    .Get(x => inventories.Contains(x.inventoryId.Value) && x.status)
+                    .SelectMany(sale => sale.so_sale_promotion)
+                    .SelectMany(x => x.so_sale_promotion_detail_article)
+                    .Select(x => new ArticleMovement()
+                    {
+                        Amount = x.so_sale_promotion.amount * x.amount,
+                        ArticleId = x.article_promotionalId
+                    }).ToList();
+
+                articles.AddRange(articlePromotion);
+
+                var totalArticles = articles.GroupBy(x => x.ArticleId)
+                    .Select(x => new ArticleMovement()
+                    {
+                        Amount = x.Sum(c => c.Amount),
+                        ArticleId = x.Key
+                    }).ToList();
+
+                int routeId = UoWConsumer.RouteTeamRepository
+                    .Get(x => x.userId == request.UserId)
+                    .Select(x => x.routeId)
+                    .FirstOrDefault();
+
+                ResgisterArticleMovementRequest registerRequest = new ResgisterArticleMovementRequest()
+                {
+                    Articles = totalArticles,
+                    UserId = request.UserId,
+                    RouteId = routeId
+                };
+
+                return RegisterArticleMovement(registerRequest);
+            }
+            catch (Exception e)
+            {
+                return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    "Error", e.Message
+                });
+            }
+        }
+
         public ResponseBase<MsgResponseBase> RegisterArticleMovement(ResgisterArticleMovementRequest request)
         {
             request.ValidModel();
@@ -789,6 +851,14 @@ namespace SmartOrderService.Services
 
                 if (articlePromotionalRoute == null)
                     throw new EntityNotFoundException("No se encontró el articulo " + item.ArticleId + " En la Ruta " + request.RouteId);
+
+                //Validar si ya fue registrado el movimiento
+                var promArticleMovement = UoWConsumer.PromotionArticleMovementRepository
+                    .Get(x => x.type == 2 && DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(DateTime.Today) && x.stock == articlePromotionalRoute.amount)
+                    .FirstOrDefault();
+
+                if (promArticleMovement != null)
+                    continue;
 
                 so_promotion_article_movement articleMovement = new so_promotion_article_movement()
                 {

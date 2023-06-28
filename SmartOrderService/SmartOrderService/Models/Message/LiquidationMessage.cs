@@ -1,4 +1,6 @@
 ﻿using SmartOrderService.CustomExceptions;
+using SmartOrderService.DB;
+using SmartOrderService.Models.DTO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -175,6 +177,14 @@ namespace SmartOrderService.Models.Message
     public class GetLiquidationStatusResponse
     {
         public string Code { get; set; }
+    }
+    #endregion
+
+    #region MyRegion
+    public class LoadArticleMovementRequest
+    {
+        public Guid WorkdayId { get; set; }
+        public int UserId { get; set; }
     }
     #endregion
 

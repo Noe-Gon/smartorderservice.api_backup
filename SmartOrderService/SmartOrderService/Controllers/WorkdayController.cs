@@ -129,6 +129,15 @@ namespace SmartOrderService.Controllers
             try
             {
                 workday = service.FinishWorkday(workday);
+                using (var service2 = new LiquidationService())
+                {
+                    service2.LoadArticleMovement(new Models.Message.LoadArticleMovementRequest()
+                    {
+                        UserId = workday.UserId,
+                        WorkdayId = workday.WorkdayId
+                    });
+                }
+                
                 response = Request.CreateResponse(HttpStatusCode.Accepted, workday);
             }
             catch (NoCustomerVisitException e)
