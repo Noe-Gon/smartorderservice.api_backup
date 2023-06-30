@@ -61,7 +61,6 @@ namespace SmartOrderService.Services
 
         public bool CloseInventory(int inventoryId)
         {
-
             var CurrentInventory = db.so_inventory.Where(i => i.inventoryId == inventoryId).FirstOrDefault();
 
             if (CurrentInventory != null)

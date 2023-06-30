@@ -76,6 +76,13 @@ namespace SmartOrderService.Controllers
                 RouteTeamService servce = new RouteTeamService();
                 var routeId = servce.GetRouteId(workday.UserId);
 
+                if (routeId == 0)
+                {
+                    var WorkdayService = new WorkdayService();
+                    workday = WorkdayService.createWorkday(workday.UserId);
+                    return Request.CreateResponse(HttpStatusCode.Created, workday);
+                }
+
                 if (mapObjectService.ContainsKey(routeId.ToString()))
                 {
                     serviceLock = mapObjectService[routeId.ToString()];
@@ -128,14 +135,37 @@ namespace SmartOrderService.Controllers
             HttpResponseMessage response;
             try
             {
-                workday = service.FinishWorkday(workday);
-                using (var service2 = new LiquidationService())
+                WorkdayLock serviceLock = new WorkdayLock();
+                RouteTeamService servce = new RouteTeamService();
+                var routeId = servce.GetRouteId(workday.UserId);
+
+                if (routeId == 0)
                 {
-                    service2.LoadArticleMovement(new Models.Message.LoadArticleMovementRequest()
+                    workday = service.FinishWorkday(workday);
+                    return Request.CreateResponse(HttpStatusCode.Accepted, workday);
+                }
+
+                if (mapObjectService.ContainsKey(routeId.ToString()))
+                {
+                    serviceLock = mapObjectService[routeId.ToString()];
+                    serviceLock.LastUser = workday.UserId;
+                }
+                else
+                {
+                    serviceLock = new WorkdayLock
                     {
-                        UserId = workday.UserId,
-                        WorkdayId = workday.WorkdayId
-                    });
+                        LastUser = workday.UserId,
+                        WorkdayService = new WorkdayService()
+                    };
+                    mapObjectService.Add(routeId.ToString(), serviceLock);
+                }
+
+                lock (serviceLock.WorkdayService)
+                {
+                    workday = service.FinishWorkday(workday);
+
+                    if (serviceLock.LastUser == workday.UserId)
+                        mapObjectService.Remove(routeId.ToString());
                 }
                 
                 response = Request.CreateResponse(HttpStatusCode.Accepted, workday);

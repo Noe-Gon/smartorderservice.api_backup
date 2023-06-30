@@ -15,6 +15,8 @@ namespace SmartOrderService.Models.Requests
     public class LoadInventoryDeliveriesRequest
     {
         public int InventoryId { get; set; }
+
+        public int UserId { get; set; }
     }
 
     public class LoadInventoryDeliveriesResponse
