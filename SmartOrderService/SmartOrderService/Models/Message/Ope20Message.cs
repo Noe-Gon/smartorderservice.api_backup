@@ -64,4 +64,19 @@ namespace SmartOrderService.Models.Message
         public DateTime SupplierDateEnd { get; set; }
     }
     #endregion
+
+    #region DistributionCenter Ope 20
+    public class DistributionCenterResponse
+    {
+        [JsonProperty("cedisNumber")]
+        public int CedisNumber { get; set; }
+
+        [JsonProperty("branch")]
+        public int Branch { get; set; }
+
+        [JsonProperty("status")]
+        public bool Status { get; set; }
+
+    }
+    #endregion
 }

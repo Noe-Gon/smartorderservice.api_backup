@@ -716,6 +716,7 @@
     <Compile Include="Services\CustomerBlockedService.cs" />
     <Compile Include="Services\DigitalTicketConfigurationService.cs" />
     <Compile Include="Services\EmailService.cs" />
+    <Compile Include="Services\Ope20Service.cs" />
     <Compile Include="Services\RoleTeamService.cs" />
     <Compile Include="Services\RouteTeamInventoryAvailableService.cs" />
     <Compile Include="Services\RouteTeamService.cs" />

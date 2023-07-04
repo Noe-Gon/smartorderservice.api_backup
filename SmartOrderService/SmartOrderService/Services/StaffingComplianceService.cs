@@ -320,7 +320,7 @@ namespace SmartOrderService.Services
             
             bool inTripulacs = false;
             List<string> exceptionMessages = new List<string>();
-
+            var serviceOpe20 = new Ope20Service();
             //Notificar a la API
             try
             {
@@ -341,7 +341,7 @@ namespace SmartOrderService.Services
 
                     string ayudanteCode = ayudante != null ? ayudante.UserCode : null;
 
-                    if (IsCediInOpe20(""))
+                    if (serviceOpe20.IsCediInOpe20(routeBranch.Branch.code))
                     {
                         User impulsor = new User()
                         {
@@ -353,7 +353,7 @@ namespace SmartOrderService.Services
                             CollaboratorCode = ayudanteCode
                         };
 
-                        CallCrewOpe20(new CrewOpe20Request()
+                        serviceOpe20.CallCrewOpe20(new CrewOpe20Request()
                         {
                             SalesMan = impulsor,
                             Assistant1 = ayudante1,
@@ -418,7 +418,7 @@ namespace SmartOrderService.Services
                         inTripulacs = true;
                         var impulsorCode = impulsor.UserCode;
 
-                        if (IsCediInOpe20("")) 
+                        if (serviceOpe20.IsCediInOpe20(routeBranch.Branch.code)) 
                         {
                             User saleMan = new User()
                             {
@@ -430,7 +430,7 @@ namespace SmartOrderService.Services
                                 CollaboratorCode = request.EmployeeCode
                             };
 
-                            CallCrewOpe20(new CrewOpe20Request()
+                            serviceOpe20.CallCrewOpe20(new CrewOpe20Request()
                             {
                                 SalesMan = saleMan,
                                 Assistant1 = ayudante1,
@@ -659,32 +659,6 @@ namespace SmartOrderService.Services
             return UoWConsumer.AuthentificationLogRepository
                 .Get(x => x.UserCode == userCode && DbFunctions.TruncateTime(x.CreatedDate) == DbFunctions.TruncateTime(date))
                 .FirstOrDefault();
-        }
-
-        public bool IsCediInOpe20(string code)
-        {
-            //Validar la info en la tabla y en Ope 20
-            return true;
-        }
-
-        public bool CallCrewOpe20(CrewOpe20Request request)
-        {
-            var client = new RestClient();
-            client.BaseUrl = new Uri(ConfigurationManager.AppSettings["OPE20_API"]);
-            string SubscriptionKey = ConfigurationManager.AppSettings["OPE20_subscription_key"];
-            var requestConfig = new RestRequest("/api/crew", Method.PUT);
-            requestConfig.RequestFormat = DataFormat.Json;
-
-            requestConfig.AddHeader("Ocp-Apim-Subscription-Key", SubscriptionKey);
-            requestConfig.AddHeader("Content-Type", "application/x-www-form-urlencoded");
-
-            var RestResponse = client.Execute(requestConfig);
-            if (RestResponse.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                return true;
-            }
-
-            throw new ExternalAPIException("Falló al intentar obtener la información del usuario");
         }
 
         private void RegisterLog()
