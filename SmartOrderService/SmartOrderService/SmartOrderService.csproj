@@ -384,12 +384,14 @@
     <Compile Include="DB\so_branch.cs" />
     <Compile Include="DB\so_branch_articles.cs" />
     <Compile Include="DB\so_branch_config.cs" />
+    <Compile Include="DB\so_branch_limit_time.cs" />
     <Compile Include="DB\so_branch_products_discount_list.cs" />
     <Compile Include="DB\so_branch_reason_devolution.cs" />
     <Compile Include="DB\so_branch_reason_failed_transaction.cs" />
     <Compile Include="DB\so_branch_reason_replacement.cs" />
     <Compile Include="DB\so_branch_replacement.cs" />
     <Compile Include="DB\so_branch_tax.cs" />
+    <Compile Include="DB\so_branch_time_zone.cs" />
     <Compile Include="DB\so_brand.cs" />
     <Compile Include="DB\so_category.cs" />
     <Compile Include="DB\so_category_billing_data.cs" />
@@ -642,6 +644,7 @@
     <Compile Include="Models\Locks\SaleTeamLock.cs" />
     <Compile Include="Models\Locks\WorkdayLock.cs" />
     <Compile Include="Models\Message\BillPocketMessage.cs" />
+    <Compile Include="Models\Message\BranchMessage.cs" />
     <Compile Include="Models\Message\SaleModels.cs" />
     <Compile Include="Models\Message\SaleTeamMessage.cs" />
     <Compile Include="Models\Requests\CRMRequests.cs" />
