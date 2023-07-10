@@ -778,6 +778,9 @@ namespace SmartOrderService.Services
                 });
             }
 
+            var saleService = new SaleService();
+            mailRequest.CancelTicketLink = saleService.GetCancelLinkByCustomerId(customer.x.customerId);
+
             var service = new EmailService();
             var response = service.SendOrderTicket(mailRequest);
 
