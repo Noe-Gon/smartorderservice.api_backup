@@ -358,7 +358,8 @@ namespace SmartOrderService.Services
                             SalesMan = impulsor,
                             Assistant1 = ayudante1,
                             RouteCode = routeBranch.Route.code,
-                            OperationDate = DateTime.Now
+                            OperationDate = DateTime.Now,
+                            PosId = routeBranch.Branch.code
                         });
                     }
                     else {
@@ -435,7 +436,8 @@ namespace SmartOrderService.Services
                                 SalesMan = saleMan,
                                 Assistant1 = ayudante1,
                                 RouteCode = routeBranch.Route.code,
-                                OperationDate = DateTime.Now
+                                OperationDate = DateTime.Now,
+                                PosId = routeBranch.Branch.code
                             });
                         }
                         else

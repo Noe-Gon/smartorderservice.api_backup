@@ -35,6 +35,9 @@ namespace SmartOrderService.Models.Message
 
         [JsonProperty("routeCode")]
         public string RouteCode { get; set; }
+
+        [JsonProperty("posId")]
+        public string PosId { get; set; }
     }
 
     public class Supervisor

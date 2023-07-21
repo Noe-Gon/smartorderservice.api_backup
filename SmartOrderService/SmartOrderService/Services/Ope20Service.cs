@@ -15,8 +15,8 @@ namespace SmartOrderService.Services
         public bool CallCrewOpe20(CrewOpe20Request request)
         {
             var client = new RestClient();
-            client.BaseUrl = new Uri(ConfigurationManager.AppSettings["OPE20_API"]);
-            string SubscriptionKey = ConfigurationManager.AppSettings["OPE20_subscription_key"];
+            client.BaseUrl = new Uri(ConfigurationManager.AppSettings["API_OPE20_URL"]);
+            string SubscriptionKey = ConfigurationManager.AppSettings["API_OPE20_subscription_key"];
             var requestConfig = new RestRequest("/api/crew", Method.PUT);
             requestConfig.RequestFormat = DataFormat.Json;
 
@@ -36,7 +36,7 @@ namespace SmartOrderService.Services
         {
             var client = new RestClient();
             client.BaseUrl = new Uri(ConfigurationManager.AppSettings["OPE20_DistributionCenter_URL"]);
-            var requestConfig = new RestRequest("/api/DistributionCenter?brnach=" + code, Method.PUT);
+            var requestConfig = new RestRequest("/api/DistributionCenter?branch=" + code, Method.GET);
             requestConfig.RequestFormat = DataFormat.Json;
 
             var RestResponse = client.Execute(requestConfig);
