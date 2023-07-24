@@ -325,6 +325,7 @@
     <Compile Include="CustomExceptions\BadRequestException.cs" />
     <Compile Include="CustomExceptions\BillingDataException.cs" />
     <Compile Include="CustomExceptions\BillpocketReportException.cs" />
+    <Compile Include="CustomExceptions\BranchLimitTimeException.cs" />
     <Compile Include="CustomExceptions\CRMException.cs" />
     <Compile Include="CustomExceptions\CustomerBillingDataNotFoundException.cs" />
     <Compile Include="CustomExceptions\CustomerException.cs" />
