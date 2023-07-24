@@ -628,8 +628,11 @@ namespace SmartOrderService.Services
         {
             var route = db.so_route
                 .Where(x => x.routeId == request.RouteId && x.status)
-                .Select(x => new { RouteCode = x.code, BranchCode = x.so_branch.code, RouteId = x.branchId, BranchId = x.branchId })
+                .Select(x => new { RouteCode = x.code, BranchCode = x.so_branch.code, RouteId = x.routeId, BranchId = x.branchId })
                 .FirstOrDefault();
+
+            if (!IsValidLimitTime(route.BranchId, request.DeliveryDate))
+                throw new BranchLimitTimeException("No se puede registrar, ya pasó el tiempo limite.");
 
             if (route == null)
                 return ResponseBase<SendOrderResponse>.Create(new List<string>()
@@ -777,6 +780,9 @@ namespace SmartOrderService.Services
                     UnitPrice = item.price
                 });
             }
+
+            var saleService = new SaleService();
+            mailRequest.CancelTicketLink = saleService.GetCancelLinkByCustomerId(customer.x.customerId);
 
             var service = new EmailService();
             var response = service.SendOrderTicket(mailRequest);
@@ -1179,6 +1185,31 @@ namespace SmartOrderService.Services
             }
 
             db.SaveChanges();
+        }
+
+        private bool IsValidLimitTime(int branchId, DateTime time)
+        {
+            var tomorrow = DateTime.Today.AddDays(1);
+            time = time.Date;
+            if (time > tomorrow)
+                return true;
+
+            if (time == tomorrow)
+            {
+                var limitTime = db.so_branch_limit_time
+                    .Where(x => x.branchId == branchId)
+                    .Select(x => x.limit_time)
+                    .FirstOrDefault();
+
+                var timeServer = DateTime.Now.TimeOfDay;
+
+                if (timeServer < limitTime)
+                    return true;
+
+                return false;
+            }
+
+            return false;
         }
     }
 }

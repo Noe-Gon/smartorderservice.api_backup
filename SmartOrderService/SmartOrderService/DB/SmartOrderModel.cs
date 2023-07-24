@@ -175,6 +175,11 @@ namespace SmartOrderService.DB
 
         public virtual DbSet<so_billpocket_report_log> so_billpocket_report_logs { get; set; }
         public virtual DbSet<so_digital_ticket_configuration> so_digital_ticket_configuration { get; set; }
+
+        public virtual DbSet<so_branch_limit_time> so_branch_limit_time { get; set; }
+
+        public virtual DbSet<so_branch_time_zone> so_branch_time_zone { get; set; }
+        
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<so_role_team>()
@@ -1890,6 +1895,9 @@ namespace SmartOrderService.DB
             var digitalTicketConfiguration = modelBuilder.Entity<so_digital_ticket_configuration>();
             digitalTicketConfiguration.HasKey(x => x.digitalTicketConfigurationId);
             digitalTicketConfiguration.Property(x => x.digitalTicketConfigurationId).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+
+            var branchTimeZone = modelBuilder.Entity<so_branch_time_zone>();
+            branchTimeZone.HasKey(x => x.branchtimezoneId);
         }
     }
 }

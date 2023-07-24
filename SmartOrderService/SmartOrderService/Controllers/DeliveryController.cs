@@ -182,6 +182,13 @@ namespace SmartOrderService.Controllers
 
                 return Content(HttpStatusCode.BadRequest, response);
             }
+            catch (BranchLimitTimeException e)
+            {
+                return Content((HttpStatusCode)420, ResponseBase<SendOrderResponse>.Create(new List<string>()
+                {
+                    e.Message
+                }));
+            }
             catch (ApiPreventaNoAuthorizationException e)
             {
                 return Content(HttpStatusCode.InternalServerError, ResponseBase<SendOrderResponse>.Create(new List<string>()
