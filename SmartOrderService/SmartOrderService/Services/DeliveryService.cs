@@ -494,8 +494,14 @@ namespace SmartOrderService.Services
         {
             var route = db.so_route
                 .Where(x => x.routeId == request.RouteId && x.status)
-                .Select(x => new { RouteCode = x.code, BranchCode = x.so_branch.code, RouteId = x.branchId, BranchId = x.branchId })
+                .Select(x => new { RouteCode = x.code, BranchCode = x.so_branch.code, RouteId = x.routeId, BranchId = x.branchId })
                 .FirstOrDefault();
+
+            if(!IsValidLimitTime(route.BranchId, request.DeliveryDate))
+                return ResponseBase<SendOrderResponse>.Create(new List<string>()
+                {
+                    "No se puede registrar, ya pasó el tiempo limite."
+                });
 
             if (route == null)
                 return ResponseBase<SendOrderResponse>.Create(new List<string>()
@@ -1002,6 +1008,30 @@ namespace SmartOrderService.Services
                         errorMsg
                     });
             }
+        }
+
+        private bool IsValidLimitTime(int branchId, DateTime time)
+        {
+            if (DbFunctions.TruncateTime(time) > DbFunctions.TruncateTime(DateTime.Now.AddDays(1)))
+                return true;
+
+            if (DbFunctions.TruncateTime(time) == DbFunctions.TruncateTime(DateTime.Now.AddDays(1)))
+            {
+                var limitTime = db.so_branch_limit_time
+                    .Where(x => x.branchId == branchId)
+                    .Select(x => x.limit_time)
+                    .FirstOrDefault();
+
+                var timeServer = DateTime.Now.TimeOfDay;
+
+                if (timeServer < limitTime)
+                    return true;
+
+                return false;
+            }
+
+            return false;
+
         }
     }
 }
