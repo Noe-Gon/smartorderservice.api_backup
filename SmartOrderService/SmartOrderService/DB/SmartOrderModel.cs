@@ -174,6 +174,11 @@ namespace SmartOrderService.DB
         public virtual DbSet<Configuracion_WorkByCloud> Configuracion_WorkByCloud { get; set; }
         public virtual DbSet<so_promotion_type_catalog> so_promotion_type_catalog { get; set; }
 
+        public virtual DbSet<so_digital_ticket_configuration> so_digital_ticket_configuration { get; set; }
+        public virtual DbSet<so_branch_limit_time> so_branch_limit_time { get; set; }
+
+        public virtual DbSet<so_branch_time_zone> so_branch_time_zone { get; set; }
+
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<so_role_team>()
@@ -1884,6 +1889,9 @@ namespace SmartOrderService.DB
 
             modelBuilder.Entity<so_promotion_type_catalog>()
                 .HasKey(x => x.id);
+
+            var branchTimeZone = modelBuilder.Entity<so_branch_time_zone>();
+            branchTimeZone.HasKey(x => x.branchtimezoneId);
         }
     }
 }

@@ -13,6 +13,13 @@ namespace SmartOrderService.Services
 {
     public class EmailService
     {
+        DigitalTicketConfigurationService digitalTicketConfigurationService;
+
+        public EmailService()
+        {
+            digitalTicketConfigurationService = new DigitalTicketConfigurationService();
+        }
+
         public ResponseBase<SendWellcomeEmailResponse> SendWellcomeEmail(WellcomeEmailRequest request)
         {
             try
@@ -55,6 +62,7 @@ namespace SmartOrderService.Services
             {
                 bool lTienePromociones = false;
                 string sRutaPlantilla = "~/Content/Template/TicketDigitalEmail.html";
+                string urlAvisoPrivacidad = digitalTicketConfigurationService.GetPrivacityNotice();
 
                 if (request.dtTicket.Columns.Count > 0 && request.dtTicket.Rows.Count > 0)
                 {
@@ -71,6 +79,7 @@ namespace SmartOrderService.Services
                     body = body.Replace("{RouteAddress}", request.RouteAddress);
                     body = body.Replace("{SellerName}", request.SellerName);
                     body = body.Replace("{CancelTicketLink}", request.CancelTicketLink);
+                    body = body.Replace("{UrlAvisoPrivacidad}", urlAvisoPrivacidad == null ? urlAvisoPrivacidad : "<a href='" + urlAvisoPrivacidad + "'>Aviso de privacidad</a>");
 
                     if (request.PaymentMethod == null || !string.IsNullOrEmpty(request.PaymentMethod))
                         body = body.Replace("{PaymentMethod}", "");
@@ -203,6 +212,7 @@ namespace SmartOrderService.Services
             {
                 bool lTienePromociones = false;
                 string sRutaPlantilla = "~/Content/Template/CancelTicketDigitalEmail.html";
+                string urlAvisoPrivacidad = digitalTicketConfigurationService.GetPrivacityNotice();
 
                 if (request.dtTicket.Columns.Count > 0 && request.dtTicket.Rows.Count > 0)
                 {
@@ -219,6 +229,8 @@ namespace SmartOrderService.Services
                     body = body.Replace("{RouteAddress}", request.RouteAddress);
                     body = body.Replace("{SellerName}", request.SellerName);
                     body = body.Replace("{CancelDate}", request.Date.ToString("dd/MMM/yy"));
+                    body = body.Replace("{CancelTicketLink}", request.CancelTicketLink);
+                    body = body.Replace("{UrlAvisoPrivacidad}", urlAvisoPrivacidad == null ? urlAvisoPrivacidad : "<a href='" + urlAvisoPrivacidad + "'>Aviso de privacidad</a>");
 
                     if (request.PaymentMethod == null || !string.IsNullOrEmpty(request.PaymentMethod))
                         body = body.Replace("{PaymentMethod}", "");
@@ -424,6 +436,7 @@ namespace SmartOrderService.Services
             try
             {
                 string template = request.Status ? "~/Content/Template/OrderTicket.html" : "~/Content/Template/CancelOrderTicket.html";
+                string urlAvisoPrivacidad = digitalTicketConfigurationService.GetPrivacityNotice();
 
                 using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath(template)))
                 {
@@ -436,6 +449,8 @@ namespace SmartOrderService.Services
                     body = body.Replace("{RouteAddress}", request.RouteAddress);
                     body = body.Replace("{SellerName}", request.SallerName);
                     body = body.Replace("{DeliveryDate}", request.DeliveryDate.ToString("dd/MM/yyyy"));
+                    body = body.Replace("{CancelTicketLink}", request.CancelTicketLink);
+                    body = body.Replace("{UrlAvisoPrivacidad}", urlAvisoPrivacidad == null ? urlAvisoPrivacidad : "<a href='" + urlAvisoPrivacidad + "'>Aviso de privacidad</a>");
 
                     int totalProductsSold = 0;
                     double totalPrice = 0;

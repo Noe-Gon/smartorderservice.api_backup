@@ -2816,6 +2816,7 @@ namespace SmartOrderService.Services
                                         UnitPrice = Convert.ToDouble(detail.price)
                                     });
                                 }
+                                sendTicketDigitalEmail.CancelTicketLink = GetCancelLinkByCustomerId(customer.customerId);
                                 sendTicketDigitalEmail.Sales = sales;
 
                                 //Se envia el ticket
@@ -2924,6 +2925,7 @@ namespace SmartOrderService.Services
                                         UnitPrice = Convert.ToDouble(detail.price)
                                     });
                                 }
+                                sendTicketDigitalEmail.CancelTicketLink = GetCancelLinkByCustomerId(customer.customerId);
                                 sendTicketDigitalEmail.Sales = sales;
 
                                 //Se envia el ticket

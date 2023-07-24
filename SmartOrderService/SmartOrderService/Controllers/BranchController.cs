@@ -1,5 +1,7 @@
 ﻿using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models;
+using SmartOrderService.Models.Message;
+using SmartOrderService.Models.Responses;
 using SmartOrderService.Services;
 using System;
 using System.Collections.Generic;
@@ -70,6 +72,29 @@ namespace SmartOrderService.Controllers
         // DELETE: api/Branch/5
         public void Delete(int id)
         {
+        }
+
+        [HttpGet]
+        [Route("~/api/branch/LimitTime")]
+        public IHttpActionResult GetLimitTime([FromUri] int branchId)
+        {
+            try
+            {
+                var response = new BranchService().GetLimitTime(branchId);
+
+                if (response.Status)
+                    return Content(HttpStatusCode.OK, response);
+
+                return Content(HttpStatusCode.BadRequest, response);
+            }
+            catch (EntityNotFoundException e)
+            {
+                return Content(HttpStatusCode.NotFound, ResponseBase<GetLimitTimeResponse>.Create(new List<string>() { e.Message }));
+            }
+            catch (Exception e)
+            {
+                return Content(HttpStatusCode.InternalServerError, ResponseBase<GetLimitTimeResponse>.Create(new List<string>() { e.Message }));
+            }
         }
     }
 }
