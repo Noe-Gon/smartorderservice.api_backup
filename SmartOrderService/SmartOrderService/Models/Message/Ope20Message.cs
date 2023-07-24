@@ -28,7 +28,7 @@ namespace SmartOrderService.Models.Message
         public User Assistant4 { get; set; }
 
         [JsonProperty("businessUnitId")]
-        public int BusinessUnitId { get; set; }
+        public int? BusinessUnitId { get; set; }
 
         [JsonProperty("operationDate")]
         public DateTime OperationDate { get; set; }
