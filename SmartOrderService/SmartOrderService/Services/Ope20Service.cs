@@ -20,9 +20,9 @@ namespace SmartOrderService.Services
         {
             var client = new RestClient();
             client.BaseUrl = new Uri(ConfigurationManager.AppSettings["API_OPE20_URL"]);
-            string SubscriptionKey = ConfigurationManager.AppSettings["API_OPE20_subscription_key"];
+            string SubscriptionKey = ConfigurationManager.AppSettings["EXTERNAL_ROUTE_KEY_Subscription_key"];
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
-            var requestConfig = new RestRequest("api/crew", Method.PUT);
+            var requestConfig = new RestRequest("api/external-route/api/crew", Method.PUT);
             requestConfig.RequestFormat = DataFormat.Json;
             requestConfig.AddHeader("Ocp-Apim-Subscription-Key", SubscriptionKey);
             requestConfig.AddJsonBody(request);
@@ -54,6 +54,32 @@ namespace SmartOrderService.Services
                 return response.FirstOrDefault().Status;
             }
             return false;
+        }
+
+        public CloseRouteNotificationResponse CloseRouteNotification(CloseRouteNotificationRequest request)
+        {
+            var client = new RestClient();
+            client.BaseUrl = new Uri(ConfigurationManager.AppSettings["API_OPE20_URL"]);
+            string SubscriptionKey = ConfigurationManager.AppSettings["EXTERNAL_SALE_KEY_Subscription_key"];
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+            var requestConfig = new RestRequest("api/external-sale/api/sale/closeroutenotification", Method.PUT);
+            requestConfig.RequestFormat = DataFormat.Json;
+            requestConfig.AddHeader("Ocp-Apim-Subscription-Key", SubscriptionKey);
+            requestConfig.AddJsonBody(request);
+
+            var RestResponse = client.Execute(requestConfig);
+            if (RestResponse.StatusCode != HttpStatusCode.OK)
+                throw new ExternalAPIException("Error en Ope20.");
+
+            if (RestResponse.StatusCode != HttpStatusCode.OK)
+                throw new ExternalAPIException(RestResponse.Content);
+
+            var response = JsonConvert.DeserializeObject<CloseRouteNotificationResponse>(RestResponse.Content);
+
+            if (response.ErrorCode != 200)
+                throw new ExternalAPIException(response.Message);
+
+            return response;
         }
     }
 }

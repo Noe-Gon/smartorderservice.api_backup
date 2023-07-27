@@ -82,4 +82,30 @@ namespace SmartOrderService.Models.Message
 
     }
     #endregion
+
+    #region Close Route Notification
+    public class CloseRouteNotificationRequest
+    {
+        [JsonProperty("routeCode")]
+        public string RouteCode { get; set; }
+
+        [JsonProperty("posID")]
+        public string BranchCode { get; set; }
+
+        [JsonProperty("loadID")]
+        public string LoadID { get; set; }
+    }
+
+    public class CloseRouteNotificationResponse
+    {
+        [JsonProperty("errorCode")]
+        public int ErrorCode { get; set; }
+
+        [JsonProperty("message")]
+        public string Message { get; set; }
+
+        [JsonProperty("affectedSales")]
+        public int AffectedSaled { get; set; }
+    }
+    #endregion
 }

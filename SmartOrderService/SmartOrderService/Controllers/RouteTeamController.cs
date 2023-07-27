@@ -122,6 +122,10 @@ namespace SmartOrderService.Services
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict,false);
             }
+            catch (ExternalAPIException e)
+            {
+                response = Request.CreateResponse((HttpStatusCode)420, false);
+            }
             catch (Exception e)
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict, false);
@@ -145,6 +149,10 @@ namespace SmartOrderService.Services
             catch (BillpocketReportException e)
             {
                 response = Request.CreateResponse((HttpStatusCode)420, false);
+            }
+            catch (ExternalAPIException e)
+            {
+                response = Request.CreateResponse((HttpStatusCode)421, false);
             }
             catch (WorkdayNotFoundException e)
             {

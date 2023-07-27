@@ -2,6 +2,7 @@
 using SmartOrderService.DB;
 using SmartOrderService.Models.DTO;
 using SmartOrderService.Models.Enum;
+using SmartOrderService.Models.Message;
 using SmartOrderService.Utils;
 using System;
 using System.Collections.Generic;
@@ -290,6 +291,7 @@ namespace SmartOrderService.Services
             }
             return true;
             */
+            
             int impulsorId = SearchDrivingId(userId);
             so_work_day workDay = GetWorkdayByUserAndDate(impulsorId, DateTime.Today);
 
@@ -300,6 +302,7 @@ namespace SmartOrderService.Services
             {
                 return false;
             }
+
             return true;
         }
 
@@ -326,9 +329,13 @@ namespace SmartOrderService.Services
 
             if (userTravel > 0)
                 return false;
-            
-            if(workDay.CheckBillpocket)
+
+            CloseInventoryOpe20(workDayCurrent);
+
+            if (workDay.CheckBillpocket)
                 return ChalBillPocketReportForAllUsers(workDay.WorkdayId, workDay.UserId);
+
+            
 
             return true;
         }
@@ -448,5 +455,38 @@ namespace SmartOrderService.Services
             return routeTeam;
         }
 
+        public void CloseInventoryOpe20(so_work_day workDay)
+        {
+            Ope20Service service = new Ope20Service();
+
+            var inventories = db.so_route_team_travels_employees
+                .Join(db.so_inventory, rt => rt.inventoryId, inv => inv.inventoryId,
+                (rt, inv) => new { inv.code, rt.work_dayId, rt.routeId })
+                .Where(x => x.work_dayId == workDay.work_dayId)
+                .ToList();
+
+            if (inventories == null)
+                return;
+
+            int routeId = inventories.First().routeId;
+            var routeBranchCode = db.so_route
+                .Where(x => routeId == x.routeId)
+                .Select(x => new { RouteCode = x.code, BranchCode = x.so_branch.code }).FirstOrDefault();
+
+            List<string> inventoryCodes = inventories.Select(x => x.code).Distinct().ToList();
+
+            if (!service.IsCediInOpe20(routeBranchCode.BranchCode))
+                return;
+
+            foreach (var inventoryCode in inventoryCodes)
+            {
+                service.CloseRouteNotification(new CloseRouteNotificationRequest()
+                {
+                    BranchCode = routeBranchCode.BranchCode,
+                    RouteCode = routeBranchCode.RouteCode,
+                    LoadID = inventoryCode
+                });
+            }
+        }
     }
 }
