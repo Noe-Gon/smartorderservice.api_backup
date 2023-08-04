@@ -130,8 +130,14 @@ namespace SmartOrderService.Services
                     prices.AddRange(Mapper.Map<so_price_list_products_detail[], List<PriceDto>>(priceDetails));
                 }
             }
-
-            prices = MergePrices(MasterPrices, prices, branch_tax);
+            if (vario)
+            {
+                prices = MergePrices(MasterPrices, prices, branch_tax, true);
+            }
+            else
+            {
+                prices = MergePrices(MasterPrices, prices, branch_tax);
+            }
 
             return prices;
         }
@@ -207,6 +213,7 @@ namespace SmartOrderService.Services
             so_branch_tax branch_tax = db.so_branch_tax.FirstOrDefault(x => x.branchId == BranchId && x.status);
 
             var MasterPrices = getPricesByBranch(BranchId, updated, productsIds);
+            var MasterPricesAll = getPricesByBranch(BranchId, updated, productsIds, true);
 
             var CustomerList = db.so_delivery.Where(d => d.inventoryId.Equals(InventoryId) && d.status).Select(c => c.customerId).ToList();
 
@@ -248,7 +255,7 @@ namespace SmartOrderService.Services
             {
                 if (Customer == vario)
                 {
-                    List<PriceDto> prices = getPricesByCustomerBranchv2(Customer, route.routeId, BranchId, updated, productsIds, MasterPrices, branch_tax, true);
+                    List<PriceDto> prices = getPricesByCustomerBranchv2(Customer, route.routeId, BranchId, updated, productsIds, MasterPricesAll, branch_tax, true);
 
                     PriceList.Add(new PriceList() { Prices = prices, CustomerId = Customer });
                 }
@@ -307,7 +314,7 @@ namespace SmartOrderService.Services
             return prices;
         }
 
-        public List<PriceDto> MergePrices(List<PriceDto> Master, List<PriceDto> CustomerPrices, so_branch_tax BranchTax)
+        public List<PriceDto> MergePrices(List<PriceDto> Master, List<PriceDto> CustomerPrices, so_branch_tax BranchTax, bool isVario = false)
         {
 
             foreach (var price in CustomerPrices)
@@ -321,14 +328,15 @@ namespace SmartOrderService.Services
             var filtered = Master.Where(p => !ids.Contains(p.ProductId)).ToList();
 
             CustomerPrices = SetTaxes(BranchTax, CustomerPrices);
-
-            CustomerPrices.AddRange(filtered);
-
+            if (!isVario)
+            {
+                CustomerPrices.AddRange(filtered);
+            }
 
             return CustomerPrices;
         }
 
-        public List<PriceDto> getPricesByBranch(int BranchId, DateTime updated, List<int> ProductsIds)
+        public List<PriceDto> getPricesByBranch(int BranchId, DateTime updated, List<int> ProductsIds, bool all = false)
         {
 
             List<PriceDto> prices;
@@ -345,7 +353,24 @@ namespace SmartOrderService.Services
 
             if (priceList != null)
             {
-                var priceDetails = db.so_price_list_products_detail
+                if (all)
+                {
+                    var priceDetails = db.so_price_list_products_detail
+                   .Where(
+                        p => p.products_price_listId.Equals(priceList.PriceListId)
+                        && p.status
+                        && p.so_product.type == 1
+                        && p.so_product.status
+                    ).
+                    ToArray();
+
+                    prices = Mapper.Map<so_price_list_products_detail[], List<PriceDto>>(priceDetails);
+
+                    prices = SetTaxes(branch_tax, prices);
+                }
+                else
+                {
+                    var priceDetails = db.so_price_list_products_detail
                    .Where(
                         p => p.products_price_listId.Equals(priceList.PriceListId)
                         && p.status
@@ -355,10 +380,10 @@ namespace SmartOrderService.Services
                     ).
                     ToArray();
 
-                prices = Mapper.Map<so_price_list_products_detail[], List<PriceDto>>(priceDetails);
+                    prices = Mapper.Map<so_price_list_products_detail[], List<PriceDto>>(priceDetails);
 
-                prices = SetTaxes(branch_tax, prices);
-
+                    prices = SetTaxes(branch_tax, prices);
+                }
             }
             else
             {
