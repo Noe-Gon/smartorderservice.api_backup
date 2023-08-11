@@ -76,7 +76,7 @@ namespace SmartOrderService.Services
 
             var response = JsonConvert.DeserializeObject<CloseRouteNotificationResponse>(RestResponse.Content);
 
-            if (response.ErrorCode != 200)
+            if (response.ErrorCode != 0)
                 throw new ExternalAPIException(response.Message);
 
             return response;
