@@ -57,7 +57,7 @@ namespace SmartOrderService.Services
 
             if (routeTeam == null)
                 throw new EntityNotFoundException("El usuario no esta asignado a un equipo");
-            bool inTripulacs = false;
+
             List<string> exceptionMessages = new List<string>();
             //Notificar a la API
             try
@@ -88,7 +88,6 @@ namespace SmartOrderService.Services
                     if (response == "\"{\\\"errors\\\":[]}\"")
                     {
                         //Lógica del fallo con el registro en tripulacs
-                        inTripulacs = true;
                         if (ayudanteCode != null)
                         {
                             ayudante.Status = true;
@@ -131,7 +130,6 @@ namespace SmartOrderService.Services
                     if (impulsor != null)
                     {
                         //Lógica del fallo con el registro en tripulacs
-                        inTripulacs = true;
                         var impulsorCode = impulsor.UserCode;
                         requestNotify.auxiliarid = Convert.ToInt32(request.EmployeeCode);
                         requestNotify.impulsorId = Convert.ToInt32(impulsorCode);
@@ -142,7 +140,6 @@ namespace SmartOrderService.Services
                         if (response == "\"{\\\"errors\\\":[]}\"")
                         {
                             //Lógica del fallo con el registro en tripulacs
-                            inTripulacs = true;
                         }
                         if (response == "\"{\\\"errors\\\":[{\\\"error\\\":9001,\\\"message\\\":\\\"No existe la tripulación configurada para la ruta " + routeBranch.Route.code + ".\\\"}]}\"")
                         {
@@ -183,7 +180,7 @@ namespace SmartOrderService.Services
                     CreatedDate = DateTime.Now,
                     LeaderCode = null,
                     ModifiedDate = null,
-                    Status = inTripulacs,
+                    Status = true,
                     RouteId = routeBranch.Route.routeId,
                     UserCode = request.EmployeeCode,
                     UserId = user.userId,
@@ -318,7 +315,6 @@ namespace SmartOrderService.Services
                         throw new UserInUseException("El usuario inicio sesión con otro codigo de empleado");
                 }
             
-            bool inTripulacs = false;
             List<string> exceptionMessages = new List<string>();
             var serviceOpe20 = new Ope20Service();
             //Notificar a la API
@@ -372,7 +368,6 @@ namespace SmartOrderService.Services
                         if (response == "\"{\\\"errors\\\":[]}\"")
                         {
                             //Lógica del fallo con el registro en tripulacs
-                            inTripulacs = true;
                             if (ayudanteCode != null)
                             {
                                 ayudante.Status = true;
@@ -416,7 +411,6 @@ namespace SmartOrderService.Services
                     if (impulsor != null)
                     {
                         //Lógica del fallo con el registro en tripulacs
-                        inTripulacs = true;
                         var impulsorCode = impulsor.UserCode;
 
                         if (serviceOpe20.IsCediInOpe20(routeBranch.Branch.code)) 
@@ -451,7 +445,6 @@ namespace SmartOrderService.Services
                             if (response == "\"{\\\"errors\\\":[]}\"")
                             {
                                 //Lógica del fallo con el registro en tripulacs
-                                inTripulacs = true;
                             }
                             if (response == "\"{\\\"errors\\\":[{\\\"error\\\":9001,\\\"message\\\":\\\"No existe la tripulación configurada para la ruta " + routeBranch.Route.code + ".\\\"}]}\"")
                             {
@@ -493,7 +486,7 @@ namespace SmartOrderService.Services
                 CreatedDate = DateTime.Now,
                 LeaderCode = null,
                 ModifiedDate = null,
-                Status = inTripulacs,
+                Status = true,
                 RouteId = routeBranch.Route.routeId,
                 UserCode = request.EmployeeCode,
                 UserId = user.userId,

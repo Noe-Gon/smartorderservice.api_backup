@@ -465,7 +465,7 @@ namespace SmartOrderService.Services
                 .Where(x => x.work_dayId == workDay.work_dayId)
                 .ToList();
 
-            if (inventories == null)
+            if (inventories == null || inventories.Count == 0)
                 return;
 
             int routeId = inventories.First().routeId;

@@ -1,6 +1,7 @@
 ﻿using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.DTO;
 using SmartOrderService.Models.Requests;
+using SmartOrderService.Models.Responses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -140,27 +141,37 @@ namespace SmartOrderService.Services
             try
             {
                 RouteTeamService routeTeamService = new RouteTeamService();
-                response = Request.CreateResponse(HttpStatusCode.Accepted, routeTeamService.CheckWorkDayClosingStatusByWorkDay(workday));
+                response = Request.CreateResponse(HttpStatusCode.Accepted, ResponseBase<bool?>.Create(routeTeamService.CheckWorkDayClosingStatusByWorkDay(workday)));
             }
             catch (EntityNotFoundException e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Forbidden, false);
+                response = Request.CreateResponse(HttpStatusCode.Forbidden, ResponseBase<bool?>.Create(new List<string>() {
+                    e.Message
+                }));
             }
             catch (BillpocketReportException e)
             {
-                response = Request.CreateResponse((HttpStatusCode)420, false);
+                response = Request.CreateResponse((HttpStatusCode)420, ResponseBase<bool?>.Create(new List<string>() {
+                    e.Message
+                }));
             }
             catch (ExternalAPIException e)
             {
-                response = Request.CreateResponse((HttpStatusCode)421, false);
+                response = Request.CreateResponse((HttpStatusCode)421, ResponseBase<bool?>.Create(new List<string>() {
+                    e.Message
+                }));
             }
             catch (WorkdayNotFoundException e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict, false);
+                response = Request.CreateResponse(HttpStatusCode.Conflict, ResponseBase<bool?>.Create(new List<string>() {
+                    e.Message
+                }));
             }
             catch (Exception e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict, false);
+                response = Request.CreateResponse(HttpStatusCode.Conflict, ResponseBase<bool?>.Create(new List<string>() {
+                    e.Message
+                }));
             }
             return response;
         }

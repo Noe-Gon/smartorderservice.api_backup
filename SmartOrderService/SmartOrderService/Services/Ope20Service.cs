@@ -68,8 +68,6 @@ namespace SmartOrderService.Services
             requestConfig.AddJsonBody(request);
 
             var RestResponse = client.Execute(requestConfig);
-            if (RestResponse.StatusCode != HttpStatusCode.OK)
-                throw new ExternalAPIException("Error en Ope20.");
 
             if (RestResponse.StatusCode != HttpStatusCode.OK)
                 throw new ExternalAPIException(RestResponse.Content);
