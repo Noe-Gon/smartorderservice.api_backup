@@ -146,13 +146,13 @@ namespace SmartOrderService.Services
             catch (EntityNotFoundException e)
             {
                 response = Request.CreateResponse(HttpStatusCode.Forbidden, ResponseBase<bool?>.Create(new List<string>() {
-                    e.Message
+                    "No es posible cerrar jornada, enviar reporte de BillPocket"
                 }));
             }
             catch (BillpocketReportException e)
             {
                 response = Request.CreateResponse((HttpStatusCode)420, ResponseBase<bool?>.Create(new List<string>() {
-                    e.Message
+                    "No fue posible cerrar la sesión. Algún usuario no ha enviado el reporte de Billpocket"
                 }));
             }
             catch (ExternalAPIException e)
@@ -169,9 +169,18 @@ namespace SmartOrderService.Services
             }
             catch (Exception e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict, ResponseBase<bool?>.Create(new List<string>() {
-                    e.Message
-                }));
+                if (e == null || string.IsNullOrEmpty(e.Message))
+                {
+                    response = Request.CreateResponse(HttpStatusCode.Conflict, ResponseBase<bool?>.Create(new List<string>() {
+                        "Error no identificado, contacte al servidor"
+                    }));
+                }
+                else
+                {
+                    response = Request.CreateResponse(HttpStatusCode.Conflict, ResponseBase<bool?>.Create(new List<string>() {
+                        e.Message
+                    }));
+                }
             }
             return response;
         }

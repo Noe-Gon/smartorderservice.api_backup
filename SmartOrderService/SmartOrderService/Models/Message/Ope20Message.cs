@@ -107,5 +107,14 @@ namespace SmartOrderService.Models.Message
         [JsonProperty("affectedSales")]
         public int AffectedSaled { get; set; }
     }
+
+    public class Ope20ErrrorResponse
+    {
+        public object errors { get; set; }
+        public string type { get; set; }
+        public string title { get; set; }
+        public int status { get; set; }
+        public string traceId { get; set; }
+    }
     #endregion
 }

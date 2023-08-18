@@ -70,7 +70,10 @@ namespace SmartOrderService.Services
             var RestResponse = client.Execute(requestConfig);
 
             if (RestResponse.StatusCode != HttpStatusCode.OK)
-                throw new ExternalAPIException(RestResponse.Content);
+            {
+                var error = JsonConvert.DeserializeObject<Ope20ErrrorResponse>(RestResponse.Content);
+                throw new ExternalAPIException(error.title);
+            }
 
             var response = JsonConvert.DeserializeObject<CloseRouteNotificationResponse>(RestResponse.Content);
 
