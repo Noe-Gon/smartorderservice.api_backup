@@ -446,6 +446,7 @@
     <Compile Include="DB\so_inventory_replacement_detail.cs" />
     <Compile Include="DB\so_inventory_summary.cs" />
     <Compile Include="DB\so_invoice_opefactura.cs" />
+    <Compile Include="DB\so_is_sale_point.cs" />
     <Compile Include="DB\so_leader_authorization_code.cs" />
     <Compile Include="DB\so_loan_order.cs" />
     <Compile Include="DB\so_loan_sale.cs" />
@@ -720,6 +721,7 @@
     <Compile Include="Services\CustomerBlockedService.cs" />
     <Compile Include="Services\DigitalTicketConfigurationService.cs" />
     <Compile Include="Services\EmailService.cs" />
+    <Compile Include="Services\IsSalePointService.cs" />
     <Compile Include="Services\Ope20Service.cs" />
     <Compile Include="Services\RoleTeamService.cs" />
     <Compile Include="Services\RouteTeamInventoryAvailableService.cs" />

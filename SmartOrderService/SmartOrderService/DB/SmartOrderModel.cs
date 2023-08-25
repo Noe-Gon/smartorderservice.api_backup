@@ -179,7 +179,9 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_branch_limit_time> so_branch_limit_time { get; set; }
 
         public virtual DbSet<so_branch_time_zone> so_branch_time_zone { get; set; }
-        
+
+        public virtual DbSet<so_is_sale_point> so_is_sale_point { get; set; }
+
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<so_role_team>()

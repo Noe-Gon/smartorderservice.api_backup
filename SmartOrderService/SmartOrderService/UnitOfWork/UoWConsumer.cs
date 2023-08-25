@@ -53,6 +53,7 @@ namespace SmartOrderService.UnitOfWork
             InventoryRepository = new GenericRepository<so_inventory>(Context);
             SynchronizedConsumersRepository = new GenericRepository<so_synchronized_consumer>(Context);
             SynchronizedConsumerDetailsRepository = new GenericRepository<so_synchronized_consumer_detail>(Context);
+            IsSalePointRepository = new GenericRepository<so_is_sale_point>(Context);
             //RouteCustomerVarioRepository = new GenericRepository<so_route_customer_vario>(Context);
         }
 
@@ -92,6 +93,7 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_sale_aditional_data> SaleAdditionalDataRepository { get; set; }
         public GenericRepository<so_synchronized_consumer> SynchronizedConsumersRepository { get; set; }
         public GenericRepository<so_synchronized_consumer_detail> SynchronizedConsumerDetailsRepository { get; set; }
+        public GenericRepository<so_is_sale_point> IsSalePointRepository { get; set; }
         //public GenericRepository<so_route_customer_vario> RouteCustomerVarioRepository { get; set; }
 
         public void Save()
