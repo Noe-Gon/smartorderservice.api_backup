@@ -322,6 +322,7 @@ namespace SmartOrderService.Services
             {
                 var requestNotify = new NotifyWorkdayRequest();
                 //Si es impulsor
+                var isSalePointService = IsSalePointService.Create();
                 if (routeTeam.roleTeamId == (int)ERolTeam.Impulsor)
                 {
                     //Buscar si el ayudante se autenticó antes que el impulsor para registrarlo. 
@@ -349,14 +350,28 @@ namespace SmartOrderService.Services
                             CollaboratorCode = ayudanteCode
                         };
 
-                        serviceOpe20.CallCrewOpe20(new CrewOpe20Request()
+                        if (isSalePointService.GetIsSalePoint(routeBranch.Branch.code).isSalePoint)
                         {
-                            SalesMan = impulsor,
-                            Assistant1 = ayudante1,
-                            RouteCode = routeBranch.Route.code,
-                            OperationDate = DateTime.Now,
-                            PosId = routeBranch.Branch.code
-                        });
+                            serviceOpe20.CallCrewOpe20(new CrewOpe20Request()
+                            {
+                                SalesMan = impulsor,
+                                Assistant1 = ayudante1,
+                                RouteCode = routeBranch.Route.code,
+                                OperationDate = DateTime.Now,
+                                PosId = routeBranch.Branch.code
+                            });
+                        }
+                        else
+                        {
+                            serviceOpe20.CallCrewOpe20(new CrewOpe20Request()
+                            {
+                                SalesMan = impulsor,
+                                Assistant1 = ayudante1,
+                                RouteCode = routeBranch.Route.code,
+                                OperationDate = DateTime.Now,
+                                BusinessUnitId = Int32.Parse(routeBranch.Branch.code)
+                            });
+                        }
                     }
                     else {
                         requestNotify.auxiliarid = Convert.ToInt32(ayudanteCode);
@@ -425,14 +440,28 @@ namespace SmartOrderService.Services
                                 CollaboratorCode = request.EmployeeCode
                             };
 
-                            serviceOpe20.CallCrewOpe20(new CrewOpe20Request()
+                            if (isSalePointService.GetIsSalePoint(routeBranch.Branch.code).isSalePoint)
                             {
-                                SalesMan = saleMan,
-                                Assistant1 = ayudante1,
-                                RouteCode = routeBranch.Route.code,
-                                OperationDate = DateTime.Now,
-                                PosId = routeBranch.Branch.code
-                            });
+                                serviceOpe20.CallCrewOpe20(new CrewOpe20Request()
+                                {
+                                    SalesMan = saleMan,
+                                    Assistant1 = ayudante1,
+                                    RouteCode = routeBranch.Route.code,
+                                    OperationDate = DateTime.Now,
+                                    PosId = routeBranch.Branch.code
+                                });
+                            }
+                            else
+                            {
+                                serviceOpe20.CallCrewOpe20(new CrewOpe20Request()
+                                {
+                                    SalesMan = saleMan,
+                                    Assistant1 = ayudante1,
+                                    RouteCode = routeBranch.Route.code,
+                                    OperationDate = DateTime.Now,
+                                    BusinessUnitId = Int32.Parse(routeBranch.Branch.code)
+                                });
+                            }
                         }
                         else
                         {
