@@ -9,6 +9,7 @@ namespace SmartOrderService.Models.Requests
     {
         public int UserId { get; set; }
         public int? InventoryId { get; set; }
+        public Guid? WorkDayId { get; set; }
     }
 
     public class BlockCustomerRequest

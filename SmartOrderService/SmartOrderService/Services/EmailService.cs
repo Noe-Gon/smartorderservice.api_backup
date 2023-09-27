@@ -1,4 +1,5 @@
 ﻿using RestSharp;
+using SmartOrderService.Models.Email;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;
 using System;
@@ -7,6 +8,9 @@ using System.Configuration;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Mail;
+using System.Net.Mime;
 using System.Web;
 
 namespace SmartOrderService.Services
@@ -60,12 +64,18 @@ namespace SmartOrderService.Services
             try
             {
                 bool lTienePromociones = false;
+                bool lTieneLealtad = false;
                 string sRutaPlantilla = "~/Content/Template/TicketDigitalEmail.html";
                 string urlAvisoPrivacidad = digitalTicketConfigurationService.GetPrivacityNotice();
 
                 if (request.dtTicket.Columns.Count > 0 && request.dtTicket.Rows.Count > 0)
                 {
                     lTienePromociones = true;
+                }
+
+                if (request.SalesWithPoints != null && request.SalesWithPoints.Count > 0)
+                {
+                    lTieneLealtad = true;
                 }
 
                 using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath(sRutaPlantilla)))
@@ -87,6 +97,7 @@ namespace SmartOrderService.Services
 
                     string tdBody = "";
                     string tdBodyPromociones = "";
+                    string tdBodyLealtad = "";
 
                     //Orders
                     if (request.Order == null)
@@ -177,6 +188,39 @@ namespace SmartOrderService.Services
                         body = body.Replace("{TotalPromos}", totalPromos.ToString());
                     }
 
+                    if (lTieneLealtad)
+                    {
+                        int totalPuntos = 0;
+                        int totalProductLoyalty = 0;
+                        body = body.Replace("id='lealtad' style='display:none'", "id='lealtad' style='display:'");
+
+                        body = body.Replace("id='tableHeaderLoyalty' style='display:none'", "id='tableHeaderLoyalty' style='display:'");
+
+                        body = body.Replace("id='lbllealtad' style='display:none'", "id='lbllealtad' style='display:'");
+                        body = body.Replace("id='lbllealtadPuntosUtilizados' style='display:none'", "id='lbllealtadPuntosUtilizados' style='display:'");
+                        body = body.Replace("id='lbllealtadPuntosGanados' style='display:none'", "id='lbllealtadPuntosGanados' style='display:'");
+                        body = body.Replace("id='lbllealtadPuntosAcumulados' style='display:none'", "id='lbllealtadPuntosAcumulados' style='display:'");
+                        body = body.Replace("id='lbllealtadPuntosVigencia' style='display:none'", "id='lbllealtadPuntosVigencia' style='display:'");
+
+                        foreach (var productLoyalty in request.SalesWithPoints)
+                        {
+                            totalProductLoyalty++;
+                            tdBodyLealtad += "<tr><td>" + totalProductLoyalty + ") " + productLoyalty.ProductName + "</td>";
+                            tdBodyLealtad += "<td>" + productLoyalty.Amount + "</td>";
+                            tdBodyLealtad += "<td>" + productLoyalty.UnitPrice + "</td>";
+                            tdBodyLealtad += "<td>" + productLoyalty.TotalPrice + "</td></tr>";
+                            totalPuntos += productLoyalty.TotalPrice;
+                        }
+
+                        body = body.Replace("{TdBodyLealtad}", tdBodyLealtad);
+
+                        body = body.Replace("{TotalLealtad}", totalProductLoyalty.ToString());
+                        body = body.Replace("{PuntosUtilizadosLealtad}", totalPuntos.ToString());
+                        body = body.Replace("{PuntosGanadosLealtad}", "120");
+                        body = body.Replace("{PuntosAcumuladosLealtad}", request.AccumulatedPoints.ToString());
+                        body = body.Replace("{PuntosVigencia}", "29/07/2021 al 31/12/2021");
+                    }
+                    body = body.Replace("{cutomerReferenceCode}", request.CustomerReferenceCode);
                     body = body.Replace("{TdBody}", tdBody);
                     body = body.Replace("{TotalProductsSold}", totalCountProductSold.ToString());
                     body = body.Replace("{TotalBoxesSold}", totalBoxesSold.ToString());
@@ -393,6 +437,40 @@ namespace SmartOrderService.Services
             }
         }
 
+        public ResponseBase<SendReactivationTicketDigitalResponse> SendTermsAndConditionsLoyalty(SendReactivationTicketDigitalRequest request)
+        {
+            try
+            {
+                using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath("~/Content/Template/LoyaltyEmail.html")))
+                {
+                    string body = reader.ReadToEnd();
+                    body = body.Replace("{CustomerName}", request.CustomerName);
+                    body = body.Replace("{TermsAndConditionLink}", request.TermsAndConditionLink);
+
+                    var mailInfo = new SendAPIEmailrequest()
+                    {
+                        To = request.CustomerEmail,
+                        Subject = "Solicitud envío de ticket de compra",
+                        Body = body
+                    };
+
+                    DummySendEmailLoyalty(mailInfo);
+                }
+
+                return ResponseBase<SendReactivationTicketDigitalResponse>.Create(new SendReactivationTicketDigitalResponse()
+                {
+                    Msg = "Se envió correctamente"
+                });
+            }
+            catch (Exception e)
+            {
+                return ResponseBase<SendReactivationTicketDigitalResponse>.Create(new List<string>()
+                {
+                    e.Message
+                });
+            }
+        }
+
         public ResponseBase<SendRemovalRequestEmailResponse> SendRemovalRequestEmail(SendRemovalRequestEmailRequest request)
         {
             try
@@ -562,6 +640,49 @@ namespace SmartOrderService.Services
             requesto.AddJsonBody(request);
 
             var RestResponse = client.Execute(requesto);
+        }
+
+        public void DummySendEmailLoyalty(SendAPIEmailrequest request)
+        {
+            MailMessage mmsg = new MailMessage();
+
+            mmsg.To.Add(request.To);
+            mmsg.Subject = request.Subject;
+            mmsg.SubjectEncoding = System.Text.Encoding.UTF8;
+
+            //Add image
+            Attachment att = new Attachment(HttpContext.Current.Server.MapPath("~/Src/loyaltyImage.png"));
+            att.ContentDisposition.Inline = true;
+            att.ContentDisposition.DispositionType = DispositionTypeNames.Inline;
+            att.ContentId = "Bepensa";
+            att.ContentType.MediaType = "image/png";
+            att.ContentType.Name = Path.GetFileName(HttpContext.Current.Server.MapPath("~/Src/loyaltyImage.png"));
+            request.Body = request.Body.Replace("{imageLoyalty}", "<img class=\"image\" src=\"cid:Bepensa\" />");
+
+            mmsg.Body = request.Body;
+            mmsg.BodyEncoding = System.Text.Encoding.UTF8;
+            mmsg.IsBodyHtml = true;
+            mmsg.Attachments.Add(att);
+
+            mmsg.From = new MailAddress("bepensafullpotentialaws@walook.com.mx");
+
+            SmtpClient client = new SmtpClient();
+
+            client.Credentials = new NetworkCredential("AKIA4VWPJ4MQA5N5FLVM", "BE7TsEtOBV/9SIIFTZ6r9hDvg8HWTWbvyu/dRgXRvenz");
+
+            client.Port = 587;
+            client.EnableSsl = true;
+
+            client.Host = "email-smtp.us-east-2.amazonaws.com";
+
+            try
+            {
+                client.Send(mmsg);
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
         }
     }
 }

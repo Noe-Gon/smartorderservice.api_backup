@@ -3,7 +3,6 @@ using SmartOrderService.UnitOfWork.Repositories;
 using SmartOrderService.DB;
 using SmartOrderService.Models.Enum;
 using System;
-using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using System.Web;
@@ -38,8 +37,14 @@ namespace SmartOrderService.UnitOfWork
             CustomerProductPriceListRepository = new GenericRepository<so_customer_products_price_list>(Context);
             ProductPriceListRepository = new GenericRepository<so_products_price_list>(Context);
             PortalLinksLogRepository = new GenericRepository<so_portal_links_log>(Context);
+            LoyaltyLinksLogRepository = new GenericRepository<so_loyalty_links_log>(Context);
             RouteTeamTravelsCustomerBlocked = new GenericRepository<so_route_team_travels_customer_blocked>(Context);
             WorkDayRepository = new GenericRepository<so_work_day>(Context);
+            RouteCustomerVarioRepository = new GenericRepository<so_route_customer_vario>(Context);
+            ProductBottleRepository = new GenericRepository<so_product_bottle>(Context);
+            SaleDetailRepository = new GenericRepository<so_sale_detail>(Context);
+            LiquidationLogRepository = new GenericRepository<so_liquidation_log>(Context);
+            LiquidationLogStatusRepository = new GenericRepository<so_liquidation_log_status>(Context);
             LeaderAuthorizationCodeRepository = new GenericRepository<so_leader_authorization_code>(Context);
             AuthentificationLogRepository = new GenericRepository<so_authentication_log>(Context);
             RouteTeamInventoryAvailableRepository = new GenericRepository<so_route_team_inventory_available>(Context);
@@ -53,7 +58,10 @@ namespace SmartOrderService.UnitOfWork
             InventoryRepository = new GenericRepository<so_inventory>(Context);
             SynchronizedConsumersRepository = new GenericRepository<so_synchronized_consumer>(Context);
             SynchronizedConsumerDetailsRepository = new GenericRepository<so_synchronized_consumer_detail>(Context);
-            //RouteCustomerVarioRepository = new GenericRepository<so_route_customer_vario>(Context);
+            RouteTeamInventoryAvailableRepository = new GenericRepository<so_route_team_inventory_available>(Context);
+            RouteTeamTravlesEmployeesRepository = new GenericRepository<so_route_team_travels_employees>(Context);
+            PromotionArticleMovementRepository = new GenericRepository<so_promotion_article_movement>(Context);
+            ArticlePromotionalRouteRepository = new GenericRepository<so_article_promotional_route>(Context);
         }
 
         public SmartOrderModel Context { get; set; }
@@ -78,21 +86,30 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_customer_products_price_list> CustomerProductPriceListRepository { get; set; }
         public GenericRepository<so_products_price_list> ProductPriceListRepository { get; set; }
         public GenericRepository<so_portal_links_log> PortalLinksLogRepository { get; set; }
+        public GenericRepository<so_loyalty_links_log> LoyaltyLinksLogRepository { get; set; }
         public GenericRepository<so_route_team_travels_customer_blocked> RouteTeamTravelsCustomerBlocked { get; set; }
         public GenericRepository<so_work_day> WorkDayRepository { get; set; }
         public GenericRepository<so_leader_authorization_code> LeaderAuthorizationCodeRepository { get; set; }
         public GenericRepository<so_authentication_log> AuthentificationLogRepository { get; set; }
+        public GenericRepository<so_route_customer_vario> RouteCustomerVarioRepository { get; set; }
+        public GenericRepository<so_sale_promotion> SalePromotionRepository { get; set; }
+        public GenericRepository<so_product_bottle> ProductBottleRepository { get; set; }
+        public GenericRepository<so_product> ProductRepository { get; set; }
         public GenericRepository<so_route_team_inventory_available> RouteTeamInventoryAvailableRepository { get; set; }
         public GenericRepository<so_product_tax> ProductTaxRepository { get; set; }
         public GenericRepository<so_branch_tax> BranchTaxRepository { get; set; }
-        public GenericRepository<so_product> ProductRepository { get; set; }
         public GenericRepository<so_delivery_detail> DeliveryDetailRepository { get; set; }
         public GenericRepository<so_delivery_status> DeliveryStatusRepository { get; set; }
         public GenericRepository<so_delivery_additional_data> DeliveryAdditionalData { get; set; }
         public GenericRepository<so_sale_aditional_data> SaleAdditionalDataRepository { get; set; }
+        public GenericRepository<so_sale_detail> SaleDetailRepository { get; set; }
+        public GenericRepository<so_liquidation_log> LiquidationLogRepository { get; set; }
+        public GenericRepository<so_liquidation_log_status> LiquidationLogStatusRepository { get; set; }
+        public GenericRepository<so_route_team_travels_employees> RouteTeamTravlesEmployeesRepository { get; set; }
         public GenericRepository<so_synchronized_consumer> SynchronizedConsumersRepository { get; set; }
         public GenericRepository<so_synchronized_consumer_detail> SynchronizedConsumerDetailsRepository { get; set; }
-        //public GenericRepository<so_route_customer_vario> RouteCustomerVarioRepository { get; set; }
+        public GenericRepository<so_promotion_article_movement> PromotionArticleMovementRepository { get; set; }
+        public GenericRepository<so_article_promotional_route> ArticlePromotionalRouteRepository { get; set; }
 
         public void Save()
         {

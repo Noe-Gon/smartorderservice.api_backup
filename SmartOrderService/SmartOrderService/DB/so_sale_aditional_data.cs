@@ -17,7 +17,16 @@ namespace SmartOrderService.DB
         [Key]
         public int saleAdicionalDataId { get; set; }
         public int saleId { get; set; }
+        public so_sale so_sale { get; set; }
         public string paymentMethod { get; set; }
 
+        [Column("cause_no_signature")]
+        public string CauseNoSignature { get; set; }
+
+        [Column("signature")]
+        public string Signature { get; set; }
+
+        [Column("location")]
+        public string Location { get; set; }
     }
 }

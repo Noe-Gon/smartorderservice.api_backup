@@ -78,5 +78,6 @@ namespace SmartOrderService.DB
         public virtual so_inventory so_inventory { get; set; }
 
         public virtual so_customer so_customer { get; set; }
+
     }
 }

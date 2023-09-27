@@ -14,6 +14,7 @@ using RestSharp;
 using System.Configuration;
 using Newtonsoft.Json;
 using SmartOrderService.Models.Responses;
+using SmartOrderService.Models.Message;
 
 namespace SmartOrderService.Services
 {
@@ -1266,6 +1267,37 @@ namespace SmartOrderService.Services
             });
 
             var response = client.Execute(request);
+        }
+
+        public ResponseBase<List<InventoryStatusResponse>> GetInventoryStatus(Guid workDayId, int userId)
+        {
+            so_work_day workDay = db.so_work_day.Where(x => x.work_dayId == workDayId).FirstOrDefault();
+
+            if (workDay == null)
+                throw new EntityNotFoundException("No se encontró la jornada");
+
+            var inventoriesTravels = db.so_route_team_travels_employees
+                .Where(x => x.userId == userId && x.work_dayId == workDay.work_dayId)
+                .ToList();
+
+            var response = db.so_inventory
+                .Where(x => x.userId == workDay.userId && DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(workDay.date_start))
+                .Select(x => new InventoryStatusResponse()
+                {
+                    InventoryId = x.inventoryId,
+                    OriginalOrder = x.order
+                })
+                .ToList()
+                .Select(x => new InventoryStatusResponse()
+                {
+                    InventoryId = x.InventoryId,
+                    EndDate = inventoriesTravels.Where(y => y.inventoryId == x.InventoryId).Select(z => z.createdon).FirstOrDefault(),
+                    OpenOrder = inventoriesTravels.Where(y => y.inventoryId == x.InventoryId).Select(z => z.travelNumber).FirstOrDefault(),
+                    OriginalOrder = x.OriginalOrder,
+                    StartDate = inventoriesTravels.Where(y => y.inventoryId == x.InventoryId && !y.active).Select(z => z.modifiedon).FirstOrDefault(),
+                }).ToList();
+
+            return ResponseBase<List<InventoryStatusResponse>>.Create(response);
         }
 
         public void Dispose()

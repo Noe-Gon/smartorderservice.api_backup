@@ -1,0 +1,11 @@
+[
+    {
+        "uuid": "c4854ed3-0167-4b0a-ba68-a631fe8d8a40",
+        "customerCode": "970000042301"
+    }, 
+
+    {
+        "uuid": "c4854ed3-0167-4b0a-ba68-a631fe8d8a40",
+        "customerCode": "440000026442"
+    }, 
+]
