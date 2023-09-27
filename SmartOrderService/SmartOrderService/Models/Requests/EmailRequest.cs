@@ -134,6 +134,7 @@ namespace SmartOrderService.Models.Requests
         public string CustomerMail { get; set; }
         public string ReferenceCode { get; set; }
         public bool Status { get; set; }
+        public string CancelTicketLink { get; set; }
         public List<SendOrderTicketItem> Items { get; set; }
     }
 
