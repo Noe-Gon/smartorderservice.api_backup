@@ -1,6 +1,8 @@
 ﻿using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.DTO;
+using SmartOrderService.Models.Locks;
 using SmartOrderService.Models.Requests;
+using SmartOrderService.Models.Responses;
 using SmartOrderService.Services;
 using SmartOrderService.Utils;
 using System;
@@ -14,6 +16,7 @@ namespace SmartOrderService.Controllers
 {
     public class InventoryController : ApiController
     {
+        private static Dictionary<string, InventoryLock> mapObjectService = new Dictionary<string, InventoryLock>();
         // GET: api/Inventory
         public HttpResponseMessage Get([FromUri]InventoryRequest request)
         {
@@ -157,10 +160,41 @@ namespace SmartOrderService.Controllers
             }
             try
             {
-                using (var inventoryService = new InventoryService())
+                InventoryLock serviceLock = new InventoryLock(); 
+                RouteTeamService servce = new RouteTeamService();
+                var routeId = servce.GetRouteId(request.UserId);
+
+                if (routeId == 0)
                 {
-                    bool result = inventoryService.CloseInventory(request.InventoryId.Value, request.UserId);
+                    var InventoryService = new InventoryService();
+                    bool result = InventoryService.CloseInventory(request.InventoryId.Value, request.UserId);
                     HttpStatusCode code = result ? HttpStatusCode.OK : HttpStatusCode.Conflict;
+                    return Request.CreateResponse(code);
+                }
+
+                if (mapObjectService.ContainsKey(routeId.ToString()))
+                {
+                    serviceLock = mapObjectService[routeId.ToString()];
+                    serviceLock.key = request.UserId;
+                }
+                else
+                {
+                    serviceLock = new InventoryLock
+                    {
+                        key = request.UserId,
+                        InventoryService = new InventoryService()
+                    };
+                    mapObjectService.Add(routeId.ToString(), serviceLock);
+                }
+
+                lock (serviceLock.InventoryService)
+                {
+                    bool result = serviceLock.InventoryService.CloseInventory(request.InventoryId.Value, request.UserId);
+                    HttpStatusCode code = result ? HttpStatusCode.OK : HttpStatusCode.Conflict;
+
+                    if (serviceLock.key == request.UserId)
+                        mapObjectService.Remove(routeId.ToString());
+
                     response = Request.CreateResponse(code);
                 }
             }
@@ -196,6 +230,67 @@ namespace SmartOrderService.Controllers
             }
             return response;
         }
+        
+        [HttpPost]
+        [Route("api/inventory/loaddeliveries")]
+        public IHttpActionResult LoadInventoryDeliveries([FromBody]LoadInventoryDeliveriesRequest request)
+        {
+
+            try
+            {
+                InventoryLock serviceLock = new InventoryLock();
+
+                if (mapObjectService.ContainsKey(request.InventoryId.ToString()))
+                {
+                    serviceLock = mapObjectService[request.InventoryId.ToString()];
+                    serviceLock.key++;
+                    request.UserId = serviceLock.key;
+                }
+                else
+                {
+                    request.UserId = 1;
+                    serviceLock = new InventoryLock
+                    {
+                        key = request.UserId,
+                        InventoryService = new InventoryService()
+                    };
+                    mapObjectService.Add(request.InventoryId.ToString(), serviceLock);
+                }
+
+                lock (serviceLock.InventoryService)
+                {
+                    var inventoryService = new InventoryService();
+                    var response = inventoryService.LoadDeliveries(request.InventoryId);
+
+                    if (serviceLock.key == request.UserId)
+                        mapObjectService.Remove(request.InventoryId.ToString());
+
+                    if (response.Status)
+                        return Content(HttpStatusCode.OK, response);
+
+                    return Content(HttpStatusCode.Conflict, response);
+                }
+            }
+            catch (EntityNotFoundException e)
+            {
+                var response = ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                });
+
+                return Content(HttpStatusCode.NotFound, response);
+            }
+            catch (Exception e)
+            {
+                var response = ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    "Error no especificado", e.Message
+                });
+
+                return Content(HttpStatusCode.InternalServerError, response);
+            }
+        }
+
 
         [HttpGet, Route("api/inventory/isInventoryOpen")]
         public HttpResponseMessage isInventoryOpen([FromUri] int inventoryId, [FromUri] int userId)
@@ -204,7 +299,7 @@ namespace SmartOrderService.Controllers
             try
             {
                 var inventoryService = new InventoryService();
-                var inventoryOpen = inventoryService.isInventoryOpen(inventoryId, userId);
+                var inventoryOpen = inventoryService.isInventoryOpen(inventoryId,userId);
                 response = Request.CreateResponse(HttpStatusCode.OK, inventoryOpen);
             }
             catch (Exception e)
@@ -214,5 +309,21 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
+        [HttpGet, Route("api/v2/inventory/isInventoryOpen")]
+        public HttpResponseMessage isInventoryOpenv2([FromUri] int inventoryId, [FromUri] int userId)
+        {
+            HttpResponseMessage response;
+            try
+            {
+                var inventoryService = new InventoryService();
+                var inventoryOpen = inventoryService.isInventoryOpenv2(inventoryId, userId);
+                response = Request.CreateResponse(HttpStatusCode.OK, inventoryOpen);
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, e);
+            }
+            return response;
+        }
     }
 }

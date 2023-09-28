@@ -19,6 +19,8 @@ using SmartOrderService.Utils;
 using SmartOrderService.Models.DTO;
 using Newtonsoft.Json;
 using System.Text;
+using SmartOrderService.Models.Message;
+using SmartOrderService.Models.Locks;
 
 namespace SmartOrderService.Controllers
 {
@@ -27,7 +29,7 @@ namespace SmartOrderService.Controllers
         private SmartOrderModel db = new SmartOrderModel();
 
         private static SaleService objectService = new SaleService();
-        private static Dictionary<string, SaleService> mapObjectService = new Dictionary<string, SaleService>();
+        private static Dictionary<string, SaleTeamLock> mapObjectService = new Dictionary<string, SaleTeamLock>();
         SaleService service;
 
         [HttpGet,Route("api/sales/{SaleId}/Lines")]
@@ -85,7 +87,7 @@ namespace SmartOrderService.Controllers
         }
 
         // GET: api/Sales
-        public HttpResponseMessage Getso_sale([FromUri ]SaleRequest request)
+        public HttpResponseMessage Getso_sale([FromUri]SaleRequest request)
         {
             HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.NoContent);
          
@@ -229,25 +231,61 @@ namespace SmartOrderService.Controllers
             SaleTeam saleResult = new SaleTeam();
             try
             {
-                SaleService serviceLock = null;
+                SaleTeamLock serviceLock = null;
                 RouteTeamService servce = new RouteTeamService();
                 var routeId = servce.searchRouteId(sale.UserId);
-                if(mapObjectService.ContainsKey(routeId.ToString()))
+
+                if (mapObjectService.ContainsKey(routeId.ToString()))
                 {
                     serviceLock = mapObjectService[routeId.ToString()];
+                    serviceLock.SaleDate = sale.Date;
+                    serviceLock.LastUser = sale.UserId;
+                    serviceLock.CustomerId = sale.CustomerId;
+                    serviceLock.DeliveryId = sale.DeliveryId;
                 }
                 else
                 {
-                    serviceLock = new SaleService();
+                    serviceLock = new SaleTeamLock()
+                    {
+                        SaleService = new SaleService(),
+                        SaleDate = sale.Date,
+                        LastUser = sale.UserId,
+                        CustomerId = sale.CustomerId,
+                        DeliveryId = sale.DeliveryId,
+                    };
+
                     mapObjectService.Add(routeId.ToString(), serviceLock);
                 }
                 if (serviceLock == null)
-                    serviceLock = objectService;
+                    serviceLock = new SaleTeamLock()
+                    {
+                        SaleService = objectService,
+                        SaleDate = sale.Date,
+                        LastUser = sale.UserId,
+                        CustomerId = sale.CustomerId,
+                        DeliveryId = sale.DeliveryId,
+                    };
 
                 lock (serviceLock)
                 {
-                    saleResult = serviceLock.SaleTeamTransaction(sale);
+                    saleResult = serviceLock.SaleService.SaleTeamTransaction(sale);
+
+                    try
+                    {
+                        if (sale.EmailDeliveryTicket ?? false)
+                            serviceLock.SaleService.SenTicketDigital(new SendTicketDigitalRequest()
+                            {
+                                SaleId = saleResult.SaleId,
+                                Email = sale.Email
+                            });
+                    }
+                    catch (Exception) { }
+
+                    if(serviceLock.CustomerId == sale.CustomerId && serviceLock.LastUser == sale.UserId 
+                        && serviceLock.SaleDate == sale.Date && serviceLock.DeliveryId == sale.DeliveryId)
+                        mapObjectService.Remove(routeId.ToString());
                 }
+
             }
             catch (ProductNotFoundBillingException e)
             {
@@ -258,6 +296,12 @@ namespace SmartOrderService.Controllers
             catch (BadRequestException e)
             {
                 return BadRequest();
+            }
+            catch (ApiPreventaException e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.MethodNotAllowed, e.Message);
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
             }
             catch (Exception e)
             {
@@ -300,7 +344,44 @@ namespace SmartOrderService.Controllers
             return response;
         }
 
-       
+        [HttpDelete, Route("api/sales/saleteam_v2")]
+        public HttpResponseMessage Deleteso_sale_team_v2(int id, string PaymentMethod)
+        {
+            HttpResponseMessage response;
+
+            try
+            {
+                var service = new SaleService();
+                var sale = service.Cancel(id, PaymentMethod);
+                try
+                {
+                    service.SenTicketDigital(new SendTicketDigitalRequest()
+                    {
+                        SaleId = sale.SaleId,
+                        Email = null
+                    });
+                }
+                catch (Exception) { }
+                
+                
+                response = Request.CreateResponse(HttpStatusCode.OK, sale);
+            }
+            catch (DeviceNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Unauthorized, "no estas autorizado");
+            }
+            catch (EntityNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.NotFound);
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, "la venta no fue afectada");
+            }
+
+            return response;
+        }
+
         [HttpGet, Route("api/sales/PartnerSale/{UserId}/User/{InventoryId}/Inventory/{CustomerId}/Customer")]
         public HttpResponseMessage PartnerSale(int UserId, int InventoryId, int CustomerId)
 
@@ -360,7 +441,6 @@ namespace SmartOrderService.Controllers
             try
             {
                 saleResult.DeletedSale = service.Delete(deleteSaleId);
-                service.RestoreInventoryAvailability(deleteSaleId);
                 lock (objectService)
                 {
                     saleResult.NewSale = objectService.SaleTeamTransaction(newSale);
@@ -421,6 +501,40 @@ namespace SmartOrderService.Controllers
                 response.Append("\n" + product.productName + ", cantidad disponible: " + product.amount);
             }
             return response.ToString();
+        }
+
+        [HttpPost]
+        [Route("~/api/sale/SendTicketDigital")]
+        public IHttpActionResult SendTicketDigital(SendTicketDigitalRequest request)
+        {
+            try
+            {
+                var service = new SaleService();
+                var response = service.SenTicketDigital(request);
+
+                if (response.Status)
+                    return Content(HttpStatusCode.OK, response);
+
+                return Content(HttpStatusCode.BadRequest, response);
+            }
+            catch (EntityNotFoundException e)
+            {
+                var response = ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                });
+
+                return Content(HttpStatusCode.InternalServerError, response);
+            }
+            catch (Exception e)
+            {
+                var response = ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                });
+
+                return Content(HttpStatusCode.InternalServerError, response); 
+            }
         }
     }
 }

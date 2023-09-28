@@ -1,10 +1,13 @@
 ﻿using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
+using SmartOrderService.Models.DTO;
 using SmartOrderService.Models.Enum;
+using SmartOrderService.Utils;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Web;
 
 namespace SmartOrderService.Services
@@ -24,13 +27,15 @@ namespace SmartOrderService.Services
                 {
                     return true;
                 }
-                
-
-                int inventoryState = GetInventoryState(userId, DateTime.Today);
+                 var inventory = GetCurrentInventory(userId, DateTime.Today);
+                int inventoryState = inventory.state;
 
                 //Start Load Inventory Process OPCD
                 CallLoadInventoryProcess(userId);
                 //End Load Inventory Process
+
+                if (IsActualOpened(userId, inventory.inventoryId))
+                    return true;
 
                 if ((inventoryState == 0 && userRole == ERolTeam.Impulsor))
                 {
@@ -68,6 +73,12 @@ namespace SmartOrderService.Services
                 throw new InventoryEmptyException();
             }
 
+        }
+
+        private bool IsActualOpened(int userId, int inventoryId)
+        {
+            var routeTeam = db.so_route_team_travels_employees.Where(x => x.userId == userId && x.inventoryId == inventoryId).FirstOrDefault();
+            return routeTeam == null ? false : routeTeam.active;
         }
 
         public void CheckIfCurrentTravelsIsNewByUser(int userId)
@@ -165,12 +176,12 @@ namespace SmartOrderService.Services
             int impulsorId = SearchDrivingId(userId);
             var routeTeam = db.so_route_team.Where(x => x.userId == impulsorId).First();
             var route = db.so_route.Where(x => x.routeId == routeTeam.routeId).First();
-
+            var inventory = db.so_inventory.Where(x => x.inventoryId == inventoryId).FirstOrDefault();
             inventoryService.CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
             //End Load Inventory Process
 
             //Si es de Viaje no sincronizado devolver true
-            var workDay = GetWorkdayByUserAndDate(impulsorId, DateTime.Today);
+            var workDay = GetWorkdayByUserAndDate(impulsorId, inventory.date);
             var isInTravelsemployees = db.so_route_team_travels_employees
                 .Where(x => x.userId == userId && x.inventoryId == inventoryId && x.work_dayId == workDay.work_dayId)
                 .FirstOrDefault() != null;
@@ -206,18 +217,31 @@ namespace SmartOrderService.Services
             return routeTeam.routeId;
         }
 
+        public int GetRouteId(int userId)
+        {
+            so_user_route routeTeam = db.so_user_route.Where(
+                i => i.userId == userId && i.status == true
+                ).FirstOrDefault();
+            if (routeTeam == null)
+            {
+                return 0;
+            }
+            return routeTeam.routeId;
+        }
+
         public so_work_day GetWorkdayByUserAndDate(int userId, DateTime date)
         {
             so_work_day workday =  db.so_work_day.Where(
                 i => i.userId == userId
                 && DbFunctions.TruncateTime(i.date_start) == DbFunctions.TruncateTime(date)
                 ).FirstOrDefault();
+
             if (workday == null)
-            {
                 throw new WorkdayNotFoundException("No se encontro la jornada para el usuario " + userId + " y el dia " + date);
-            }
+            
             return workday;
         }
+
 
         public int GetInventoryState(int userId, DateTime date)
         {
@@ -229,6 +253,18 @@ namespace SmartOrderService.Services
             userId = SearchDrivingId(userId);
             var inventory = inventoryService.GetCurrentInventory(userId,date);
             return inventory.state;
+        }
+
+        public so_inventory GetCurrentInventory(int userId, DateTime date)
+        {
+            InventoryService inventoryService = new InventoryService();
+            if (date == null)
+            {
+                date = DateTime.Today;
+            }
+            userId = SearchDrivingId(userId);
+            var inventory = inventoryService.GetCurrentInventory(userId, date);
+            return inventory;
         }
 
         public bool CheckWorkDayClosingStatus(int userId)
@@ -255,7 +291,7 @@ namespace SmartOrderService.Services
             return true;
             */
             int impulsorId = SearchDrivingId(userId);
-            var workDay = GetWorkdayByUserAndDate(impulsorId, DateTime.Today);
+            so_work_day workDay = GetWorkdayByUserAndDate(impulsorId, DateTime.Today);
 
             int userTravel = db.so_route_team_travels_employees
                 .Where(x => x.work_dayId == workDay.work_dayId && x.active)
@@ -264,6 +300,106 @@ namespace SmartOrderService.Services
             {
                 return false;
             }
+            return true;
+        }
+
+        public bool CheckWorkDayClosingStatusByWorkDay(Workday workDay)
+        {
+
+            ERolTeam userRole = roleTeamService.GetUserRole(workDay.UserId);
+            if (userRole == ERolTeam.SinAsignar)
+            {
+                return true;
+            }
+
+            int impulsorId = SearchDrivingId(workDay.UserId);
+            so_work_day workDayCurrent = db.so_work_day.Where(w =>
+                w.work_dayId == workDay.WorkdayId
+            ).FirstOrDefault();
+
+            if (workDayCurrent == null)
+                throw new WorkdayNotFoundException("No se encontro la jornada para el usuario " + impulsorId);
+
+            int userTravel = db.so_route_team_travels_employees
+                .Where(x => x.work_dayId == workDayCurrent.work_dayId && x.active)
+                .Count();
+
+            if (userTravel > 0)
+                return false;
+            
+            if(workDay.CheckBillpocket)
+                return ChalBillPocketReportForAllUsers(workDay.WorkdayId, workDay.UserId);
+
+            return true;
+        }
+
+        public bool ChalBillPocketReportForAllUsers(Guid workdayId, int userId)
+        {
+            List<int> users = db.so_route_team_travels_employees.Where(x => x.work_dayId == workdayId)
+                .Select(x => x.userId)
+                .Distinct()
+                .ToList();
+
+            foreach (var user in users)
+            {
+                try
+                {
+                    CheckBillPocketReport(workdayId, user);
+                }
+                catch (EntityNotFoundException e)
+                {
+                    if (user == userId)
+                        throw new EntityNotFoundException();
+                    else
+                        throw new BillpocketReportException();
+                }
+            }
+
+            return true;
+        }
+
+        public bool CheckBillPocketReport(Guid workdayId, int userId)
+        {
+            //Se buscan las ventas
+            List<int> inventories = db.so_route_team_travels_employees.Where(x => x.work_dayId == workdayId)
+               .Select(x => x.inventoryId)
+               .Distinct()
+               .ToList();
+
+            if (inventories.Count == 0)
+                throw new EntityNotFoundException("No se encontraron viajes para la jornada " + workdayId.ToString());
+
+            so_work_day workDay = db.so_work_day.Where(x => x.work_dayId == workdayId).FirstOrDefault();
+
+            if (workDay == null)
+                throw new EntityNotFoundException("No se encontraró la jornada " + workdayId.ToString());
+
+            Expression<Func<so_sale, bool>> filter = x => x.status && inventories.Contains(x.inventoryId.Value) && workDay.date_start <= x.date;
+
+            filter = filter.And(x => x.userId == userId);
+
+            List<int> sales = db.so_sale.Where(filter).Select(x => x.saleId).ToList();
+
+            if (sales.Count() == 0)
+                return true;
+
+            //Se busca las de billpocket
+            var billSales = db.so_sale_aditional_data.Where(x => sales.Contains(x.saleId) && x.paymentMethod == "tarjeta").ToList();
+
+            if (billSales.Count() == 0)
+                return true;
+
+            //Si hay almenos una venta con billpocket
+            var report = db.so_billpocket_report_logs.Where(x => x.WorkDayId == workdayId && userId == x.UserId)
+                .OrderByDescending(x => x.SendDate).FirstOrDefault();
+
+            if (report == null)
+                throw new EntityNotFoundException("No se ha enviado el reporte.");
+
+            //Si las ventas no coinciden
+            if (report.TotalSales != billSales.Count())
+                throw new EntityNotFoundException("No se ha enviado el reporte final.");
+
             return true;
         }
 

@@ -14,6 +14,7 @@ namespace SmartOrderService.DB
             so_delivery_detail = new HashSet<so_delivery_detail>();
             so_delivery_promotion = new HashSet<so_delivery_promotion>();
             so_delivery_replacement = new HashSet<so_delivery_replacement>();
+            so_delivery_combos = new HashSet<so_delivery_combo>();
         }
 
         [Key]
@@ -41,6 +42,8 @@ namespace SmartOrderService.DB
 
         private int _sale_note = 0;
 
+        public virtual so_delivery_additional_data so_delivery_additional_data { get; set; }
+
         public int? sale_note {
             set
             {
@@ -67,6 +70,8 @@ namespace SmartOrderService.DB
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<so_delivery_replacement> so_delivery_replacement { get; set; }
+
+       public virtual ICollection<so_delivery_combo> so_delivery_combos { get; set; }
 
         public virtual so_delivery_sale so_delivery_sale { get; set; }
 

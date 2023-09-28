@@ -9,6 +9,7 @@ namespace SmartOrderService.Models.DTO
     {
         public int ProductId { get; set; }
         public int Amount { get; set; }
+        public int AmountDelivered { get; set; }
         public int CreditAmount { get; set; }
         public bool Status { get; set; }
         public Single? price { get; set; }

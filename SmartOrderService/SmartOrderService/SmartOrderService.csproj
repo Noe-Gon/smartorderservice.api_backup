@@ -27,6 +27,7 @@
     </NuGetPackageImportStamp>
     <TargetFrameworkProfile />
     <Use64BitIISExpress />
+    <WebGreaseLibPath>..\packages\WebGrease.1.5.2\lib</WebGreaseLibPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -47,18 +48,33 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Antlr3.Runtime, Version=3.4.1.9004, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
+      <HintPath>..\packages\Antlr.3.4.1.9004\lib\Antlr3.Runtime.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="AutoMapper, Version=4.2.1.0, Culture=neutral, PublicKeyToken=be96cd2c38ef1005, processorArchitecture=MSIL">
       <HintPath>..\packages\AutoMapper.4.2.1\lib\net45\AutoMapper.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="FluentValidation, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7de548da2fbae0f0, processorArchitecture=MSIL">
-      <HintPath>..\packages\FluentValidation.8.0.0\lib\net45\FluentValidation.dll</HintPath>
+      <HintPath>..\packages\FluentValidation.8.6.1\lib\net45\FluentValidation.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="FluentValidation.ValidatorAttribute, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7de548da2fbae0f0, processorArchitecture=MSIL">
       <HintPath>..\packages\FluentValidation.ValidatorAttribute.8.6.1\lib\net45\FluentValidation.ValidatorAttribute.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="FluentValidation.WebApi, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7de548da2fbae0f0, processorArchitecture=MSIL">
       <HintPath>..\packages\FluentValidation.WebApi.8.6.1\lib\net45\FluentValidation.WebApi.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="HtmlRenderer">
       <HintPath>..\..\HtmlRenderer.dll</HintPath>
@@ -69,13 +85,77 @@
     <Reference Include="LibreriaCFDI">
       <HintPath>..\..\LibreriaCFDI.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.AspNet.Identity.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Identity.Core.2.2.1\lib\net45\Microsoft.AspNet.Identity.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.Identity.EntityFramework, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Identity.EntityFramework.2.2.1\lib\net45\Microsoft.AspNet.Identity.EntityFramework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.Identity.Owin, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Identity.Owin.2.2.1\lib\net45\Microsoft.AspNet.Identity.Owin.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.IdentityModel.Clients.ActiveDirectory, Version=5.2.9.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.IdentityModel.Clients.ActiveDirectory.5.2.9\lib\net45\Microsoft.IdentityModel.Clients.ActiveDirectory.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.3.0.1\lib\net45\Microsoft.Owin.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Host.SystemWeb, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Host.SystemWeb.3.0.1\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Security.3.0.1\lib\net45\Microsoft.Owin.Security.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.Cookies, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Security.Cookies.3.0.1\lib\net45\Microsoft.Owin.Security.Cookies.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.Facebook, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Security.Facebook.3.0.1\lib\net45\Microsoft.Owin.Security.Facebook.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.Google, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Security.Google.3.0.1\lib\net45\Microsoft.Owin.Security.Google.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.MicrosoftAccount, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Security.MicrosoftAccount.3.0.1\lib\net45\Microsoft.Owin.Security.MicrosoftAccount.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.OAuth, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Security.OAuth.3.0.1\lib\net45\Microsoft.Owin.Security.OAuth.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.Twitter, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Security.Twitter.3.0.1\lib\net45\Microsoft.Owin.Security.Twitter.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="microsoft.xrm.sdk, Version=5.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Xrm.Sdk.2011.5.0.18\lib\net40\microsoft.xrm.sdk.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
+      <HintPath>..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
@@ -83,40 +163,20 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Primitives, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.ComponentModel.Primitives.4.3.0\lib\net45\System.ComponentModel.Primitives.dll</HintPath>
-    </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Net" />
-    <Reference Include="System.Net.Http, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Net.Http.2.0.20126.16343\lib\net40\System.Net.Http.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Net.Http.Extensions, Version=2.2.29.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Net.Http.Formatting.Extension.5.2.3.0\lib\System.Net.Http.Extensions.dll</HintPath>
-    </Reference>
+    <Reference Include="System.IdentityModel" />
     <Reference Include="System.Net.Http.Formatting, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.7\lib\net45\System.Net.Http.Formatting.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Net.Http.Primitives, Version=4.2.29.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Net.Http.Formatting.Extension.5.2.3.0\lib\System.Net.Http.Primitives.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Net.Http.WebRequest, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Net.Http.2.0.20126.16343\lib\net40\System.Net.Http.WebRequest.dll</HintPath>
-      <Private>True</Private>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
     <Reference Include="System.Security" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Threading.Tasks.Dataflow, Version=4.5.24.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Tpl.Dataflow.4.5.24\lib\portable-net45+win8+wpa81\System.Threading.Tasks.Dataflow.dll</HintPath>
       <Private>True</Private>
-    </Reference>
-    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
     </Reference>
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
@@ -127,98 +187,59 @@
     <Reference Include="System.Web.Abstractions" />
     <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.Helpers.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.Http, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.5.2.7\lib\net45\System.Web.Http.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="System.Web.Http.Owin, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.AspNet.WebApi.Owin.5.2.7\lib\net45\System.Web.Http.Owin.dll</HintPath>
+    <Reference Include="System.Web.Http.Owin, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Owin.5.2.3\lib\net45\System.Web.Http.Owin.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.Http.WebHost, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebApi.WebHost.5.2.7\lib\net45\System.Web.Http.WebHost.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.Mvc, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.Mvc.5.2.7\lib\net45\System.Web.Mvc.dll</HintPath>
     </Reference>
+    <Reference Include="System.Web.Optimization, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Web.Optimization.1.1.3\lib\net40\System.Web.Optimization.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.Razor.3.2.7\lib\net45\System.Web.Razor.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.Routing" />
     <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.WebPages.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.WebPages.Deployment, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <Private>True</Private>
-      <HintPath>..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
     </Reference>
-    <Reference Include="System.Web.Optimization">
-      <HintPath>..\packages\Microsoft.AspNet.Web.Optimization.1.1.3\lib\net40\System.Web.Optimization.dll</HintPath>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Configuration">
+      <HintPath>..\..\..\..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5\System.Configuration.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Net.Http">
+    </Reference>
+    <Reference Include="System.Net.Http.WebRequest">
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml.Serialization" />
-    <Reference Include="WebGrease">
-      <Private>True</Private>
+    <Reference Include="WebGrease, Version=1.5.2.14234, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\WebGrease.1.5.2\lib\WebGrease.dll</HintPath>
-    </Reference>
-    <Reference Include="Antlr3.Runtime">
       <Private>True</Private>
-      <HintPath>..\packages\Antlr.3.4.1.9004\lib\Antlr3.Runtime.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="EntityFramework">
-      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
-    </Reference>
-    <Reference Include="EntityFramework.SqlServer">
-      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.AspNet.Identity.Core">
-      <HintPath>..\packages\Microsoft.AspNet.Identity.Core.2.2.1\lib\net45\Microsoft.AspNet.Identity.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.AspNet.Identity.Owin">
-      <HintPath>..\packages\Microsoft.AspNet.Identity.Owin.2.2.1\lib\net45\Microsoft.AspNet.Identity.Owin.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.AspNet.Identity.EntityFramework">
-      <HintPath>..\packages\Microsoft.AspNet.Identity.EntityFramework.2.2.1\lib\net45\Microsoft.AspNet.Identity.EntityFramework.dll</HintPath>
-    </Reference>
-    <Reference Include="Owin">
-      <HintPath>..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Owin">
-      <HintPath>..\packages\Microsoft.Owin.3.0.1\lib\net45\Microsoft.Owin.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Owin.Host.SystemWeb">
-      <HintPath>..\packages\Microsoft.Owin.Host.SystemWeb.3.0.1\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Owin.Security">
-      <HintPath>..\packages\Microsoft.Owin.Security.3.0.1\lib\net45\Microsoft.Owin.Security.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Owin.Security.Facebook">
-      <HintPath>..\packages\Microsoft.Owin.Security.Facebook.3.0.1\lib\net45\Microsoft.Owin.Security.Facebook.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Owin.Security.Cookies">
-      <HintPath>..\packages\Microsoft.Owin.Security.Cookies.3.0.1\lib\net45\Microsoft.Owin.Security.Cookies.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Owin.Security.OAuth">
-      <HintPath>..\packages\Microsoft.Owin.Security.OAuth.3.0.1\lib\net45\Microsoft.Owin.Security.OAuth.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Owin.Security.Google">
-      <HintPath>..\packages\Microsoft.Owin.Security.Google.3.0.1\lib\net45\Microsoft.Owin.Security.Google.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Owin.Security.Twitter">
-      <HintPath>..\packages\Microsoft.Owin.Security.Twitter.3.0.1\lib\net45\Microsoft.Owin.Security.Twitter.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Owin.Security.MicrosoftAccount">
-      <HintPath>..\packages\Microsoft.Owin.Security.MicrosoftAccount.3.0.1\lib\net45\Microsoft.Owin.Security.MicrosoftAccount.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -260,6 +281,7 @@
     <Compile Include="Controllers\ApiVersionController.cs" />
     <Compile Include="Controllers\ApplicationController.cs" />
     <Compile Include="Controllers\BillingDataController.cs" />
+    <Compile Include="Controllers\BillPocketController.cs" />
     <Compile Include="Controllers\BinnacleVisitController.cs" />
     <Compile Include="Controllers\BranchController.cs" />
     <Compile Include="Controllers\CategoryController.cs" />
@@ -298,15 +320,18 @@
     <Compile Include="Controllers\SalesController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
     <Compile Include="Controllers\WorkdayController.cs" />
+    <Compile Include="CustomExceptions\ApiPreventaException.cs" />
     <Compile Include="CustomExceptions\BadPropiertiesException.cs" />
     <Compile Include="CustomExceptions\BadRequestException.cs" />
     <Compile Include="CustomExceptions\BillingDataException.cs" />
-    <Compile Include="CustomExceptions\CreateWorkdayInventoryNotFoundException.cs" />
+    <Compile Include="CustomExceptions\BillpocketReportException.cs" />
+    <Compile Include="CustomExceptions\CRMException.cs" />
     <Compile Include="CustomExceptions\CustomerBillingDataNotFoundException.cs" />
     <Compile Include="CustomExceptions\CustomerException.cs" />
     <Compile Include="CustomExceptions\CustomerNotFoundException.cs" />
     <Compile Include="CustomExceptions\DeliveryNotFoundException.cs" />
     <Compile Include="CustomExceptions\DeviceNotFoundException.cs" />
+    <Compile Include="CustomExceptions\DuplicateEntityException.cs" />
     <Compile Include="CustomExceptions\EmptySaleException.cs" />
     <Compile Include="CustomExceptions\EntityNotFoundException.cs" />
     <Compile Include="CustomExceptions\ExternalAPIException.cs" />
@@ -328,8 +353,10 @@
     <Compile Include="CustomExceptions\SaleNotFoundException.cs" />
     <Compile Include="CustomExceptions\ServerErrorException.cs" />
     <Compile Include="CustomExceptions\InventoryNotOpenException.cs" />
+    <Compile Include="CustomExceptions\UserInUseException.cs" />
     <Compile Include="CustomExceptions\WorkdayNotFoundException.cs" />
     <Compile Include="CustomExceptions\WorkdayStartedException.cs" />
+    <Compile Include="DB\Configuracion_WorkByCloud.cs" />
     <Compile Include="DB\DEVOLUTIONS_VIEW.cs" />
     <Compile Include="DB\factdet.cs" />
     <Compile Include="DB\factura.cs" />
@@ -347,8 +374,10 @@
     <Compile Include="DB\so_api_version.cs" />
     <Compile Include="DB\so_application.cs" />
     <Compile Include="DB\so_article.cs" />
+    <Compile Include="DB\so_authentication_log.cs" />
     <Compile Include="DB\so_autoventa_View.cs" />
     <Compile Include="DB\so_billing_data.cs" />
+    <Compile Include="DB\so_billpocket_report_log.cs" />
     <Compile Include="DB\so_binnacle_reason_failed.cs" />
     <Compile Include="DB\so_binnacle_visit.cs" />
     <Compile Include="DB\so_bottle.cs" />
@@ -387,6 +416,9 @@
     <Compile Include="DB\so_data_input.cs" />
     <Compile Include="DB\so_data_out.cs" />
     <Compile Include="DB\so_delivery.cs" />
+    <Compile Include="DB\so_delivery_additional_data.cs" />
+    <Compile Include="DB\so_delivery_combo.cs" />
+    <Compile Include="DB\so_delivery_combo_detail.cs" />
     <Compile Include="DB\so_delivery_detail.cs" />
     <Compile Include="DB\so_delivery_devolution.cs" />
     <Compile Include="DB\so_delivery_promotion.cs" />
@@ -395,7 +427,9 @@
     <Compile Include="DB\so_delivery_references.cs" />
     <Compile Include="DB\so_delivery_replacement.cs" />
     <Compile Include="DB\so_delivery_sale.cs" />
+    <Compile Include="DB\so_delivery_status.cs" />
     <Compile Include="DB\so_device.cs" />
+    <Compile Include="DB\so_digital_ticket_configuration.cs" />
     <Compile Include="DB\so_equivalence_article.cs" />
     <Compile Include="DB\so_equivalence_product.cs" />
     <Compile Include="DB\so_fee.cs" />
@@ -409,9 +443,12 @@
     <Compile Include="DB\so_inventory_replacement_detail.cs" />
     <Compile Include="DB\so_inventory_summary.cs" />
     <Compile Include="DB\so_invoice_opefactura.cs" />
+    <Compile Include="DB\so_leader_authorization_code.cs" />
     <Compile Include="DB\so_loan_order.cs" />
     <Compile Include="DB\so_loan_sale.cs" />
     <Compile Include="DB\so_log_errors.cs" />
+    <Compile Include="DB\so_order.cs" />
+    <Compile Include="DB\so_order_detail.cs" />
     <Compile Include="DB\so_portal_links_log.cs" />
     <Compile Include="DB\so_preventa_View.cs" />
     <Compile Include="DB\so_price_list_products_detail.cs" />
@@ -445,6 +482,7 @@
     <Compile Include="DB\so_route_category.cs" />
     <Compile Include="DB\so_route_customer.cs" />
     <Compile Include="DB\so_inventory_revisions.cs" />
+    <Compile Include="DB\so_route_customer_vario.cs" />
     <Compile Include="DB\so_route_team.cs" />
     <Compile Include="DB\so_route_team_inventory_available.cs" />
     <Compile Include="DB\so_route_team_travels.cs" />
@@ -452,6 +490,9 @@
     <Compile Include="DB\so_route_team_travels_employees.cs" />
     <Compile Include="DB\so_route_team_travels_visit.cs" />
     <Compile Include="DB\so_sale.cs" />
+    <Compile Include="DB\so_sale_aditional_data.cs" />
+    <Compile Include="DB\so_sale_combo.cs" />
+    <Compile Include="DB\so_sale_combo_detail.cs" />
     <Compile Include="DB\so_sale_detail.cs" />
     <Compile Include="DB\so_sale_inventory.cs" />
     <Compile Include="DB\so_sale_promotion.cs" />
@@ -462,6 +503,8 @@
     <Compile Include="DB\so_site.cs" />
     <Compile Include="DB\so_summary.cs" />
     <Compile Include="DB\so_survey_customer.cs" />
+    <Compile Include="DB\so_synchronized_consumer.cs" />
+    <Compile Include="DB\so_synchronized_consumer_detail.cs" />
     <Compile Include="DB\so_tag.cs" />
     <Compile Include="DB\so_tracking.cs" />
     <Compile Include="DB\so_tracking_configuration.cs" />
@@ -505,20 +548,40 @@
     <Compile Include="Models\DTO\CellarNoticeDto.cs" />
     <Compile Include="Models\DTO\CollectBottleDetailDto.cs" />
     <Compile Include="Models\DTO\CollectBottleDto.cs" />
+    <Compile Include="Models\DTO\ComboItemDto.cs" />
+    <Compile Include="Models\DTO\DeliveryComboDto.cs" />
     <Compile Include="Models\DTO\Invoice\InvoiceDataDto.cs" />
     <Compile Include="Models\DTO\Invoice\InvoiceHeaderOpeFacturaDto.cs" />
     <Compile Include="Models\DTO\Invoice\InvoiceLineOpeFacturaDto.cs" />
     <Compile Include="Models\DTO\Invoice\InvoiceOpeFacturaDto.cs" />
     <Compile Include="Models\DTO\Invoice\SimpleInvoiceLineOpeFactura.cs" />
+    <Compile Include="Models\DTO\OrderDTO.cs" />
     <Compile Include="Models\DTO\Product.cs" />
+    <Compile Include="Models\DTO\PromocionData.cs" />
+    <Compile Include="Models\DTO\PromotionCatalog.cs" />
+    <Compile Include="Models\DTO\PromotionCatalogDto.cs" />
+    <Compile Include="Models\DTO\PromotionGiftArticleCatalogDto.cs" />
+    <Compile Include="Models\DTO\PromotionGiftArticleDto.cs" />
+    <Compile Include="Models\DTO\PromotionGiftProductDto.cs" />
+    <Compile Include="Models\DTO\PromotionProductDto.cs" />
+    <Compile Include="Models\DTO\PromotionResult.cs" />
+    <Compile Include="Models\DTO\PromotionSaleDeliveryResult.cs" />
+    <Compile Include="Models\DTO\PromotionSaleDetailGiftArticle.cs" />
+    <Compile Include="Models\DTO\PromotionSaleDetailGiftProduct.cs" />
+    <Compile Include="Models\DTO\PromotionSaleDetailPromotionProduct.cs" />
     <Compile Include="Models\DTO\RegisterCustomerDataDto.cs" />
     <Compile Include="Models\DTO\RegisterCustomerDto.cs" />
+    <Compile Include="Models\DTO\RelSalePromotion.cs" />
     <Compile Include="Models\DTO\RouteTeamInventoryDto.cs" />
+    <Compile Include="Models\DTO\SaleCombo.cs" />
+    <Compile Include="Models\DTO\SaleComboDetail.cs" />
     <Compile Include="Models\DTO\SaleDetailResponse.cs" />
     <Compile Include="Models\DTO\SaleDetailResult.cs" />
+    <Compile Include="Models\DTO\SaleDetailsArticles.cs" />
     <Compile Include="Models\DTO\SaleDto.cs" />
     <Compile Include="Models\DTO\SalePromotionDetailProductResponse.cs" />
     <Compile Include="Models\DTO\SalePromotionResponse.cs" />
+    <Compile Include="Models\DTO\SaleWithPromotion.cs" />
     <Compile Include="Models\DTO\TrackingConfigurationDto.cs" />
     <Compile Include="Models\DTO\CountConfigurationDto.cs" />
     <Compile Include="Models\DTO\CustomerDataDto.cs" />
@@ -558,19 +621,30 @@
     <Compile Include="Models\DTO\UserNoticeRechargeDto.cs" />
     <Compile Include="Models\DTO\UserReasonDevolutionDto.cs" />
     <Compile Include="Models\DTO\VisitDto.cs" />
+    <Compile Include="Models\DTO\WorkCloseDayArticle.cs" />
     <Compile Include="Models\DTO\Workday.cs" />
     <Compile Include="Models\Email\EmailAPIRequests.cs" />
     <Compile Include="Models\Enum\Consumer.cs" />
     <Compile Include="Models\Enum\ConsumerRemovalRequest.cs" />
+    <Compile Include="Models\Enum\DeliveryStatus.cs" />
     <Compile Include="Models\Enum\EInventoryTeamStatus.cs" />
     <Compile Include="Models\Enum\ERolTeam.cs" />
     <Compile Include="Models\Enum\PortalLinksStatus.cs" />
+    <Compile Include="Models\Generic\AuditData.cs" />
+    <Compile Include="Models\Generic\AuditDate.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\DTO\PriceDto.cs" />
     <Compile Include="Models\DTO\PriceList.cs" />
     <Compile Include="Models\DTO\ProductDto.cs" />
     <Compile Include="Models\DTO\ProductArticle.cs" />
     <Compile Include="Models\DTO\Promotion.cs" />
+    <Compile Include="Models\Locks\InventoryLock.cs" />
+    <Compile Include="Models\Locks\SaleTeamLock.cs" />
+    <Compile Include="Models\Locks\WorkdayLock.cs" />
+    <Compile Include="Models\Message\BillPocketMessage.cs" />
+    <Compile Include="Models\Message\SaleModels.cs" />
+    <Compile Include="Models\Message\SaleTeamMessage.cs" />
+    <Compile Include="Models\Requests\CRMRequests.cs" />
     <Compile Include="Models\Message\StaffingComplianceMessage.cs" />
     <Compile Include="Models\Message\WsEmployeeDataMessage.cs" />
     <Compile Include="Models\Requests\ApiVersionRequest.cs" />
@@ -601,12 +675,14 @@
     <Compile Include="Models\Requests\UserRequest.cs" />
     <Compile Include="Models\Requests\VisitRequest.cs" />
     <Compile Include="Models\Requests\WorkDayRequest.cs" />
+    <Compile Include="Models\Responses\BillPocketTokensResponse.cs" />
     <Compile Include="Models\Responses\CodePlaceResponses.cs" />
     <Compile Include="Models\Responses\ConsumerResponses.cs" />
     <Compile Include="Models\Responses\CountConfigurationResponse.cs" />
     <Compile Include="Models\Responses\CustomerBlockedResponses.cs" />
     <Compile Include="Models\Responses\CustomerResponse.cs" />
     <Compile Include="Models\Responses\EmailResponse.cs" />
+    <Compile Include="Models\Responses\GetCustomerAllInfoResponse.cs" />
     <Compile Include="Models\Responses\InventoryOpenResponse.cs" />
     <Compile Include="Models\Responses\InvoiceOpeFacturaResponse.cs" />
     <Compile Include="Models\Responses\MsgResponseBase.cs" />
@@ -631,9 +707,13 @@
     <Compile Include="Results\ChallengeResult.cs" />
     <Compile Include="Services\ApiVersionService.cs" />
     <Compile Include="Services\ApplicationService.cs" />
+    <Compile Include="Services\BConnectService.cs" />
+    <Compile Include="Services\BillPocketService.cs" />
     <Compile Include="Services\CodePlaceService.cs" />
     <Compile Include="Services\ConsumerService.cs" />
+    <Compile Include="Services\CRMService.cs" />
     <Compile Include="Services\CustomerBlockedService.cs" />
+    <Compile Include="Services\DigitalTicketConfigurationService.cs" />
     <Compile Include="Services\EmailService.cs" />
     <Compile Include="Services\RoleTeamService.cs" />
     <Compile Include="Services\RouteTeamInventoryAvailableService.cs" />
@@ -666,6 +746,7 @@
     <Compile Include="Controllers\RouteTeamController.cs" />
     <Compile Include="Services\RouteTeamTravelsService.cs" />
     <Compile Include="Services\SaleDetailResultService.cs" />
+    <Compile Include="Services\DeliveryStatusService.cs" />
     <Compile Include="Services\StaffingComplianceService.cs" />
     <Compile Include="Services\SurveyCustomerService.cs" />
     <Compile Include="Services\TrackingService.cs" />
@@ -681,7 +762,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>InsertCliente.tt</DependentUpon>
     </Compile>
-    <Compile Include="UnitOfWork\Repositories\GenericRepository.cs" />
     <Compile Include="UnitOfWork\UoWConsumer.cs" />
     <Compile Include="Utils\DateUtils.cs" />
     <Compile Include="Utils\DatosFacturas.cs" />
@@ -700,16 +780,24 @@
     <Compile Include="Utils\DB\so_sale_detail.cs" />
     <Compile Include="Utils\DB\so_site.cs" />
     <Compile Include="Utils\DB\so_user.cs" />
+    <Compile Include="Utils\Enums\PromotionTypes.cs" />
     <Compile Include="Utils\Enums\TeamTravelStatus.cs" />
     <Compile Include="Utils\HttpUtil.cs" />
     <Compile Include="Utils\InvoiceData.cs" />
     <Compile Include="Utils\NumberUtil.cs" />
+    <Compile Include="Utils\PredicateBuilder.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Areas\HelpPage\HelpPage.css" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\Template\BillpocketReportEmail.html" />
+    <Content Include="Content\Template\CancelOrderTicket.html" />
+    <Content Include="Content\Template\CancelTicketDigitalEmail.html" />
+    <Content Include="Content\Template\OrderTableTemplate.html" />
+    <Content Include="Content\Template\OrderTicket.html" />
     <Content Include="Content\Template\ReactivationTicketDigitalEmail.html" />
+    <Content Include="Content\Template\RemovalRequestEmail.html" />
     <Content Include="Content\Template\TicketDigitalEmail.html" />
     <Content Include="Content\Template\WellcomeEmail.html" />
     <Content Include="favicon.ico" />
@@ -736,6 +824,7 @@
     <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\CollectionModelDescription.cshtml" />
     <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ApiGroup.cshtml" />
     <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
+    <None Include="packages.config" />
     <None Include="Properties\PublishProfiles\FolderProfile.pubxml" />
     <None Include="Properties\PublishProfiles\WBCDS.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
@@ -754,15 +843,6 @@
       <Generator>TextTemplatingFilePreprocessor</Generator>
       <LastGenOutput>InsertCliente.cs</LastGenOutput>
     </Content>
-    <Content Include="Web.config">
-      <SubType>Designer</SubType>
-    </Content>
-    <Content Include="Web.Debug.config">
-      <DependentUpon>Web.config</DependentUpon>
-    </Content>
-    <Content Include="Web.Release.config">
-      <DependentUpon>Web.config</DependentUpon>
-    </Content>
     <Content Include="Content\Site.css" />
     <Content Include="Scripts\_references.js" />
     <Content Include="Views\Web.config" />
@@ -770,22 +850,33 @@
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
+    <Content Include="Web.config" />
+    <Content Include="Scripts\jquery-1.10.2.min.map" />
+    <None Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+    <None Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="fonts\" />
     <Folder Include="Views\Assistant\" />
     <Folder Include="Views\RouteTeamInventoryAvailable\" />
     <Folder Include="Views\VersionApi\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="packages.config">
-      <SubType>Designer</SubType>
-    </Content>
     <None Include="Project_Readme.html" />
-    <Content Include="Scripts\jquery-1.10.2.min.map" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Algoritmos.Data\Algoritmos.Data.csproj">
+      <Project>{28C92429-205E-4BA5-A355-EC6AEFF0EE35}</Project>
+      <Name>Algoritmos.Data</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CRM.Data\CRM.Data.csproj">
+      <Project>{34992c17-ae63-4141-a2bc-a2a8d66abcf2}</Project>
+      <Name>CRM.Data</Name>
+    </ProjectReference>
     <ProjectReference Include="..\OpeCDLib\OpeCDLib.csproj">
       <Project>{e1c42c31-7046-4cc1-a3da-4bad727d6639}</Project>
       <Name>OpeCDLib</Name>
@@ -827,7 +918,7 @@
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+      <ErrorText>Este proyecto hace referencia a los paquetes NuGet que faltan en este equipo. Use la restauración de paquetes NuGet para descargarlos. Para obtener más información, consulte http://go.microsoft.com/fwlink/?LinkID=322105. El archivo que falta es {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />

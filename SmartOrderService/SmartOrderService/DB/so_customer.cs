@@ -104,6 +104,9 @@ namespace SmartOrderService.DB
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<so_route_team_travels_customer_blocked> RouteTeamTravelsCustomerBlockeds { get; set; }
 
+        //[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        //public virtual ICollection<so_route_customer_vario> RouteCustomerVario { get; set; }
+
         public string getSingleEmail()
         {
             if (String.IsNullOrEmpty(email))

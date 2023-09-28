@@ -31,6 +31,15 @@ namespace SmartOrderService.Models.Requests
             value = value
         };
 
+        public static AttributeCrm CreateInteger(string name, int value) => new AttributeCrm
+        {
+            isDateTime = false,
+            isOptionSet = false,
+            entityReferenceName = null,
+            name = name,
+            value = value
+        };
+
         public static AttributeCrm CreateDateTime(string name, string value) => new AttributeCrm
         {
             isDateTime = true,
@@ -64,6 +73,15 @@ namespace SmartOrderService.Models.Requests
             {
                 list.Add(CreateEntityReference(entityReferenceName, name, value));
             }
+        }
+
+        public static void CreateAttribute<T>(List<AttributeCrm> list, string name, T value)
+        {
+            if (value == null)
+                return;
+
+            if (value is string)
+                list.Add(Create(name, value.ToString()));
         }
     }
 }

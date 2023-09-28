@@ -9,7 +9,8 @@ namespace SmartOrderService.Models.Message
     public class AuthenticateEmployeeCodeRequest
     {
         public string EmployeeCode { get; set; }
-        public int BranchId { get; set; }
+        public int RouteId { get; set; }
+        public int UserId { get; set; }
     }
 
     public class AuthenticateEmployeeCodeResponse
@@ -31,7 +32,8 @@ namespace SmartOrderService.Models.Message
     {
         public string LeaderCode { get; set; }
         public string EmployeeCode { get; set; }
-        public int BranchId { get; set; }
+        public int RouteId { get; set; }
+        public int UserId { get; set; }
     }
 
     public class AuthenticateLeaderCodeResponse
@@ -45,6 +47,17 @@ namespace SmartOrderService.Models.Message
         public string UserName { get; set; }
         public int RoleId { get; set; }
         public string RoleName { get; set; }
+    }
+    #endregion
+
+
+    #region Helpers
+    public class NotifyWorkdayRequest
+    {
+        public int routeId { get; set; }
+        public int? impulsorId { get; set; }
+        public int posId { get; set; }
+        public int? auxiliarid { get; set; }
     }
     #endregion
 }

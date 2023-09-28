@@ -32,7 +32,7 @@ namespace SmartOrderService.Controllers
 
             catch (Exception e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict, "Uppsss..." + e.InnerException.Message);
+                response = Request.CreateResponse(HttpStatusCode.Conflict, "Uppsss...");
             }
 
             return response;

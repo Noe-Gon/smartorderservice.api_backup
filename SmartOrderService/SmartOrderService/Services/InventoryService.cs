@@ -12,6 +12,7 @@ using OpeCDLib.Models;
 using SmartOrderService.Models.Enum;
 using RestSharp;
 using System.Configuration;
+using Newtonsoft.Json;
 using SmartOrderService.Models.Responses;
 
 namespace SmartOrderService.Services
@@ -59,8 +60,7 @@ namespace SmartOrderService.Services
 
         public bool CloseInventory(int inventoryId)
         {
-
-            var CurrentInventory = db.so_inventory.Where(i => i.inventoryId == inventoryId && i.status).FirstOrDefault();
+            var CurrentInventory = db.so_inventory.Where(i => i.inventoryId == inventoryId).FirstOrDefault();
 
             if (CurrentInventory != null)
             {
@@ -83,7 +83,8 @@ namespace SmartOrderService.Services
             }
 
             int driverId = SearchDrivingId(userId);
-            var workDay = routeTeamService.GetWorkdayByUserAndDate(driverId, DateTime.Today);
+            var inventory = db.so_inventory.Where(x => x.inventoryId == inventoryId).FirstOrDefault();
+            var workDay = routeTeamService.GetWorkdayByUserAndDate(driverId, inventory.date);
 
             //Verificar que los demas ya hayan finalizado para cerrar el viaje
             var travelInProgress = db.so_route_team_travels_employees
@@ -99,6 +100,7 @@ namespace SmartOrderService.Services
                     {
                         //closingRouteTeamTravelStatus(userId, inventoryId, userTeamRole);
                         CloseUserTravel(inventoryId, userId, workDay);
+                        UpdateUnsynchronizedConsumer(driverId);
                         dbContextTransaction.Commit();
                         return true;
                     }
@@ -109,12 +111,25 @@ namespace SmartOrderService.Services
             return true;
         }
 
+        private void UpdateUnsynchronizedConsumer(int userId)
+        {
+            var routeId = db.so_route_team.Where(x => x.userId.Equals(userId)).Select(p => p.routeId).FirstOrDefault();
+            var userIds = db.so_route_team.Where(x => x.routeId.Equals(routeId)).Select(p => p.userId).ToList();
+            var unsynchronizedConsumers = db.so_synchronized_consumer_detail.Where(x => userIds.Contains(x.userId) && !x.synchronized).ToList();
+            foreach (var unsynchronizedConsumer in unsynchronizedConsumers)
+            {
+                unsynchronizedConsumer.synchronized = true;
+            }
+            db.SaveChanges();
+        }
+
         private void CloseUserTravel(int inventoryId, int userId, so_work_day workDay)
         {
             var routeTeamTravel = db.so_route_team_travels_employees
                 .Where(s => s.inventoryId.Equals(inventoryId) && s.userId.Equals(userId) && s.work_dayId == workDay.work_dayId)
                 .FirstOrDefault();
             routeTeamTravel.active = false;
+            routeTeamTravel.modifiedon = DateTime.Now;
             db.SaveChanges();
         }
 
@@ -193,14 +208,28 @@ namespace SmartOrderService.Services
                 OpenInventory(inventoryId);
                 return;
             }
+
+            so_inventory inventory = db.so_inventory.Where(x => x.inventoryId == inventoryId).FirstOrDefault();
             if (userTeamRole == ERolTeam.Impulsor)
             {
                 using (var dbContextTransaction = db.Database.BeginTransaction())
                 {
-                    OpenInventory(inventoryId);
-                    RecordRouteTeamTravelStatus(userId, inventoryId);
-                    RecordRouteTeamInventory(inventoryId);
-                    dbContextTransaction.Commit();
+                    try
+                    {
+                        if (inventory.state == 1)
+                            return;
+
+                        OpenInventory(inventoryId);
+                        RecordRouteTeamTravelStatus(userId, inventoryId);
+                        RecordRouteTeamInventory(inventoryId);
+                        dbContextTransaction.Commit();
+                    }
+                    catch (Exception)
+                    {
+                        dbContextTransaction.Rollback();
+                        throw;
+                    }
+                    
                 }
                 return;
             }
@@ -296,9 +325,233 @@ namespace SmartOrderService.Services
 
             }
 
+            var inventoryService = new InventoryService();
 
             return Inventories;
 
+        }
+
+        public ResponseBase<MsgResponseBase> LoadDeliveries(int inventoryId)
+        {
+            try
+            {
+                //Obtener info
+                var route = db.so_inventory
+                    .Where(i => i.inventoryId == inventoryId)
+                        .Select(i => db.so_route_team
+                        .Where(x => x.userId == i.userId)
+                            .Select(x => db.so_route
+                            .Where(r => r.routeId == x.routeId)
+                            .FirstOrDefault())
+                        .FirstOrDefault())
+                    .FirstOrDefault();
+
+                if (route == null)
+                    return ResponseBase<MsgResponseBase>.Create(new List<string>
+                    {
+                        "No se encontró el inventario"
+                    });
+
+                string routeId = route.routeId + "";
+                string branchId = route.branchId + "";
+
+                #region Obtención de deliveries
+
+                var clientPreventaApi = new RestClient();
+                clientPreventaApi.BaseUrl = new Uri(ConfigurationManager.AppSettings["PreventaAPI"]);
+                var requestPreventaApiConfig = new RestRequest("api/v1/delivery/deliveries?branchId=" + branchId + "&routeId=" + routeId + "&inventoryId=" + inventoryId, Method.GET);
+                requestPreventaApiConfig.AddHeader("x-api-key", ConfigurationManager.AppSettings["x-api-key"]);
+                requestPreventaApiConfig.RequestFormat = DataFormat.Json;
+                var GetDeliveriesResponse = clientPreventaApi.Execute(requestPreventaApiConfig);
+                int deliveryCount = 0;
+                if (GetDeliveriesResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    var responsePreventaAPI = JsonConvert.DeserializeObject<PreventaAPIResponseBase<DeliveriesPreventaAPIResponse>>(GetDeliveriesResponse.Content);
+
+                    if (responsePreventaAPI.success)
+                    {
+                        foreach (var delivery in responsePreventaAPI.data)
+                        {
+                            //Buscar si existe esa preventa con CODE
+                            var deliveryExist = db.so_delivery.Where(x => x.code == delivery.code && x.inventoryId == inventoryId).FirstOrDefault();
+                            //Si esta registrada ignorar y pasar al siguiente
+                            if (deliveryExist != null)
+                            {
+                                deliveryCount += deliveryExist.so_delivery_detail.Sum(x => x.amount);
+                                continue;
+                            }
+
+                            //Obtener al cliente existente
+                            so_customer existCustomer = db.so_customer
+                                .Where(x => x.customerId == delivery.customerId)
+                                .FirstOrDefault(); ;
+
+                            //Si el cliente no existe crear uno nuevo
+                            if (delivery.customerId == 0 || existCustomer == null) //Si delivery.customerId == 0 No existe en WBC
+                            {
+                                //Buscar por CFE (so_customer.code)
+                                existCustomer = db.so_customer.Where(x => x.code == delivery.code || x.code == "TEMP-" + delivery.code).FirstOrDefault();
+                                var day = ((int)DateTime.Now.DayOfWeek) + 1;
+                                if (existCustomer == null)
+                                {
+                                    var infoList = delivery.code.Split('-');
+                                    so_customer newCustomer = new so_customer
+                                    {
+                                        name = delivery.code,
+                                        code = delivery.customerId == 0 ? delivery.code : "TEMP-" + delivery.code,
+                                        contact = "Sin definir",
+                                        createdby = 2777,
+                                        createdon = DateTime.Now,
+                                        modifiedby = 2777,
+                                        modifiedon = DateTime.Now,
+                                        status = true
+                                    };
+                                    
+                                    so_route_customer newRouteCustomer = new so_route_customer
+                                    {
+                                        so_route = route,
+                                        so_customer = newCustomer,
+                                        order = 0,
+                                        day = day,
+                                        visit_type = 1,
+                                        status = true,
+                                        createdby = 2777,
+                                        createdon = DateTime.Now,
+                                        modifiedby = 2777,
+                                        modifiedon = DateTime.Now,
+                                    };
+
+                                    db.so_customer.Add(newCustomer);
+                                    db.so_route_customer.Add(newRouteCustomer);
+                                    db.SaveChanges();
+                                    existCustomer = newCustomer;
+                                }
+                                else
+                                {
+                                    //Verificar si existe un ese día
+                                    var existRouteCustomer = db.so_route_customer
+                                        .Where(x => x.routeId == route.routeId && existCustomer.customerId == x.customerId && x.day == day)
+                                        .FirstOrDefault();
+
+                                    if (existRouteCustomer == null)
+                                    {
+                                        so_route_customer newRouteCustomer = new so_route_customer
+                                        {
+                                            so_route = route,
+                                            so_customer = existCustomer,
+                                            order = 0,
+                                            visit_type = 1,
+                                            day = day,
+                                            status = true,
+                                            createdby = 2777,
+                                            createdon = DateTime.Now,
+                                            modifiedby = 2777,
+                                            modifiedon = DateTime.Now,
+                                        };
+
+                                        db.so_route_customer.Add(newRouteCustomer);
+                                        db.SaveChanges();
+                                    }
+                                    else
+                                    {
+                                        if (!existCustomer.status)
+                                        {
+                                            existCustomer.status = true;
+                                            existCustomer.modifiedby = 2777;
+                                            existCustomer.modifiedon = DateTime.Now;
+
+                                            db.SaveChanges();
+                                        }
+                                    }
+                                }
+                            }
+
+                            var deliveriStatus = db.so_delivery_status
+                                .Where(x => x.Code == DeliveryStatus.UNDELIVERED)
+                                .FirstOrDefault();
+
+                            //Si no, registrar
+                            var newDelivery = new so_delivery
+                            {
+                                code = delivery.code,
+                                createdby = 2777,
+                                createdon = DateTime.Now,
+                                customerId = existCustomer.customerId,
+                                inventoryId = inventoryId,
+                                modifiedby = 2777,
+                                modifiedon = DateTime.Now,
+                                status = true,
+                                visit_order = 0
+                            };
+
+                            var newDeliveryAdditionalData = new so_delivery_additional_data()
+                            {
+                                deliveryStatusId = deliveriStatus == null ? null : (int?)deliveriStatus.deliveryStatusId,
+                                originSystem = delivery.originSystem,
+                                originSystemDescription = delivery.originSystemDescription
+                            };
+
+                            newDelivery.so_delivery_additional_data = newDeliveryAdditionalData;
+
+                            var newDeliveryDetails = new List<so_delivery_detail>();
+                            foreach (var detail in delivery.products)
+                            {
+                                newDeliveryDetails.Add(new so_delivery_detail()
+                                {
+                                    amount = detail.quantity,
+                                    createdby = 2777,
+                                    createdon = DateTime.Now,
+                                    modifiedby = 2777,
+                                    modifiedon = DateTime.Now,
+                                    productId = detail.productId,
+                                    status = true,
+                                    so_delivery = newDelivery,
+                                    price = detail.price
+                                });
+                                deliveryCount += detail.quantity;
+                            }
+
+                            db.so_delivery.Add(newDelivery);
+                            db.so_delivery_detail.AddRange(newDeliveryDetails);
+
+                        }
+                        // Actualizar summary
+                        var summary = db.so_inventory_summary.Where(x => x.inventoryId == inventoryId && x.status).FirstOrDefault();
+                        summary.modifiedon = DateTime.Now;
+                        summary.deliveries_amount = deliveryCount;
+
+                        db.SaveChanges();
+
+                        return ResponseBase<MsgResponseBase>.Create(new MsgResponseBase()
+                        {
+                            Msg = "Ha finalizado con Exito"
+                        });
+                    }
+                }
+                if(GetDeliveriesResponse.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                {
+
+                    return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                    {
+                        "Error en API preventa", GetDeliveriesResponse.Content
+                    });
+                }
+
+                #endregion
+
+                return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    "Error en API preventa"
+                });
+            }
+            catch (Exception e)
+            {
+                return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    "Error en API preventa", e.Message
+                });
+            }
+            
         }
 
         public int getInventoryState(int userId,DateTime date)
@@ -685,6 +938,55 @@ namespace SmartOrderService.Services
             }
         }
 
+        public InventoryOpenResponsev2 isInventoryOpenv2(int inventoryId, int userId)
+        {
+            ERolTeam userTeamRole = roleTeamService.GetUserRole(userId);
+            RouteTeamInventoryAvailableService routeTeamInventoryAvailable = new RouteTeamInventoryAvailableService();
+            var inventory = db.so_inventory.Where(x => x.inventoryId == inventoryId).FirstOrDefault();
+
+            if (inventory == null)
+                throw new EntityNotFoundException("No se encontró el inventario");
+
+            if (userTeamRole == ERolTeam.Impulsor)
+            {
+
+
+                if (inventory.state == INVENTORY_OPEN || inventory.state == INVENTORY_AVAILABLE)
+                {
+                    return new InventoryOpenResponsev2
+                    {
+                        InventoryId = inventoryId,
+                        IsOpen = true,
+                        order = inventory.order
+                    };
+                }
+                return new InventoryOpenResponsev2
+                {
+                    InventoryId = inventoryId,
+                    IsOpen = false,
+                    order = inventory.order
+                };
+            }
+            else//Rol de ayudante
+            {
+                if (inventory.state == INVENTORY_OPEN)
+                {
+                    return new InventoryOpenResponsev2
+                    {
+                        InventoryId = inventoryId,
+                        IsOpen = true,
+                        order = inventory.order
+                    };
+                }
+                return new InventoryOpenResponsev2
+                {
+                    InventoryId = inventoryId,
+                    IsOpen = false,
+                    order = inventory.order
+                };
+            }
+        }
+
         private so_inventory GetCurrentInventory(int userId)
         {
             var currentInventory = db.so_inventory.Where(i => i.userId.Equals(userId)
@@ -746,6 +1048,7 @@ namespace SmartOrderService.Services
             {
                 inventoryCloneObject.Add((so_route_team_inventory_available)routeProduct.Clone());
                 routeProduct.Available_Amount = 0;
+                routeProduct.modifiedon = DateTime.Now;
             }
             db.SaveChanges();
             return inventoryCloneObject.Where(s => s.Available_Amount > 0).ToList();
@@ -812,8 +1115,6 @@ namespace SmartOrderService.Services
                 Status = inventory.status
 
             };
-
-
 
             var details = inventory.so_inventory_detail.Where(d => d.status);
 

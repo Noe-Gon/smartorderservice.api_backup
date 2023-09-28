@@ -1,4 +1,5 @@
 ﻿using SmartOrderService.CustomExceptions;
+using SmartOrderService.Models.DTO;
 using SmartOrderService.Models.Requests;
 using System;
 using System.Collections.Generic;
@@ -46,7 +47,7 @@ namespace SmartOrderService.Services
             {
                 response = Request.CreateResponse((HttpStatusCode)213, false);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 response = Request.CreateResponse(HttpStatusCode.InternalServerError, false);
             }
@@ -120,6 +121,34 @@ namespace SmartOrderService.Services
             catch (WorkdayNotFoundException e)
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict,false);
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, false);
+            }
+            return response;
+        }
+
+        [HttpPost, Route("api/v2/routeam/workdayclosestatus")]
+        public HttpResponseMessage CheckWorkDayClosingStatusByWorkDay([FromBody] Workday workday)
+        {
+            HttpResponseMessage response;
+            try
+            {
+                RouteTeamService routeTeamService = new RouteTeamService();
+                response = Request.CreateResponse(HttpStatusCode.Accepted, routeTeamService.CheckWorkDayClosingStatusByWorkDay(workday));
+            }
+            catch (EntityNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Forbidden, false);
+            }
+            catch (BillpocketReportException e)
+            {
+                response = Request.CreateResponse((HttpStatusCode)420, false);
+            }
+            catch (WorkdayNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, false);
             }
             catch (Exception e)
             {

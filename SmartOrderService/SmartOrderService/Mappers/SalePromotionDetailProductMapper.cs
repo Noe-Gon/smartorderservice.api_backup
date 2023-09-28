@@ -13,8 +13,7 @@ namespace SmartOrderService.Mappers
     {
         public so_sale_promotion_detail toEntity(SalePromotionDetailProduct model)
         {
-            return new so_sale_promotion_detail()
-            {
+            return new so_sale_promotion_detail() {
                 productId = model.ProductId,
                 amount = model.Amount,
                 price = Convert.ToDouble(model.price),
@@ -35,14 +34,13 @@ namespace SmartOrderService.Mappers
                 price_without_taxes = model.price_without_taxes,
                 vat_tax = model.vat,
                 vat_tax_rate = model.vat_rate,
-                sale_price = model.price
+                sale_price = (float?)model.PriceValue
             };
         }
 
         public SalePromotionDetailProduct toModel(so_sale_promotion_detail entity)
         {
-            return new SalePromotionDetailProduct()
-            {
+            return new SalePromotionDetailProduct() {
                 ProductId = entity.productId,
                 Amount = entity.amount,
                 Status = entity.status,
@@ -62,7 +60,8 @@ namespace SmartOrderService.Mappers
                 price_without_taxes = entity.price_without_taxes,
                 vat = entity.vat_tax,
                 vat_rate = entity.vat_tax_rate,
-                price = entity.sale_price
+                price = (float?)entity.price,
+                PriceValue = (decimal)entity.sale_price
             };
         }
     }

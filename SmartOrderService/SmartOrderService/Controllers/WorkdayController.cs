@@ -9,11 +9,14 @@ using SmartOrderService.Services;
 using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.Utils;
+using SmartOrderService.Models.Locks;
 
 namespace SmartOrderService.Controllers
 {
     public class WorkdayController : ApiController
     {
+        private static Dictionary<string, WorkdayLock> mapObjectService = new Dictionary<string, WorkdayLock>();
+
         // GET: api/Workday
         public HttpResponseMessage Get([FromUri]WorkDayRequest request)
         {
@@ -66,10 +69,43 @@ namespace SmartOrderService.Controllers
         // POST: api/Workday
         public HttpResponseMessage Post([FromBody]Workday workday)
         {
-            WorkdayService service = new WorkdayService();
+            
             HttpResponseMessage response;
-            try { 
-                workday = service.createWorkday(workday.UserId);
+            try {
+                WorkdayLock serviceLock = new WorkdayLock();
+                RouteTeamService servce = new RouteTeamService();
+                var routeId = servce.GetRouteId(workday.UserId);
+
+                if (routeId == 0)
+                {
+                    var WorkdayService = new WorkdayService();
+                    workday = WorkdayService.createWorkday(workday.UserId);
+                    return Request.CreateResponse(HttpStatusCode.Created, workday);
+                }
+
+                if (mapObjectService.ContainsKey(routeId.ToString()))
+                {
+                    serviceLock = mapObjectService[routeId.ToString()];
+                    serviceLock.LastUser = workday.UserId;
+                }
+                else
+                {
+                    serviceLock = new WorkdayLock
+                    {
+                        LastUser = workday.UserId,
+                        WorkdayService = new WorkdayService()
+                    };
+                    mapObjectService.Add(routeId.ToString(), serviceLock);
+                }
+
+                lock (serviceLock.WorkdayService)
+                {
+                    workday = serviceLock.WorkdayService.createWorkday(workday.UserId);
+
+                    if (serviceLock.LastUser == workday.UserId)
+                        mapObjectService.Remove(routeId.ToString());
+                }
+               
                 response = Request.CreateResponse(HttpStatusCode.Created, workday);
             }
             catch (NotSupportedException e)
@@ -78,23 +114,15 @@ namespace SmartOrderService.Controllers
             }
             catch (NoUserFoundException e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict, new {
-                   Message = "Usuario no registrado" 
-                });
+                response = Request.CreateResponse(HttpStatusCode.Conflict, "Usuario no registrado");
             }
-            catch(CreateWorkdayInventoryNotFoundException e)
+            catch (ArgumentException e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict, new { 
-                   Message = e.Message
-                });
+                response = Request.CreateResponse(HttpStatusCode.Forbidden, "Error: " + e.Message);
             }
             catch (Exception e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict,
-                new
-                {
-                    Message = "Error: " + e.Message
-                });
+                response = Request.CreateResponse(HttpStatusCode.Conflict, "Error: "+e.Message);
             }
 
             return response;
@@ -107,7 +135,39 @@ namespace SmartOrderService.Controllers
             HttpResponseMessage response;
             try
             {
-                workday = service.FinishWorkday(workday);
+                WorkdayLock serviceLock = new WorkdayLock();
+                RouteTeamService servce = new RouteTeamService();
+                var routeId = servce.GetRouteId(workday.UserId);
+
+                if (routeId == 0)
+                {
+                    workday = service.FinishWorkday(workday);
+                    return Request.CreateResponse(HttpStatusCode.Accepted, workday);
+                }
+
+                if (mapObjectService.ContainsKey(routeId.ToString()))
+                {
+                    serviceLock = mapObjectService[routeId.ToString()];
+                    serviceLock.LastUser = workday.UserId;
+                }
+                else
+                {
+                    serviceLock = new WorkdayLock
+                    {
+                        LastUser = workday.UserId,
+                        WorkdayService = new WorkdayService()
+                    };
+                    mapObjectService.Add(routeId.ToString(), serviceLock);
+                }
+
+                lock (serviceLock.WorkdayService)
+                {
+                    workday = service.FinishWorkday(workday);
+
+                    if (serviceLock.LastUser == workday.UserId)
+                        mapObjectService.Remove(routeId.ToString());
+                }
+                
                 response = Request.CreateResponse(HttpStatusCode.Accepted, workday);
             }
             catch (NoCustomerVisitException e)

@@ -15,22 +15,22 @@ namespace SmartOrderService.Controllers
     {
         // GET: api/Price
 
-         public HttpResponseMessage Get([FromUri] PriceRequest request)
+        public HttpResponseMessage Get([FromUri] PriceRequest request)
         {
-            
-           HttpResponseMessage response;
+
+            HttpResponseMessage response;
             try
             {
                 DateTime time = Utils.DateUtils.getDateTime(request.LastUpdate);
 
                 PriceService service = new PriceService();
 
-                var prices = service.getPricesByInventoryCustomer(request.InventoryId,request.BranchId, time, request.CustomerId);
-                      
-                    
+                var prices = service.getPricesByInventoryCustomer(request.InventoryId, request.BranchId, time, request.CustomerId);
+
+
                 response = Request.CreateResponse(HttpStatusCode.OK, prices);
             }
-            
+
             catch (Exception e)
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict, "Uppsss...");
@@ -38,7 +38,33 @@ namespace SmartOrderService.Controllers
 
             return response;
         }
-        [HttpGet,Route ("Api/PriceList")]
+
+        [HttpGet, Route("api/v2/Price")]
+        public HttpResponseMessage Getv2([FromUri] PriceRequest request)
+        {
+
+            HttpResponseMessage response;
+            try
+            {
+                DateTime time = Utils.DateUtils.getDateTime(request.LastUpdate);
+
+                PriceService service = new PriceService();
+
+                var prices = service.getPricesByInventoryCustomerv2(request.InventoryId, request.BranchId, time, request.CustomerId);
+
+
+                response = Request.CreateResponse(HttpStatusCode.OK, prices);
+            }
+
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, "Uppsss...");
+            }
+
+            return response;
+        }
+
+        [HttpGet, Route("Api/PriceList")]
         public HttpResponseMessage GetPriceList([FromUri] PriceListRequest request)
         {
 
@@ -50,6 +76,30 @@ namespace SmartOrderService.Controllers
                 PriceService service = new PriceService();
 
                 var prices = service.getPricesByInventory(request.InventoryId, request.BranchId, time);
+
+                response = Request.CreateResponse(HttpStatusCode.OK, prices);
+            }
+
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, "Uppsss..." + e.Message);
+            }
+
+            return response;
+        }
+
+        [HttpGet, Route("api/v2/PriceList")]
+        public HttpResponseMessage GetPriceListv2([FromUri] PriceListRequest request)
+        {
+
+            HttpResponseMessage response;
+            try
+            {
+                DateTime time = Utils.DateUtils.getDateTime(request.LastUpdate);
+
+                PriceService service = new PriceService();
+
+                var prices = service.getPricesByInventoryv2(request.InventoryId, request.BranchId, time);
 
                 response = Request.CreateResponse(HttpStatusCode.OK, prices);
             }

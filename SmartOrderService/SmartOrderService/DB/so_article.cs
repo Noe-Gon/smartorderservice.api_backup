@@ -12,7 +12,7 @@ namespace SmartOrderService.DB
         public so_article()
         {
             so_branch_articles = new HashSet<so_branch_articles>();
-            so_sale_promotion_detail_article = new HashSet<so_sale_promotion_detail_article>();
+            so_sale_promotion_detail_article = new HashSet<so_sale_promotion_detail_article>(); //Comentar cuando se ponga Promociones
         }
 
         [Key]
@@ -40,7 +40,7 @@ namespace SmartOrderService.DB
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<so_branch_articles> so_branch_articles { get; set; }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<so_sale_promotion_detail_article> so_sale_promotion_detail_article { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")] //Comentar cuando se ponga Promociones
+        public virtual ICollection<so_sale_promotion_detail_article> so_sale_promotion_detail_article { get; set; } //Comentar cuando se ponga Promociones
     }
 }

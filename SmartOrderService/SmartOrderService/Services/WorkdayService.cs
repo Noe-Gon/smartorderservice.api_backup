@@ -10,6 +10,8 @@ using OpeCDLib.Models;
 using SmartOrderService.Models.Enum;
 using RestSharp;
 using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
 
 namespace SmartOrderService.Services
 {
@@ -23,8 +25,6 @@ namespace SmartOrderService.Services
 
         public Workday createWorkday(int userId)
         {
-
-            var time = DateTime.Now;
             ERolTeam userRol = roleTeamService.GetUserRole(userId);
 
             if (userRol != ERolTeam.SinAsignar)
@@ -37,18 +37,7 @@ namespace SmartOrderService.Services
                 inventoryService.CallLoadInventoryProcess(impulsorId, route.so_branch.code, route.code, null);
                 //End Load Inventory Process
             }
-            //Validamos que exista un inventari actual
-            try
-            {
-                if(userRol == ERolTeam.SinAsignar)
-                {
-                    inventoryService.GetCurrentInventory(userId, time.Date);
-                }
-            }
-            catch(InventoryEmptyException e)
-            {
-                throw new CreateWorkdayInventoryNotFoundException();
-            }
+
             Workday workday = new Workday();
 
             var currentWorkday = searchWorkDay(userId);
@@ -74,6 +63,8 @@ namespace SmartOrderService.Services
                     workday.IsOpen = true;
                     return workday;
                 }
+
+                var time = DateTime.Now;
 
                 var device = db.so_device.Where(d => d.userId == userId && d.status);
 
@@ -107,6 +98,8 @@ namespace SmartOrderService.Services
             else
             {
                 var id = Guid.NewGuid();
+
+                var time = DateTime.Now;
 
                 var device = db.so_device.Where(d => d.userId == userId && d.status);
 
@@ -198,9 +191,13 @@ namespace SmartOrderService.Services
         public Workday FinishWorkday(Workday workday)
         {
             ERolTeam userRol = roleTeamService.GetUserRole(workday.UserId);
-            if (userRol == ERolTeam.SinAsignar || userRol == ERolTeam.Impulsor)
+            if(userRol == ERolTeam.SinAsignar)
+                FinishWorkdayProcess(workday);
+
+            if (userRol == ERolTeam.Impulsor)
             {
-                var workDayUpdated = FinishWorkdayProcess(workday);
+                var workDayUpdated = FinishTeamWorkdayProcess(workday);
+                ClaerTemporalCustomer(workday.WorkdayId, workday.UserId);
                 //new RouteTeamTravelsService().SetClosingStatusRoutTeamTravels(workday.WorkdayId);
                 if (userRol == ERolTeam.Impulsor)
                 {
@@ -210,17 +207,17 @@ namespace SmartOrderService.Services
                   
                     finalizarJornadaOPCD(route.so_branch.code, route.code, DateTime.Today, workDayUpdated.DateEnd);
                     //OPCD End
-
-                    using (var service = CustomerBlockedService.Create())
-                    {
-                        var response = service.ClearBlockedCustomer(new Models.Requests.ClearBlockedCustomerRequest
-                        {
-                            UserId = workday.UserId
-                        });
-                    }
                 }
             }
-            
+            if (userRol != ERolTeam.SinAsignar)
+                using(var service = CustomerBlockedService.Create())
+                {
+                    var response = service.ClearBlockedCustomer(new Models.Requests.ClearBlockedCustomerRequest
+                    {
+                        UserId = workday.UserId
+                    });
+                }
+
             workday.IsOpen = false;
             return workday;
         }
@@ -229,6 +226,7 @@ namespace SmartOrderService.Services
         {
             int UserId = workday.UserId;
             Guid WorkdayId = workday.WorkdayId;
+            String sRespuestaSp = string.Empty;
 
             var currentWorkDay = db.so_work_day.Where(w =>
                 w.userId == UserId &&
@@ -248,20 +246,20 @@ namespace SmartOrderService.Services
 
             else
             {
-
-                ERolTeam userRol = roleTeamService.GetUserRole(UserId);
                 //checamos que se tenga visita para todos los clientes
                 var today = DateTime.Today;
-                var query = db.so_venta_View.Where(v => v.id_user == UserId
-                    && DbFunctions.TruncateTime(v.inventory_date) >= DbFunctions.TruncateTime(start)
-                    && DbFunctions.TruncateTime(v.inventory_date) <= DbFunctions.TruncateTime(today));
+
                 var visits = db.so_binnacle_visit.Where(
                     b => b.userId.Equals(UserId)
                     && DbFunctions.TruncateTime(b.createdon) >= DbFunctions.TruncateTime(start)
                     && DbFunctions.TruncateTime(b.createdon) <= DbFunctions.TruncateTime(today)
                 ).Select(c => c.customerId).ToList();
 
-                var count = query.Where(v =>!visits.Contains(v.id_customer)).Count();
+                var count = db.so_venta_View.Where(v => v.id_user == UserId
+                    && !visits.Contains(v.id_customer)
+                    && DbFunctions.TruncateTime(v.inventory_date) >= DbFunctions.TruncateTime(start)
+                    && DbFunctions.TruncateTime(v.inventory_date) <= DbFunctions.TruncateTime(today)
+                    ).Count();
 
                 if (count > 0)
                     throw new NoCustomerVisitException("clientes pendientes en este viaje");
@@ -286,6 +284,77 @@ namespace SmartOrderService.Services
                     catch (Exception e)
                     {
                         dbContextTransaction.Rollback();
+                        throw new Exception(e.Message);
+                    }
+                }
+                //}
+            }
+            return workday;
+        }
+
+        public Workday FinishTeamWorkdayProcess(Workday workday)
+        {
+            int UserId = workday.UserId;
+            Guid WorkdayId = workday.WorkdayId;
+            String sRespuestaSp = string.Empty;
+
+            var currentWorkDay = db.so_work_day.Where(w =>
+                w.userId == UserId &&
+                w.work_dayId == WorkdayId
+            );
+
+            if (!currentWorkDay.Any())
+                throw new WorkdayNotFoundException();
+
+            var start = currentWorkDay.FirstOrDefault().date_start.Value;
+
+            if (currentWorkDay.FirstOrDefault().date_end.HasValue)
+            {
+                workday.IsOpen = false;
+                workday.DateEnd = currentWorkDay.FirstOrDefault().date_end.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+            }
+
+            else
+            {
+                //checamos que se tenga visita para todos los clientes
+                var today = DateTime.Today;
+
+                var visits = db.so_binnacle_visit.Where(
+                    b => b.userId.Equals(UserId)
+                    && DbFunctions.TruncateTime(b.createdon) >= DbFunctions.TruncateTime(start)
+                    && DbFunctions.TruncateTime(b.createdon) <= DbFunctions.TruncateTime(today)
+                ).Select(c => c.customerId).ToList();
+
+                var count = db.so_venta_View.Where(v => v.id_user == UserId
+                    && !visits.Contains(v.id_customer)
+                    && DbFunctions.TruncateTime(v.inventory_date) >= DbFunctions.TruncateTime(start)
+                    && DbFunctions.TruncateTime(v.inventory_date) <= DbFunctions.TruncateTime(today)
+                    ).Count();
+
+                if (count > 0)
+                    throw new NoCustomerVisitException("clientes pendientes en este viaje");
+
+                var finishWorkDay = currentWorkDay.FirstOrDefault();
+
+                using (var dbContextTransaction = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        finishWorkDay.closedby_device = UserId;
+                        finishWorkDay.date_end = DateTime.Now;
+                        finishWorkDay.modifiedon = DateTime.Now;
+                        workday.DateEnd = finishWorkDay.date_end.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+                        TemporalCloseInventory(finishWorkDay.so_user);
+
+                        db.SaveChanges();
+                        workday.IsOpen = false;
+
+                        dbContextTransaction.Commit();
+                    }
+                    catch (Exception e)
+                    {
+                        dbContextTransaction.Rollback();
+                        throw new Exception(e.Message);
                     }
                 }
                 //}
@@ -387,6 +456,21 @@ namespace SmartOrderService.Services
                 return "No insertado. Ya existe un registro con los mismos datos";
             }
             return "OPCD Falló en notificación";
+        }
+
+        public void ClaerTemporalCustomer(Guid workdayId, int? modifiedBy)
+        {
+            int routeId = db.so_route_team_travels_employees.Where(x => x.work_dayId == workdayId).Select(x => x.routeId).FirstOrDefault();
+
+            var routeCustomers = db.so_route_customer.Where(x => x.routeId == routeId && x.so_customer.code.Contains("TEMP") && x.status);
+
+            foreach (var routeCustomer in routeCustomers)
+            {
+                routeCustomer.status = false;
+                routeCustomer.modifiedby = modifiedBy ?? 2777;
+                routeCustomer.modifiedon = DateTime.Now;
+            }
+            db.SaveChanges();
         }
     }
 }

@@ -5,7 +5,6 @@ using System.Linq;
 using AutoMapper;
 
 using SmartOrderService.DB;
-using System.Configuration;
 
 namespace SmartOrderService.Services
 {
@@ -22,22 +21,14 @@ namespace SmartOrderService.Services
 
             var bottles = db.so_product_bottle.Where(pb => pb.status).Select(b => new {b.productId,b.bottleId }).ToList();
             var categories = db.so_product_category_branch.Where(pcb => pcb.status).Select(c => new { c.productId, c.categoryId }).Distinct().ToList();
-            var productsCategoriesByBranch = db.so_product_category_branch.Where(pcb => pcb.status && pcb.branchId == branchId).Select(c => new { c.productId, c.categoryId }).Distinct().ToList();
 
-            string alcoholCategoryCode = ConfigurationManager.AppSettings["ALCOHOL_CATEGORY_CODE"];
-            so_category alcoholCategory = db.so_category.Where(x => x.code == alcoholCategoryCode).FirstOrDefault();
             foreach (var product in datas) {
                 ProductDto dto = Mapper.Map<ProductDto>(product);
                 var category = categories.Where(c => c.productId == dto.ProductId).FirstOrDefault();
                 if (category == null)
-                {
                     dto.CategoryId = 1;
-                }
                 else
-                {
                     dto.CategoryId = category.categoryId;
-                }
-                dto.IsAlcohol = alcoholCategory != null && productsCategoriesByBranch.Any(x => x.productId == dto.ProductId && x.categoryId == alcoholCategory.categoryId);
                 dto.Status = dto.Status && product.status;
                 dto.BottleId = bottles.Where(b => b.productId == product.productId).Select(x => x.bottleId).FirstOrDefault();                
                 Products.Add(dto);

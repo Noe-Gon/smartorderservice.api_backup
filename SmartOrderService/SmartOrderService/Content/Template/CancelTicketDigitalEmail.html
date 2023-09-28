@@ -8,12 +8,15 @@
             width: 30%;
             text-align: center;
         }
+
         .image{
             margin-top: 15%;
         }
+
         .right {
             text-align: right;
         }
+
         .cancelSale {
             background-color: orangered;
             color: yellow;
@@ -22,6 +25,10 @@
             width: 190px;
             text-align: center;
             padding-top: 10px;
+        }
+
+        .saleClass {
+            {SaleTableStyle}
         }
     </style>
 </head>
@@ -67,48 +74,51 @@
         <div style="text-align-last: right; font-size: smaller;">
             FAVOR DE VERIFICAR ENTREGA COMPLETA DE PRODUCTOS Y CANTIDADES
         </div>
-        <div style="border: double; background-color: lightgray; text-align-last: center;">
-            <strong>Venta</strong>
-        </div>
-        <div style="width: 100%; margin-top: 5px; margin-bottom: 5px; margin-left: 51%;">
-            <strong>{PaymentMethod}</strong>
-        </div>
-        <div>
+        <div class="saleClass">
 
-            <table style="margin-left: 10px;margin-top: 10px;margin-bottom: 10px; width: 100%;">
-                <tr>
-                   <th style="text-align: left;width:400px"><strong>Producto</strong></th>
-                    <th style="text-align: left;width:100px"><strong>Cantidad</strong></th>
-                    <th style="text-align: left;width:100px"><strong>Precio</strong></th>
-                    <th style="text-align: left;width:100px"><strong>Total</strong></th>
-                </tr>
-                {TdBody}
-            </table>
+            <div style="border: double; background-color: lightgray; text-align-last: center;">
+                <strong>Venta</strong>
+            </div>
+            <div style="width: 100%; margin-top: 5px; margin-bottom: 5px; margin-left: 51%;">
+                <strong>{PaymentMethod}</strong>
+            </div>
+            <div>
 
+                <table style="margin-left: 10px;margin-top: 10px;margin-bottom: 10px; width: 100%;">
+                    <tr>
+                        <th style="text-align: left;width:400px"><strong>Producto</strong></th>
+                        <th style="text-align: left;width:100px"><strong>Cantidad</strong></th>
+                        <th style="text-align: left;width:100px"><strong>Precio</strong></th>
+                        <th style="text-align: left;width:100px"><strong>Total</strong></th>
+                    </tr>
+                    {TdBody}
+                </table>
+
+            </div>
         </div>
-		<div id='promociones' style='display:none'>
-			<div style="border: double; background-color: lightgray; text-align-last: center;">
-				<strong>Promociones</strong>
-			</div>
-			<div>
-				<table style="margin-left: 10px;margin-top: 10px;margin-bottom: 10px; width: 100%;">
-					<tr style="display:none">
-                    <th style="text-align: left;width:400px"><strong>Producto</strong></th>
-                    <th style="text-align: left;width:100px"><strong>Cantidad</strong></th>
-                    <th style="text-align: left;width:100px"><strong>Precio</strong></th>
-                    <th style="text-align: left;width:100px"><strong>Total</strong></th>
-					</tr>
-					{TdBodyPromociones}
-				</table>
-			</div>
-		</div>
+        <div id='promociones' style='display:none'>
+            <div style="border: double; background-color: lightgray; text-align-last: center;">
+                <strong>Promociones</strong>
+            </div>
+            <div>
+                <table style="margin-left: 10px;margin-top: 10px;margin-bottom: 10px; width: 100%;">
+                    <tr style="display:none">
+                        <th style="text-align: left;width:400px"><strong>Producto</strong></th>
+                        <th style="text-align: left;width:100px"><strong>Cantidad</strong></th>
+                        <th style="text-align: left;width:100px"><strong>Precio</strong></th>
+                        <th style="text-align: left;width:100px"><strong>Total</strong></th>
+                    </tr>
+                    {TdBodyPromociones}
+                </table>
+            </div>
+        </div>
         <div style="margin-bottom: 20px; width: 100%; display:inline-flex">
             <div style="width: 35%; height: 10px;">
 
             </div>
             <div style="width: 65%; margin-left: 10px; margin-top: 10px; margin-bottom: 10px;">
                 <table style="width: 100%">
-                    <tr>
+                    <tr class="saleClass">
                         <td>Total de productos vendidos:</td>
                         <td class="right">{TotalProductsSold}</td>
                     </tr>
@@ -116,32 +126,36 @@
                     <td>Total de cajas vendidas:</td>
                     <td class="right">{TotalBoxesSold}</td>
                 </tr>-->
-					<tr id='lblpromociones' style='display:none'>
-						<td>Total de Promociones:</td>
-						<td class="right">{TotalPromos}</td>
-					</tr>
-                    <tr>
+                    <tr id='lblpromociones' style='display:none'>
+                        <td>Total de Promociones:</td>
+                        <td class="right">{TotalPromos}</td>
+                    </tr>
+                    <tr class="saleClass">
                         <td>Total:</td>
                         <td class="right">{TotalPrice}</td>
                     </tr>
                 </table>
             </div>
         </div>
+        {OrderTableTamplate}
         <div style="text-align-last: center; margin-bottom: 5px;">
             ¡Gracias por tu preferencia!
+        </div>
+        <div style="text-align-last: center; margin-bottom: 5px;">
+            <a href="{CancelTicketLink}">No quiero recibir tickets en mi cuenta de correo electrónico</a>
         </div>
         <div style="text-align-last: center; margin-bottom: 5px;">
             Visitanos en: <a href="http://www.bepensaentuhogar.com/">http://www.bepensaentuhogar.com/</a>
         </div>
         <!--<div style="text-align-last: center; margin-bottom: 5px;">
         Tu opinión es muy importante para nosotros y nos ayuda a mejorar, te invitamos a responder esta breve encuesta: <a href="{LinkEncuesta}">Ir a la encuesta</a>
-    </div>
-    <div style="text-align-last: center;">
-        Quieres felicitar a alguien, tienes alguna queja o comentario,
     </div>-->
-    <div style="text-align-last: center;">
-        ¿Necesitas la factura? Comunícate al 800 xxx xxx
-    </div>
+        <div style="text-align: center;">
+            {UrlAvisoPrivacidad}
+        </div>
+        <div style="text-align: center;">
+            Para más información comunícate al 800 000 AGUA (2482)
+        </div>
     </div>
 </body>
 </html>

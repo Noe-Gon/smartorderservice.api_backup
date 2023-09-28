@@ -1,0 +1,139 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <style>
+        .divimage {
+            width: 30%;
+            text-align: center;
+        }
+
+        .image {
+            margin-top: 15%;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .cancelSale {
+            background-color: orangered;
+            color: yellow;
+            float: right;
+            height: 30px;
+            width: 190px;
+            text-align: center;
+            padding-top: 10px;
+        }
+
+        #reference_code {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div style="max-width: 800px;">
+        <div>
+            <h2>¡PEDIDO CANCELADO!</h2>
+            <h3>Hola {CustomerName}, te informamos que se canceló el pedido, aquí puedes consultar los detalles. </h3>
+        </div>
+        <div style="display: inline-flex; width: 100%; height: 100%; align-items: center; ">
+            <div style="width: 40%">
+                <div class="divimage">
+                    {image}
+                </div>
+                <div style="font-size: xx-small;">
+                    Poniente: PREDIO RUSTICO No.13345 X JACINTO CANEK Y ANILLO PERIFERICO FRACC JACINTO CANEL C.P. 37227 MÉRIDA, YUCATÁN MATRIZ: CALLE 7No. 36 X 12 Y 22 COLONIA MELCHOR OCAMPO II CP. 37165 MÉRIDA, YUCATÁN RFC: BBE790827ALA
+                </div>
+            </div>
+            <div style="width: 60%; margin-left: 10px; margin-top: 10px; margin-bottom: 10px; border: double;">
+                <div class="cancelSale">
+                    PEDIDO CANCELADO
+                </div>
+                <table style="margin-left: 5px; margin-top: 10px; margin-bottom: 10px;">
+                    <tr>
+                        <td><strong>Fecha:</strong></td>
+                        <td>{Date}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cliente:</strong></td>
+                        <td>{CustomerFullName}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ruta:</strong></td>
+                        <td>{RouteAddress}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Vendedor:</strong></td>
+                        <td>{SellerName}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div style="text-align-last: right; font-size: smaller;">
+            FAVOR DE VERIFICAR ENTREGA COMPLETA DE PRODUCTOS Y CANTIDADES
+        </div>
+        <div style="border: double; background-color: lightgray; text-align-last: center;">
+            <strong>Pedido</strong>
+        </div>
+
+        <div style="width: 100%; margin-top: 5px; margin-bottom: 5px; margin-left: 20%;">
+            <div style="width: 75%; text-align: right;">
+                <strong>Fecha de entrega: &nbsp;&nbsp;&nbsp;{DeliveryDate}</strong>
+            </div>
+        </div>
+
+        <div>
+
+            <table style="margin-left: 10px;margin-top: 10px;margin-bottom: 10px; width: 100%;">
+                <tr>
+                    <th style="text-align: left;width:400px"><strong>Producto</strong></th>
+                    <th style="text-align: left;width:100px"><strong>Cantidad</strong></th>
+                    <th style="text-align: left;width:100px"><strong>Precio</strong></th>
+                    <th style="text-align: left;width:100px"><strong>Total</strong></th>
+                </tr>
+                {TdBody}
+            </table>
+
+        </div>
+
+        <div style="width: 100%; display:inline-flex">
+            <div style="width: 35%; height: 10px;">
+
+            </div>
+            <div style="width: 65%; margin-left: 10px; margin-top: 10px; margin-bottom: 10px;">
+                <table style="width: 100%">
+                    <tr>
+                        <td>Total de productos solicitados:</td>
+                        <td class="right">{TotalProductsSold}</td>
+                    </tr>
+                    <tr>
+                        <td>Total:</td>
+                        <td class="right">{TotalPrice}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div style="width: 100%; font-size: xx-small;">
+            * Los precios pueden variar sin previo aviso
+        </div>
+        <br />
+        <div id='reference_code'>
+            Comparte éste código {ReferenceCode} y gana puntos cuando se registren
+        </div>
+        <div style="text-align: center; margin-bottom: 5px;">
+            ¡Gracias por tu preferencia!
+        </div>
+        <br />
+        <!--<div style="text-align: center; margin-bottom: 5px;">
+        Tu opinión es muy importante para nosotros y nos ayuda a mejorar, te invitamos a responder esta breve encuesta: <a href="http://www.bepensaentuhogar.com/">http://www.bepensaentuhogar.com/</a>
+    </div>
+        <br />-->
+        <div style="text-align-last: center;">
+            Para más información comunícate al 800 000 AGUA (2482)
+        </div>
+    </div>
+</body>
+</html>

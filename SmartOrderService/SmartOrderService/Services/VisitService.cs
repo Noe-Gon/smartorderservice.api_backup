@@ -63,16 +63,6 @@ namespace SmartOrderService.Services
                 {
                     int order = data.order;
 
-                    //var customerAdditionalData = db.so_customer
-                    //    .Where(x => x.customerId == data.customerId)
-                    //    .Select(x => x.CustomerAdditionalData)
-                    //    .FirstOrDefault();
-
-                    //if (customerAdditionalData != null && customerAdditionalData.Count() != 0)
-                    //{
-                    //    continue;
-                    //}
-
                     if (inventory != null && inventory.status)
                     {
                         var delivery = db.so_delivery.Where(d => d.customerId == data.customerId && d.status && d.inventoryId == inventory.inventoryId).FirstOrDefault();
@@ -99,15 +89,6 @@ namespace SmartOrderService.Services
 
                 foreach (var otherVisit in customers)
                 {
-                    //var customerAdditionalData = db.so_customer
-                    //    .Where(x => x.customerId == otherVisit)
-                    //    .Select(x => x.CustomerAdditionalData)
-                    //    .FirstOrDefault();
-
-                    //if (customerAdditionalData != null && customerAdditionalData.Count() != 0)
-                    //{
-                    //    continue;
-                    //}
 
                     if (routeVisits.Select(rv => rv.customerId).Contains(otherVisit))
                     {
@@ -204,7 +185,7 @@ namespace SmartOrderService.Services
             var impulsor = inventoryService.SearchDrivingId(userId);
 
             if (inventoryId == null || inventoryId == 0)
-                inventoryId = inventoryService.GetCurrentInventory(userId, null).inventoryId;
+                inventoryId = inventoryService.GetCurrentInventory(impulsor, null).inventoryId;
 
             var soUser = db.so_user.Where(u => u.userId == userId).FirstOrDefault();
             var date = DateTime.Today; 
