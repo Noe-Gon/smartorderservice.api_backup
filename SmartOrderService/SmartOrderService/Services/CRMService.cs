@@ -135,7 +135,7 @@ namespace SmartOrderService.Services
             var organizationUri = String.Empty;
             using (var discoveryProxy = GetProxy<IDiscoveryService, DiscoveryServiceProxy>(serviceManagement, authCredentials))
             {
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
                 if (discoveryProxy != null)
                 {
                     var orgs = DiscoverOrganizations(discoveryProxy);
