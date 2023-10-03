@@ -20,7 +20,19 @@ namespace SmartOrderService.Services
         {
             try
             {
-                return UoWConsumer.IsSalePointRepository.Get(x => x.branchCode.Equals(branchCode)).FirstOrDefault();
+                var entity = UoWConsumer.IsSalePointRepository.Get(x => x.branchCode.Equals(branchCode)).FirstOrDefault();
+                if (entity == null)
+                {
+                    DateTime date = DateTime.Now;
+                    return new so_is_sale_point
+                    {
+                        branchCode = branchCode,
+                        isSalePoint = false,
+                        createdon = date,
+                        modifiedon = date
+                    };
+                }
+                return entity;
             }
             catch (Exception e)
             {
