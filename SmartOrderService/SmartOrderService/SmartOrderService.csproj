@@ -347,6 +347,7 @@
     <Compile Include="CustomExceptions\NotFoundUsersConfigException.cs" />
     <Compile Include="CustomExceptions\NoUserFoundException.cs" />
     <Compile Include="CustomExceptions\InventoryRevisionException.cs" />
+    <Compile Include="CustomExceptions\Ope20Exception.cs" />
     <Compile Include="CustomExceptions\ProductNotFoundBillingException.cs" />
     <Compile Include="CustomExceptions\RegisterCustomerBillingException.cs" />
     <Compile Include="CustomExceptions\RelatedDriverNotFoundException.cs" />

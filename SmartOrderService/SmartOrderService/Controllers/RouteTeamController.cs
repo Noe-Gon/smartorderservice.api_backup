@@ -1,5 +1,7 @@
-﻿using SmartOrderService.CustomExceptions;
+﻿using Newtonsoft.Json;
+using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.DTO;
+using SmartOrderService.Models.Message;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;
 using System;
@@ -142,6 +144,13 @@ namespace SmartOrderService.Services
             {
                 RouteTeamService routeTeamService = new RouteTeamService();
                 response = Request.CreateResponse(HttpStatusCode.Accepted, ResponseBase<bool?>.Create(routeTeamService.CheckWorkDayClosingStatusByWorkDay(workday)));
+            }
+            catch (Ope20Exception e)
+            {
+                var responseFormat = JsonConvert.DeserializeObject<Ope20MessageException>(e.Message);
+                response = Request.CreateResponse(HttpStatusCode.Conflict, ResponseBase<bool?>.Create(new List<string>() {
+                    "409", e.Message
+                }));
             }
             catch (EntityNotFoundException e)
             {

@@ -1,4 +1,5 @@
-﻿using SmartOrderService.CustomExceptions;
+﻿using Newtonsoft.Json;
+using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
 using SmartOrderService.Models.DTO;
 using SmartOrderService.Models.Enum;
@@ -458,34 +459,82 @@ namespace SmartOrderService.Services
         public void CloseInventoryOpe20(so_work_day workDay)
         {
             Ope20Service service = new Ope20Service();
-
+            //Impacto mencionado de la SC52
+            /*
             var inventories = db.so_route_team_travels_employees
                 .Join(db.so_inventory, rt => rt.inventoryId, inv => inv.inventoryId,
                 (rt, inv) => new { inv.code, rt.work_dayId, rt.routeId })
                 .Where(x => x.work_dayId == workDay.work_dayId)
                 .ToList();
+            */
+            var date = DateTime.Now;
+            
+            var inventories = db.so_inventory.Where(x => x.userId == workDay.userId && DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(date) && x.status).ToList();
+            var inventoriesNotClosed = inventories.Where(x => x.state != 2);
+            var routeTeam = db.so_route_team.Where(x => x.userId == workDay.userId).FirstOrDefault();
 
             if (inventories == null || inventories.Count == 0)
                 return;
 
-            int routeId = inventories.First().routeId;
+            int routeId = routeTeam.routeId;
             var routeBranchCode = db.so_route
                 .Where(x => routeId == x.routeId)
                 .Select(x => new { RouteCode = x.code, BranchCode = x.so_branch.code }).FirstOrDefault();
 
-            List<string> inventoryCodes = inventories.Select(x => x.code).Distinct().ToList();
-
             if (!service.IsCediInOpe20(routeBranchCode.BranchCode))
                 return;
 
-            foreach (var inventoryCode in inventoryCodes)
+            var inventoriesFailed = new List<int>();
+            var ope20Errors = new List<string>();
+
+            foreach (var inventory in inventories)
             {
-                service.CloseRouteNotification(new CloseRouteNotificationRequest()
+                try
                 {
-                    BranchCode = routeBranchCode.BranchCode,
-                    RouteCode = routeBranchCode.RouteCode,
-                    LoadID = inventoryCode
-                });
+                    service.CloseRouteNotification(new CloseRouteNotificationRequest()
+                    {
+                        BranchCode = routeBranchCode.BranchCode,
+                        RouteCode = routeBranchCode.RouteCode,
+                        LoadID = inventory.code
+                    });
+                }
+                catch (Exception e)
+                {
+                    inventoriesFailed.Add(inventory.inventoryId);
+                    ope20Errors.Add(e.Message);
+                }
+            }
+
+            var inventoriesId = inventories.Select(x => x.inventoryId).ToList();
+            var routeTeamTravelsEmployees = db.so_route_team_travels_employees.Where(x => inventoriesId.Contains(x.inventoryId)).ToList();
+
+            var dateModified = DateTime.Now;
+            foreach (var inventory in inventoriesNotClosed)
+            {
+                if (!inventoriesFailed.Contains(inventory.inventoryId))
+                {
+                    inventory.state = 2;
+                    inventory.modifiedon = dateModified;
+                    //Se hace por medio de una lista debido a que puede existir tanto la del impulsor y ayudante en registros
+                    var travelsEmployees = routeTeamTravelsEmployees.Where(x => x.inventoryId == inventory.inventoryId).ToList();
+                    foreach (var travelEmployeeToUpdate in travelsEmployees)
+                    {
+                        travelEmployeeToUpdate.active = false;
+                        travelEmployeeToUpdate.modifiedon = dateModified;
+                    }
+                }
+            }
+
+            db.SaveChanges();
+
+            if (inventoriesFailed.Count > 0)
+            {
+                string inventoriesFailedStr = string.Join(",", inventoriesFailed);
+                throw new Ope20Exception(JsonConvert.SerializeObject(new Ope20MessageException
+                {
+                    Message = $"No se han podido cerrar las siguientes cargas en Ope20: {inventoriesFailedStr}",
+                    Ope20Errors = ope20Errors
+                }));
             }
         }
     }
