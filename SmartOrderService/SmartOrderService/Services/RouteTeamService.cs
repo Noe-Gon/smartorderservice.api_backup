@@ -306,7 +306,7 @@ namespace SmartOrderService.Services
             return true;
         }
 
-        public bool CheckWorkDayClosingStatusByWorkDay(Workday workDay)
+        public bool CheckWorkDayClosingStatusByWorkDay(Workday workDay, string version = "v2")
         {
 
             ERolTeam userRole = roleTeamService.GetUserRole(workDay.UserId);
@@ -330,7 +330,10 @@ namespace SmartOrderService.Services
             if (userTravel > 0)
                 return false;
 
-            CloseInventoryOpe20(workDayCurrent);
+            if (version == "v3")
+            {
+                CloseInventoryOpe20(workDayCurrent);
+            }
 
             if (workDay.CheckBillpocket)
                 return ChalBillPocketReportForAllUsers(workDay.WorkdayId, workDay.UserId);

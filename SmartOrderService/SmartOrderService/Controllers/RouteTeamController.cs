@@ -141,7 +141,39 @@ namespace SmartOrderService.Services
             try
             {
                 RouteTeamService routeTeamService = new RouteTeamService();
-                response = Request.CreateResponse(HttpStatusCode.Accepted, ResponseBase<bool?>.Create(routeTeamService.CheckWorkDayClosingStatusByWorkDay(workday)));
+                response = Request.CreateResponse(HttpStatusCode.Accepted, routeTeamService.CheckWorkDayClosingStatusByWorkDay(workday));
+            }
+            catch (EntityNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Forbidden, false);
+            }
+            catch (BillpocketReportException e)
+            {
+                response = Request.CreateResponse((HttpStatusCode)420, false);
+            }
+            catch (ExternalAPIException e)
+            {
+                response = Request.CreateResponse((HttpStatusCode)421, false);
+            }
+            catch (WorkdayNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, false);
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, false);
+            }
+            return response;
+        }
+
+        [HttpPost, Route("api/v3/routeam/workdayclosestatus")]
+        public HttpResponseMessage CheckWorkDayClosingStatusByWorkDayv3([FromBody] Workday workday)
+        {
+            HttpResponseMessage response;
+            try
+            {
+                RouteTeamService routeTeamService = new RouteTeamService();
+                response = Request.CreateResponse(HttpStatusCode.Accepted, ResponseBase<bool?>.Create(routeTeamService.CheckWorkDayClosingStatusByWorkDay(workday, "v3")));
             }
             catch (EntityNotFoundException e)
             {
