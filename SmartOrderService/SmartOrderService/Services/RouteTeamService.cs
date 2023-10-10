@@ -1,8 +1,10 @@
-﻿using SmartOrderService.CustomExceptions;
+﻿using Newtonsoft.Json;
+using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
 using SmartOrderService.Models.DTO;
 using SmartOrderService.Models.Enum;
 using SmartOrderService.Models.Responses;
+using SmartOrderService.Models.Message;
 using SmartOrderService.Utils;
 using System;
 using System.Collections.Generic;
@@ -315,6 +317,7 @@ namespace SmartOrderService.Services
             }
             return true;
             */
+            
             int impulsorId = SearchDrivingId(userId);
             so_work_day workDay = GetWorkdayByUserAndDate(impulsorId, DateTime.Today);
 
@@ -325,10 +328,11 @@ namespace SmartOrderService.Services
             {
                 return false;
             }
+
             return true;
         }
 
-        public bool CheckWorkDayClosingStatusByWorkDay(Workday workDay)
+        public bool CheckWorkDayClosingStatusByWorkDay(Workday workDay, string version = "v2")
         {
 
             ERolTeam userRole = roleTeamService.GetUserRole(workDay.UserId);
@@ -351,9 +355,16 @@ namespace SmartOrderService.Services
 
             if (userTravel > 0)
                 return false;
-            
-            if(workDay.CheckBillpocket)
+
+            if (version == "v3")
+            {
+                CloseInventoryOpe20(workDayCurrent);
+            }
+
+            if (workDay.CheckBillpocket)
                 return ChalBillPocketReportForAllUsers(workDay.WorkdayId, workDay.UserId);
+
+            
 
             return true;
         }
@@ -489,6 +500,81 @@ namespace SmartOrderService.Services
                 throw new EntityNotFoundException("No se encontró equipo para esa ruta");
 
             return ResponseBase<List<GetRouteTeamResponse>>.Create(routeTeams);
+        }
+
+        public void CloseInventoryOpe20(so_work_day workDay)
+        {
+            Ope20Service service = new Ope20Service();
+
+            var date = DateTime.Now;
+            
+            var inventories = db.so_inventory.Where(x => x.userId == workDay.userId && DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(date) && x.status).ToList();
+            var inventoriesNotClosed = inventories.Where(x => x.state != 2).ToList();
+            var routeTeam = db.so_route_team.Where(x => x.userId == workDay.userId).FirstOrDefault();
+
+            if (inventories == null || inventories.Count == 0)
+                return;
+
+            int routeId = routeTeam.routeId;
+            var routeBranchCode = db.so_route
+                .Where(x => routeId == x.routeId)
+                .Select(x => new { RouteCode = x.code, BranchCode = x.so_branch.code }).FirstOrDefault();
+
+            if (!service.IsCediInOpe20(routeBranchCode.BranchCode))
+                return;
+
+            var inventoriesFailed = new List<int>();
+            var ope20Errors = new List<string>();
+
+            foreach (var inventory in inventories)
+            {
+                try
+                {
+                    service.CloseRouteNotification(new CloseRouteNotificationRequest()
+                    {
+                        BranchCode = routeBranchCode.BranchCode,
+                        RouteCode = routeBranchCode.RouteCode,
+                        LoadID = inventory.code
+                    });
+                }
+                catch (Exception e)
+                {
+                    inventoriesFailed.Add(inventory.inventoryId);
+                    ope20Errors.Add(e.Message);
+                }
+            }
+
+            var inventoriesId = inventories.Select(x => x.inventoryId).ToList();
+            var routeTeamTravelsEmployees = db.so_route_team_travels_employees.Where(x => inventoriesId.Contains(x.inventoryId)).ToList();
+
+            var dateModified = DateTime.Now;
+            foreach (var inventory in inventoriesNotClosed)
+            {
+                if (!inventoriesFailed.Contains(inventory.inventoryId))
+                {
+                    inventory.state = 2;
+                    inventory.modifiedon = dateModified;
+                    //Se hace por medio de una lista debido a que puede existir tanto la del impulsor y ayudante en registros
+                    var travelsEmployees = routeTeamTravelsEmployees.Where(x => x.inventoryId == inventory.inventoryId).ToList();
+                    foreach (var travelEmployeeToUpdate in travelsEmployees)
+                    {
+                        travelEmployeeToUpdate.active = false;
+                        travelEmployeeToUpdate.modifiedon = dateModified;
+                    }
+                }
+            }
+
+            db.SaveChanges();
+
+            if (inventoriesFailed.Count > 0)
+            {
+                string inventoriesFailedStr = string.Join(",", inventoriesFailed);
+                throw new Ope20Exception(JsonConvert.SerializeObject(new Ope20MessageException
+                {
+                    Message = $"No se han podido cerrar las siguientes cargas en Ope20: {inventoriesFailedStr}",
+                    Ope20Errors = ope20Errors
+                }));
+            }
         }
     }
 }

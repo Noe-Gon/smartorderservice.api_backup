@@ -190,6 +190,8 @@ namespace SmartOrderService.DB
 
         public virtual DbSet<so_liquidation_log> so_liquidation_logs { get; set; }
 
+        public virtual DbSet<so_is_sale_point> so_is_sale_point { get; set; }
+
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<so_role_team>()

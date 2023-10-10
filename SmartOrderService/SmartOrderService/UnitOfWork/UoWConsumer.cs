@@ -62,6 +62,8 @@ namespace SmartOrderService.UnitOfWork
             RouteTeamTravlesEmployeesRepository = new GenericRepository<so_route_team_travels_employees>(Context);
             PromotionArticleMovementRepository = new GenericRepository<so_promotion_article_movement>(Context);
             ArticlePromotionalRouteRepository = new GenericRepository<so_article_promotional_route>(Context);
+            IsSalePointRepository = new GenericRepository<so_is_sale_point>(Context);
+            //RouteCustomerVarioRepository = new GenericRepository<so_route_customer_vario>(Context);
         }
 
         public SmartOrderModel Context { get; set; }
@@ -110,6 +112,8 @@ namespace SmartOrderService.UnitOfWork
         public GenericRepository<so_synchronized_consumer_detail> SynchronizedConsumerDetailsRepository { get; set; }
         public GenericRepository<so_promotion_article_movement> PromotionArticleMovementRepository { get; set; }
         public GenericRepository<so_article_promotional_route> ArticlePromotionalRouteRepository { get; set; }
+        public GenericRepository<so_is_sale_point> IsSalePointRepository { get; set; }
+        //public GenericRepository<so_route_customer_vario> RouteCustomerVarioRepository { get; set; }
 
         public void Save()
         {

@@ -57,7 +57,7 @@ namespace SmartOrderService.Services
 
             if (routeTeam == null)
                 throw new EntityNotFoundException("El usuario no esta asignado a un equipo");
-            bool inTripulacs = false;
+
             List<string> exceptionMessages = new List<string>();
             //Notificar a la API
             try
@@ -93,7 +93,6 @@ namespace SmartOrderService.Services
                     if (response == "\"{\\\"errors\\\":[]}\"")
                     {
                         //Lógica del fallo con el registro en tripulacs
-                        inTripulacs = true;
                         if (ayudanteCode != null)
                         {
                             ayudante.Status = true;
@@ -136,7 +135,6 @@ namespace SmartOrderService.Services
                     if (impulsor != null)
                     {
                         //Lógica del fallo con el registro en tripulacs
-                        inTripulacs = true;
                         var impulsorCode = impulsor.UserCode;
                         requestNotify.auxiliarid = Convert.ToInt32(request.EmployeeCode);
                         requestNotify.impulsorId = Convert.ToInt32(impulsorCode);
@@ -147,7 +145,6 @@ namespace SmartOrderService.Services
                         if (response == "\"{\\\"errors\\\":[]}\"")
                         {
                             //Lógica del fallo con el registro en tripulacs
-                            inTripulacs = true;
                         }
                         if (response == "\"{\\\"errors\\\":[{\\\"error\\\":9001,\\\"message\\\":\\\"No existe la tripulación configurada para la ruta " + routeBranch.Route.code + ".\\\"}]}\"")
                         {
@@ -188,7 +185,7 @@ namespace SmartOrderService.Services
                     CreatedDate = DateTime.Now,
                     LeaderCode = null,
                     ModifiedDate = null,
-                    Status = inTripulacs,
+                    Status = true,
                     RouteId = routeBranch.Route.routeId,
                     UserCode = request.EmployeeCode,
                     UserId = user.userId,
@@ -323,14 +320,14 @@ namespace SmartOrderService.Services
                         throw new UserInUseException("El usuario inicio sesión con otro codigo de empleado");
                 }
             
-            bool inTripulacs = false;
             List<string> exceptionMessages = new List<string>();
-
+            var serviceOpe20 = new Ope20Service();
             //Notificar a la API
             try
             {
                 var requestNotify = new NotifyWorkdayRequest();
                 //Si es impulsor
+                var isSalePointService = IsSalePointService.Create();
                 if (routeTeam.roleTeamId == (int)ERolTeam.Impulsor)
                 {
                     //Buscar si el ayudante se autenticó antes que el impulsor para registrarlo. 
@@ -346,20 +343,56 @@ namespace SmartOrderService.Services
 
                     string ayudanteCode = ayudante != null ? ayudante.UserCode : null;
 
-                    requestNotify.auxiliarid = Convert.ToInt32(ayudanteCode);
-                    requestNotify.impulsorId = Convert.ToInt32(request.EmployeeCode);
-                    requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
-                    requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
-
-                    var response = NotifyWorkday(requestNotify);
-                    if (response == "\"{\\\"errors\\\":[]}\"")
+                    if (serviceOpe20.IsCediInOpe20(routeBranch.Branch.code))
                     {
-                        //Lógica del fallo con el registro en tripulacs
-                        inTripulacs = true;
-                        if (ayudanteCode != null)
+                        User impulsor = new User()
                         {
-                            ayudante.Status = true;
-                            UoWConsumer.AuthentificationLogRepository.Update(ayudante);
+                            CollaboratorCode = request.EmployeeCode
+                        };
+
+                        User ayudante1 = ayudante == null ? null : new User()
+                        {
+                            CollaboratorCode = ayudanteCode
+                        };
+
+                        if (isSalePointService.GetIsSalePoint(routeBranch.Branch.code).isSalePoint)
+                        {
+                            serviceOpe20.CallCrewOpe20(new CrewOpe20Request()
+                            {
+                                SalesMan = impulsor,
+                                Assistant1 = ayudante1,
+                                RouteCode = routeBranch.Route.code,
+                                OperationDate = DateTime.Now,
+                                PosId = routeBranch.Branch.code
+                            });
+                        }
+                        else
+                        {
+                            serviceOpe20.CallCrewOpe20(new CrewOpe20Request()
+                            {
+                                SalesMan = impulsor,
+                                Assistant1 = ayudante1,
+                                RouteCode = routeBranch.Route.code,
+                                OperationDate = DateTime.Now,
+                                BusinessUnitId = Int32.Parse(routeBranch.Branch.code)
+                            });
+                        }
+                    }
+                    else {
+                        requestNotify.auxiliarid = Convert.ToInt32(ayudanteCode);
+                        requestNotify.impulsorId = Convert.ToInt32(request.EmployeeCode);
+                        requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
+                        requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
+
+                        var response = NotifyWorkday(requestNotify);
+                        if (response == "\"{\\\"errors\\\":[]}\"")
+                        {
+                            //Lógica del fallo con el registro en tripulacs
+                            if (ayudanteCode != null)
+                            {
+                                ayudante.Status = true;
+                                UoWConsumer.AuthentificationLogRepository.Update(ayudante);
+                            }
                         }
                     }
                 }
@@ -390,35 +423,72 @@ namespace SmartOrderService.Services
                         throw new WorkdayNotFoundException("No se encontró el Work Day del impulsor.");
                     }
 
-
                     var impulsor = UoWConsumer.AuthentificationLogRepository
                         .Get(x => !x.WasLeaderCodeAuthorization && DbFunctions.TruncateTime(x.CreatedDate) == DbFunctions.TruncateTime(DateTime.Now)
                                     && x.UserId == impulsorId && x.RouteId == request.RouteId)
                         .FirstOrDefault();
+
                     if (impulsor != null)
                     {
                         //Lógica del fallo con el registro en tripulacs
-                        inTripulacs = true;
                         var impulsorCode = impulsor.UserCode;
-                        requestNotify.auxiliarid = Convert.ToInt32(request.EmployeeCode);
-                        requestNotify.impulsorId = Convert.ToInt32(impulsorCode);
-                        requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
-                        requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
 
-                        var response = NotifyWorkday(requestNotify);
-                        if (response == "\"{\\\"errors\\\":[]}\"")
+                        if (serviceOpe20.IsCediInOpe20(routeBranch.Branch.code)) 
                         {
-                            //Lógica del fallo con el registro en tripulacs
-                            inTripulacs = true;
+                            User saleMan = new User()
+                            {
+                                CollaboratorCode = impulsorCode
+                            };
+
+                            User ayudante1 = new User()
+                            {
+                                CollaboratorCode = request.EmployeeCode
+                            };
+
+                            if (isSalePointService.GetIsSalePoint(routeBranch.Branch.code).isSalePoint)
+                            {
+                                serviceOpe20.CallCrewOpe20(new CrewOpe20Request()
+                                {
+                                    SalesMan = saleMan,
+                                    Assistant1 = ayudante1,
+                                    RouteCode = routeBranch.Route.code,
+                                    OperationDate = DateTime.Now,
+                                    PosId = routeBranch.Branch.code
+                                });
+                            }
+                            else
+                            {
+                                serviceOpe20.CallCrewOpe20(new CrewOpe20Request()
+                                {
+                                    SalesMan = saleMan,
+                                    Assistant1 = ayudante1,
+                                    RouteCode = routeBranch.Route.code,
+                                    OperationDate = DateTime.Now,
+                                    BusinessUnitId = Int32.Parse(routeBranch.Branch.code)
+                                });
+                            }
                         }
-                        if (response == "\"{\\\"errors\\\":[{\\\"error\\\":9001,\\\"message\\\":\\\"No existe la tripulación configurada para la ruta " + routeBranch.Route.code + ".\\\"}]}\"")
+                        else
                         {
-                            exceptionMessages.Add("No se encuentra configurada la ruta en tripulacs");
-                            //throw new NoRouteConfigTripulacsException("No se encuentra configurada la ruta en tripulacs");
-                        }
-                        if (response == "\"{\\\"errors\\\":[{\\\"error\\\":404,\\\"message\\\":\\\"El id del impulsor no es válido\\\"}]}\"")
-                        {
-                            exceptionMessages.Add("El id del impulsor no es válido");
+                            requestNotify.auxiliarid = Convert.ToInt32(request.EmployeeCode);
+                            requestNotify.impulsorId = Convert.ToInt32(impulsorCode);
+                            requestNotify.routeId = Convert.ToInt32(routeBranch.Route.code);
+                            requestNotify.posId = Convert.ToInt32(routeBranch.Branch.code);
+
+                            var response = NotifyWorkday(requestNotify);
+                            if (response == "\"{\\\"errors\\\":[]}\"")
+                            {
+                                //Lógica del fallo con el registro en tripulacs
+                            }
+                            if (response == "\"{\\\"errors\\\":[{\\\"error\\\":9001,\\\"message\\\":\\\"No existe la tripulación configurada para la ruta " + routeBranch.Route.code + ".\\\"}]}\"")
+                            {
+                                exceptionMessages.Add("No se encuentra configurada la ruta en tripulacs");
+                                //throw new NoRouteConfigTripulacsException("No se encuentra configurada la ruta en tripulacs");
+                            }
+                            if (response == "\"{\\\"errors\\\":[{\\\"error\\\":404,\\\"message\\\":\\\"El id del impulsor no es válido\\\"}]}\"")
+                            {
+                                exceptionMessages.Add("El id del impulsor no es válido");
+                            }
                         }
                     }
                     else
@@ -450,7 +520,7 @@ namespace SmartOrderService.Services
                 CreatedDate = DateTime.Now,
                 LeaderCode = null,
                 ModifiedDate = null,
-                Status = inTripulacs,
+                Status = true,
                 RouteId = routeBranch.Route.routeId,
                 UserCode = request.EmployeeCode,
                 UserId = user.userId,

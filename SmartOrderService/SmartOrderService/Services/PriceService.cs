@@ -56,7 +56,7 @@ namespace SmartOrderService.Services
             return prices;
         }
 
-        public List<PriceDto> getPricesByCustomerBranchv2(int CustomerId, int routeId, int BranchId, DateTime updated, List<int> productsIds, List<PriceDto> MasterPrices, so_branch_tax branch_tax)
+        public List<PriceDto> getPricesByCustomerBranchv2(int CustomerId, int routeId, int BranchId, DateTime updated, List<int> productsIds, List<PriceDto> MasterPrices, so_branch_tax branch_tax, bool vario = false)
         {
             List<PriceDto> prices = new List<PriceDto>();
 
@@ -102,7 +102,22 @@ namespace SmartOrderService.Services
 
             if (priceList != null)
             {
-                var priceDetails = db.so_price_list_products_detail
+                if (vario)
+                {
+                    var priceDetails = db.so_price_list_products_detail
+                   .Where(
+                        p => p.products_price_listId.Equals(priceList.PriceListId)
+                        && p.status
+                        && p.so_product.type == 1
+                        && p.so_product.status
+                    ).
+                    ToArray();
+
+                    prices.AddRange(Mapper.Map<so_price_list_products_detail[], List<PriceDto>>(priceDetails));
+                }
+                else
+                {
+                    var priceDetails = db.so_price_list_products_detail
                    .Where(
                         p => p.products_price_listId.Equals(priceList.PriceListId)
                         && p.status
@@ -112,10 +127,17 @@ namespace SmartOrderService.Services
                     ).
                     ToArray();
 
-                prices.AddRange(Mapper.Map<so_price_list_products_detail[], List<PriceDto>>(priceDetails));
+                    prices.AddRange(Mapper.Map<so_price_list_products_detail[], List<PriceDto>>(priceDetails));
+                }
             }
-
-            prices = MergePrices(MasterPrices, prices, branch_tax);
+            if (vario)
+            {
+                prices = MergePrices(MasterPrices, prices, branch_tax, true);
+            }
+            else
+            {
+                prices = MergePrices(MasterPrices, prices, branch_tax);
+            }
 
             return prices;
         }
@@ -191,11 +213,18 @@ namespace SmartOrderService.Services
             so_branch_tax branch_tax = db.so_branch_tax.FirstOrDefault(x => x.branchId == BranchId && x.status);
 
             var MasterPrices = getPricesByBranch(BranchId, updated, productsIds);
+            var MasterPricesAll = getPricesByBranch(BranchId, updated, productsIds, true);
 
             var CustomerList = db.so_delivery.Where(d => d.inventoryId.Equals(InventoryId) && d.status).Select(c => c.customerId).ToList();
 
             var soUser = db.so_inventory.Where(i => i.inventoryId == InventoryId).FirstOrDefault().so_user;
             var route = db.so_user_route.Where(ur => ur.userId == soUser.userId && ur.status).FirstOrDefault();
+
+            var customerVario = db.so_customer.Where(x => x.name == "cliente_vario" && x.status).ToList();
+            var routeCustomer = customerVario.Where(x => x.so_route_customer.FirstOrDefault().routeId == route.routeId).FirstOrDefault();
+
+            var vario = routeCustomer.customerId;
+
 
             if (soUser.type == so_user.POAC_TYPE || soUser.type == so_user.CCEH_TYPE)
             {
@@ -224,10 +253,18 @@ namespace SmartOrderService.Services
 
             foreach (var Customer in CustomerList)
             {
+                if (Customer == vario)
+                {
+                    List<PriceDto> prices = getPricesByCustomerBranchv2(Customer, route.routeId, BranchId, updated, productsIds, MasterPricesAll, branch_tax, true);
 
-                List<PriceDto> prices = getPricesByCustomerBranchv2(Customer, route.routeId, BranchId, updated, productsIds, MasterPrices, branch_tax);
+                    PriceList.Add(new PriceList() { Prices = prices, CustomerId = Customer });
+                }
+                else
+                {
+                    List<PriceDto> prices = getPricesByCustomerBranchv2(Customer, route.routeId, BranchId, updated, productsIds, MasterPrices, branch_tax);
 
-                PriceList.Add(new PriceList() { Prices = prices, CustomerId = Customer });
+                    PriceList.Add(new PriceList() { Prices = prices, CustomerId = Customer });
+                }
 
             }
 
@@ -277,7 +314,7 @@ namespace SmartOrderService.Services
             return prices;
         }
 
-        public List<PriceDto> MergePrices(List<PriceDto> Master, List<PriceDto> CustomerPrices, so_branch_tax BranchTax)
+        public List<PriceDto> MergePrices(List<PriceDto> Master, List<PriceDto> CustomerPrices, so_branch_tax BranchTax, bool isVario = false)
         {
 
             foreach (var price in CustomerPrices)
@@ -291,14 +328,15 @@ namespace SmartOrderService.Services
             var filtered = Master.Where(p => !ids.Contains(p.ProductId)).ToList();
 
             CustomerPrices = SetTaxes(BranchTax, CustomerPrices);
-
-            CustomerPrices.AddRange(filtered);
-
+            if (!isVario)
+            {
+                CustomerPrices.AddRange(filtered);
+            }
 
             return CustomerPrices;
         }
 
-        public List<PriceDto> getPricesByBranch(int BranchId, DateTime updated, List<int> ProductsIds)
+        public List<PriceDto> getPricesByBranch(int BranchId, DateTime updated, List<int> ProductsIds, bool all = false)
         {
 
             List<PriceDto> prices;
@@ -315,7 +353,24 @@ namespace SmartOrderService.Services
 
             if (priceList != null)
             {
-                var priceDetails = db.so_price_list_products_detail
+                if (all)
+                {
+                    var priceDetails = db.so_price_list_products_detail
+                   .Where(
+                        p => p.products_price_listId.Equals(priceList.PriceListId)
+                        && p.status
+                        && p.so_product.type == 1
+                        && p.so_product.status
+                    ).
+                    ToArray();
+
+                    prices = Mapper.Map<so_price_list_products_detail[], List<PriceDto>>(priceDetails);
+
+                    prices = SetTaxes(branch_tax, prices);
+                }
+                else
+                {
+                    var priceDetails = db.so_price_list_products_detail
                    .Where(
                         p => p.products_price_listId.Equals(priceList.PriceListId)
                         && p.status
@@ -325,10 +380,10 @@ namespace SmartOrderService.Services
                     ).
                     ToArray();
 
-                prices = Mapper.Map<so_price_list_products_detail[], List<PriceDto>>(priceDetails);
+                    prices = Mapper.Map<so_price_list_products_detail[], List<PriceDto>>(priceDetails);
 
-                prices = SetTaxes(branch_tax, prices);
-
+                    prices = SetTaxes(branch_tax, prices);
+                }
             }
             else
             {

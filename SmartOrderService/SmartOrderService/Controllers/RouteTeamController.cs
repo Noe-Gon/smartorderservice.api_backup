@@ -1,5 +1,7 @@
-﻿using SmartOrderService.CustomExceptions;
+﻿using Newtonsoft.Json;
+using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.DTO;
+using SmartOrderService.Models.Message;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;
 using System;
@@ -127,6 +129,10 @@ namespace SmartOrderService.Services
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict,false);
             }
+            catch (ExternalAPIException e)
+            {
+                response = Request.CreateResponse((HttpStatusCode)420, false);
+            }
             catch (Exception e)
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict, false);
@@ -150,6 +156,10 @@ namespace SmartOrderService.Services
             catch (BillpocketReportException e)
             {
                 response = Request.CreateResponse((HttpStatusCode)420, false);
+            }
+            catch (ExternalAPIException e)
+            {
+                response = Request.CreateResponse((HttpStatusCode)421, false);
             }
             catch (WorkdayNotFoundException e)
             {
@@ -196,6 +206,64 @@ namespace SmartOrderService.Services
                     "Error interno", e.Message
                 }));
             }
+        }
+
+        [HttpPost, Route("api/v3/routeam/workdayclosestatus")]
+        public HttpResponseMessage CheckWorkDayClosingStatusByWorkDayv3([FromBody] Workday workday)
+        {
+            HttpResponseMessage response;
+            try
+            {
+                RouteTeamService routeTeamService = new RouteTeamService();
+                response = Request.CreateResponse(HttpStatusCode.Accepted, ResponseBase<bool?>.Create(routeTeamService.CheckWorkDayClosingStatusByWorkDay(workday, "v3")));
+            }
+            catch (Ope20Exception e)
+            {
+                var responseFormat = JsonConvert.DeserializeObject<Ope20MessageException>(e.Message);
+                response = Request.CreateResponse(HttpStatusCode.Conflict, ResponseBase<bool?>.Create(new List<string>() {
+                    e.Message
+                }));
+            }
+            catch (EntityNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Forbidden, ResponseBase<bool?>.Create(new List<string>() {
+                    "No es posible cerrar jornada, enviar reporte de BillPocket"
+                }));
+            }
+            catch (BillpocketReportException e)
+            {
+                response = Request.CreateResponse((HttpStatusCode)420, ResponseBase<bool?>.Create(new List<string>() {
+                    "No fue posible cerrar la sesión. Algún usuario no ha enviado el reporte de Billpocket"
+                }));
+            }
+            catch (ExternalAPIException e)
+            {
+                response = Request.CreateResponse((HttpStatusCode)421, ResponseBase<bool?>.Create(new List<string>() {
+                    e.Message
+                }));
+            }
+            catch (WorkdayNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, ResponseBase<bool?>.Create(new List<string>() {
+                    e.Message
+                }));
+            }
+            catch (Exception e)
+            {
+                if (e == null || string.IsNullOrEmpty(e.Message))
+                {
+                    response = Request.CreateResponse(HttpStatusCode.Conflict, ResponseBase<bool?>.Create(new List<string>() {
+                        "Error no identificado, contacte al servidor"
+                    }));
+                }
+                else
+                {
+                    response = Request.CreateResponse(HttpStatusCode.Conflict, ResponseBase<bool?>.Create(new List<string>() {
+                        e.Message
+                    }));
+                }
+            }
+            return response;
         }
 
         // GET api/<controller>

@@ -1251,6 +1251,11 @@ namespace SmartOrderService.Services
 
         public void CallLoadInventoryProcess(int userId, string branchCode, string routeCode, DateTime? deliveryDate)
         {
+            Ope20Service service = new Ope20Service();
+
+            if (service.IsCediInOpe20(branchCode))
+                return;
+
             if (deliveryDate == null)
                 deliveryDate = DateTime.Now;
 

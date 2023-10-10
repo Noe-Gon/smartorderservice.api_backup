@@ -352,6 +352,7 @@
     <Compile Include="CustomExceptions\NotFoundUsersConfigException.cs" />
     <Compile Include="CustomExceptions\NoUserFoundException.cs" />
     <Compile Include="CustomExceptions\InventoryRevisionException.cs" />
+    <Compile Include="CustomExceptions\Ope20Exception.cs" />
     <Compile Include="CustomExceptions\ProductNotFoundBillingException.cs" />
     <Compile Include="CustomExceptions\RegisterCustomerBillingException.cs" />
     <Compile Include="CustomExceptions\RelatedDriverNotFoundException.cs" />
@@ -457,6 +458,7 @@
     <Compile Include="DB\so_invoice_opefactura.cs" />
     <Compile Include="DB\so_liquidation_log.cs" />
     <Compile Include="DB\so_liquidation_log_status.cs" />
+    <Compile Include="DB\so_is_sale_point.cs" />
     <Compile Include="DB\so_leader_authorization_code.cs" />
     <Compile Include="DB\so_loan_order.cs" />
     <Compile Include="DB\so_loan_sale.cs" />
@@ -668,6 +670,7 @@
     <Compile Include="Models\Locks\SaleTeamLock.cs" />
     <Compile Include="Models\Locks\WorkdayLock.cs" />
     <Compile Include="Models\Message\BillPocketMessage.cs" />
+    <Compile Include="Models\Message\Ope20Message.cs" />
     <Compile Include="Models\Message\BranchMessage.cs" />
     <Compile Include="Models\Message\InventoryMessage.cs" />
     <Compile Include="Models\Message\SaleModels.cs" />
@@ -758,6 +761,8 @@
     <Compile Include="Services\EmailService.cs" />
     <Compile Include="Services\LiquidationService.cs" />
     <Compile Include="Services\LoyaltyEnsitechService.cs" />
+    <Compile Include="Services\IsSalePointService.cs" />
+    <Compile Include="Services\Ope20Service.cs" />
     <Compile Include="Services\RoleTeamService.cs" />
     <Compile Include="Services\RouteTeamInventoryAvailableService.cs" />
     <Compile Include="Services\RouteTeamService.cs" />
@@ -963,8 +968,8 @@
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
-    <Content Include="Web.config" />
     <Content Include="Scripts\jquery-1.10.2.min.map" />
+    <Content Include="Web.config" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
