@@ -13,5 +13,6 @@ namespace SmartOrderService.Models.DTO
         public decimal additional_cost { get; set; }
         public decimal amount_max_customer { get; set; }
         public string name_type_promotion { get; set; }
+        public int? type_promotionId { get; set; }
     }
 }

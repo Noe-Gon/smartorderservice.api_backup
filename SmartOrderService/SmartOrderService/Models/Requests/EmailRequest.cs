@@ -19,15 +19,20 @@ namespace SmartOrderService.Models.Requests
         public string CustomerName { get; set; }
         public string CustomerFullName { get; set; }
         public string CustomerEmail { get; set; }
+        public string CustomerReferenceCode { get; set; }
         public DateTime Date { get; set; }
         public string RouteAddress { get; set; }
         public string SellerName { get; set; }
         public string PaymentMethod { get; set; }
         public string CancelTicketLink { get; set; }
         public List<SendTicketDigitalEmailSales> Sales { get; set; }
+        public List<SendTicketDigitalEmailSalesWithPoints> SalesWithPoints { get; set; }
         public DataTable dtTicket { get; set; }
         public SendTicketDigitalEmailOrder Order { get; set; }
         public string ReferenceCode { get; set; }
+        public int AccumulatedPoints { get; set; }
+        public int WonPoints { get; set; }
+        public string ValidityPointsDates { get; set; }
     }
 
     public class SendTicketDigitalEmailOrder
@@ -85,6 +90,14 @@ namespace SmartOrderService.Models.Requests
         public int Amount { get; set; }
         public double UnitPrice { get; set; }
         public double TotalPrice { get; set; }
+    }
+
+    public class SendTicketDigitalEmailSalesWithPoints
+    {
+        public string ProductName { get; set; }
+        public int Amount { get; set; }
+        public int UnitPrice { get; set; }
+        public int TotalPrice { get; set; }
     }
 
     public class SendReactivationTicketDigitalRequest

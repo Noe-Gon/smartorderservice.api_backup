@@ -3,6 +3,7 @@ using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
 using SmartOrderService.Models.DTO;
 using SmartOrderService.Models.Enum;
+using SmartOrderService.Models.Responses;
 using SmartOrderService.Models.Message;
 using SmartOrderService.Utils;
 using System;
@@ -35,6 +36,18 @@ namespace SmartOrderService.Services
                 //Start Load Inventory Process OPCD
                 CallLoadInventoryProcess(userId);
                 //End Load Inventory Process
+                int impulsorId = SearchDrivingId(userId);
+
+                try
+                {
+                    if (IsSettlementSent(GetWorkdayByUserAndDate(impulsorId, DateTime.Now).work_dayId))
+                        throw new SettlementSentException();
+                }
+                catch (SettlementSentException e)
+                {
+                    throw e;
+                }
+                catch (Exception) { }
 
                 if (IsActualOpened(userId, inventory.inventoryId))
                     return true;
@@ -56,6 +69,7 @@ namespace SmartOrderService.Services
                 }
                 if (inventoryState == 0 && userRole == ERolTeam.Ayudante)
                     throw new InventoryNotOpenException();
+
                 return false;
             }
             catch (InventoryInProgressException)
@@ -75,6 +89,16 @@ namespace SmartOrderService.Services
                 throw new InventoryEmptyException();
             }
 
+        }
+
+        public bool IsSettlementSent(Guid workDayId)
+        {
+            var log = db.so_liquidation_logs
+                    .Where(x => x.WorkDayId == workDayId && x.ExecutionIdAws != null)
+                    .OrderByDescending(x => x.CreatedOn)
+                    .FirstOrDefault();
+
+            return log != null;
         }
 
         private bool IsActualOpened(int userId, int inventoryId)
@@ -114,6 +138,7 @@ namespace SmartOrderService.Services
 
             throw new InventoryNotClosedException();
         }
+
         public void CallLoadInventoryProcess(int userId)
         {
             var inventoryService = new InventoryService();
@@ -457,6 +482,24 @@ namespace SmartOrderService.Services
                 && i.roleTeamId == (int)ERolTeam.Impulsor
                 ).FirstOrDefault();
             return routeTeam;
+        }
+
+        public ResponseBase<List<GetRouteTeamResponse>> GetRouteTeam(int routeId)
+        {
+            var routeTeams = db.so_route_team
+                .Where(x => x.routeId == routeId)
+                .Select(x => new GetRouteTeamResponse
+                {
+                    RoleId = x.roleTeamId,
+                    UserId = x.userId,
+                    RoleName = x.roleTeamId == (int)ERolTeam.Impulsor ? "Impulsor" : "Ayudante",
+                    UserName = db.so_user.Where(u => u.userId == x.userId).Select(u => u.name).FirstOrDefault()
+                }).ToList();
+
+            if (routeTeams.Count == 0)
+                throw new EntityNotFoundException("No se encontró equipo para esa ruta");
+
+            return ResponseBase<List<GetRouteTeamResponse>>.Create(routeTeams);
         }
 
         public void CloseInventoryOpe20(so_work_day workDay)
