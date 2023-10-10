@@ -1,5 +1,7 @@
-﻿using SmartOrderService.CustomExceptions;
+﻿using Newtonsoft.Json;
+using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.DTO;
+using SmartOrderService.Models.Message;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;
 using System;
@@ -141,7 +143,46 @@ namespace SmartOrderService.Services
             try
             {
                 RouteTeamService routeTeamService = new RouteTeamService();
-                response = Request.CreateResponse(HttpStatusCode.Accepted, ResponseBase<bool?>.Create(routeTeamService.CheckWorkDayClosingStatusByWorkDay(workday)));
+                response = Request.CreateResponse(HttpStatusCode.Accepted, routeTeamService.CheckWorkDayClosingStatusByWorkDay(workday));
+            }
+            catch (EntityNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Forbidden, false);
+            }
+            catch (BillpocketReportException e)
+            {
+                response = Request.CreateResponse((HttpStatusCode)420, false);
+            }
+            catch (ExternalAPIException e)
+            {
+                response = Request.CreateResponse((HttpStatusCode)421, false);
+            }
+            catch (WorkdayNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, false);
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, false);
+            }
+            return response;
+        }
+
+        [HttpPost, Route("api/v3/routeam/workdayclosestatus")]
+        public HttpResponseMessage CheckWorkDayClosingStatusByWorkDayv3([FromBody] Workday workday)
+        {
+            HttpResponseMessage response;
+            try
+            {
+                RouteTeamService routeTeamService = new RouteTeamService();
+                response = Request.CreateResponse(HttpStatusCode.Accepted, ResponseBase<bool?>.Create(routeTeamService.CheckWorkDayClosingStatusByWorkDay(workday, "v3")));
+            }
+            catch (Ope20Exception e)
+            {
+                var responseFormat = JsonConvert.DeserializeObject<Ope20MessageException>(e.Message);
+                response = Request.CreateResponse(HttpStatusCode.Conflict, ResponseBase<bool?>.Create(new List<string>() {
+                    e.Message
+                }));
             }
             catch (EntityNotFoundException e)
             {

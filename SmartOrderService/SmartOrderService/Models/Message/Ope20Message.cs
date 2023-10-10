@@ -117,4 +117,11 @@ namespace SmartOrderService.Models.Message
         public string traceId { get; set; }
     }
     #endregion
+    #region Custom Model Exception
+    public class Ope20MessageException
+    {
+        public string Message { get; set; }
+        public List<string> Ope20Errors { get; set; }
+    }
+    #endregion
 }
