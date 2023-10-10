@@ -462,18 +462,11 @@ namespace SmartOrderService.Services
         public void CloseInventoryOpe20(so_work_day workDay)
         {
             Ope20Service service = new Ope20Service();
-            //Impacto mencionado de la SC52
-            /*
-            var inventories = db.so_route_team_travels_employees
-                .Join(db.so_inventory, rt => rt.inventoryId, inv => inv.inventoryId,
-                (rt, inv) => new { inv.code, rt.work_dayId, rt.routeId })
-                .Where(x => x.work_dayId == workDay.work_dayId)
-                .ToList();
-            */
+
             var date = DateTime.Now;
             
             var inventories = db.so_inventory.Where(x => x.userId == workDay.userId && DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(date) && x.status).ToList();
-            var inventoriesNotClosed = inventories.Where(x => x.state != 2);
+            var inventoriesNotClosed = inventories.Where(x => x.state != 2).ToList();
             var routeTeam = db.so_route_team.Where(x => x.userId == workDay.userId).FirstOrDefault();
 
             if (inventories == null || inventories.Count == 0)

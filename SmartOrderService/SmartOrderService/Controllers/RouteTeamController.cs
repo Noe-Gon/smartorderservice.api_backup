@@ -181,7 +181,7 @@ namespace SmartOrderService.Services
             {
                 var responseFormat = JsonConvert.DeserializeObject<Ope20MessageException>(e.Message);
                 response = Request.CreateResponse(HttpStatusCode.Conflict, ResponseBase<bool?>.Create(new List<string>() {
-                    "409", e.Message
+                    e.Message
                 }));
             }
             catch (EntityNotFoundException e)
