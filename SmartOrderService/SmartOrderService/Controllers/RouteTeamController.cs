@@ -143,7 +143,11 @@ namespace SmartOrderService.Services
             try
             {
                 RouteTeamService routeTeamService = new RouteTeamService();
-                response = Request.CreateResponse(HttpStatusCode.Accepted, routeTeamService.CheckWorkDayClosingStatusByWorkDay(workday));
+                response = Request.CreateResponse(HttpStatusCode.Accepted, routeTeamService.CheckWorkDayClosingStatusByWorkDay(workday), "v3");
+            }
+            catch (Ope20Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, false);
             }
             catch (EntityNotFoundException e)
             {
