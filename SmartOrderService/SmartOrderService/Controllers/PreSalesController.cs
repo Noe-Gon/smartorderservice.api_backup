@@ -13,10 +13,10 @@ namespace SmartOrderService.Controllers
 {
     public class PreSalesController : ApiController
     {
-        public IPreSales _preSalesService { get; set; }
+        public IPreSalesService _preSalesService { get; set; }
         public PreSalesController()
         {
-            _preSalesService = new PreSalesService();
+            _preSalesService = PreSalesService.GetInstance();
         }
 
         [HttpPost, Route("api/presales/send")]
@@ -34,15 +34,28 @@ namespace SmartOrderService.Controllers
                     e.Message
                 }));
             }
+            catch (WorkdayNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.NotFound, ResponseBase<bool?>.Create(new List<string>() {
+                    e.Message
+                }));
+            }
+            catch (ApiPreventaException e)
+            {
+                response = Request.CreateResponse((HttpStatusCode)460, ResponseBase<bool?>.Create(new List<string>() {
+                    e.Message
+                }));
+            }
             catch (InternalServerException e)
             {
-                response = Request.CreateResponse(HttpStatusCode.InternalServerError, ResponseBase<bool?>.Create(new List<string>() {
+                response = Request.CreateResponse((HttpStatusCode)461, ResponseBase<bool?>.Create(new List<string>() {
+                    "Ha ocurrido un error al llamar al API de preventa, para más detalle consultar desde api",
                     e.Message
                 }));
             }
             catch (Exception e)
             {
-                response = Request.CreateResponse(HttpStatusCode.Conflict, ResponseBase<bool?>.Create(new List<string>() {
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, ResponseBase<bool?>.Create(new List<string>() {
                     e.Message
                 }));
             }

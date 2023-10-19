@@ -3,7 +3,7 @@
 namespace SmartOrderService.Interfaces
 
 {
-    public interface IPreSales
+    public interface IPreSalesService
     {
         bool SendPreSales(SendPreSalesDTO WorkDayId);
     }
