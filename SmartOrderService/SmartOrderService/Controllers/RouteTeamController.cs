@@ -143,7 +143,7 @@ namespace SmartOrderService.Services
             try
             {
                 RouteTeamService routeTeamService = new RouteTeamService();
-                response = Request.CreateResponse(HttpStatusCode.Accepted, routeTeamService.CheckWorkDayClosingStatusByWorkDay(workday), "v3");
+                response = Request.CreateResponse(HttpStatusCode.Accepted, routeTeamService.CheckWorkDayClosingStatusByWorkDay(workday, "v3"));
             }
             catch (Ope20Exception e)
             {
