@@ -352,6 +352,10 @@ namespace SmartOrderService.Services
             int userTravel = db.so_route_team_travels_employees
                 .Where(x => x.work_dayId == workDayCurrent.work_dayId && x.active)
                 .Count();
+            if (IsInOpe20(workDayCurrent))
+            {
+                userTravel = 0;
+            }
 
             if (userTravel > 0)
                 return false;
@@ -500,6 +504,19 @@ namespace SmartOrderService.Services
                 throw new EntityNotFoundException("No se encontró equipo para esa ruta");
 
             return ResponseBase<List<GetRouteTeamResponse>>.Create(routeTeams);
+        }
+
+        public bool IsInOpe20(so_work_day workDay)
+        {
+            Ope20Service service = new Ope20Service();
+
+            var routeTeam = db.so_route_team.Where(x => x.userId == workDay.userId).FirstOrDefault();
+            int routeId = routeTeam.routeId;
+            var routeBranchCode = db.so_route
+                .Where(x => routeId == x.routeId)
+                .Select(x => new { RouteCode = x.code, BranchCode = x.so_branch.code }).FirstOrDefault();
+
+            return service.IsCediInOpe20(routeBranchCode.BranchCode);
         }
 
         public void CloseInventoryOpe20(so_work_day workDay)
