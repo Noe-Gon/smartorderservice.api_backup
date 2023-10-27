@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.DTO;
+using SmartOrderService.Models.Enum;
 using SmartOrderService.Models.Message;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;
@@ -263,6 +264,49 @@ namespace SmartOrderService.Services
                 else
                 {
                     response = Request.CreateResponse(HttpStatusCode.Conflict, ResponseBase<bool?>.Create(new List<string>() {
+                        e.Message
+                    }));
+                }
+            }
+            return response;
+        }
+
+        [HttpGet]
+        [Route("api/routeam/travelsInProcess")]
+        public HttpResponseMessage CheckTravelsInProcess(int UserId, string Date = null)
+        {
+            HttpResponseMessage response;
+            try
+            {
+                RouteTeamService routeTeamService = new RouteTeamService();
+                response = Request.CreateResponse(HttpStatusCode.OK, ResponseBase<GetTravelsInProcessResponse>.Create(routeTeamService.GetTravelsInProcess(UserId, Date, null, new List<ERolTeam>()
+                {
+                    ERolTeam.Ayudante
+                })));
+            }
+            catch (BadRequestException e)
+            {
+                response = Request.CreateResponse((HttpStatusCode)400, ResponseBase<bool?>.Create(new List<string>() {
+                    e.Message
+                }));
+            }
+            catch (EntityNotFoundException e)
+            {
+                response = Request.CreateResponse((HttpStatusCode)404, ResponseBase<bool?>.Create(new List<string>() {
+                    e.Message
+                }));
+            }
+            catch (Exception e)
+            {
+                if (e == null || string.IsNullOrEmpty(e.Message))
+                {
+                    response = Request.CreateResponse(HttpStatusCode.InternalServerError, ResponseBase<GetTravelsInProcessResponse>.Create(new List<string>() {
+                        "Error no identificado, contacte al servidor"
+                    }));
+                }
+                else
+                {
+                    response = Request.CreateResponse(HttpStatusCode.InternalServerError, ResponseBase<GetTravelsInProcessResponse>.Create(new List<string>() {
                         e.Message
                     }));
                 }

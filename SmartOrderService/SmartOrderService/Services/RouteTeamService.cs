@@ -373,6 +373,111 @@ namespace SmartOrderService.Services
             return true;
         }
 
+        public GetTravelsInProcessResponse GetTravelsInProcess(int userId, string date, List<ERolTeam> avoid = null, List<ERolTeam> specificSearch = null)
+        {
+            GetTravelsInProcessResponse result = new GetTravelsInProcessResponse();
+            if (userId == 0)
+            {
+                throw new BadRequestException("Se requiere el campo UserId, no puede ser 0");
+            }
+            if (userId < 0)
+            {
+                throw new BadRequestException("El campo UserId no puede ser un número negativo");
+            }
+            //ERolTeam userRole = roleTeamService.GetUserRole(userId);
+            DateTime dateStart = DateTime.Now;
+            if (!string.IsNullOrEmpty(date))
+            {
+                try
+                {
+                    dateStart = DateTime.Parse(date);
+                }
+                catch (Exception e)
+                {
+                    throw new BadRequestException($"La fecha \"{date}\" no se pudo parsear, revisar el formato sea del tipo \"yyyy-MM-dd\" con fechas válidas");
+                }
+            }
+
+            try
+            {
+                var routeId = db.so_route_team.Where(x => x.userId == userId).Select(x => x.routeId).FirstOrDefault();
+                if (routeId == 0)
+                {
+                    throw new EntityNotFoundException($"No se encontró un equipo para el usuario con identificador de {userId}");
+                }
+
+                var usersTeam = GetUsersTeamByFilter(routeId, null, null);
+                var usersTeamFilter = GetUsersTeamByFilter(routeId, avoid, specificSearch);
+
+                var inventories = db.so_inventory.Where(x => usersTeam.Contains(x.userId) && DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(dateStart) && x.status).ToList();
+                var inventoriesId = inventories.Select(x => x.inventoryId).ToList();
+
+                var inventorieFilters = db.so_inventory.Where(x => usersTeamFilter.Contains(x.userId) && DbFunctions.TruncateTime(x.date) == DbFunctions.TruncateTime(dateStart) && x.status && x.state == 1).Select(x => x.inventoryId).ToList();
+                var inventoriesTeamEmployees = db.so_route_team_travels_employees.Where(x => usersTeamFilter.Contains(x.userId) && inventoriesId.Contains(x.inventoryId) && x.active).Select(x => x.inventoryId).ToList();
+
+                if (inventories.Count > 0 && (inventorieFilters.Count > 0 || inventoriesTeamEmployees.Count > 0))
+                {
+                    var inventoriesOpenId = inventorieFilters.Union(inventoriesTeamEmployees).Distinct().ToList();
+                    var inventoriesOpen = inventories.Where(x => inventoriesOpenId.Contains(x.inventoryId)).ToList();
+                    foreach (var inventory in inventoriesOpen)
+                    {
+                        result.TravelsInProcess.Add(new TravelsInProcess
+                        {
+                            InventoryId = inventory.inventoryId,
+                            Code = inventory.code
+                        });
+                    }
+                    if (result.TravelsInProcess.Count > 0)
+                    {
+                        result.IsInProcess = true;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+
+            return result;
+        }
+
+        private List<int> GetUsersTeamByFilter(int routeId, List<ERolTeam> avoid, List<ERolTeam> specificSearch)
+        {
+            if (specificSearch == null)
+            {
+                specificSearch = new List<ERolTeam>();
+            }
+            if (avoid == null)
+            {
+                avoid = new List<ERolTeam>();
+            }
+            var users = db.so_route_team.Where(x => x.routeId == routeId).Select(x => x.userId).ToList();
+            List<int> resultFilter = new List<int>();
+            if (specificSearch.Count > 0)
+            {
+                foreach (var user in users)
+                {
+                    if (specificSearch.Contains(roleTeamService.GetUserRole(user)))
+                    {
+                        resultFilter.Add(user);
+                    }
+                }
+                return resultFilter;
+            }
+            if (avoid.Count > 0)
+            {
+                foreach (var user in users)
+                {
+                    if (!avoid.Contains(roleTeamService.GetUserRole(user)))
+                    {
+                        resultFilter.Add(user);
+                    }
+                }
+                return resultFilter;
+            }
+            return users;
+        }
+
         public bool ChalBillPocketReportForAllUsers(Guid workdayId, int userId)
         {
             List<int> users = db.so_route_team_travels_employees.Where(x => x.work_dayId == workdayId)
