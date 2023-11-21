@@ -161,5 +161,6 @@ namespace SmartOrderService.Models
     public class SaleTeamWithPoints : SaleTeamv3
     {
         public List<SaleDetailLoyalty> SaleDetailsLoyalty;
+        public string AdjustmentReason { get; set; }
     }
 }

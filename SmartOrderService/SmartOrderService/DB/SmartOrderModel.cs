@@ -192,6 +192,9 @@ namespace SmartOrderService.DB
 
         public virtual DbSet<so_is_sale_point> so_is_sale_point { get; set; }
 
+        public virtual DbSet<so_sale_adjustment_reason> so_sale_adjustment_reason { get; set; }
+
+
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<so_role_team>()
@@ -1972,6 +1975,14 @@ namespace SmartOrderService.DB
             articleMovement.HasRequired(x => x.so_article_promotional_route)
                 .WithMany(x => x.so_promotion_article_movement)
                 .HasForeignKey(x => x.article_promotional_routeId);
+
+            var saleAdjusmentReason = modelBuilder.Entity<so_sale_adjustment_reason>();
+            saleAdjusmentReason.HasKey(x => x.Id);
+            saleAdjusmentReason.Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            saleAdjusmentReason.Property(x => x.Reason).HasMaxLength(100).IsRequired();
+            saleAdjusmentReason.HasRequired(x => x.CustomerVario)
+                .WithMany(x => x.so_sale_adjustment_reason)
+                .HasForeignKey(x => x.CustomerId);
         }
     }
 }

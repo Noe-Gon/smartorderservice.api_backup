@@ -512,6 +512,7 @@
     <Compile Include="DB\so_sale.cs" />
     <Compile Include="DB\so_salev2.cs" />
     <Compile Include="DB\so_sale_aditional_data.cs" />
+    <Compile Include="DB\so_sale_adjustment_reason.cs" />
     <Compile Include="DB\so_sale_combo.cs" />
     <Compile Include="DB\so_sale_combo_detail.cs" />
     <Compile Include="DB\so_sale_detail.cs" />

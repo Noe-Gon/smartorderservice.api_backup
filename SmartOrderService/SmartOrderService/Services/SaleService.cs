@@ -2701,6 +2701,64 @@ namespace SmartOrderService.Services
             }
         }
 
+        public SaleTeamWithPoints SaleTeamTransactionWithAdjustmentReason(SaleTeamWithPoints sale)
+        {
+            using (var transaction = db.Database.BeginTransaction())
+            {
+                SaleTeamWithPoints saleResult = CreateSaleResultFromSaleWithPoints(sale);
+                string sRespuesta = "";
+                try
+                {
+                    if (saleResult.SaleDetails.Count() > 0 || saleResult.SaleDetailsLoyalty.Count() > 0 || saleResult.SaleDetailsArticles.Count() > 0 || saleResult.PromotionCatalog.Count() > 0)
+                    {
+                        if (!checkIfSaleExist(saleResult))
+                        {
+                            UnlockCreatev2(saleResult);
+                            CustomerCheck(sale);
+                            if (saleResult.SaleId == 0)
+                            {
+                                throw new BadRequestException();
+                            }
+                            UpdateRouteTeamInventoryLoyalty(saleResult, db);
+                            CreatePaymentMethod(saleResult);
+                            sRespuesta = CreatePromotion(saleResult, db);
+                            if (sRespuesta != string.Empty)
+                                throw new Exception(sRespuesta);
+                            UpdateRouteTeamInventoryPromotion(saleResult);
+
+                            if (!string.IsNullOrEmpty(sale.AdjustmentReason) && saleResult.SaleId != 0)
+                                RegisterAdjustmentReason(saleResult.SaleId, sale.AdjustmentReason, saleResult.CustomerId, sale.UserId);
+                        }
+                        transaction.Commit();
+                    }
+                    else
+                    {
+                        throw new EmptySaleException("La venta no se ha podido realizar porque no hay productos disponibles");
+                    }
+                }
+                catch (EmptySaleException)
+                {
+                    transaction.Rollback();
+                    sale.SaleDetails = new List<SaleDetail>();
+                    sale.SalePromotions = new List<SalePromotion>();
+                    sale.TotalCash = 0.00;
+                    return sale;
+                }
+                catch (ApiPreventaException e)
+                {
+                    transaction.Rollback();
+                    throw e;
+                }
+                catch (Exception exception)
+                {
+                    transaction.Rollback();
+                    throw exception;
+                }
+                RedemptionPoints(saleResult);
+                return saleResult;
+            }
+        }
+
         public void UpdateRouteTeamInventoryPromotion(SaleTeamWithPoints sale)
         {
             int routeId = db.so_route_team_travels_employees
@@ -3745,6 +3803,25 @@ namespace SmartOrderService.Services
             }
             catch (Exception) { }
             return uuid;
+        }
+
+        public void RegisterAdjustmentReason(int saleId, string reason, int customerId, int userId)
+        {
+            if (string.IsNullOrEmpty(reason))
+                return;
+
+            var newSaleAdjustmentReason = new so_sale_adjustment_reason()
+            {
+                CreatedBy = userId,
+                CreatedOn = DateTime.Now,
+                CustomerId = customerId,
+                Reason = reason,
+                SaleId = saleId,
+                Status = true
+            };
+
+            db.so_sale_adjustment_reason.Add(newSaleAdjustmentReason);
+            db.SaveChanges();
         }
     }
 }

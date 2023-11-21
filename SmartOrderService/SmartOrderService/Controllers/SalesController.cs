@@ -411,6 +411,104 @@ namespace SmartOrderService.Controllers
 
         }
 
+        [ResponseType(typeof(so_sale))]
+        [HttpPost, Route("api/sales/saleTeam_v4")]
+        public IHttpActionResult so_sale_team_v4(SaleTeamWithPoints sale)
+        {
+            IHttpActionResult responseActionResult;
+            HttpResponseMessage responseMessage;
+            SaleTeamWithPoints saleResult = new SaleTeamWithPoints();
+            try
+            {
+                SaleTeamLock serviceLock = null;
+                RouteTeamService servce = new RouteTeamService();
+                var routeId = servce.searchRouteId(sale.UserId);
+                if (mapObjectService.ContainsKey(routeId.ToString()))
+                {
+                    serviceLock = mapObjectService[routeId.ToString()];
+                    serviceLock.SaleDate = sale.Date;
+                    serviceLock.LastUser = sale.UserId;
+                    serviceLock.CustomerId = sale.CustomerId;
+                    serviceLock.DeliveryId = sale.DeliveryId;
+                }
+                else
+                {
+                    serviceLock = new SaleTeamLock()
+                    {
+                        SaleService = new SaleService(),
+                        SaleDate = sale.Date,
+                        LastUser = sale.UserId,
+                        CustomerId = sale.CustomerId,
+                        DeliveryId = sale.DeliveryId,
+                    };
+
+                    mapObjectService.Add(routeId.ToString(), serviceLock);
+                }
+                if (serviceLock == null)
+                    serviceLock = new SaleTeamLock()
+                    {
+                        SaleService = objectService,
+                        SaleDate = sale.Date,
+                        LastUser = sale.UserId,
+                        CustomerId = sale.CustomerId,
+                        DeliveryId = sale.DeliveryId,
+                    };
+
+                lock (serviceLock)
+                {
+                    saleResult = serviceLock.SaleService.SaleTeamTransactionWithAdjustmentReason(sale);
+
+                    if (serviceLock.CustomerId == sale.CustomerId && serviceLock.LastUser == sale.UserId
+                        && serviceLock.SaleDate == sale.Date && serviceLock.DeliveryId == sale.DeliveryId)
+                        mapObjectService.Remove(routeId.ToString());
+                }
+
+                try
+                {
+                    if (sale.EmailDeliveryTicket ?? false)
+                        serviceLock.SaleService.SendTicketDigital(new SendTicketDigitalRequest()
+                        {
+                            SaleId = saleResult.SaleId,
+                            Email = sale.Email
+                        });
+                }
+                catch (Exception) { }
+            }
+            catch (ProductNotFoundBillingException e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.NotFound, e.Message);
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
+            }
+            catch (BadRequestException e)
+            {
+                return BadRequest();
+            }
+            catch (ApiPreventaException e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.MethodNotAllowed, e.Message);
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
+            }
+            catch (EmptySaleException e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.PreconditionFailed, e.Message);
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
+            }
+            catch (Exception e)
+            {
+                responseMessage = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+                responseActionResult = ResponseMessage(responseMessage);
+                return responseActionResult;
+            }
+
+            responseMessage = Request.CreateResponse(HttpStatusCode.OK, saleResult);
+            responseActionResult = ResponseMessage(responseMessage);
+            return responseActionResult;
+
+        }
+
         [HttpDelete, Route("api/sales/saleteam")]
         public HttpResponseMessage Deleteso_sale_team(int id)
         {
