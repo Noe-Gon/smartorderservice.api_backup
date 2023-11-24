@@ -757,5 +757,38 @@ namespace SmartOrderService.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("~/api/sale/SendAdjustmentEmail")]
+        public IHttpActionResult SendAdjustmentEmail(SendAdjustmentRequest request)
+        {
+            try
+            {
+                var service = new SaleService();
+                var response = service.SendAdjustment(request);
+
+                if (response.Status)
+                    return Content(HttpStatusCode.OK, response);
+
+                return Content(HttpStatusCode.BadRequest, response);
+            }
+            catch (EntityNotFoundException e)
+            {
+                var response = ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                });
+
+                return Content(HttpStatusCode.InternalServerError, response);
+            }
+            catch (Exception e)
+            {
+                var response = ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                });
+
+                return Content(HttpStatusCode.InternalServerError, response);
+            }
+        }
     }
 }

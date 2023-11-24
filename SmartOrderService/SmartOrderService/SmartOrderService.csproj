@@ -916,6 +916,8 @@
     <Content Include="Content\Template\OrderTicket.html" />
     <Content Include="Content\Template\ReactivationTicketDigitalEmail.html" />
     <Content Include="Content\Template\RemovalRequestEmail.html" />
+    <Content Include="Content\Template\AdjustmentSaleStatusEmail.html" />
+    <Content Include="Content\Template\AdjustmentTable.html" />
     <Content Include="Content\Template\TicketDigitalEmail.html" />
     <Content Include="Content\Template\WellcomeEmail.html" />
     <Content Include="favicon.ico" />

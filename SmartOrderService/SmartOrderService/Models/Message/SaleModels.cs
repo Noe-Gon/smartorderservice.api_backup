@@ -14,4 +14,15 @@ namespace SmartOrderService.Models.Message
     }
 
     #endregion
+
+    #region Send Adjustment Email
+
+    public class SendAdjustmentRequest
+    {
+        public int RouteId { get; set; }
+        public string Email { get; set; }
+        public DateTime? Date { get; set; }
+    }
+
+    #endregion
 }

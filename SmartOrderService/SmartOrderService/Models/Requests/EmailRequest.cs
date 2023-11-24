@@ -183,4 +183,39 @@ namespace SmartOrderService.Models.Requests
         public string Body { get; set; }
     }
     #endregion
+
+    #region Adjustment Email
+    public class SendAdjustmentEmailRequest
+    {
+        public List<string> LidersEmail { get; set; }
+        public DateTime Date { get; set; }
+        public string RouteAddress { get; set; }
+        public string Branch { get; set; }
+        public string ImpulsorFullName { get; set; }
+        public Double TotalAdjustment { get; set; }
+
+        public List<SendAdjustmentEmailSales> Sales { get; set; }
+
+        public SendAdjustmentEmailRequest()
+        {
+            LidersEmail = new List<string>();
+            Sales = new List<SendAdjustmentEmailSales>();
+            TotalAdjustment = 0;
+        }
+    }
+
+    public class SendAdjustmentEmailSales
+    {
+        public string Coordenadas { get; set; }
+        public string AjustmentReason { get; set; }
+        public string Table { get; set; }
+        public Double TotalAdjustment { get; set; }
+    }
+
+    public class SendAdjustmentEmailResponse
+    {
+        public string Table { get; set; }
+        public Double Total { get; set; }
+    }
+    #endregion
 }
