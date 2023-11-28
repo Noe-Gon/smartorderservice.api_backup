@@ -160,6 +160,11 @@ namespace SmartOrderService.Models
     }
     public class SaleTeamWithPoints : SaleTeamv3
     {
+        public SaleTeamWithPoints()
+        {
+            SaleDetailsLoyalty = new List<SaleDetailLoyalty>();
+        }
+
         public List<SaleDetailLoyalty> SaleDetailsLoyalty;
         public string AdjustmentReason { get; set; }
     }
