@@ -349,6 +349,7 @@ namespace SmartOrderService.Services
             if (workDayCurrent == null)
                 throw new WorkdayNotFoundException("No se encontro la jornada para el usuario " + impulsorId);
 
+            Ope20Service service = new Ope20Service();
             int userTravel = db.so_route_team_travels_employees
                 .Where(x => x.work_dayId == workDayCurrent.work_dayId && x.active)
                 .Count();
@@ -593,6 +594,7 @@ namespace SmartOrderService.Services
             return routeTeam;
         }
 
+
         public ResponseBase<List<GetRouteTeamResponse>> GetRouteTeam(int routeId)
         {
             var routeTeams = db.so_route_team
@@ -691,11 +693,8 @@ namespace SmartOrderService.Services
             if (inventoriesFailed.Count > 0)
             {
                 string inventoriesFailedStr = string.Join(",", inventoriesFailed);
-                throw new Ope20Exception(JsonConvert.SerializeObject(new Ope20MessageException
-                {
-                    Message = $"No se han podido cerrar las siguientes cargas en Ope20: {inventoriesFailedStr}",
-                    Ope20Errors = ope20Errors
-                }));
+                string errorOpe20 = ope20Errors.Count > 0 ? ope20Errors[0] : "";
+                throw new Ope20Exception($"No se han podido cerrar las siguientes cargas en Ope20: { inventoriesFailedStr }. {errorOpe20}");
             }
         }
     }
