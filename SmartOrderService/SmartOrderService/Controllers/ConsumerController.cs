@@ -135,6 +135,84 @@ namespace SmartOrderService.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("~/api/consumer/GetUuid")]
+        public IHttpActionResult GetConsumerUuid([FromUri] string customerCode)
+        {
+            using (var service = GetService())
+            {
+                try
+                {
+                    var response = new LoyaltyEnsitechService().GetConsumerUuidByCustomerCode(customerCode);
+
+                    if (response.Status)
+                        return Ok(response);
+                    else
+                        return Content(HttpStatusCode.BadRequest, response);
+                }
+                catch (Exception e)
+                {
+                    return InternalServerError(e);
+                }
+            }
+        }
+
+        [HttpGet]
+        [Route("~/api/Loyalty/Rules")]
+        public HttpResponseMessage GetRules([FromUri] int routeId)
+        {
+            HttpResponseMessage response;
+            try
+            {
+
+                var products = new LoyaltyEnsitechService().GetRules(routeId);
+                response = Request.CreateResponse(HttpStatusCode.OK, products);
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, "Error: " + e.Message);
+            }
+
+            return response;
+        }
+
+        [HttpGet]
+        [Route("~/api/consumer/GetPoints")]
+        public IHttpActionResult GetConsumerPoints([FromUri] string uuid)
+        {
+            using (var service = GetService())
+            {
+                try
+                {
+                    var response = new LoyaltyEnsitechService().GetConsumerPoints(uuid);
+                        return Ok(response);
+                }
+                catch (Exception e)
+                {
+                    return InternalServerError(e);
+                }
+            }
+        }
+
+        [HttpGet]
+        [Route("~/api/consumer/GetProducts")]
+        public HttpResponseMessage GetConsumerProducts([FromUri] string uuid)
+        {
+            HttpResponseMessage response;
+            try
+            {
+
+                var products = new LoyaltyEnsitechService().GetConsumerProducts(uuid);
+                response = Request.CreateResponse(HttpStatusCode.OK, products);
+            }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, "Error: " + e.Message);
+            }
+
+            return response;
+        }
+
         [HttpPost]
         [Route("~/api/ResendEmail/TicketDigital")]
         public IHttpActionResult ResendTicketDigital(ResendTicketDigitalRequest request)
@@ -166,6 +244,28 @@ namespace SmartOrderService.Controllers
                 using (var service = GetService())
                 {
                     var response = service.ReactivationTicketDigital(request);
+
+                    if (response.Status)
+                        return Ok(response);
+                    else
+                        return Content(HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (Exception e)
+            {
+                return InternalServerError(e);
+            }
+        }
+
+        [HttpPost]
+        [Route("~/api/LoyaltyTermsAndConditions")]
+        public IHttpActionResult LoyaltyTermsAndConditions(ReactivationTicketDigitalRequest request)
+        {
+            try
+            {
+                using (var service = GetService())
+                {
+                    var response = service.LoyaltyTermsAndConditions(request);
 
                     if (response.Status)
                         return Ok(response);
@@ -315,6 +415,31 @@ namespace SmartOrderService.Controllers
                 using (var service = GetService())
                 {
                     var response = service.GetCustomerUnsynchronized(request);
+
+                    if (response.Status)
+                        return Content(HttpStatusCode.OK, response.Data);
+
+                    return Content(HttpStatusCode.BadRequest, response.Data);
+                }
+            }
+            catch (Exception e)
+            {
+                return InternalServerError(e);
+            }
+        }
+
+        [HttpGet]
+        [Route("~/api/CustomerVario")]
+        public IHttpActionResult GetCustomer([FromUri]int routeId)
+        {
+            try
+            {
+                using (var service = GetService())
+                {
+                    var response = service.GetCustomerVario(new GetCustomerVarioRequest
+                    {
+                        RouteId = routeId
+                    });
 
                     if (response.Status)
                         return Content(HttpStatusCode.OK, response.Data);

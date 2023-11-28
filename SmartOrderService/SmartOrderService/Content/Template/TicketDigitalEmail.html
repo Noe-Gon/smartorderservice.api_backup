@@ -109,6 +109,22 @@
                 </table>
             </div>
         </div>
+        <div id='lealtad' style='display:none'>
+            <div style="border: double; background-color: lightgray; text-align-last: center;">
+                <strong>Puntos de lealtad</strong>
+            </div>
+            <div>
+                <table style="margin-left: 10px;margin-top: 10px;margin-bottom: 10px; width: 100%;">
+                    <tr id='tableHeaderLoyalty' style='display:none'>
+                        <th style="text-align: left;width:400px"><strong>Producto</strong></th>
+                        <th style="text-align: left;width:100px"><strong>Cantidad</strong></th>
+                        <th style="text-align: left;width:100px"><strong>Puntos</strong></th>
+                        <th style="text-align: left;width:100px"><strong>Total</strong></th>
+                    </tr>
+                    {TdBodyLealtad}
+                </table>
+            </div>
+        </div>
         <div style="margin-bottom: 20px; width: 100%; display:inline-flex">
             <div style="width: 35%; height: 10px;">
 
@@ -119,20 +135,43 @@
                         <td>Total de productos vendidos:</td>
                         <td class="right">{TotalProductsSold}</td>
                     </tr>
-                    <!--<tr>
-                    <td>Total de cajas vendidas:</td>
-                    <td class="right">{TotalBoxesSold}</td>
-                </tr>-->
                     <tr id='lblpromociones' style='display:none'>
                         <td>Total de Promociones:</td>
                         <td class="right">{TotalPromos}</td>
                     </tr>
-                    <tr class="saleClass">
+                    <tr id='lbllealtad' style='display:none'>
+                        <td>Total de lealtad:</td>
+                        <td class="right">{TotalLealtad}</td>
+                    </tr>
+                    <tr>
                         <td>Total:</td>
                         <td class="right">{TotalPrice}</td>
                     </tr>
+                    <tr id='lbllealtadPuntosUtilizados' style='display:none'>
+                        <td>Puntos utilizados:</td>
+                        <td class="right">{PuntosUtilizadosLealtad}</td>
+                    </tr>
+                    <tr id='lbllealtadPuntosGanados' style='display:none'>
+                        <td>Puntos por su compra:</td>
+                        <td class="right">{PuntosGanadosLealtad}</td>
+                    </tr>
+                    <tr id='lbllealtadPuntosAcumulados' style='display:none'>
+                        <td>Puntos acumulados:</td>
+                        <td class="right">{PuntosAcumuladosLealtad}</td>
+                    </tr>
+                    <tr id='lbllealtadPuntosVigencia' style='display:none'>
+                        <td>Vigencia de puntos:</td>
+                        <td class="right">{PuntosVigencia}</td>
+                    </tr>
                 </table>
             </div>
+        </div>
+        <div style="text-align-last: center;">
+            ¿Ya sabes cómo ganar más puntos?<br>
+            Obtener puntos es muy fácil, comparte tu código con tus amigos y familiares y<br>
+            recibe puntos por cada persona que se registre con tu código.<br><br>
+            Tu código es: {cutomerReferenceCode}<br><br>
+            Este mes llévate puntos extras al ...<br><br>
         </div>
         <div style="text-align-last: center; margin-bottom: 5px;">
             ¡Gracias por tu preferencia!

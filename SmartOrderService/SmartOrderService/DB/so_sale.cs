@@ -19,6 +19,8 @@ namespace SmartOrderService.DB
             so_sale_detail = new HashSet<so_sale_detail>();
             so_sale_promotion = new HashSet<so_sale_promotion>();
             so_sale_combos = new HashSet<so_sale_combo>();
+            //so_sale_with_points = new HashSet<so_sale_with_points>();
+            //so_sale_with_points_details = new HashSet<so_sale_with_points_details>();
         }
 
         [Key]
@@ -77,10 +79,24 @@ namespace SmartOrderService.DB
         public virtual ICollection<so_sale_promotion> so_sale_promotion { get; set; }
         public virtual ICollection<so_sale_combo> so_sale_combos { get; set; }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<so_sale_with_points> so_sale_with_points { get; set; }
+        //[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        //public virtual ICollection<so_sale_with_points_details> so_sale_with_points_details { get; set; }
+
         public virtual so_user so_user { get; set; }
 
         public virtual so_delivery so_delivery { get; set; }
 
         public virtual so_inventory so_inventory { get; set; }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<so_sale_aditional_data> so_sale_aditional_data { get; set; }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<so_sale_detail_article> so_sale_detail_article { get; set; }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<so_sale_adjustment_reason> so_sale_adjustment_reason { get; set; }
     }
 }

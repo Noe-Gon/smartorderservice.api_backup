@@ -2,6 +2,7 @@
 using Algoritmos.Data.UnitofWork;
 using AutoMapper;
 using CRM.Data.UnitOfWork;
+using Newtonsoft.Json;
 using RestSharp;
 using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
@@ -266,6 +267,10 @@ namespace SmartOrderService.Services
                     });
                 }
 
+                newCustomerAdditionalData.ReferenceCode = "" + newCustomer.customerId;
+                UoWConsumer.CustomerAdditionalDataRepository.Update(newCustomerAdditionalData);
+                UoWConsumer.Save();
+
                 var response = new InsertConsumerResponse
                 {
                     CustomerId = newCustomer.customerId,
@@ -286,7 +291,7 @@ namespace SmartOrderService.Services
                     Neighborhood = request.Neighborhood,
                     Phone = request.Phone,
                     Phone_2 = request.Phone_2,
-                    ReferenceCode = request.ReferenceCode,
+                    ReferenceCode = "" + newCustomer.customerId,
                     RouteId = request.RouteId,
                     StateId = request.StateId,
                     Street = request.Street,
@@ -793,7 +798,7 @@ namespace SmartOrderService.Services
                 {
                     request.userId = inventoryService.SearchDrivingId(request.userId);
                 }
-                catch (RelatedDriverNotFoundException e)
+                catch (RelatedDriverNotFoundException)
                 { }
 
                 so_inventory inventory = inventoryService.GetCurrentInventory(request.userId, null);
@@ -1144,6 +1149,80 @@ namespace SmartOrderService.Services
                 });
             }
         }
+        public ResponseBase<ReactivationTicketDigitalResponse> LoyaltyTermsAndConditions(ReactivationTicketDigitalRequest request)
+        {
+            try
+            {
+                var customer = UoWConsumer.CustomerRepository
+                    .GetByID(request.CustomerId);
+
+                if (customer == null)
+                    return ResponseBase<ReactivationTicketDigitalResponse>.Create(new List<string>()
+                    {
+                        "No se encontró al cliente"
+                    });
+
+                if (string.IsNullOrEmpty(request.CustomerEmail))
+                    request.CustomerEmail = customer.email;
+
+                if (string.IsNullOrEmpty(request.CustomerEmail))
+                    return ResponseBase<ReactivationTicketDigitalResponse>.Create(new List<string>()
+                    {
+                        "No se encontró ningun email para el envio"
+                    });
+
+                //TermsAndConditios
+                //Verificar si el cliente cuenta con uno activo
+                var termsObject = UoWConsumer.LoyaltyLinksLogRepository
+                    .Get(x => x.CustomerId == request.CustomerId && x.Type == (int)PortalLinks.TYPE.TERMSANDCONDITIONS_ACCEPT && x.Status == (int)PortalLinks.STATUS.PENDING)
+                    .FirstOrDefault();
+
+                var emailInfo = new SendReactivationTicketDigitalRequest()
+                {
+                    CustomerEmail = request.CustomerEmail,
+                    CustomerName = customer.name
+                };
+
+                if (termsObject == null)
+                {
+                    //Generar Link de Aceptación de terminos y condiciones
+                    Guid termsId = Guid.NewGuid();
+                    var termsEmail = new so_loyalty_links_log
+                    {
+                        CustomerId = customer.customerId,
+                        CreatedDate = DateTime.Today,
+                        Id = termsId,
+                        LimitDays = 0,
+                        Status = (int)PortalLinks.STATUS.PENDING,
+                        Type = (int)PortalLinks.TYPE.TERMSANDCONDITIONS_ACCEPT
+                    };
+                    UoWConsumer.LoyaltyLinksLogRepository.Insert(termsEmail);
+                    UoWConsumer.Save();
+                    emailInfo.TermsAndConditionLink = ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/TermsAndConditionsLoyalty/" + termsId;
+
+                }
+                else
+                    emailInfo.TermsAndConditionLink = ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/TermsAndConditionsLoyalty/" + termsObject.Id;
+
+                var emailService = new EmailService();
+                var response = emailService.SendTermsAndConditionsLoyalty(emailInfo);
+
+                if (response.Status)
+                    return ResponseBase<ReactivationTicketDigitalResponse>.Create(new ReactivationTicketDigitalResponse
+                    {
+                        Msg = response.Data.Msg
+                    });
+
+                return ResponseBase<ReactivationTicketDigitalResponse>.Create(response.Errors);
+            }
+            catch (Exception e)
+            {
+                return ResponseBase<ReactivationTicketDigitalResponse>.Create(new List<string>()
+                {
+                    e.Message
+                });
+            }
+        }
 
         public ResponseBase<List<GetCountriesResponse>> GetCountries()
         {
@@ -1317,6 +1396,47 @@ namespace SmartOrderService.Services
                     e.Message
                 });
             }
+        }
+
+        public ResponseBase<GetCustomerVarioResponse> GetCustomerVario(GetCustomerVarioRequest request)
+        {
+            int? customerId = UoWConsumer.RouteCustomerVarioRepository
+                .Get(x => x.RouteId == request.RouteId && x.Status)
+                .Select(x => x.CustomerId)
+                .FirstOrDefault();
+
+            if (customerId == null)
+                return ResponseBase<GetCustomerVarioResponse>.Create(new List<string>()
+                {
+                    "La ruta no cuenta con cliente vario o este ha sido eliminado de la ruta"
+                });
+
+            var response = UoWConsumer.CustomerRepository
+                .Get(x => x.customerId == customerId)
+                .Select(x => new GetCustomerVarioResponse
+                {
+                    Address = x.address,
+                    Code = x.code,
+                    Contact = x.contact,
+                    CustomerId = x.customerId,
+                    Description = x.description,
+                    Email = x.email,
+                    Latitude = x.latitude ?? 0,
+                    Longitude = x.longitude ?? 0,
+                    Name = x.name,
+                    Status = x.status,
+                    Tags = x.so_tag.Select(t => t.tag).ToList(),
+
+                })
+                .FirstOrDefault();
+
+            if (response == null)
+                return ResponseBase<GetCustomerVarioResponse>.Create(new List<string>()
+                {
+                    "Cliente no encontrado"
+                });
+
+            return ResponseBase<GetCustomerVarioResponse>.Create(response);
         }
 
         public ResponseBase<GetConsumerAllInfo> GetCustomerAllInfo(PriceRequest request)

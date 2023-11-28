@@ -35,6 +35,7 @@ namespace SmartOrderService.Services
             List<PromotionProductDto> lstpromotionProductDto = new List<PromotionProductDto>();
             List<PromotionGiftProductDto> lstpromotionGiftProductDto = new List<PromotionGiftProductDto>();
             List<PromotionGiftArticleDto> lstpromotionpromotionGiftArticleDto = new List<PromotionGiftArticleDto>();
+            List<PromotionTypeCatalog> lstPromotionTypeCatalogDto = new List<PromotionTypeCatalog>();
             PromotionResult PromotionResultDto = new PromotionResult();
 
             using (var context = db)
@@ -69,6 +70,17 @@ namespace SmartOrderService.Services
                 inventaryId = new SqlParameter("@InventaryId5", InventaryId);
                 optionId = new SqlParameter("@OptionId5", 5);
                 lstpromotionpromotionGiftArticleDto = context.Database.SqlQuery<PromotionGiftArticleDto>("sp_getPromotions @UserId5, @InventaryId5, @OptionId5", userId, inventaryId, optionId).ToList();
+
+                var promotionTypeIds = lstpromotionCatalogDto.Select(x => x.type_promotionId).ToList();
+
+                //Recuperando el catalogo de tipos de promociones
+                lstPromotionTypeCatalogDto = db.so_promotion.Where(x => x.status && promotionTypeIds.Contains(x.promotionId)).Select(x => new PromotionTypeCatalog()
+                {
+                    code = x.code,
+                    id = x.promotionId,
+                    name = x.name
+                }).ToList();
+            
             }
 
             PromotionResultDto.PromotionGiftArticleCatalogDto = lstGiftArticleCatalog;
@@ -76,6 +88,7 @@ namespace SmartOrderService.Services
             PromotionResultDto.PromotionGiftProductDto = lstpromotionGiftProductDto;
             PromotionResultDto.PromotionProductDto = lstpromotionProductDto;
             PromotionResultDto.PromotionGiftArticleDto = lstpromotionpromotionGiftArticleDto;
+            PromotionResultDto.PromotionTypeCatalogDto = lstPromotionTypeCatalogDto;
 
             return PromotionResultDto;
         }
@@ -119,7 +132,7 @@ namespace SmartOrderService.Services
                 //Recuperando los articulos de regalo de la promoción
                 userId = new SqlParameter("@UserId5", UserId);
                 inventaryId = new SqlParameter("@InventaryId5", InventaryId);
-                optionId = new SqlParameter("@OptionId5", 10);
+                optionId = new SqlParameter("@OptionId5", 11);
                 lstPromotionSaleDetailGiftArticle = context.Database.SqlQuery<PromotionSaleDetailGiftArticle>("sp_getPromotions @UserId5, @InventaryId5, @OptionId5", userId, inventaryId, optionId).ToList();
             }
 

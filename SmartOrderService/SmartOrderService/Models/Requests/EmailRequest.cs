@@ -19,15 +19,20 @@ namespace SmartOrderService.Models.Requests
         public string CustomerName { get; set; }
         public string CustomerFullName { get; set; }
         public string CustomerEmail { get; set; }
+        public string CustomerReferenceCode { get; set; }
         public DateTime Date { get; set; }
         public string RouteAddress { get; set; }
         public string SellerName { get; set; }
         public string PaymentMethod { get; set; }
         public string CancelTicketLink { get; set; }
         public List<SendTicketDigitalEmailSales> Sales { get; set; }
+        public List<SendTicketDigitalEmailSalesWithPoints> SalesWithPoints { get; set; }
         public DataTable dtTicket { get; set; }
         public SendTicketDigitalEmailOrder Order { get; set; }
         public string ReferenceCode { get; set; }
+        public int AccumulatedPoints { get; set; }
+        public int WonPoints { get; set; }
+        public string ValidityPointsDates { get; set; }
     }
 
     public class SendTicketDigitalEmailOrder
@@ -85,6 +90,14 @@ namespace SmartOrderService.Models.Requests
         public int Amount { get; set; }
         public double UnitPrice { get; set; }
         public double TotalPrice { get; set; }
+    }
+
+    public class SendTicketDigitalEmailSalesWithPoints
+    {
+        public string ProductName { get; set; }
+        public int Amount { get; set; }
+        public int UnitPrice { get; set; }
+        public int TotalPrice { get; set; }
     }
 
     public class SendReactivationTicketDigitalRequest
@@ -168,6 +181,41 @@ namespace SmartOrderService.Models.Requests
         public List<string> To { get; set; }
         public string Subject { get; set; }
         public string Body { get; set; }
+    }
+    #endregion
+
+    #region Adjustment Email
+    public class SendAdjustmentEmailRequest
+    {
+        public List<string> LidersEmail { get; set; }
+        public DateTime Date { get; set; }
+        public string RouteAddress { get; set; }
+        public string Branch { get; set; }
+        public string ImpulsorFullName { get; set; }
+        public Double TotalAdjustment { get; set; }
+
+        public List<SendAdjustmentEmailSales> Sales { get; set; }
+
+        public SendAdjustmentEmailRequest()
+        {
+            LidersEmail = new List<string>();
+            Sales = new List<SendAdjustmentEmailSales>();
+            TotalAdjustment = 0;
+        }
+    }
+
+    public class SendAdjustmentEmailSales
+    {
+        public string Coordenadas { get; set; }
+        public string AjustmentReason { get; set; }
+        public string Table { get; set; }
+        public Double TotalAdjustment { get; set; }
+    }
+
+    public class SendAdjustmentEmailResponse
+    {
+        public string Table { get; set; }
+        public Double Total { get; set; }
     }
     #endregion
 }

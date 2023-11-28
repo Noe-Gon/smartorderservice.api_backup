@@ -30,6 +30,9 @@ namespace SmartOrderService.Mappers
 
                     cfg.CreateMap<so_customer, CustomerDto>()
                     .ForMember(dest => dest.VentaAlcohol, opt => opt.MapFrom(src => src.venta_alcohol));
+                    
+                    cfg.CreateMap<so_customer, CustomerWithVarioDto>();
+                    cfg.CreateMap<so_customer, CustomerDtoV2>();
 
 
                     cfg.CreateMap<so_reason_devolution, ReasonDevolutionDto>();

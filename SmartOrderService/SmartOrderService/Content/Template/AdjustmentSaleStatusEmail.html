@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <style>
+        .divimage {
+            width: 30%;
+            text-align: center;
+        }
+
+        .image{
+            margin-top: 15%;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .cancelSale {
+            background-color: orangered;
+            color: yellow;
+            float: right;
+            height: 30px;
+            width: 190px;
+            text-align: center;
+            padding-top: 10px;
+        }
+        .saleClass {
+            {SaleTableStyle}
+        }
+    </style>
+</head>
+<body>
+    <div style="max-width: 800px;">
+        <div>
+            <h2>Resumen del ajuste de Liquidación</h2>
+            <h3>Se realizó {NumAjustes} ajuste(s) de venta.</h3>
+        </div>
+        <div style="display: inline-flex; width: 100%; height: 100%; align-items: center; ">
+            <div style="width: 40%">
+                <div class="divimage">
+                    {image}
+                </div>
+            </div>
+        </div>
+        <div style="display: inline-flex; width: 100%; height: 100%; align-items: center; ">
+            <div style="width: 100%; margin-right: 10px; margin-left: 10px; margin-top: 10px; margin-bottom: 10px; border: double;">
+                <table style="margin-left: 5px; margin-top: 10px; margin-bottom: 10px;">
+                    <tr>
+                        <td><strong>Ruta:</strong></td>
+                        <td>{RouteAddress}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fecha:</strong></td>
+                        <td>{Date}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Impulsor:</strong></td>
+                        <td>{ImpulsorFullName}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ajuste Total Aplicado :</strong></td>
+                        <td>{TotalAdjustment}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        {tables}
+
+    </div>
+</body>
+</html>

@@ -15,10 +15,12 @@ namespace Algoritmos.Data.UnitofWork
         {
             Context = new AlgoritmosModelContext();
             UsuariosRepository = GenericRepository<Usuarios>.Create(Context);
+            RutasUsuarioRepository = GenericRepository<RutasUsuario>.Create(Context);
         }
 
         public AlgoritmosModelContext Context { get; set; }
         public GenericRepository<Usuarios> UsuariosRepository { get; set; }
+        public GenericRepository<RutasUsuario> RutasUsuarioRepository { get; set; }
 
         public void Save()
         {
