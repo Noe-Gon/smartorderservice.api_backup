@@ -301,6 +301,7 @@
     <Compile Include="Controllers\InventoryRevisionController.cs" />
     <Compile Include="Controllers\InvoiceController.cs" />
     <Compile Include="Controllers\LiquidationController.cs" />
+    <Compile Include="Controllers\PreSalesController.cs" />
     <Compile Include="Controllers\PriceController.cs" />
     <Compile Include="Controllers\ProductController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
@@ -549,6 +550,8 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Interfaces\IAPIPreventaService.cs" />
+    <Compile Include="Interfaces\IPreSalesService.cs" />
     <Compile Include="Mappers\base\IListMapper.cs" />
     <Compile Include="Mappers\base\IMapper.cs" />
     <Compile Include="Mappers\base\ListMapper.cs" />
@@ -565,6 +568,7 @@
     <Compile Include="Mappers\TrackingConfigurationMapper.cs" />
     <Compile Include="Models\AccountBindingModels.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
+    <Compile Include="Models\DTO\APIPreventaDTO.cs" />
     <Compile Include="Models\DTO\ApiVersionDto.cs" />
     <Compile Include="Models\DTO\ApplicationDto.cs" />
     <Compile Include="Models\DTO\Article.cs" />
@@ -584,6 +588,7 @@
     <Compile Include="Models\DTO\Invoice\InvoiceOpeFacturaDto.cs" />
     <Compile Include="Models\DTO\Invoice\SimpleInvoiceLineOpeFactura.cs" />
     <Compile Include="Models\DTO\OrderDTO.cs" />
+    <Compile Include="Models\DTO\PreSalesDTO.cs" />
     <Compile Include="Models\DTO\Product.cs" />
     <Compile Include="Models\DTO\PromocionData.cs" />
     <Compile Include="Models\DTO\PromotionCatalog.cs" />
@@ -678,6 +683,7 @@
     <Compile Include="Models\Message\SaleModels.cs" />
     <Compile Include="Models\Message\ApiDigitalizacionMessage.cs" />
     <Compile Include="Models\Message\LiquidationMessage.cs" />
+    <Compile Include="Models\Responses\APIPreventaResponse.cs" />
     <Compile Include="Models\Responses\BillPocketTokensResponse.cs" />
     <Compile Include="Models\Message\SaleTeamMessage.cs" />
     <Compile Include="Models\Requests\CRMRequests.cs" />
@@ -751,6 +757,7 @@
     <Compile Include="Providers\ApplicationOAuthProvider.cs" />
     <Compile Include="Results\ChallengeResult.cs" />
     <Compile Include="Services\ApiDigitalizacionService.cs" />
+    <Compile Include="Services\APIPreventaService.cs" />
     <Compile Include="Services\ApiVersionService.cs" />
     <Compile Include="Services\ApplicationService.cs" />
     <Compile Include="Services\BConnectService.cs" />
@@ -766,6 +773,7 @@
     <Compile Include="Services\LoyaltyEnsitechService.cs" />
     <Compile Include="Services\IsSalePointService.cs" />
     <Compile Include="Services\Ope20Service.cs" />
+    <Compile Include="Services\PreSalesService.cs" />
     <Compile Include="Services\RoleTeamService.cs" />
     <Compile Include="Services\RouteTeamInventoryAvailableService.cs" />
     <Compile Include="Services\RouteTeamService.cs" />
@@ -839,6 +847,7 @@
     <Compile Include="Utils\InvoiceData.cs" />
     <Compile Include="Utils\NumberUtil.cs" />
     <Compile Include="Utils\PredicateBuilder.cs" />
+    <Compile Include="Utils\StatusCodeValidatorPreSales.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Areas\HelpPage\HelpPage.css" />
@@ -986,6 +995,7 @@
     <Folder Include="App_Data\" />
     <Folder Include="Views\Assistant\" />
     <Folder Include="Views\BillPocket\" />
+    <Folder Include="Views\PreSales\" />
     <Folder Include="Views\RouteTeamInventoryAvailable\" />
     <Folder Include="Views\VersionApi\" />
   </ItemGroup>
