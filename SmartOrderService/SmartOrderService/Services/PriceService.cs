@@ -218,10 +218,9 @@ namespace SmartOrderService.Services
 
             var soUser = db.so_inventory.Where(i => i.inventoryId == InventoryId).FirstOrDefault().so_user;
             var route = db.so_user_route.Where(ur => ur.userId == soUser.userId && ur.status).FirstOrDefault();
-
+            
             CustomerVarioService varioService = new CustomerVarioService();
-
-            var vario = varioService.GetCustomerVarioIdByRouteId(route.routeId);
+            var vario = varioService.GetCustomerVarioByRouteId(route.routeId).customerId;
 
             if (soUser.type == so_user.POAC_TYPE || soUser.type == so_user.CCEH_TYPE)
             {
