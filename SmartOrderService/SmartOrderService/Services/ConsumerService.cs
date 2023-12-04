@@ -1828,7 +1828,7 @@ namespace SmartOrderService.Services
         {
             so_products_price_list response = null;
             CustomerVarioService varioService = new CustomerVarioService();
-            var customerVario = varioService.GetCustomerVarioByRouteId(route.routeId);
+            var customerVario = varioService.GetCustomerVarioForCreate(UoWConsumer, route.routeId);
 
             //Logica que será para la siguiente iniciativa
             //var customerVario = UoWConsumer.RouteCustomerVarioRepository
