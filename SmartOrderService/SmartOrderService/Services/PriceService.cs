@@ -79,7 +79,7 @@ namespace SmartOrderService.Services
             if(priceList == null)
             {
                 CustomerVarioService varioService = new CustomerVarioService();
-                var customerVario = varioService.GetCustomerVarioByRouteId(routeId);
+                var customerVario = varioService.GetCustomerVarioForCreate(db, routeId);
 
                 if(customerVario != null)
                     priceList = db.so_products_price_list
