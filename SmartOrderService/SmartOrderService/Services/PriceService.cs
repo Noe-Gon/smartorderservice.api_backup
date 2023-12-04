@@ -78,11 +78,10 @@ namespace SmartOrderService.Services
 
             if(priceList == null)
             {
-                var customerVario = db.so_route_customer
-                    .Where(x => x.routeId == routeId && x.so_customer.name == "cliente_vario")
-                    .FirstOrDefault();
+                CustomerVarioService varioService = new CustomerVarioService();
+                var customerVario = varioService.GetCustomerVarioForCreate(db, routeId);
 
-                if(customerVario != null)
+                if (customerVario != null)
                     priceList = db.so_products_price_list
                        .Join(db.so_customer_products_price_list,
                            pl => pl.products_price_listId,
@@ -219,12 +218,9 @@ namespace SmartOrderService.Services
 
             var soUser = db.so_inventory.Where(i => i.inventoryId == InventoryId).FirstOrDefault().so_user;
             var route = db.so_user_route.Where(ur => ur.userId == soUser.userId && ur.status).FirstOrDefault();
-
-            var customerVario = db.so_customer.Where(x => x.name == "cliente_vario" && x.status).ToList();
-            var routeCustomer = customerVario.Where(x => x.so_route_customer.FirstOrDefault().routeId == route.routeId).FirstOrDefault();
-
-            var vario = routeCustomer.customerId;
-
+            
+            CustomerVarioService varioService = new CustomerVarioService();
+            var vario = varioService.GetCustomerVarioByRouteId(route.routeId).customerId;
 
             if (soUser.type == so_user.POAC_TYPE || soUser.type == so_user.CCEH_TYPE)
             {

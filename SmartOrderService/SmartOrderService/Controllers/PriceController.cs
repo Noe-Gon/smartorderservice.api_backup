@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
+using SmartOrderService.CustomExceptions;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;
 using SmartOrderService.Services;
@@ -103,7 +104,10 @@ namespace SmartOrderService.Controllers
 
                 response = Request.CreateResponse(HttpStatusCode.OK, prices);
             }
-
+            catch (NotFoundVarioRouteException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+            }
             catch (Exception e)
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict, "Uppsss..." + e.Message);

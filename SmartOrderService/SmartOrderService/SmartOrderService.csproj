@@ -350,6 +350,7 @@
     <Compile Include="CustomExceptions\NoRouteConfigTripulacsException.cs" />
     <Compile Include="CustomExceptions\NotEnoughProductAmountException.cs" />
     <Compile Include="CustomExceptions\NotFoundUsersConfigException.cs" />
+    <Compile Include="CustomExceptions\NotFoundVarioRouteException.cs" />
     <Compile Include="CustomExceptions\NoUserFoundException.cs" />
     <Compile Include="CustomExceptions\InventoryRevisionException.cs" />
     <Compile Include="CustomExceptions\Ope20Exception.cs" />
@@ -758,6 +759,7 @@
     <Compile Include="Services\ConsumerService.cs" />
     <Compile Include="Services\CRMService.cs" />
     <Compile Include="Services\CustomerBlockedService.cs" />
+    <Compile Include="Services\CustomerVarioService.cs" />
     <Compile Include="Services\DigitalTicketConfigurationService.cs" />
     <Compile Include="Services\EmailService.cs" />
     <Compile Include="Services\LiquidationService.cs" />
