@@ -232,11 +232,16 @@ namespace SmartOrderService.Services
                     NeighborhoodIdName = request.NeighborhoodName,
                     FiguraId = figuraId
                 };
+                /*
+                 * Deshabilitado por errores desconociddos
+                 */
+                //newCustomerAdditionalData.Code = CRMService.ConsumerToCRM(crmRequest, CRMService.TypeCreate, Method.POST);
 
-                newCustomerAdditionalData.Code = CRMService.ConsumerToCRM(crmRequest, CRMService.TypeCreate, Method.POST);
-
-                if (newCustomerAdditionalData.Code == null)
-                    throw new CRMException("No se logró registrar en CRM");
+                /*
+                 * Deshabilitado por errores desconociddos
+                 */
+                //if (newCustomerAdditionalData.Code == null)
+                //    throw new CRMException("No se logró registrar en CRM");
 
                 UoWConsumer.CustomerAdditionalDataRepository.Insert(newCustomerAdditionalData);
                 UoWConsumer.CustomerDataRepository.Insert(newCustomerData);
@@ -644,17 +649,19 @@ namespace SmartOrderService.Services
                         FiguraId = figuraId,
                         PriceListId = productPriceList.is_master ? (int?)null : Convert.ToInt32(productPriceList.code),
                     };
+                    /*
+                     * Deshabilitado por errores desconociddos
+                    // */
+                    //if (customerAdditionalDateAux.Code != null)
+                    //{
+                    //    if (CRMService.ConsumerToCRM(crmRequest, CRMService.TypeUpdate, Method.POST) == null)
+                    //        throw new CRMException("No se logró registrar en CRM");
+                    //}
+                    //else
+                    //    customerAdditionalDateAux.Code = CRMService.ConsumerToCRM(crmRequest, CRMService.TypeCreate, Method.POST);
 
-                    if (customerAdditionalDateAux.Code != null)
-                    {
-                        if (CRMService.ConsumerToCRM(crmRequest, CRMService.TypeUpdate, Method.POST) == null)
-                            throw new CRMException("No se logró registrar en CRM");
-                    }
-                    else
-                        customerAdditionalDateAux.Code = CRMService.ConsumerToCRM(crmRequest, CRMService.TypeCreate, Method.POST);
-
-                    if (customerAdditionalDateAux.Code == null)
-                        throw new CRMException("No se logró registrar en CRM");
+                    //if (customerAdditionalDateAux.Code == null)
+                    //    throw new CRMException("No se logró registrar en CRM");
 
                     UoWConsumer.RouteCustomerRepository.InsertByRange(newDaysInRoute);
                     UoWConsumer.RouteCustomerRepository.UpdateByRange(daysInRoute);
@@ -1377,7 +1384,10 @@ namespace SmartOrderService.Services
                         CFECode = null,
                         EntityId = customerAdditionalData.Code
                     };
-                    CRMService.ConsumerToCRM(crmRequest, CRMService.TypeUpdate, Method.POST);
+                    /*
+                     * Deshabilitado por errores desconociddos
+                     */
+                    //CRMService.ConsumerToCRM(crmRequest, CRMService.TypeUpdate, Method.POST);
                 }
 
                 customer.status = false;

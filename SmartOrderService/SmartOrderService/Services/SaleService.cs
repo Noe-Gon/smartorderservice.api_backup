@@ -2272,7 +2272,7 @@ namespace SmartOrderService.Services
                 SaleTeam saleResult = CreateSaleResultFromSale(sale);
                 try
                 {
-                    if (sale.SaleDetails.Count() > 0)
+                    if (saleResult.SaleDetails.Count() > 0 || saleResult.PromotionCatalog.Count() > 0 || saleResult.SalePromotions.Count() > 0)
                     {
                         if (!checkIfSaleExist(sale))
                         {
@@ -3710,7 +3710,8 @@ namespace SmartOrderService.Services
                             });
                         }
 
-                        foreach (var item in sale.so_sale_detail_article)
+                        var saleDetailArticles = sale.so_sale_detail_article == null ? new List<so_sale_detail_article>() : sale.so_sale_detail_article.ToList();
+                        foreach (var item in saleDetailArticles)
                         {
                             var article = db.so_article_promotional.Where(x => x.id == item.article_promotionalId).FirstOrDefault();
                             if (article == null)
