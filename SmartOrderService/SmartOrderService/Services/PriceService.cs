@@ -81,7 +81,7 @@ namespace SmartOrderService.Services
                 CustomerVarioService varioService = new CustomerVarioService();
                 var customerVario = varioService.GetCustomerVarioForCreate(db, routeId);
 
-                if(customerVario != null)
+                if (customerVario != null)
                     priceList = db.so_products_price_list
                        .Join(db.so_customer_products_price_list,
                            pl => pl.products_price_listId,

@@ -70,9 +70,10 @@ namespace SmartOrderService.Services
 
                 if (existCustomer != null)
                     throw new DuplicateEntityException("Ya existe un consumidor con ese CFE");
-
+                /*
                 if (IsCFEInCRM(request.CFECode))
                     throw new DuplicateEntityException("Ya existe un consumidor con ese CFE en CRM");
+                */
 
                 var newCustomer = new so_customer
                 {
@@ -110,6 +111,7 @@ namespace SmartOrderService.Services
                 var newCustomerAdditionalData = new so_customer_additional_data()
                 {
                     Customer = newCustomer,
+                    CustomerId = newCustomer.customerId,
                     Phone = request.Phone,
                     Phone_2 = request.Phone_2,
                     Email_2 = request.Email_2,
@@ -199,10 +201,14 @@ namespace SmartOrderService.Services
                 string termsEmailURL = ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/TermsAndConditions/" + termsId;
 
                 //Se notifica al CMR
+                /*
                 var CRMService = new CRMService();
-
+                */
+                Guid? routeId = null;
+                Guid? figuraId = null;
+                /*
                 var routeId = GetIdRoute(route.code, route.so_branch.code);
-                var figuraId = GetFiguraCRM();
+                var figuraId = GetFiguraCRM(); */
 
                 var crmRequest = new CRMConsumerRequest
                 {
@@ -232,11 +238,16 @@ namespace SmartOrderService.Services
                     NeighborhoodIdName = request.NeighborhoodName,
                     FiguraId = figuraId
                 };
+                /*
+                 * Deshabilitado por errores desconociddos
+                 */
+                //newCustomerAdditionalData.Code = CRMService.ConsumerToCRM(crmRequest, CRMService.TypeCreate, Method.POST);
 
-                newCustomerAdditionalData.Code = CRMService.ConsumerToCRM(crmRequest, CRMService.TypeCreate, Method.POST);
-
-                if (newCustomerAdditionalData.Code == null)
-                    throw new CRMException("No se logró registrar en CRM");
+                /*
+                 * Deshabilitado por errores desconociddos
+                 */
+                //if (newCustomerAdditionalData.Code == null)
+                //    throw new CRMException("No se logró registrar en CRM");
 
                 UoWConsumer.CustomerAdditionalDataRepository.Insert(newCustomerAdditionalData);
                 UoWConsumer.CustomerDataRepository.Insert(newCustomerData);
@@ -468,8 +479,10 @@ namespace SmartOrderService.Services
                     }
                     else
                     {
+                        /*
                         if (IsCFEInCRM(request.CFECode, updateCustomerAdditionalData.Code == null ? null : updateCustomerAdditionalData.Code.ToString()))
                             throw new DuplicateEntityException("Ya existe un consumidor con ese CFE en CRM");
+                        */
 
                         updateCustomerAdditionalData.NeighborhoodId = request.Neighborhood == defaultGuid ? null : request.Neighborhood;
                         updateCustomerAdditionalData.Email_2 = request.Email_2 ?? updateCustomerAdditionalData.Email_2;
@@ -611,10 +624,13 @@ namespace SmartOrderService.Services
                         UoWConsumer.CustomerProductPriceListRepository.Insert(newCustomerProductPriceList);
                     }
 
+                    /*
                     var routeId = GetIdRoute(route.code, route.so_branch.code);
                     var figuraId = GetFiguraCRM();
+                    */
 
                     //Notificar al CRM
+                    /*
                     var CRMService = new CRMService();
                     var crmRequest = new CRMConsumerRequest
                     {
@@ -644,17 +660,21 @@ namespace SmartOrderService.Services
                         FiguraId = figuraId,
                         PriceListId = productPriceList.is_master ? (int?)null : Convert.ToInt32(productPriceList.code),
                     };
+                    */
 
-                    if (customerAdditionalDateAux.Code != null)
-                    {
-                        if (CRMService.ConsumerToCRM(crmRequest, CRMService.TypeUpdate, Method.POST) == null)
-                            throw new CRMException("No se logró registrar en CRM");
-                    }
-                    else
-                        customerAdditionalDateAux.Code = CRMService.ConsumerToCRM(crmRequest, CRMService.TypeCreate, Method.POST);
+                    /*
+                     * Deshabilitado por errores desconociddos
+                    // */
+                    //if (customerAdditionalDateAux.Code != null)
+                    //{
+                    //    if (CRMService.ConsumerToCRM(crmRequest, CRMService.TypeUpdate, Method.POST) == null)
+                    //        throw new CRMException("No se logró registrar en CRM");
+                    //}
+                    //else
+                    //    customerAdditionalDateAux.Code = CRMService.ConsumerToCRM(crmRequest, CRMService.TypeCreate, Method.POST);
 
-                    if (customerAdditionalDateAux.Code == null)
-                        throw new CRMException("No se logró registrar en CRM");
+                    //if (customerAdditionalDateAux.Code == null)
+                    //    throw new CRMException("No se logró registrar en CRM");
 
                     UoWConsumer.RouteCustomerRepository.InsertByRange(newDaysInRoute);
                     UoWConsumer.RouteCustomerRepository.UpdateByRange(daysInRoute);
@@ -1377,7 +1397,10 @@ namespace SmartOrderService.Services
                         CFECode = null,
                         EntityId = customerAdditionalData.Code
                     };
-                    CRMService.ConsumerToCRM(crmRequest, CRMService.TypeUpdate, Method.POST);
+                    /*
+                     * Deshabilitado por errores desconociddos
+                     */
+                    //CRMService.ConsumerToCRM(crmRequest, CRMService.TypeUpdate, Method.POST);
                 }
 
                 customer.status = false;
