@@ -683,6 +683,7 @@
     <Compile Include="Models\Message\SaleModels.cs" />
     <Compile Include="Models\Message\ApiDigitalizacionMessage.cs" />
     <Compile Include="Models\Message\LiquidationMessage.cs" />
+    <Compile Include="Models\Responses\APICRMV1.cs" />
     <Compile Include="Models\Responses\APIPreventaResponse.cs" />
     <Compile Include="Models\Responses\BillPocketTokensResponse.cs" />
     <Compile Include="Models\Message\SaleTeamMessage.cs" />

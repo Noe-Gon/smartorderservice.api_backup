@@ -70,10 +70,11 @@ namespace SmartOrderService.Services
 
                 if (existCustomer != null)
                     throw new DuplicateEntityException("Ya existe un consumidor con ese CFE");
-                /*
-                if (IsCFEInCRM(request.CFECode))
+
+                var CRMService = new CRMService();
+
+                if (CRMService.IsCFEInCRM(request.CFECode))
                     throw new DuplicateEntityException("Ya existe un consumidor con ese CFE en CRM");
-                */
 
                 var newCustomer = new so_customer
                 {
@@ -200,14 +201,9 @@ namespace SmartOrderService.Services
                 };
                 string termsEmailURL = ConfigurationManager.AppSettings["PortalUrl"] + "Consumer/TermsAndConditions/" + termsId;
 
-                //Se notifica al CMR
-                /*
-                var CRMService = new CRMService();
-                */
-                Guid? routeId = null;
                 Guid? figuraId = null;
+                var routeId = CRMService.GetIdRoute(route.code, route.so_branch.code);
                 /*
-                var routeId = GetIdRoute(route.code, route.so_branch.code);
                 var figuraId = GetFiguraCRM(); */
 
                 var crmRequest = new CRMConsumerRequest
@@ -367,6 +363,8 @@ namespace SmartOrderService.Services
 
                     so_customer updateCustomer;
 
+                    var CRMService = new CRMService();
+
                     if (request.OriginalCustomerId == null || request.OriginalCustomerId == 0)
                         updateCustomer = UoWConsumer.CustomerRepository
                             .Get(x => x.customerId == request.CustomerId && x.status)
@@ -479,10 +477,9 @@ namespace SmartOrderService.Services
                     }
                     else
                     {
-                        /*
-                        if (IsCFEInCRM(request.CFECode, updateCustomerAdditionalData.Code == null ? null : updateCustomerAdditionalData.Code.ToString()))
+
+                        if (CRMService.IsCFEInCRM(request.CFECode, updateCustomerAdditionalData.Code == null ? null : updateCustomerAdditionalData.Code.ToString()))
                             throw new DuplicateEntityException("Ya existe un consumidor con ese CFE en CRM");
-                        */
 
                         updateCustomerAdditionalData.NeighborhoodId = request.Neighborhood == defaultGuid ? null : request.Neighborhood;
                         updateCustomerAdditionalData.Email_2 = request.Email_2 ?? updateCustomerAdditionalData.Email_2;
@@ -624,10 +621,11 @@ namespace SmartOrderService.Services
                         UoWConsumer.CustomerProductPriceListRepository.Insert(newCustomerProductPriceList);
                     }
 
+                    var routeId = CRMService.GetIdRoute(route.code, route.so_branch.code);
                     /*
-                    var routeId = GetIdRoute(route.code, route.so_branch.code);
                     var figuraId = GetFiguraCRM();
-                    */
+                     */
+
 
                     //Notificar al CRM
                     /*
@@ -1620,117 +1618,6 @@ namespace SmartOrderService.Services
                 .FirstOrDefault();
 
             return DrivingId;
-        }
-
-        private bool IsCFEInCRM(string cfe, string id = null)
-        {
-            var service = new CRMService().GetService();
-            service.Timeout = new TimeSpan(0, 2, 0);
-
-            string fetchXml =
-                       @"<fetch version='1.0' output-format='xml-platform' mapping='logical' distinct='false'>
-                             <entity name='ope_clientes_cancun'>
-
-                                <attribute name='ope_clientes_cancunid' /> 
-
-                                <attribute name='ope_name' />
-                                <attribute name='ope_cfe' />
-
-                                 <attribute name='ope_rutasidname' /> 
-
-                                <attribute name='ope_tipocliente' />" +
-                                @"<filter type='and'>
-                                        <condition attribute='ope_cfe' operator='eq' value = '" + cfe + "'/>" +
-                                        "<condition attribute='ope_tipocliente' operator='eq' value = '1' />" +
-                                    "</filter>" +
-                            "</entity>" +
-                        " </fetch>";
-
-            
-            var results = service.RetrieveMultiple(new FetchExpression(fetchXml));
-
-            if (results.Entities.Any())
-            {
-                if (id != null)
-                {
-                    var entityList = results.Entities.ToList();
-                    var idCRM = entityList.First().GetAttributeValue<Guid>("ope_clientes_cancunid").ToString();
-
-                    if (idCRM == id)
-                        return false;
-                    else
-                        return true;
-                }
-
-                return true;
-            }
-            return false;
-        }
-
-        private Guid? GetIdRoute(string routeCode, string brachCode)
-        {
-            var service = new CRMService().GetService();
-            service.Timeout = new TimeSpan(0, 2, 0);
-
-            var branchId = GetCRMCedisId(brachCode);
-
-            string fetchXml = @"<fetch version='1.0' output-format='xml-platform' mapping='logical' distinct='false'>
-                             <entity name='ope_rutas'>
-                                <attribute name='ope_name' />
-                                <attribute name='ope_idruta' />
-                                <attribute name='ope_rutasid' />
-                                <attribute name='createdon' />
-                                <attribute name='statecode' />
-                                <attribute name='ope_idbiruta' />
-                                <order attribute='createdon' descending='false' />" +
-                                @"<filter type='and'>
-                                        <condition attribute='ope_idruta' operator='eq' value = '" + routeCode + "'/>" +
-                                        "<condition attribute='ope_cedisid' operator='eq' value = '" + branchId.ToString() + "'/>" +
-                                        "<condition attribute='statecode' operator='eq' value = '0' />" +
-                                        "<condition attribute='ope_idbiruta' operator='not-null' />" +
-                                    "</filter>" +
-                            "</entity>" +
-                        " </fetch>";
-
-            var results = service.RetrieveMultiple(new FetchExpression(fetchXml));
-             
-            if (results.Entities.Any())
-            {
-                var entity = results.Entities.ToList().FirstOrDefault();
-                var ope_rutasid = entity == null ? null : entity.GetAttributeValue<Guid?>("ope_rutasid");
-
-                return ope_rutasid;
-            }
-            return null;
-        }
-
-        private Guid? GetCRMCedisId(string brachCode)
-        {
-            var service = new CRMService().GetService();
-            service.Timeout = new TimeSpan(0, 2, 0);
-
-            string fetchXml =
-                        @"<fetch version='1.0' output-format='xml-platform' mapping='logical' distinct='false'>
-                             <entity name='ope_cedis'>
-                                <attribute name='ope_name' />
-                                <attribute name='ope_idcedis' />
-                                <attribute name='ope_cedisid' />" +
-                                     @"<filter type='and'>
-                                        <condition attribute='ope_idcedis' operator='eq' value = '" + brachCode + "'/>" +
-                                     "</filter>" +
-                             "</entity>" +
-                         " </fetch>";
-
-            var results = service.RetrieveMultiple(new FetchExpression(fetchXml));
-
-            if (results.Entities.Any())
-            {
-                var entity = results.Entities.ToList().FirstOrDefault();
-                var ope_rutasid = entity == null ? null : entity.GetAttributeValue<Guid?>("ope_cedisid");
-
-                return ope_rutasid;
-            }
-            return null;
         }
 
         public Guid? GetFiguraCRM()
