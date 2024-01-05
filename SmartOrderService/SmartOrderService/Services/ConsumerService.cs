@@ -234,16 +234,11 @@ namespace SmartOrderService.Services
                     NeighborhoodIdName = request.NeighborhoodName,
                     FiguraId = figuraId
                 };
-                /*
-                 * Deshabilitado por errores desconociddos
-                 */
-                //newCustomerAdditionalData.Code = CRMService.ConsumerToCRM(crmRequest, CRMService.TypeCreate, Method.POST);
 
-                /*
-                 * Deshabilitado por errores desconociddos
-                 */
-                //if (newCustomerAdditionalData.Code == null)
-                //    throw new CRMException("No se logró registrar en CRM");
+                newCustomerAdditionalData.Code = CRMService.ConsumerToCRM(crmRequest);
+
+                if (newCustomerAdditionalData.Code == null)
+                    throw new CRMException("No se logró registrar en CRM");
 
                 UoWConsumer.CustomerAdditionalDataRepository.Insert(newCustomerAdditionalData);
                 UoWConsumer.CustomerDataRepository.Insert(newCustomerData);
@@ -622,14 +617,8 @@ namespace SmartOrderService.Services
                     }
 
                     var routeId = CRMService.GetIdRoute(route.code, route.so_branch.code);
-                    /*
-                    var figuraId = GetFiguraCRM();
-                     */
+                    Guid? figuraId = null;//GetFiguraCRM();
 
-
-                    //Notificar al CRM
-                    /*
-                    var CRMService = new CRMService();
                     var crmRequest = new CRMConsumerRequest
                     {
                         Name = updateCustomer.name,
@@ -658,21 +647,17 @@ namespace SmartOrderService.Services
                         FiguraId = figuraId,
                         PriceListId = productPriceList.is_master ? (int?)null : Convert.ToInt32(productPriceList.code),
                     };
-                    */
 
-                    /*
-                     * Deshabilitado por errores desconociddos
-                    // */
-                    //if (customerAdditionalDateAux.Code != null)
-                    //{
-                    //    if (CRMService.ConsumerToCRM(crmRequest, CRMService.TypeUpdate, Method.POST) == null)
-                    //        throw new CRMException("No se logró registrar en CRM");
-                    //}
-                    //else
-                    //    customerAdditionalDateAux.Code = CRMService.ConsumerToCRM(crmRequest, CRMService.TypeCreate, Method.POST);
+                    if (customerAdditionalDateAux.Code != null)
+                    {
+                        if (CRMService.ConsumerToCRM(crmRequest) == null)
+                            throw new CRMException("No se logró registrar en CRM");
+                    }
+                    else
+                        customerAdditionalDateAux.Code = CRMService.ConsumerToCRM(crmRequest);
 
-                    //if (customerAdditionalDateAux.Code == null)
-                    //    throw new CRMException("No se logró registrar en CRM");
+                    if (customerAdditionalDateAux.Code == null)
+                        throw new CRMException("No se logró registrar en CRM");
 
                     UoWConsumer.RouteCustomerRepository.InsertByRange(newDaysInRoute);
                     UoWConsumer.RouteCustomerRepository.UpdateByRange(daysInRoute);
@@ -1395,10 +1380,8 @@ namespace SmartOrderService.Services
                         CFECode = null,
                         EntityId = customerAdditionalData.Code
                     };
-                    /*
-                     * Deshabilitado por errores desconociddos
-                     */
-                    //CRMService.ConsumerToCRM(crmRequest, CRMService.TypeUpdate, Method.POST);
+
+                    CRMService.ConsumerToCRM(crmRequest);
                 }
 
                 customer.status = false;
@@ -1618,37 +1601,6 @@ namespace SmartOrderService.Services
                 .FirstOrDefault();
 
             return DrivingId;
-        }
-
-        public Guid? GetFiguraCRM()
-        {
-            string employeeCode = ConfigurationManager.AppSettings["CodigoEmpleadoCRM"];
-
-            var service = new CRMService().GetService();
-            service.Timeout = new TimeSpan(0, 2, 0);
-
-            string fetchXml =
-                        @"<fetch version='1.0' output-format='xml-platform' mapping='logical' distinct='false'>
-                             <entity name='ope_figura'>
-                                <attribute name='ope_name' />
-                                <attribute name='ope_codigoempleado' />
-                                <attribute name='ope_figuraid' />" +
-                                     @"<filter type='and'>
-                                        <condition attribute='ope_codigoempleado' operator='eq' value = '" + employeeCode + "'/>" +
-                                     "</filter>" +
-                             "</entity>" +
-                         " </fetch>";
-
-            var results = service.RetrieveMultiple(new FetchExpression(fetchXml));
-
-            if (results.Entities.Any())
-            {
-                var entity = results.Entities.ToList().FirstOrDefault();
-                var Ope_figuraId = entity == null ? null : entity.GetAttributeValue<Guid?>("ope_figuraid");
-
-                return Ope_figuraId;
-            }
-            return null;
         }
 
         public ResponseBase<GetConsumerResponse> GetConsumer(int customerId)
