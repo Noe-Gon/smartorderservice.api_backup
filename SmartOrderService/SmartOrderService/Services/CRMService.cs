@@ -61,14 +61,34 @@ namespace SmartOrderService.Services
             {
                 return null;
             }
+            if (jsonObject.Data == null)
+            {
+                return null;
+            }
             return jsonObject.Data.CrmId;
         }
 
-        public Guid? ConsumerToCRM(CRMConsumerRequest consumer)
+        public Guid? InsertConsumerToCRM(CRMConsumerRequest consumer)
         {
             try
             {
-                return ExecuteActionConsumerToCRM(consumer, Method.POST);
+                var client = new RestClient();
+                client.BaseUrl = new Uri(URL);
+                var request = new RestRequest("api/crm/consumer", Method.POST);
+                request.RequestFormat = DataFormat.Json;
+                request.AddBody(consumer);
+                var RestResponse = client.Execute(request);
+                string content = RestResponse.Content;
+                var jsonObject = JsonConvert.DeserializeObject<ResponseBase<MVIdFromCRM>>(content);
+                if (RestResponse.StatusCode != HttpStatusCode.Created)
+                {
+                    return null;
+                }
+                if (jsonObject.Data == null)
+                {
+                    return null;
+                }
+                return jsonObject.Data.CrmId;
             }
             catch (Exception e)
             {
@@ -80,7 +100,19 @@ namespace SmartOrderService.Services
         {
             try
             {
-                return ExecuteActionConsumerToCRM(consumer, Method.PUT);
+                var client = new RestClient();
+                client.BaseUrl = new Uri(URL);
+                var request = new RestRequest("api/crm/consumer", Method.PUT);
+                request.RequestFormat = DataFormat.Json;
+                request.AddBody(consumer);
+                var RestResponse = client.Execute(request);
+                string content = RestResponse.Content;
+                var jsonObject = JsonConvert.DeserializeObject<ResponseBase<MVIdFromCRM>>(content);
+                if (RestResponse.StatusCode != HttpStatusCode.OK)
+                {
+                    return null;
+                }
+                return jsonObject.Data.CrmId;
             }
             catch (Exception e)
             {
@@ -88,33 +120,28 @@ namespace SmartOrderService.Services
             }
         }
 
-        public Guid? DeleteConsumerToCRM(CRMConsumerRequest consumer)
+        public bool? DeleteConsumerToCRM(CRMConsumerRequest consumer)
         {
             try
             {
-                return ExecuteActionConsumerToCRM(consumer, Method.PUT);
+                var client = new RestClient();
+                client.BaseUrl = new Uri(URL);
+                var request = new RestRequest("api/crm/consumer/delete", Method.PUT);
+                request.RequestFormat = DataFormat.Json;
+                request.AddParameter("IdCRM", consumer.EntityId.ToString());
+                var RestResponse = client.Execute(request);
+                string content = RestResponse.Content;
+                var jsonObject = JsonConvert.DeserializeObject<ResponseBase<bool>>(content);
+                if (RestResponse.StatusCode != HttpStatusCode.OK)
+                {
+                    return null;
+                }
+                return jsonObject.Data;
             }
             catch (Exception e)
             {
                 return null;
             }
-        }
-
-        private Guid? ExecuteActionConsumerToCRM(CRMConsumerRequest consumer, Method type)
-        {
-            var client = new RestClient();
-            client.BaseUrl = new Uri(URL);
-            var request = new RestRequest("api/crm/consumer", type);
-            request.RequestFormat = DataFormat.Json;
-            request.AddBody(consumer);
-            var RestResponse = client.Execute(request);
-            string content = RestResponse.Content;
-            var jsonObject = JsonConvert.DeserializeObject<ResponseBase<MVIdFromCRM>>(content);
-            if (RestResponse.StatusCode != HttpStatusCode.OK)
-            {
-                return null;
-            }
-            return jsonObject.Data.CrmId;
         }
     }
 }

@@ -235,7 +235,7 @@ namespace SmartOrderService.Services
                     FiguraId = figuraId
                 };
 
-                newCustomerAdditionalData.Code = CRMService.ConsumerToCRM(crmRequest);
+                newCustomerAdditionalData.Code = CRMService.InsertConsumerToCRM(crmRequest);
 
                 if (newCustomerAdditionalData.Code == null)
                     throw new CRMException("No se logró registrar en CRM");
@@ -650,11 +650,11 @@ namespace SmartOrderService.Services
 
                     if (customerAdditionalDateAux.Code != null)
                     {
-                        if (CRMService.ConsumerToCRM(crmRequest) == null)
+                        if (CRMService.UpdateConsumerToCRM(crmRequest) == null)
                             throw new CRMException("No se logró registrar en CRM");
                     }
                     else
-                        customerAdditionalDateAux.Code = CRMService.ConsumerToCRM(crmRequest);
+                        customerAdditionalDateAux.Code = CRMService.InsertConsumerToCRM(crmRequest);
 
                     if (customerAdditionalDateAux.Code == null)
                         throw new CRMException("No se logró registrar en CRM");
@@ -1381,7 +1381,7 @@ namespace SmartOrderService.Services
                         EntityId = customerAdditionalData.Code
                     };
 
-                    CRMService.ConsumerToCRM(crmRequest);
+                    CRMService.DeleteConsumerToCRM(crmRequest);
                 }
 
                 customer.status = false;
