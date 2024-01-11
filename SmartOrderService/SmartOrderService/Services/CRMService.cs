@@ -53,7 +53,7 @@ namespace SmartOrderService.Services
             var request = new RestRequest("api/crm/route", Method.GET);
             request.RequestFormat = DataFormat.Json;
             request.AddParameter("routeCode", routeCode);
-            request.AddParameter("brachCode", brachCode);
+            request.AddParameter("branchCode", brachCode);
             var RestResponse = client.Execute(request);
             string content = RestResponse.Content;
             var jsonObject = JsonConvert.DeserializeObject<ResponseBase<MVIdFromCRM>>(content);
