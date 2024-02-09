@@ -36,6 +36,13 @@ namespace SmartOrderService.Services
             var request = new RestRequest("api/crm/consumer/existCFE", Method.GET);
             request.RequestFormat = DataFormat.Json;
             request.AddParameter("CFEcode", cfe);
+            /*
+             * Descomentar para validar si es el mismo crm que el cliente
+            if (!string.IsNullOrEmpty(id))
+            {
+                request.AddParameter("id", id);
+            }
+            */
             var RestResponse = client.Execute(request);
             string content = RestResponse.Content;
             var jsonObject = JsonConvert.DeserializeObject<ResponseBase<MVIsInCRM>>(content);

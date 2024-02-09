@@ -146,6 +146,10 @@ namespace SmartOrderService.Controllers
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
             }
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message);
+            }
             return response;
         }
 

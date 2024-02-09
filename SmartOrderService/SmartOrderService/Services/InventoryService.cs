@@ -225,7 +225,7 @@ namespace SmartOrderService.Services
                         RecordRouteTeamInventory(inventoryId);
                         dbContextTransaction.Commit();
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
                         dbContextTransaction.Rollback();
                         throw;
@@ -254,6 +254,11 @@ namespace SmartOrderService.Services
 
         private void RecordRouteTeamInventory(int inventoryId)
         {
+            var exist = db.so_route_team_inventory_available.Where(x => x.inventoryId.Equals(inventoryId)).ToList();
+            if (exist.Count > 0)
+            {
+                return;
+            }
             var inventoryDetailList = db.so_inventory_detail.Where(s => s.inventoryId.Equals(inventoryId)).ToList();
             foreach (var inventoryDetail in inventoryDetailList)
             {
@@ -794,17 +799,33 @@ namespace SmartOrderService.Services
             Guid workDayId = routeTeamService.GetWorkdayByUserAndDate(imppulsorId, DateTime.Today).work_dayId;
             int routeId = routeTeamService.searchRouteId(userId);
             int lastTravelNumber = SearchLastTravelNumber(workDayId, imppulsorId);
-            var routeTeamTravel = new so_route_team_travels_employees()
+            var exist = GetRouteTeamTravelsEmployee(userId, inventoryId, workDayId, routeId);
+            if (exist != null)
             {
-                inventoryId = inventoryId,
-                work_dayId = workDayId,
-                routeId = routeId,
-                travelNumber = lastTravelNumber + 1,
-                active = true,
-                userId = userId
-            };
-            db.so_route_team_travels_employees.Add(routeTeamTravel);
+                exist.travelNumber = exist.travelNumber;
+                exist.active = true;
+                exist.modifiedon = DateTime.Now;
+            }
+            else
+            {
+                var routeTeamTravel = new so_route_team_travels_employees()
+                {
+                    inventoryId = inventoryId,
+                    work_dayId = workDayId,
+                    routeId = routeId,
+                    travelNumber = lastTravelNumber + 1,
+                    active = true,
+                    userId = userId
+                };
+                db.so_route_team_travels_employees.Add(routeTeamTravel);
+            }
             db.SaveChanges();
+        }
+
+        public so_route_team_travels_employees GetRouteTeamTravelsEmployee(int userId, int inventoryId, Guid workDayId, int routeId)
+        {
+            var exist = db.so_route_team_travels_employees.Where(x => x.userId == userId && x.work_dayId == workDayId && x.routeId == routeId && x.inventoryId == inventoryId).FirstOrDefault();
+            return exist;
         }
 
         private int SearchLastTravelNumber(Guid workDay, int userId)
