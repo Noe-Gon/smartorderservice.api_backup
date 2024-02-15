@@ -218,7 +218,11 @@ namespace SmartOrderService.Services
                     try
                     {
                         if (inventory.state == 1)
+                        {
+                            RecordRouteTeamTravelStatus(userId, inventoryId);
+                            dbContextTransaction.Commit();
                             return;
+                        }
 
                         OpenInventory(inventoryId);
                         RecordRouteTeamTravelStatus(userId, inventoryId);
