@@ -567,5 +567,185 @@ namespace SmartOrderService.Services
 
             var RestResponse = client.Execute(requesto);
         }
+
+        public ResponseBase<MsgResponseBase> SendAdjustmentEmail(SendAdjustmentEmailRequest request)
+        {
+            try
+            {
+                string sRutaPlantilla = "~/Content/Template/AdjustmentSaleStatusEmail.html";
+
+                using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath(sRutaPlantilla)))
+                {
+                    string body = reader.ReadToEnd();
+
+                    body = body.Replace("{NumAjustes}", request.Sales.Count().ToString());
+                    body = body.Replace("{RouteAddress}", request.RouteAddress);
+                    body = body.Replace("{Date}", request.Date.ToString("dd/MMM/yyyy HH:mm"));
+                    body = body.Replace("{ImpulsorFullName}", request.ImpulsorFullName);
+                    body = body.Replace("{TotalAdjustment}", String.Format("{0:0.00}", request.TotalAdjustment));
+
+                    string tables = "";
+                    double totalAdjustment = 0;
+                    foreach (var adjustment in request.Sales)
+                    {
+                        tables = tables + adjustment.Table;
+                        totalAdjustment += adjustment.TotalAdjustment;
+                    }
+
+                    body = body.Replace("{tables}", tables);
+
+                    var mailInfo = new APIEmailSendEmailToManyUsersRequest()
+                    {
+                        To = request.LidersEmail,
+                        Subject = "Ajuste de liquidación",
+                        Body = body
+                    };
+
+                    APIEmailSendEmailToManyUsers(mailInfo);
+                }
+
+                return ResponseBase<MsgResponseBase>.Create(new MsgResponseBase
+                {
+                    Msg = "El correo se envió correctamente"
+                });
+            }
+            catch (Exception e)
+            {
+                return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                });
+            }
+        }
+
+        public SendAdjustmentEmailResponse GetAdjusmentTable(SendTicketDigitalEmailRequest request)
+        {
+            try
+            {
+                bool lTienePromociones = false;
+                bool lTieneLealtad = false;
+                string sRutaPlantilla = "~/Content/Template/AdjustmentTable.html";
+
+                if (request.dtTicket.Columns.Count > 0 && request.dtTicket.Rows.Count > 0)
+                {
+                    lTienePromociones = true;
+                }
+
+                using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath(sRutaPlantilla)))
+                {
+                    string body = reader.ReadToEnd();
+
+                    string tdBody = "";
+                    string tdBodyPromociones = "";
+                    string tdBodyLealtad = "";
+
+                    //Orders
+                    if (request.Order == null)
+                        body = body.Replace("{OrderTableTamplate}", "");
+                    else if (request.Order.OrderDetail.Count() == 0)
+                        body = body.Replace("{OrderTableTamplate}", "");
+                    else
+                    {
+                        using (StreamReader readerTemplate = new StreamReader(HttpContext.Current.Server.MapPath("~/Content/Template/OrderTableTemplate.html")))
+                        {
+                            string bodyOrderTemplate = readerTemplate.ReadToEnd();
+
+                            body = body.Replace("{OrderTableTamplate}", bodyOrderTemplate);
+                            body = body.Replace("{OrderDeliveryDate}", request.Order.DeliveryDate.ToString("dd/MM/yyyy"));
+                            string tableData = "";
+                            double totalPrice = 0;
+                            int index = 0;
+                            int totalOrderProductsSold = 0;
+
+                            foreach (var item in request.Order.OrderDetail)
+                            {
+                                index++;
+                                totalOrderProductsSold += item.Amount;
+                                totalPrice += item.TotalPrice;
+                                tableData += "<tr><td>" + index + ") " + item.ProductName + "</td>";
+                                tableData += "<td>" + item.Amount + "</td>";
+                                tableData += "<td>" + item.UnitPrice.ToString("0.00") + "</td>";
+                                tableData += "<td>" + item.TotalPrice.ToString("0.00") + "</td></tr>";
+                            }
+
+                            body = body.Replace("{OrderTdBody}", tableData);
+                            body = body.Replace("{OrderTotalProductsSold}", totalOrderProductsSold.ToString());
+                            body = body.Replace("{OrderTotalPrice}", totalPrice.ToString("0.00"));
+
+                            if (string.IsNullOrEmpty(request.ReferenceCode))
+                                body = body.Replace("id='reference_code'", "id='reference_code' style='display: none'");
+                            else
+                            {
+                                body = body.Replace("id='reference_code'", "id='reference_code' style='text-align: center; margin-bottom: 5px;'");
+                                body = body.Replace("{OrderReferenceCode}", request.ReferenceCode);
+                            }
+
+                        }
+                    }
+
+                    if (request.Sales.Count() == 0)
+                    {
+                        body = body.Replace("{SaleTableStyle}", "display: none;");
+                    }
+                    else
+                    {
+                        body = body.Replace("{SaleTableStyle}", "");
+                    }
+
+                    int totalProductsSold = 0;
+                    int totalBoxesSold = 0;
+                    int totalCountProductSold = 0;
+                    double total = 0.0;
+                    //Make Table
+                    foreach (var row in request.Sales)
+                    {
+                        totalProductsSold++;
+                        tdBody += "<tr><td>" + totalProductsSold + ") " + row.ProductName + "</td>";
+                        tdBody += "<td>" + row.Amount + "</td>";
+                        tdBody += "<td>" + "$" + String.Format("{0:0.00}", row.UnitPrice) + "</td>";
+                        tdBody += "<td>" + "$" + String.Format("{0:0.00}", row.TotalPrice) + "</td></tr>";
+                        totalBoxesSold += row.Amount;
+                        totalCountProductSold += row.Amount;
+                        total += row.TotalPrice;
+                    }
+
+                    if (lTienePromociones)
+                    {
+                        int totalPromos = 0;
+                        body = body.Replace("id='promociones' style='display:none'", "id='promociones' style='display:'");
+                        body = body.Replace("id='lblpromociones' style='display:none'", "id='lblpromociones' style='display:'");
+                        foreach (DataRow row in request.dtTicket.Rows)
+                        {
+                            tdBodyPromociones += "<tr><td style='width:400px'>" + row["id"] + ") " + row["name_product"].ToString() + " - (" + row["name"] + ")</td>";
+                            tdBodyPromociones += "<td style='width:100px'>" + row["amount"].ToString() + "</td>";
+                            tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", row["sale_price"]) + "</td>";
+                            tdBodyPromociones += "<td style='width:100px'>" + "$" + String.Format("{0:0.00}", row["total_price"]) + "</td></tr>";
+                            totalPromos += (int)row["amount"];
+                            total += Convert.ToDouble(row["total_price"]);
+                        }
+
+                        body = body.Replace("{TdBodyPromociones}", tdBodyPromociones);
+                        body = body.Replace("{TotalPromos}", totalPromos.ToString());
+                    }
+
+                    body = body.Replace("{TdBody}", tdBody);
+                    body = body.Replace("{TotalProductsSold}", totalCountProductSold.ToString());
+                    body = body.Replace("{TotalBoxesSold}", totalBoxesSold.ToString());
+                    body = body.Replace("{TotalPrice}", String.Format("{0:0.00}", total));
+
+
+                    return new SendAdjustmentEmailResponse()
+                    {
+                        Table = body,
+                        Total = total
+                    };
+                }
+
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
     }
 }

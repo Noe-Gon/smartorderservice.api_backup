@@ -511,6 +511,7 @@
     <Compile Include="DB\so_sale.cs" />
     <Compile Include="DB\so_salev2.cs" />
     <Compile Include="DB\so_sale_aditional_data.cs" />
+    <Compile Include="DB\so_sale_adjustment_reason.cs" />
     <Compile Include="DB\so_sale_combo.cs" />
     <Compile Include="DB\so_sale_combo_detail.cs" />
     <Compile Include="DB\so_sale_detail.cs" />
@@ -826,6 +827,8 @@
     <Content Include="Areas\HelpPage\HelpPage.css" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\Template\AdjustmentSaleStatusEmail.html" />
+    <Content Include="Content\Template\AdjustmentTable.html" />
     <Content Include="Content\Template\BillpocketReportEmail.html" />
     <Content Include="Content\Template\CancelOrderTicket.html" />
     <Content Include="Content\Template\CancelTicketDigitalEmail.html" />

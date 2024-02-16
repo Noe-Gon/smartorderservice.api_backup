@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using Algoritmos.Data.Enums;
+using Algoritmos.Data.UnitofWork;
+using Newtonsoft.Json;
 using OpeCDLib.Models;
 using RestSharp;
 using SmartOrderService.CustomExceptions;
@@ -2820,6 +2822,24 @@ namespace SmartOrderService.Services
             return saleDto;
         }
 
+        public void RegisterAdjustmentReason(int saleId, string reason, int customerId, int userId)
+        {
+            if (string.IsNullOrEmpty(reason))
+                return;
+
+            var newSaleAdjustmentReason = new so_sale_adjustment_reason()
+            {
+                CreatedBy = userId,
+                CreatedOn = DateTime.Now,
+                CustomerId = customerId,
+                Reason = reason,
+                SaleId = saleId,
+                Status = true
+            };
+
+            db.so_sale_adjustment_reason.Add(newSaleAdjustmentReason);
+            db.SaveChanges();
+        }
 
         public ResponseBase<MsgResponseBase> SendTicketDigital(SendTicketDigitalRequest request)
         {
@@ -3131,6 +3151,267 @@ namespace SmartOrderService.Services
                         {
                             "No se puede enviar el email", e.Message
                         });
+
+                }
+            }
+        }
+
+        public ResponseBase<MsgResponseBase> SendAdjustment(SendAdjustmentRequest request)
+        {
+            SendAdjustmentEmailRequest requestEMail = new SendAdjustmentEmailRequest();
+            if (request.Date == null)
+                request.Date = DateTime.Today;
+
+            so_route route = db.so_route.Where(x => x.routeId == request.RouteId)
+                    .FirstOrDefault();
+
+            requestEMail.RouteAddress = route.code + ": " + route.name;
+            requestEMail.Branch = route.so_branch.code + ": " + route.so_branch.name;
+
+            //Get Emails
+            if (string.IsNullOrEmpty(request.Email))
+                using (var uoWEmBeAlgoritmo = new UoWEmBeAlgoritmo())
+                {
+                    int routeCode = Convert.ToInt32(route.code);
+                    List<int> lidersId = uoWEmBeAlgoritmo.RutasUsuarioRepository
+                            .Get(x => x.IdRuta == routeCode)
+                            .Select(x => x.IdUsuario)
+                            .ToList();
+
+                    requestEMail.LidersEmail = uoWEmBeAlgoritmo.UsuariosRepository
+                        .Get(x => lidersId.Contains(x.IdUsuario) && x.Estatus && x.IdRole == (int)UsuariosRole.CODES.LEADERCEDIS)
+                        .Select(x => x.Email)
+                        .ToList();
+                }
+            else
+                requestEMail.LidersEmail.Add(request.Email);
+
+            if (requestEMail.LidersEmail.Count() == 0)
+                return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    "No se encontró emails para el envio"
+                });
+
+            //Get Impulsor
+            int userId = db.so_route_team.Where(x => x.routeId == request.RouteId && x.roleTeamId == (byte)ERolTeam.Impulsor)
+                .Select(x => x.userId)
+                .FirstOrDefault();
+
+            so_user user = db.so_user.Where(x => x.userId == userId)
+                .FirstOrDefault();
+
+            if (user == null)
+                return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    "No se encontró al impulsor de la ruta " + request.RouteId
+                });
+
+            requestEMail.ImpulsorFullName = user.code + " - " + user.name;
+
+            List<Guid> workdayIds = db.so_work_day
+                .Where(x => DbFunctions.TruncateTime(x.date_start) == DbFunctions.TruncateTime(request.Date) &&
+                        x.userId == userId)
+                .Select(x => x.work_dayId)
+                .ToList();
+
+            if (workdayIds.Count() == 0)
+                return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    "No hay Jornada para la ruta " + request.RouteId + " en la fecha " + request.Date.Value.ToString("dd-MM-yyyy")
+                });
+
+            //Get inventories
+            List<int> inventoriesId = db.so_route_team_travels_employees
+                .Where(x => workdayIds.Contains(x.work_dayId))
+                .GroupBy(x => x.inventoryId)
+                .Select(x => x.Key)
+                .ToList();
+
+            if (inventoriesId.Count() == 0)
+                return ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    "No hay Viajes para la ruta " + request.RouteId + " en la fecha " + request.Date.Value.ToString("dd-MM-yyyy")
+                });
+
+            //Get sales
+            List<int> salesId = db.so_sale_adjustment_reason
+                .Where(x => inventoriesId.Contains(x.Sale.inventoryId.Value))
+                .Select(x => x.SaleId)
+                .ToList();
+
+            if (salesId.Count() == 0)
+                return ResponseBase<MsgResponseBase>.Create(new MsgResponseBase()
+                {
+                    Msg = "No hay ajustes de venta para la ruta " + request.RouteId + " en la fecha " + request.Date.Value.ToString("dd-MM-yyyy")
+                });
+
+            //Create Header
+            foreach (var saleId in salesId)
+            {
+                var adjust = GetAdjustmentTable(saleId);
+                requestEMail.Sales.Add(adjust);
+                requestEMail.TotalAdjustment += adjust.TotalAdjustment;
+            }
+
+            //Send Email
+            requestEMail.Date = request.Date.Value;
+            EmailService emailService = new EmailService();
+            return emailService.SendAdjustmentEmail(requestEMail);
+        }
+
+        public SendAdjustmentEmailSales GetAdjustmentTable(int saleId)
+        {
+
+            using (var transaction = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    var sale = db.so_sale.Where(s => s.saleId.Equals(saleId)).FirstOrDefault();
+
+                    if (sale == null)
+                        throw new EntityNotFoundException("No se encontró la venta");
+
+                    var customer = db.so_customer.Where(x => x.customerId == sale.customerId).FirstOrDefault();
+
+                    var saleAD = db.so_sale_aditional_data.Where(x => x.saleId == sale.saleId).FirstOrDefault();
+                    string PaymentMethod = saleAD == null ? null : saleAD.paymentMethod;
+                    //Se prepara la información
+                    string route = db.so_user_route.Where(x => x.userId == sale.userId).Select(x => x.so_route.code).FirstOrDefault(); //db.so_route_customer.Where(x => x.customerId == sale.customerId).Select(x => x.so_route.code).FirstOrDefault();
+                    so_user user = db.so_user.Where(x => x.userId == sale.userId).FirstOrDefault();
+                    DataTable dtTicket = GetPromotionsTicketDigital(db, sale.saleId);
+                   
+
+                    var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
+                    {
+                        CustomerName = customer.name,
+                        RouteAddress = route,
+                        CustomerFullName = customer.customerId + " - " + customer.name + " " + customer.address,
+                        Date = sale.date,
+                        PaymentMethod = PaymentMethod,
+                        SellerName = user.code + " - " + user.name,
+                        dtTicket = dtTicket,
+                        ReferenceCode = customer.customerId.ToString()
+                    };
+
+                    //Preparar Order
+                    List<so_delivery_detail> delivery = null;
+                    if (sale.deliveryId == 0)
+                        sendTicketDigitalEmail.Order = null;
+                    else
+                    {
+                        delivery = db.so_delivery_detail
+                            .Where(x => x.deliveryId == sale.deliveryId)
+                            .ToList();
+
+                        sendTicketDigitalEmail.Order = new SendTicketDigitalEmailOrder()
+                        {
+                            OrderDetail = new List<SendTicketDigitalEmailOrderDetail>(),
+                            DeliveryDate = sale.date
+                        };
+                    }
+
+                    var sales = new List<SendTicketDigitalEmailSales>();
+                    foreach (var detail in sale.so_sale_detail)
+                    {
+                        var product = db.so_product.Where(x => x.productId == detail.productId).FirstOrDefault();
+                        if (product == null)
+                            continue;
+
+                        if (sendTicketDigitalEmail.Order != null)
+                        {
+                            var productOrder = delivery.Where(x => x.productId == detail.productId).FirstOrDefault();
+                            //Si el producto esta dentro de la preventa
+                            if (productOrder != null)
+                            {
+                                //Verificar si la cantidad es menor o igual a la preventa
+                                if (detail.amount <= productOrder.amount)
+                                {
+                                    //Si lo que se esta vendiendo es menor o igual a lo solicitado Agregar en Order y pasar al siguiente
+                                    sendTicketDigitalEmail.Order.OrderDetail.Add(new SendTicketDigitalEmailOrderDetail
+                                    {
+                                        Amount = detail.amount, //Se usa el detail porque el amount puede ser menor
+                                        ProductName = product.code + " - " + product.name,
+                                        //TotalPrice = (double)detail.amount * productOrder.price.Value,
+                                        //UnitPrice = productOrder.price.Value,
+                                        TotalPrice = (double)detail.amount * detail.price,
+                                        UnitPrice = detail.price
+                                    });
+                                }
+                                else
+                                {
+                                    //Si es mayor hacer la resta y agregar a sale y preventa
+                                    sendTicketDigitalEmail.Order.OrderDetail.Add(new SendTicketDigitalEmailOrderDetail
+                                    {
+                                        Amount = productOrder.amount,
+                                        ProductName = product.code + " - " + product.name,
+                                        //TotalPrice = (double)productOrder.amount * productOrder.price.Value,
+                                        //UnitPrice = productOrder.price.Value,
+                                        TotalPrice = (double)productOrder.amount * detail.price,
+                                        UnitPrice = detail.price
+                                    });
+
+                                    sales.Add(new SendTicketDigitalEmailSales
+                                    {
+                                        Amount = detail.amount - productOrder.amount,
+                                        ProductName = product.code + " - " + product.name,
+                                        TotalPrice = Convert.ToDouble(detail.amount - productOrder.amount) * Convert.ToDouble(detail.price),
+                                        UnitPrice = Convert.ToDouble(detail.price)
+                                    });
+
+                                }
+                                continue;
+                            }
+                        }
+
+                        sales.Add(new SendTicketDigitalEmailSales
+                        {
+                            Amount = detail.amount,
+                            ProductName = product.code + " - " + product.name,
+                            TotalPrice = Convert.ToDouble(detail.amount) * Convert.ToDouble(detail.price),
+                            UnitPrice = Convert.ToDouble(detail.price)
+                        });
+                    }
+
+                    foreach (var item in sale.so_sale_detail_article)
+                    {
+                        var article = db.so_article_promotional.Where(x => x.id == item.article_promotionalId).FirstOrDefault();
+                        if (article == null)
+                            continue;
+
+                        sales.Add(new SendTicketDigitalEmailSales
+                        {
+                            Amount = item.amount,
+                            ProductName = article.code + " - " + article.name,
+                            TotalPrice = Convert.ToDouble(item.amount) * Convert.ToDouble(item.price),
+                            UnitPrice = Convert.ToDouble(item.price)
+                        });
+                    }
+
+                    sendTicketDigitalEmail.CancelTicketLink = GetCancelLinkByCustomerId(customer.customerId);
+                    sendTicketDigitalEmail.Sales = sales;
+
+                    //Se envia el ticket
+                    var emailService = new EmailService();
+                    var response = emailService.GetAdjusmentTable(sendTicketDigitalEmail);
+
+                    response.Table = response.Table
+                        .Replace("{AdjustmentReason}", sale.so_sale_adjustment_reason.FirstOrDefault() == null ? "Sin especificar" : sale.so_sale_adjustment_reason.FirstOrDefault().Reason);
+                    response.Table = response.Table.Replace("{Coordenadas}", saleAD.Location);
+                    transaction.Commit();
+
+                    return new SendAdjustmentEmailSales()
+                    {
+                        Table = response.Table,
+                        AjustmentReason = sale.so_sale_adjustment_reason.First().Reason,
+                        Coordenadas = saleAD.Location,
+                        TotalAdjustment = response.Total
+                    };
+
+                }
+                catch (Exception e)
+                {
+                    transaction.Rollback();
+                    throw e;
 
                 }
             }
