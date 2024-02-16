@@ -8,5 +8,7 @@ namespace SmartOrderService.Models.DTO
         public string name { get; set; }
         public decimal price { get; set; }
         public int amount { get; set; }
+        public bool sell_allowed { get; set; }
+        public string barcode { get; set; }
     }
 }

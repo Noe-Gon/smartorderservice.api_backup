@@ -14,7 +14,7 @@ namespace SmartOrderService.Controllers
 {
     public class CustomerController : ApiController
     {
-        // GET: api/Customer
+
         public HttpResponseMessage Get([FromUri] CustomerRequest request)
         {
             HttpResponseMessage response;
@@ -28,7 +28,7 @@ namespace SmartOrderService.Controllers
             {
                 response = Request.CreateResponse(HttpStatusCode.NotFound, "Error: " + e.Message);
             }
-            catch (InventoryEmptyException e)
+            catch (InventoryEmptyException)
             {
                 response = Request.CreateResponse(HttpStatusCode.Conflict, "Error: no se han cargado los clientes a visitar en el recorrido, no hay inventario del día");
             }
@@ -38,6 +38,34 @@ namespace SmartOrderService.Controllers
                 response = Request.CreateResponse(HttpStatusCode.InternalServerError, "Error: " + e.Message);
             }
 
+
+            return response;
+        }
+
+        [HttpGet]
+        [Route("~/api/CustomersWithVario")]
+        public HttpResponseMessage GetCustomer([FromUri] CustomerWithVarioRequest request)
+        {
+            HttpResponseMessage response;
+            try
+            {
+
+                var Customers = new CustomerService().FindCustomersWithVario(request);
+                response = Request.CreateResponse(HttpStatusCode.OK, Customers);
+            }
+            catch (CustomerNotFoundException e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.NotFound, "Error: " + e.Message);
+            }
+            catch (InventoryEmptyException)
+            {
+                response = Request.CreateResponse(HttpStatusCode.Conflict, "Error: no se han cargado los clientes a visitar en el recorrido, no hay inventario del día");
+            }
+
+            catch (Exception e)
+            {
+                response = Request.CreateResponse(HttpStatusCode.InternalServerError, "Error: " + e.Message);
+            }
 
             return response;
         }

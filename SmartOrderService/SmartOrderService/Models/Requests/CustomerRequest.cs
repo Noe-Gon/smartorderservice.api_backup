@@ -15,4 +15,9 @@ namespace SmartOrderService.Models.Requests
         public int BrancId { get; set; }
 
     }
+
+    public class CustomerWithVarioRequest : CustomerRequest
+    {
+        public int routeId { get; set; }
+    }
 }

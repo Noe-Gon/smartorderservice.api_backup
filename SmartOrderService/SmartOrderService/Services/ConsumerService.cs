@@ -2,6 +2,7 @@
 using Algoritmos.Data.UnitofWork;
 using AutoMapper;
 using CRM.Data.UnitOfWork;
+using Newtonsoft.Json;
 using RestSharp;
 using SmartOrderService.CustomExceptions;
 using SmartOrderService.DB;
@@ -266,6 +267,10 @@ namespace SmartOrderService.Services
                     });
                 }
 
+                newCustomerAdditionalData.ReferenceCode = "" + newCustomer.customerId;
+                UoWConsumer.CustomerAdditionalDataRepository.Update(newCustomerAdditionalData);
+                UoWConsumer.Save();
+
                 var response = new InsertConsumerResponse
                 {
                     CustomerId = newCustomer.customerId,
@@ -286,7 +291,7 @@ namespace SmartOrderService.Services
                     Neighborhood = request.Neighborhood,
                     Phone = request.Phone,
                     Phone_2 = request.Phone_2,
-                    ReferenceCode = request.ReferenceCode,
+                    ReferenceCode = "" + newCustomer.customerId,
                     RouteId = request.RouteId,
                     StateId = request.StateId,
                     Street = request.Street,
@@ -793,7 +798,7 @@ namespace SmartOrderService.Services
                 {
                     request.userId = inventoryService.SearchDrivingId(request.userId);
                 }
-                catch (RelatedDriverNotFoundException e)
+                catch (RelatedDriverNotFoundException)
                 { }
 
                 so_inventory inventory = inventoryService.GetCurrentInventory(request.userId, null);
@@ -1317,6 +1322,47 @@ namespace SmartOrderService.Services
                     e.Message
                 });
             }
+        }
+
+        public ResponseBase<GetCustomerVarioResponse> GetCustomerVario(GetCustomerVarioRequest request)
+        {
+            int? customerId = UoWConsumer.RouteCustomerVarioRepository
+                .Get(x => x.RouteId == request.RouteId && x.Status)
+                .Select(x => x.CustomerId)
+                .FirstOrDefault();
+
+            if (customerId == null)
+                return ResponseBase<GetCustomerVarioResponse>.Create(new List<string>()
+                {
+                    "La ruta no cuenta con cliente vario o este ha sido eliminado de la ruta"
+                });
+
+            var response = UoWConsumer.CustomerRepository
+                .Get(x => x.customerId == customerId)
+                .Select(x => new GetCustomerVarioResponse
+                {
+                    Address = x.address,
+                    Code = x.code,
+                    Contact = x.contact,
+                    CustomerId = x.customerId,
+                    Description = x.description,
+                    Email = x.email,
+                    Latitude = x.latitude ?? 0,
+                    Longitude = x.longitude ?? 0,
+                    Name = x.name,
+                    Status = x.status,
+                    Tags = x.so_tag.Select(t => t.tag).ToList(),
+
+                })
+                .FirstOrDefault();
+
+            if (response == null)
+                return ResponseBase<GetCustomerVarioResponse>.Create(new List<string>()
+                {
+                    "Cliente no encontrado"
+                });
+
+            return ResponseBase<GetCustomerVarioResponse>.Create(response);
         }
 
         public ResponseBase<GetConsumerAllInfo> GetCustomerAllInfo(PriceRequest request)

@@ -4,6 +4,7 @@ namespace SmartOrderService.DB
     using System.Data.Entity;
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Linq;
+    using SmartOrderService.Controllers;
 
     public partial class SmartOrderModel : DbContext
     {
@@ -114,6 +115,7 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_sale_inventory> so_sale_inventory { get; set; }
         public virtual DbSet<so_sale_promotion> so_sale_promotion { get; set; }
         public virtual DbSet<so_sale_promotion_detail> so_sale_promotion_detail { get; set; }
+        public virtual DbSet<so_sale_promotion_detail_product> so_sale_promotion_detail_product { get; set; }
         public virtual DbSet<so_sale_promotion_detail_article> so_sale_promotion_detail_article { get; set; }
         public virtual DbSet<so_sale_replacement> so_sale_replacement { get; set; }
         public virtual DbSet<so_sale_send_mail> so_sale_send_mail { get; set; }
@@ -159,11 +161,11 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_leader_authorization_code> so_leader_authorization_codes { get; set; }
         public virtual DbSet<so_authentication_log> so_authentication_logs { get; set; }
 
-        //public virtual DbSet<so_sale_detail_article> so_sale_detail_article { get; set; }
+        public virtual DbSet<so_sale_detail_article> so_sale_detail_article { get; set; }
 
-        //public virtual DbSet<so_promotion_article_movement> so_promotion_article_movement { get; set; }
+        public virtual DbSet<so_promotion_article_movement> so_promotion_article_movement { get; set; }
 
-        //public virtual DbSet<so_article_promotional_route> so_article_promotional_route { get; set; }
+        public virtual DbSet<so_article_promotional_route> so_article_promotional_route { get; set; }
         public virtual DbSet<so_delivery_status> so_delivery_status { get; set; }
         public virtual DbSet<so_order> so_order { get; set; }
         public virtual DbSet<so_order_detail> so_order_detail { get; set; }
@@ -171,7 +173,10 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_synchronized_consumer> so_synchronized_consumer { get; set; }
         public virtual DbSet<so_synchronized_consumer_detail> so_synchronized_consumer_detail { get; set; }
         public virtual DbSet<Configuracion_WorkByCloud> Configuracion_WorkByCloud { get; set; }
-        //public virtual DbSet<so_route_customer_vario> so_route_customer_vario { get; set; }
+        public virtual DbSet<so_promotion_type_catalog> so_promotion_type_catalog { get; set; }
+        public virtual DbSet<so_route_customer_vario> so_route_customer_vario { get; set; }
+        public virtual DbSet<so_article_promotional> so_article_promotional { get; set; }
+        public virtual DbSet<so_promotion_article> so_promotion_article { get; set; }
 
         public virtual DbSet<so_billpocket_report_log> so_billpocket_report_logs { get; set; }
         public virtual DbSet<so_digital_ticket_configuration> so_digital_ticket_configuration { get; set; }
@@ -179,6 +184,8 @@ namespace SmartOrderService.DB
         public virtual DbSet<so_branch_limit_time> so_branch_limit_time { get; set; }
 
         public virtual DbSet<so_branch_time_zone> so_branch_time_zone { get; set; }
+
+        public virtual DbSet<so_liquidation_log> so_liquidation_logs { get; set; }
 
         public virtual DbSet<so_is_sale_point> so_is_sale_point { get; set; }
 
@@ -369,15 +376,15 @@ namespace SmartOrderService.DB
                 .WithRequired(e => e.so_article)
                 .WillCascadeOnDelete(false);
 
-            modelBuilder.Entity<so_article>() //Comentar cuando se pongo Promociones
-                .HasMany(e => e.so_sale_promotion_detail_article)
-                .WithRequired(e => e.so_article)
-                .WillCascadeOnDelete(false);
+            /*modelBuilder.Entity<so_article>()
+               .HasMany(e => e.so_sale_promotion_detail_article)
+               .WithRequired(e => e.so_article)
+               .WillCascadeOnDelete(false);*/
 
-            //modelBuilder.Entity<so_article_promotional_route>()
-            //    .HasMany(e => e.so_promotion_article_movement)
-            //    .WithRequired(e => e.so_article_promotional_route)
-            //    .WillCascadeOnDelete(false);
+            modelBuilder.Entity<so_article_promotional_route>()
+                .HasMany(e => e.so_promotion_article_movement)
+                .WithRequired(e => e.so_article_promotional_route)
+                .WillCascadeOnDelete(false);
 
             modelBuilder.Entity<so_billing_data>()
                 .Property(e => e.code)
@@ -1109,6 +1116,11 @@ namespace SmartOrderService.DB
                 .WillCascadeOnDelete(false);
 
             modelBuilder.Entity<so_product>()
+                .HasMany(e => e.so_sale_promotion_detail_product)
+                .WithRequired(e => e.so_product)
+                .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<so_product>()
                 .HasOptional(e => e.so_product_tax)
                 .WithRequired(e => e.so_product);
 
@@ -1421,6 +1433,11 @@ namespace SmartOrderService.DB
                 .WillCascadeOnDelete(false);
 
             modelBuilder.Entity<so_sale>()
+               .HasMany(e => e.so_sale_detail_article)
+               .WithRequired(e => e.so_sale)
+               .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<so_sale>()
                 .HasMany(e => e.so_sale_promotion)
                 .WithRequired(e => e.so_sale)
                 .WillCascadeOnDelete(false);
@@ -1475,6 +1492,11 @@ namespace SmartOrderService.DB
 
             modelBuilder.Entity<so_sale_promotion>()
                 .HasMany(e => e.so_sale_promotion_detail_article)
+                .WithRequired(e => e.so_sale_promotion)
+                .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<so_sale_promotion>()
+                .HasMany(e => e.so_sale_promotion_detail_product)
                 .WithRequired(e => e.so_sale_promotion)
                 .WillCascadeOnDelete(false);
 
@@ -1844,25 +1866,44 @@ namespace SmartOrderService.DB
                 .WithMany(x => x.AuthenticationLogs)
                 .HasForeignKey(x => x.LeaderAuthenticationCodeId);
 
-            modelBuilder.Entity<so_delivery_status>()
-                .HasKey(x => x.deliveryStatusId)
-                .Property(x => x.deliveryStatusId).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            var routeCustomerVario = modelBuilder.Entity<so_route_customer_vario>();
+            routeCustomerVario.HasKey(x => x.Id);
+            routeCustomerVario.Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            routeCustomerVario.HasRequired(x => x.Customer)
+                .WithMany(x => x.RouteCustomerVario)
+                .HasForeignKey(x => x.CustomerId);
+            routeCustomerVario.HasRequired(x => x.Route)
+                .WithMany(x => x.RouteCustomerVario)
+                .HasForeignKey(x => x.RouteId);
 
-            modelBuilder.Entity<so_order>()
-               .Property(e => e.tags)
-               .IsUnicode(false);
+            var saleAdditionalData = modelBuilder.Entity<so_sale_aditional_data>();
+            saleAdditionalData.HasKey(x => x.saleAdicionalDataId);
+            saleAdditionalData.Property(x => x.saleAdicionalDataId).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            saleAdditionalData.HasRequired(x => x.so_sale)
+                .WithMany(x => x.so_sale_aditional_data)
+                .HasForeignKey(x => x.saleId);
 
-            modelBuilder.Entity<so_order>()
-                .HasMany(e => e.so_order_detail)
-                .WithRequired(e => e.so_order)
-                .WillCascadeOnDelete(false);
+            var deliveryStatus = modelBuilder.Entity<so_delivery_status>();
+            deliveryStatus.HasKey(x => x.deliveryStatusId);
+            deliveryStatus.Property(x => x.deliveryStatusId).IsRequired().HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+
+            modelBuilder.Entity<so_delivery>()
+                .HasOptional(x => x.so_delivery_additional_data)
+                .WithRequired(x => x.Delivery);
 
             var deliveryAdditionalData = modelBuilder.Entity<so_delivery_additional_data>();
             deliveryAdditionalData.HasKey(x => x.deliveryId);
 
-            deliveryAdditionalData.HasOptional(x => x.DeliveryStatus)
-                .WithMany(x => x.DeliveryAdditionalData)
-                .HasForeignKey(x => x.deliveryStatusId);
+            var liquidationLogStatus = modelBuilder.Entity<so_liquidation_log_status>();
+            liquidationLogStatus.HasKey(x => x.Id);
+            liquidationLogStatus.Property(x => x.Id).IsRequired().HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+
+            var liquidationLog = modelBuilder.Entity<so_liquidation_log>();
+            liquidationLog.HasKey(x => x.Id);
+            liquidationLog.Property(x => x.Id).IsRequired().HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            liquidationLog.HasRequired(x => x.LiquidationStatus)
+                .WithMany(x => x.LiquidationLogs)
+                .HasForeignKey(x => x.LiquidationStatusId);
 
             modelBuilder.Entity<so_delivery>()
                 .HasOptional(x => x.so_delivery_additional_data)
@@ -1871,6 +1912,22 @@ namespace SmartOrderService.DB
             modelBuilder.Entity<Configuracion_WorkByCloud>()
                 .HasKey(x => x.wbcConfId);
 
+            modelBuilder.Entity<so_promotion_type_catalog>()
+                .HasKey(x => x.id);
+
+            modelBuilder.Entity<so_article_promotional>()
+               .Property(e => e.price)
+               .HasPrecision(10, 4);
+
+            modelBuilder.Entity<so_article_promotional>()
+                .HasMany(e => e.so_promotion_article)
+                .WithRequired(e => e.so_article_promotional)
+                .HasForeignKey(e => e.article_promotionalId)
+                .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<so_promotion_article>()
+                .Property(e => e.price)
+                .HasPrecision(10, 4);
             var billpocketReportLog = modelBuilder.Entity<so_billpocket_report_log>();
             billpocketReportLog.HasKey(x => x.Id);
             billpocketReportLog.Property(x => x.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
@@ -1900,6 +1957,12 @@ namespace SmartOrderService.DB
 
             var branchTimeZone = modelBuilder.Entity<so_branch_time_zone>();
             branchTimeZone.HasKey(x => x.branchtimezoneId);
+            var articleMovement = modelBuilder.Entity<so_promotion_article_movement>();
+            articleMovement.HasKey(x => x.id);
+            articleMovement.Property(x => x.id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            articleMovement.HasRequired(x => x.so_article_promotional_route)
+                .WithMany(x => x.so_promotion_article_movement)
+                .HasForeignKey(x => x.article_promotional_routeId);
         }
     }
 }

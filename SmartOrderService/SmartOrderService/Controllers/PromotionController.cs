@@ -1,7 +1,8 @@
-﻿using SmartOrderService.Services;
+﻿using SmartOrderService.Models.Message;
+using SmartOrderService.Models.Responses;
+using SmartOrderService.Services;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
@@ -88,6 +89,31 @@ namespace SmartOrderService.Controllers
             catch (Exception e)
             {
                 return Request.CreateResponse(HttpStatusCode.Conflict, e.Message);
+            }
+        }
+
+        [HttpPost]
+        [Route("~/api/promotion/article_movement")]
+        public IHttpActionResult LoadArticleMovement(LoadArticleMovementRequest request)
+        {
+            try
+            {
+                using (var service = new LiquidationService())
+                {
+                    var response = service.LoadArticleMovement(request);
+
+                    if (response.Status)
+                        return Ok(response);
+
+                    return Content(System.Net.HttpStatusCode.BadRequest, response);
+                }
+            }
+            catch (Exception e)
+            {
+                return Content(System.Net.HttpStatusCode.BadRequest, ResponseBase<MsgResponseBase>.Create(new List<string>()
+                {
+                    e.Message
+                }));
             }
         }
     }

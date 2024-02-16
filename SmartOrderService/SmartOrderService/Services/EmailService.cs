@@ -1,4 +1,5 @@
 ﻿using RestSharp;
+using SmartOrderService.Models.Email;
 using SmartOrderService.Models.Requests;
 using SmartOrderService.Models.Responses;
 using System;
@@ -7,6 +8,9 @@ using System.Configuration;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Mail;
+using System.Net.Mime;
 using System.Web;
 
 namespace SmartOrderService.Services

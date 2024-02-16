@@ -77,6 +77,11 @@ namespace SmartOrderService.Services
                                     && x.UserId == ayudanteId && x.RouteId == request.RouteId)
                         .FirstOrDefault();
 
+                    //var ayudante = UoWConsumer.AuthentificationLogRepository
+                    //    .Get(x => x.UserId == ayudanteId && x.RouteId == request.RouteId && x.CreatedDate == DateTime.Now)
+                    //    .FirstOrDefault();
+
+                    //Asigna null si no se ha autenticado. En caso de haberse autenticado, registra a impulsor y ayudante
                     string ayudanteCode = ayudante != null ? ayudante.UserCode : null;
 
                     requestNotify.auxiliarid = Convert.ToInt32(ayudanteCode);
@@ -98,7 +103,7 @@ namespace SmartOrderService.Services
                 //Si es ayudante
                 else
                 {
-                    //Buscar si ya inicio un Impulsor
+                    //Obtenemos el id del impulsor
                     int? impulsorId = UoWConsumer.RouteTeamRepository
                         .Get(x => x.roleTeamId == (int)ERolTeam.Impulsor && x.routeId == request.RouteId)
                         .Select(x => x.userId)

@@ -29,4 +29,15 @@ namespace SmartOrderService.Models.DTO
         }
     
     }
+
+    public class CustomerWithVarioDto : CustomerDto
+    {
+        public CustomerWithVarioDto()
+        {
+            Tags = new List<string>();
+            isVario = false;
+        }
+
+        public bool isVario { get; set; }
+    }
 }

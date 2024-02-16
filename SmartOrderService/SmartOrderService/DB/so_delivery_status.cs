@@ -1,4 +1,4 @@
-﻿using SmartOrderService.Models.Generic;
+using SmartOrderService.Models.Generic;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;

@@ -326,6 +326,8 @@
     <Compile Include="CustomExceptions\BillingDataException.cs" />
     <Compile Include="CustomExceptions\BillpocketReportException.cs" />
     <Compile Include="CustomExceptions\BranchLimitTimeException.cs" />
+    <Compile Include="CustomExceptions\ConfigurationValueNotFoundException.cs" />
+    <Compile Include="CustomExceptions\CreateWorkdayInventoryNotFoundException.cs" />
     <Compile Include="CustomExceptions\CRMException.cs" />
     <Compile Include="CustomExceptions\CustomerBillingDataNotFoundException.cs" />
     <Compile Include="CustomExceptions\CustomerException.cs" />
@@ -336,6 +338,8 @@
     <Compile Include="CustomExceptions\EmptySaleException.cs" />
     <Compile Include="CustomExceptions\EntityNotFoundException.cs" />
     <Compile Include="CustomExceptions\ExternalAPIException.cs" />
+    <Compile Include="CustomExceptions\InternalServerException.cs" />
+    <Compile Include="CustomExceptions\InvalidModelException.cs" />
     <Compile Include="CustomExceptions\InventoryEmptyException.cs" />
     <Compile Include="CustomExceptions\InventoryInProgressException.cs" />
     <Compile Include="CustomExceptions\InventoryNotClosedException.cs" />
@@ -343,6 +347,7 @@
     <Compile Include="CustomExceptions\InvoiceException.cs" />
     <Compile Include="CustomExceptions\LeaderCodeExceptions.cs" />
     <Compile Include="CustomExceptions\NoCustomerVisitException.cs" />
+    <Compile Include="CustomExceptions\NoRouteConfigTripulacsException.cs" />
     <Compile Include="CustomExceptions\NotEnoughProductAmountException.cs" />
     <Compile Include="CustomExceptions\NotFoundUsersConfigException.cs" />
     <Compile Include="CustomExceptions\NoUserFoundException.cs" />
@@ -355,6 +360,8 @@
     <Compile Include="CustomExceptions\SaleNotFoundException.cs" />
     <Compile Include="CustomExceptions\ServerErrorException.cs" />
     <Compile Include="CustomExceptions\InventoryNotOpenException.cs" />
+    <Compile Include="CustomExceptions\SettlementSentException.cs" />
+    <Compile Include="CustomExceptions\UnauthorisedException.cs" />
     <Compile Include="CustomExceptions\UserInUseException.cs" />
     <Compile Include="CustomExceptions\WorkdayNotFoundException.cs" />
     <Compile Include="CustomExceptions\WorkdayStartedException.cs" />
@@ -376,6 +383,8 @@
     <Compile Include="DB\so_api_version.cs" />
     <Compile Include="DB\so_application.cs" />
     <Compile Include="DB\so_article.cs" />
+    <Compile Include="DB\so_article_promotional.cs" />
+    <Compile Include="DB\so_article_promotional_route.cs" />
     <Compile Include="DB\so_authentication_log.cs" />
     <Compile Include="DB\so_autoventa_View.cs" />
     <Compile Include="DB\so_billing_data.cs" />
@@ -449,6 +458,8 @@
     <Compile Include="DB\so_invoice_opefactura.cs" />
     <Compile Include="DB\so_is_sale_point.cs" />
     <Compile Include="DB\so_leader_authorization_code.cs" />
+    <Compile Include="DB\so_liquidation_log.cs" />
+    <Compile Include="DB\so_liquidation_log_status.cs" />
     <Compile Include="DB\so_loan_order.cs" />
     <Compile Include="DB\so_loan_sale.cs" />
     <Compile Include="DB\so_log_errors.cs" />
@@ -470,9 +481,12 @@
     <Compile Include="DB\so_product_company.cs" />
     <Compile Include="DB\so_product_tax.cs" />
     <Compile Include="DB\so_promotion.cs" />
+    <Compile Include="DB\so_promotion_article.cs" />
+    <Compile Include="DB\so_promotion_article_movement.cs" />
     <Compile Include="DB\so_promotion_detail_article.cs" />
     <Compile Include="DB\so_promotion_detail_product.cs" />
     <Compile Include="DB\so_promotion_discount_list.cs" />
+    <Compile Include="DB\so_promotion_type_catalog.cs" />
     <Compile Include="DB\so_reason_devolution.cs" />
     <Compile Include="DB\so_reason_failed_transaction.cs" />
     <Compile Include="DB\so_reason_replacement.cs" />
@@ -495,14 +509,17 @@
     <Compile Include="DB\so_route_team_travels_employees.cs" />
     <Compile Include="DB\so_route_team_travels_visit.cs" />
     <Compile Include="DB\so_sale.cs" />
+    <Compile Include="DB\so_salev2.cs" />
     <Compile Include="DB\so_sale_aditional_data.cs" />
     <Compile Include="DB\so_sale_combo.cs" />
     <Compile Include="DB\so_sale_combo_detail.cs" />
     <Compile Include="DB\so_sale_detail.cs" />
+    <Compile Include="DB\so_sale_detail_article.cs" />
     <Compile Include="DB\so_sale_inventory.cs" />
     <Compile Include="DB\so_sale_promotion.cs" />
     <Compile Include="DB\so_sale_promotion_detail.cs" />
     <Compile Include="DB\so_sale_promotion_detail_article.cs" />
+    <Compile Include="DB\so_sale_promotion_detail_product.cs" />
     <Compile Include="DB\so_sale_replacement.cs" />
     <Compile Include="DB\so_sale_send_mail.cs" />
     <Compile Include="DB\so_site.cs" />
@@ -540,6 +557,7 @@
     <Compile Include="Mappers\SalePromotionDetailProductMapper.cs" />
     <Compile Include="Mappers\SaleReplacementMapper.cs" />
     <Compile Include="Mappers\SaleTeamMapper.cs" />
+    <Compile Include="Mappers\SaleTeamv3Mapper.cs" />
     <Compile Include="Mappers\TrackingConfigurationMapper.cs" />
     <Compile Include="Models\AccountBindingModels.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -554,6 +572,7 @@
     <Compile Include="Models\DTO\CollectBottleDetailDto.cs" />
     <Compile Include="Models\DTO\CollectBottleDto.cs" />
     <Compile Include="Models\DTO\ComboItemDto.cs" />
+    <Compile Include="Models\DTO\CustomerDtoV2.cs" />
     <Compile Include="Models\DTO\DeliveryComboDto.cs" />
     <Compile Include="Models\DTO\Invoice\InvoiceDataDto.cs" />
     <Compile Include="Models\DTO\Invoice\InvoiceHeaderOpeFacturaDto.cs" />
@@ -634,6 +653,8 @@
     <Compile Include="Models\Enum\DeliveryStatus.cs" />
     <Compile Include="Models\Enum\EInventoryTeamStatus.cs" />
     <Compile Include="Models\Enum\ERolTeam.cs" />
+    <Compile Include="Models\Enum\HelperLiquidationLogStatus.cs" />
+    <Compile Include="Models\Enum\PaymentMethod.cs" />
     <Compile Include="Models\Enum\PortalLinksStatus.cs" />
     <Compile Include="Models\Generic\AuditData.cs" />
     <Compile Include="Models\Generic\AuditDate.cs" />
@@ -646,7 +667,10 @@
     <Compile Include="Models\Locks\InventoryLock.cs" />
     <Compile Include="Models\Locks\SaleTeamLock.cs" />
     <Compile Include="Models\Locks\WorkdayLock.cs" />
+    <Compile Include="Models\Message\ApiDigitalizacionMessage.cs" />
     <Compile Include="Models\Message\BillPocketMessage.cs" />
+    <Compile Include="Models\Message\InventoryMessage.cs" />
+    <Compile Include="Models\Message\LiquidationMessage.cs" />
     <Compile Include="Models\Message\Ope20Message.cs" />
     <Compile Include="Models\Message\BranchMessage.cs" />
     <Compile Include="Models\Message\SaleModels.cs" />
@@ -712,6 +736,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\ApplicationOAuthProvider.cs" />
     <Compile Include="Results\ChallengeResult.cs" />
+    <Compile Include="Services\ApiDigitalizacionService.cs" />
     <Compile Include="Services\ApiVersionService.cs" />
     <Compile Include="Services\ApplicationService.cs" />
     <Compile Include="Services\BConnectService.cs" />
@@ -723,6 +748,7 @@
     <Compile Include="Services\DigitalTicketConfigurationService.cs" />
     <Compile Include="Services\EmailService.cs" />
     <Compile Include="Services\IsSalePointService.cs" />
+    <Compile Include="Services\LiquidationService.cs" />
     <Compile Include="Services\Ope20Service.cs" />
     <Compile Include="Services\RoleTeamService.cs" />
     <Compile Include="Services\RouteTeamInventoryAvailableService.cs" />
