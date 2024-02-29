@@ -210,6 +210,7 @@ namespace SmartOrderService.Services
                 product.Available_Amount -= productInventory.Amount;
                 db.SaveChanges();
             }
+            /*
             if (sale.SaleDetailsLoyalty.Count() > 0)
             {
                 so_sale_with_points saleWithPoint = new so_sale_with_points
@@ -252,6 +253,7 @@ namespace SmartOrderService.Services
                     db.SaveChanges();
                 }
             }
+            */
         }
 
         public List<so_route_team_inventory_available> GetInventoryTeamByInventoryId(int inventoryId)

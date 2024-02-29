@@ -2883,6 +2883,7 @@ namespace SmartOrderService.Services
 
         public void RedemptionPoints(SaleTeamWithPoints sale)
         {
+            /*
             int pointsUsed = 0;
             foreach (var loyaltyProduct in sale.SaleDetailsLoyalty)
             {
@@ -2899,6 +2900,7 @@ namespace SmartOrderService.Services
                 points = pointsUsed
             };
             loyaltyService.RedemptionPoints(requestBody);
+            */
         }
         
         public void CreatePaymentMethod(SaleTeamv3 sale)
@@ -3331,7 +3333,9 @@ namespace SmartOrderService.Services
                                 venta.createdon,
                                 venta.state,
                                 venta.status,
+                                /*
                                 venta.so_sale_with_points
+                                */
                             }).ToList();
 
             var saleDto = (from item in qsaleDto
@@ -3387,6 +3391,7 @@ namespace SmartOrderService.Services
                                                                  ReplacementId = g.replacementId,
                                                                  Amount = g.amount
                                                              }).ToList(),
+                                         /*
                                          SaleDetailsLoyalty = item.so_sale_with_points.Count() == 0 ? new List<SaleDetailsLoyalty>() : (from g in item.so_sale_with_points.FirstOrDefault().so_sale_with_points_details
                                                                select new SaleDetailsLoyalty()
                                                                {
@@ -3395,6 +3400,7 @@ namespace SmartOrderService.Services
                                                                    Name = g.so_product.name,
                                                                    Points = g.pointsPerUnit
                                                                }).ToList(),
+                                         */
                                          SalePromotion = (from g in item.so_sale_promotion
                                                           where g.status == true && g.promotion_catalogId == null
                                                           orderby g.createdon descending
@@ -3583,19 +3589,22 @@ namespace SmartOrderService.Services
                             });
                         }
 
-                        foreach (var item in sale.so_sale_detail_article)
+                        if (sale.so_sale_detail_article != null)
                         {
-                            var article = db.so_article_promotional.Where(x => x.id == item.article_promotionalId).FirstOrDefault();
-                            if (article == null)
-                                continue;
-
-                            sales.Add(new SendTicketDigitalEmailSales
+                            foreach (var item in sale.so_sale_detail_article)
                             {
-                                Amount = item.amount,
-                                ProductName = article.code + " - " + article.name,
-                                TotalPrice = Convert.ToDouble(item.amount) * Convert.ToDouble(item.price),
-                                UnitPrice = Convert.ToDouble(item.price)
-                            });
+                                var article = db.so_article_promotional.Where(x => x.id == item.article_promotionalId).FirstOrDefault();
+                                if (article == null)
+                                    continue;
+
+                                sales.Add(new SendTicketDigitalEmailSales
+                                {
+                                    Amount = item.amount,
+                                    ProductName = article.code + " - " + article.name,
+                                    TotalPrice = Convert.ToDouble(item.amount) * Convert.ToDouble(item.price),
+                                    UnitPrice = Convert.ToDouble(item.price)
+                                });
+                            }
                         }
 
                         sendTicketDigitalEmail.CancelTicketLink = GetCancelLinkByCustomerId(customer.customerId);
@@ -3609,7 +3618,6 @@ namespace SmartOrderService.Services
                     }
                     else
                     {
-                        string uuid = GetUuidCostumer(customer.code);
 
                         var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
                         {
@@ -3623,13 +3631,6 @@ namespace SmartOrderService.Services
                             dtTicket = dtTicket,
                             ReferenceCode = customer.customerId.ToString()
                         };
-
-                        if(uuid != null)
-                        {
-                            int points = GetLoyaltyPoints(uuid);
-
-                            sendTicketDigitalEmail.AccumulatedPoints = points;
-                        }
 
                         //Preparar Order
                         List<so_delivery_detail> delivery = null;
@@ -3723,25 +3724,6 @@ namespace SmartOrderService.Services
                                 ProductName = article.code + " - " + article.name,
                                 TotalPrice = Convert.ToDouble(item.amount) * Convert.ToDouble(item.price),
                                 UnitPrice = Convert.ToDouble(item.price)
-                            });
-                        }
-
-                        var salesLoyalty = new List<SendTicketDigitalEmailSalesWithPoints>();
-                        var SaleDetailsLoyalty = db.so_sale_with_points_details.Where(x => x.so_sale_with_points.saleId == sale.saleId).ToList();
-                        foreach (var detailLoyalty in SaleDetailsLoyalty)
-                        {
-                            var product = db.so_product.Where(x => x.code == detailLoyalty.so_product.code).FirstOrDefault();
-                            if (product == null)
-                            {
-                                continue;
-                            }
-
-                            salesLoyalty.Add(new SendTicketDigitalEmailSalesWithPoints
-                            {
-                                ProductName = product.productId + " - " + detailLoyalty.so_product.name,
-                                Amount = detailLoyalty.Amount,
-                                UnitPrice = detailLoyalty.pointsPerUnit,
-                                TotalPrice = detailLoyalty.pointsPerUnit * detailLoyalty.Amount
                             });
                         }
 
@@ -3899,9 +3881,6 @@ namespace SmartOrderService.Services
                     so_user user = db.so_user.Where(x => x.userId == sale.userId).FirstOrDefault();
                     DataTable dtTicket = GetPromotionsTicketDigital(db, sale.saleId);
 
-
-                    string uuid = GetUuidCostumer(customer.code);
-
                     var sendTicketDigitalEmail = new SendTicketDigitalEmailRequest
                     {
                         CustomerName = customer.name,
@@ -3913,13 +3892,6 @@ namespace SmartOrderService.Services
                         dtTicket = dtTicket,
                         ReferenceCode = customer.customerId.ToString()
                     };
-
-                    if (uuid != null)
-                    {
-                        int points = GetLoyaltyPoints(uuid);
-
-                        sendTicketDigitalEmail.AccumulatedPoints = points;
-                    }
 
                     //Preparar Order
                     List<so_delivery_detail> delivery = null;
@@ -4015,25 +3987,6 @@ namespace SmartOrderService.Services
                         });
                     }
 
-                    var salesLoyalty = new List<SendTicketDigitalEmailSalesWithPoints>();
-                    var SaleDetailsLoyalty = db.so_sale_with_points_details.Where(x => x.so_sale_with_points.saleId == sale.saleId).ToList();
-                    foreach (var detailLoyalty in SaleDetailsLoyalty)
-                    {
-                        var product = db.so_product.Where(x => x.code == detailLoyalty.so_product.code).FirstOrDefault();
-                        if (product == null)
-                        {
-                            continue;
-                        }
-
-                        salesLoyalty.Add(new SendTicketDigitalEmailSalesWithPoints
-                        {
-                            ProductName = product.productId + " - " + detailLoyalty.so_product.name,
-                            Amount = detailLoyalty.Amount,
-                            UnitPrice = detailLoyalty.pointsPerUnit,
-                            TotalPrice = detailLoyalty.pointsPerUnit * detailLoyalty.Amount
-                        });
-                    }
-
                     sendTicketDigitalEmail.CancelTicketLink = GetCancelLinkByCustomerId(customer.customerId);
                     sendTicketDigitalEmail.Sales = sales;
 
@@ -4062,39 +4015,6 @@ namespace SmartOrderService.Services
 
                 }
             }
-        }
-
-        public int GetLoyaltyPoints(string uuid)
-        {
-            int points = 0;
-
-            try
-            {
-                LoyaltyEnsitechService LoyaltyService = new LoyaltyEnsitechService();
-                var response = LoyaltyService.GetConsumerPoints(uuid);
-
-                if (response.Status)
-                    points = response.Data.points;
-            }
-            catch (Exception) {  }
-
-            return points;
-        }
-
-        public string GetUuidCostumer(string code)
-        {
-            string uuid = null;
-
-            try
-            {
-                LoyaltyEnsitechService LoyaltyService = new LoyaltyEnsitechService();
-                var response = LoyaltyService.GetConsumerUuidByCustomerCode(code);
-
-                if (response.Status)
-                    uuid = response.Data.uuid;
-            }
-            catch (Exception) { }
-            return uuid;
         }
 
         public void RegisterAdjustmentReason(int saleId, string reason, int customerId, int userId)

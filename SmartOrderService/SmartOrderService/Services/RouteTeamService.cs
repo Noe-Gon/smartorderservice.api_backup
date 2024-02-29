@@ -349,7 +349,6 @@ namespace SmartOrderService.Services
             if (workDayCurrent == null)
                 throw new WorkdayNotFoundException("No se encontro la jornada para el usuario " + impulsorId);
 
-            Ope20Service service = new Ope20Service();
             int userTravel = db.so_route_team_travels_employees
                 .Where(x => x.work_dayId == workDayCurrent.work_dayId && x.active)
                 .Count();

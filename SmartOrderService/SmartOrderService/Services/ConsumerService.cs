@@ -1154,6 +1154,7 @@ namespace SmartOrderService.Services
         }
         public ResponseBase<ReactivationTicketDigitalResponse> LoyaltyTermsAndConditions(ReactivationTicketDigitalRequest request)
         {
+            /*
             try
             {
                 var customer = UoWConsumer.CustomerRepository
@@ -1225,6 +1226,8 @@ namespace SmartOrderService.Services
                     e.Message
                 });
             }
+            */
+            return null;
         }
 
         public ResponseBase<List<GetCountriesResponse>> GetCountries()
