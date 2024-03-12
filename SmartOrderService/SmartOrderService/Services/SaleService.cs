@@ -2985,7 +2985,6 @@ namespace SmartOrderService.Services
             pMensaje.Size = 1000;
             command.Parameters.Add(pMensaje);
 
-            command.ExecuteNonQuery();
             sRespuesta = Convert.ToString(command.Parameters["@Mensaje"].Value);
 
             return sRespuesta;
